@@ -137,9 +137,13 @@ pub fn direct_kill_fraction(cfg: &AdcConfig) -> f64 {
 /// convenience: a payload bound to a charged residue cannot cross a membrane,
 /// so no amount of it in a dying cell reaches the next one.
 ///
-/// Bystander killing reaches ANTIGEN-NEGATIVE cells, so it is drawn from the
-/// remainder the direct term cannot touch. That is the point of the mechanism
-/// and the reason it addresses antigen escape rather than merely adding kill.
+/// Bystander killing is drawn from the cells the DIRECT term left alive, which
+/// is not the same set as the antigen-negative cells and was described as if it
+/// were. With `direct_kill_probability < 1` some antigen-POSITIVE cells also
+/// survive, so the surviving pool is `1 - dying` and only `(1 - antigen) /
+/// (1 - dying)` of it is antigen-negative. Use [`bystander_kill_on_negative`]
+/// for the antigen-negative part, which is the quantity an escape experiment
+/// measures.
 #[must_use = "the kill fraction is the function's only output"]
 pub fn bystander_kill_fraction(cfg: &AdcConfig) -> f64 {
     if !cfg.linker.releases_permeable_payload() {
@@ -152,6 +156,49 @@ pub fn bystander_kill_fraction(cfg: &AdcConfig) -> f64 {
     // which includes every antigen-negative cell.
     let remaining = (1.0 - dying).max(0.0);
     (dying * escaped * reach).min(remaining)
+}
+
+/// The part of the bystander kill that lands on ANTIGEN-NEGATIVE cells.
+///
+/// This exists because the preregistration needed a quantity an experiment can
+/// produce and [`bystander_kill_fraction`] is not one. Divided by the
+/// antigen-negative pool it was reported as a "share" of **216%** -- impossible
+/// for a share -- because the bystander term is bounded by every surviving
+/// cell, antigen-positive ones included, while the sentence beside it claimed
+/// the antigen-negative pool.
+///
+/// Payload that escapes a dying cell does not know its neighbour's antigen
+/// status, so it is apportioned across the surviving pool in proportion:
+/// `bystander * (1 - antigen) / (1 - dying)`. That is bounded by the
+/// antigen-negative pool by construction, which is what makes P10's
+/// falsification threshold scoreable.
+#[must_use = "the kill fraction is the function's only output"]
+pub fn bystander_kill_on_negative(cfg: &AdcConfig) -> f64 {
+    let dying = direct_kill_fraction(cfg);
+    let surviving = (1.0 - dying).max(0.0);
+    if surviving <= 0.0 {
+        return 0.0;
+    }
+    let negative = (1.0 - cfg.antigen_positive_fraction.clamp(0.0, 1.0)).max(0.0);
+    bystander_kill_fraction(cfg) * (negative / surviving)
+}
+
+/// [`bystander_kill_on_negative`] as a share of the antigen-negative pool.
+///
+/// In `[0, 1]` by construction, and the quantity P10 is registered on.
+#[must_use = "the share is the function's only output"]
+pub fn negative_pool_reached(cfg: &AdcConfig) -> f64 {
+    let negative = (1.0 - cfg.antigen_positive_fraction.clamp(0.0, 1.0)).max(0.0);
+    if negative <= 0.0 {
+        return 0.0;
+    }
+    // NO CLAMP. A clamp here made the guard policing this bound satisfy
+    // itself: reverting the numerator to the raw bystander term -- literally
+    // the 216% this function exists to retract -- passed every test, because
+    // the clamp capped it and the assertion then checked the clamp. The
+    // apportionment is bounded by construction, so a value above one means the
+    // construction is wrong and must surface rather than be flattened.
+    bystander_kill_on_negative(cfg) / negative
 }
 
 /// Total kill fraction: direct plus bystander.
@@ -261,38 +308,86 @@ mod tests {
         assert!(total_kill_fraction(&bystanding) > ceiling * 1.1);
     }
 
-    /// Antigen LOSS lowers the ceiling, and a bystander ADC degrades more
-    /// gracefully than one without it. That difference is the clinical
-    /// argument for the linker.
+    /// THE BYSTANDER MECHANISM IS SELF-LIMITING, and this test used to claim
+    /// the opposite.
+    ///
+    /// It was `antigen_loss_hurts_the_non_bystander_arm_more`, and it asserted
+    /// that the relative advantage `b/a` is NON-DECREASING as antigen is lost
+    /// -- with a comment saying that is what separates "addresses escape" from
+    /// "just adds kill". Measured at this module's own `heterogeneous()`
+    /// config the ratio is EXACTLY CONSTANT at `1 + escape*reach = 1.30` for
+    /// every antigen fraction, because `bystander = dying * escape * reach`
+    /// and `dying = apf * kill`, so both arms scale with `apf` and the ratio
+    /// cancels. `>=` accepts a constant, and a constant ratio IS "just adds
+    /// kill" -- the reading the guard existed to rule out. The name was false
+    /// too: both arms are hurt in exact proportion, so neither is hurt more.
+    ///
+    /// What the model actually says is more interesting and is the direction
+    /// worth preregistering: the payload comes from cells that TOOK UP the
+    /// ADC, i.e. antigen-positive ones, and antigen escape removes exactly
+    /// that population. So the bystander effect does not answer escape better
+    /// as escape worsens -- it is starved by it. The share of the
+    /// antigen-NEGATIVE pool a cleavable linker reaches falls from 77.1% at
+    /// 0.9 positive to 2.6% at 0.1 positive. (This docstring said 90% and 1%,
+    /// which were the values the RETRACTED formula produced -- the retraction
+    /// reached the code and not the paragraph performing it.)
     #[test]
-    fn antigen_loss_hurts_the_non_bystander_arm_more() {
-        let mut prev_gap = 0.0_f64;
+    fn the_bystander_effect_is_starved_by_the_escape_it_answers() {
+        // THE QUANTITY IS THE ANTIGEN-NEGATIVE SHARE, and getting that wrong
+        // is what this test is for. A previous version divided the whole
+        // bystander kill by the antigen-negative pool and published 216% as a
+        // "share" -- impossible -- because the bystander term is bounded by
+        // every surviving cell, antigen-positive ones included.
+        let mut prev = f64::INFINITY;
+        let mut shares = Vec::new();
         for &positive in &[0.9_f64, 0.6, 0.3, 0.1] {
-            let plain = AdcConfig {
+            let cfg = AdcConfig {
                 antigen_positive_fraction: positive,
-                linker: Linker::NonCleavable,
+                linker: Linker::Cleavable,
                 ..heterogeneous()
             };
-            let bystanding = AdcConfig {
-                linker: Linker::Cleavable,
-                ..plain
-            };
-            let (a, b) = (
-                total_kill_fraction(&plain),
-                total_kill_fraction(&bystanding),
-            );
-            assert!(b > a, "no bystander advantage at {positive} positive");
-            // The RELATIVE advantage must be at least as large as antigen is
-            // lost -- otherwise the mechanism does not address escape, it just
-            // adds kill.
-            let gap = b / a;
+            let share = negative_pool_reached(&cfg);
             assert!(
-                gap >= prev_gap - 1e-9,
-                "the bystander advantage shrank as antigen was lost \
-                 ({gap:.3} vs {prev_gap:.3}), so it does not address escape"
+                (0.0..=1.0).contains(&share),
+                "a SHARE of the antigen-negative pool came out at {share} for \
+                 {positive} positive, which no experiment can produce"
             );
-            prev_gap = gap;
+            assert!(
+                share < prev,
+                "the bystander arm reached a LARGER share of the \
+                 antigen-negative pool at {positive} positive ({share:.4} vs \
+                 {prev:.4}); the payload comes from antigen-POSITIVE cells, so \
+                 losing them cannot help"
+            );
+            prev = share;
+            shares.push(share);
         }
+        // AND THE DECLINE MUST BE STEEP, not merely non-increasing. The guard
+        // this replaces accepted a CONSTANT -- `>=` on a ratio that cancels --
+        // and that vacuity is the whole reason the direction had to be
+        // rederived. A model where bystander kill were proportional to the
+        // negative pool would hold `share` flat and must fail here.
+        assert!(
+            shares[0] > shares[3] * 5.0,
+            "the reach falls only from {:.4} to {:.4}; a near-flat decline is \
+             the shape the retracted guard could not distinguish from a real \
+             one",
+            shares[0],
+            shares[3]
+        );
+        // The unbounded quantity still exists and is still NOT a share: this
+        // pins the distinction the retraction turns on.
+        let dense = AdcConfig {
+            antigen_positive_fraction: 0.9,
+            linker: Linker::Cleavable,
+            ..heterogeneous()
+        };
+        assert!(
+            bystander_kill_fraction(&dense) > 1.0 - dense.antigen_positive_fraction,
+            "the raw bystander term no longer exceeds the antigen-negative \
+             pool, so the two quantities can no longer be confused and this \
+             test's subject is gone"
+        );
     }
 
     #[test]

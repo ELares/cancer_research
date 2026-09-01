@@ -5,7 +5,7 @@
 # to the figs dict in scripts/generate_latex.py.
 #
 # Fields:
-#   manuscript_figure: number in the compiled manuscript (1-24), or null
+#   manuscript_figure: number in the compiled manuscript (1-31), or null
 #   filename: basename without extension (both PDF and PNG exist)
 #   generator:
 #     script: path relative to repo root (or null for orphans)
@@ -20,7 +20,7 @@
 # validates that this file stays in sync with disk.
 
 figures:
-  # ── Manuscript figures (1-24) ──────────────────────────────────
+  # ── Manuscript figures (1-31) ──────────────────────────────────
 
   - manuscript_figure: 1
     filename: fig1c_ratio_straddle
@@ -421,7 +421,7 @@ figures:
       offline in seconds; it is a separate script from generate_figures.py,
       which loads the whole corpus and several gitignored simulation outputs.
 
-  - manuscript_figure: null
+  - manuscript_figure: 29
     filename: fig29_rare_event_resolution
     generator:
       script: scripts/rare_event_analysis.py
@@ -429,7 +429,7 @@ figures:
     inputs:
       - analysis/rare-event-sweep.jsonl
     type: simulation
-    status: supplementary
+    status: manuscript
     note: >
       How far down the death-rate tail a given sample size can see. Several
       conditions in Figure 7 report exactly 0% at n = 1,000,000; because
@@ -452,7 +452,7 @@ figures:
       quantitative predictions -- the figure is about resolution, not about
       biology. Regenerates offline in seconds from the committed sweep JSONL.
 
-  - manuscript_figure: null
+  - manuscript_figure: 25
     filename: fig30_modality_landscape
     generator:
       script: scripts/generate_conceptual_diagrams.py
@@ -460,7 +460,7 @@ figures:
     inputs:
       - analysis/modality-coverage.json
     type: conceptual
-    status: supplementary
+    status: manuscript
     note: >-
       What the simulation engine can be ASKED, against what the field
       publishes. The one figure that answers the criticism this project's
@@ -482,7 +482,7 @@ figures:
       the grey shrinks, and the caption's arm list is derived from the same
       JSON so it cannot describe an engine that no longer exists.
 
-  - manuscript_figure: null
+  - manuscript_figure: 26
     filename: fig31_modality_panel
     generator:
       script: scripts/generate_conceptual_diagrams.py
@@ -490,7 +490,7 @@ figures:
     inputs:
       - analysis/modality-panel.json
     type: simulation
-    status: supplementary
+    status: manuscript
     note: >-
       Every applicable treatment arm run against the identical tumour from the
       identical seed by `sim-modality-panel`, so a difference between two rows
@@ -509,5 +509,98 @@ figures:
       coincide to the last digit because this panel is DEPTH-FREE and their
       exogenous-ROS parameters are equal by default; the thing that separates
       them is a geometry, not a mechanism, and it lives in
-      `analysis/depth-reach-comparison.md`. Every number is read from
-      analysis/modality-panel.json; nothing on the figure is typed.
+      `analysis/depth-reach-comparison.md`. The kill fractions and the route split are
+      read from analysis/modality-panel.json. The subtitle's arm and route
+      COUNTS are typed, which this note previously denied; they are pinned by
+      tests/test_modality_panel.py rather than derived at draw time.
+
+  - manuscript_figure: 27
+    filename: fig32_modality_tme
+    generator:
+      script: scripts/generate_conceptual_diagrams.py
+      function: fig32_modality_tme
+    inputs:
+      - analysis/modality-tme.json
+    type: simulation
+    status: manuscript
+    note: >-
+      The resistance sweep for every arm, on a SIGNED scale and split by cell
+      state. Both choices are the figure. The analysis behind it once took the
+      absolute value of every change and reported an arm that "loses 121%" --
+      impossible, and worse, it hid a real result, because one axis HELPS:
+      clonal heterogeneity raises the pharmacologic arm's kill by supplying a
+      low-glutathione tail that dies while the average cell resists. A
+      magnitude colour map paints that the same shade as a catastrophic loss,
+      so the map is diverging and zero is neutral. The split by phenotype is
+      there because an earlier sweep ran one cell state and reported two axes
+      inert -- correctly for that run, and misleadingly, since what was inert
+      was the configuration's ability to see them. Red is a loss and blue a
+      gain, which is `RdBu` and not `RdBu_r`: the first draft drew the reverse
+      of what its own caption said.
+
+  - manuscript_figure: 28
+    filename: fig33_adoptive_barriers
+    generator:
+      script: scripts/generate_conceptual_diagrams.py
+      function: fig33_adoptive_barriers
+    inputs:
+      - analysis/modality-panel.json
+    type: simulation
+    status: manuscript
+    note: >-
+      The same CAR-T construct against a leukaemia and a solid tumour, as a
+      waterfall on a log axis. The point is that NO SINGLE STEP looks
+      catastrophic: three barriers at plausible values leave six per cent,
+      exhaustion removes most of what is left, and the product is the
+      difference between a therapy that cures a blood cancer and one that does
+      very little in a solid tumour -- which is why the model keeps them
+      separate instead of fitting one efficacy scalar. The antigen ceiling is
+      drawn even though it does NOTHING here, because it is a CAP rather than
+      a coefficient and a figure that omitted the inert step would imply all
+      three always act. The generator asserts the drawn factors against the
+      binary's own binds flag before drawing, since that decomposition was a
+      residual once and could not disagree with itself.
+
+  - manuscript_figure: 30
+    filename: fig34_depth_reach
+    generator:
+      script: scripts/generate_conceptual_diagrams.py
+      function: fig34_depth_reach
+    inputs:
+      - analysis/depth-reach-comparison.json
+    type: simulation
+    status: manuscript
+    note: >-
+      The manuscript's tissue-access argument, drawn, because what makes it an
+      argument is a SHAPE: three physical modalities whose delivered energy
+      falls off at rates two orders of magnitude apart, against a pharmacologic
+      arm whose delivery does not fall off at all. PDT goes 92.5% to 0.6% over
+      9.4 mm while radiation goes 45.4% to 43.7%. THE CONTROL IS DRAWN RATHER
+      THAN DROPPED and it is the reason for the second panel: the untreated arm
+      "retains" 400% of its surface kill, which is not robustness but what a
+      ratio does when both terms are near zero. A panel plotting retention
+      alone would rank an untreated tumour first, so retention and absolute
+      kill are shown together and the caption says to read neither alone.
+
+  - manuscript_figure: 31
+    filename: fig35_calibration_verdicts
+    generator:
+      script: scripts/generate_conceptual_diagrams.py
+      function: fig35_calibration_verdicts
+    inputs:
+      - analysis/modality-calibration.json
+    type: simulation
+    status: manuscript
+    note: >-
+      Per-arm calibration outcome INCLUDING the arms where fitting failed,
+      which is the only reason it is worth a figure. A chart of what is fitted
+      would be marketing. The THREE rows that are not green carry the
+      content, and an earlier version of this note said two -- omitting the
+      widest failure on the page. A thermal-ablation arm is UNCONSTRAINED
+      because its target admits almost the whole scanned range; checkpoint
+      blockade is INADMISSIBLE because its published response band constrains a
+      PRODUCT of antigen presentation and kill rate, neither identifiable from
+      it alone; and the ADC bystander effect has NO TARGET because nothing
+      comparable is published. ADMISSIBLE means a parameter
+      reproduces a band, NOT that an arm is validated -- every arm here still
+      feeds no number the manuscript reports.

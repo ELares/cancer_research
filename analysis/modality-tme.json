@@ -3547,14 +3547,41 @@
   }
  },
  "dominant_axis": {
-  "glycolytic": [
-   "acidic pH",
-   1.0
-  ],
-  "persister": [
-   "clonal heterogeneity",
-   1.2368421052631582
-  ]
+  "glycolytic": {
+   "axis": "acidic pH",
+   "value": -1.0,
+   "arm": "AntibodyDrugConjugate",
+   "direction": "loss",
+   "tied_with": [
+    "depth"
+   ]
+  },
+  "persister": {
+   "axis": "clonal heterogeneity",
+   "value": 1.2368421052631582,
+   "arm": "AntibodyDrugConjugate",
+   "direction": "gain",
+   "tied_with": []
+  }
+ },
+ "undefined_cells": {
+  "glycolytic": {
+   "hypoxia": [
+    "RSL3"
+   ],
+   "stromal shielding": [
+    "RSL3"
+   ],
+   "acidic pH": [
+    "RSL3"
+   ],
+   "depth": [
+    "RSL3"
+   ],
+   "clonal heterogeneity": [
+    "RSL3"
+   ]
+  }
  },
  "inert_axes": [],
  "live_axes": [

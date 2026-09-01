@@ -818,6 +818,365 @@ def fig31_modality_panel():
     save(fig, "fig31_modality_panel")
 
 
+# ── Figure 32: what the microenvironment does to every arm ────────────
+
+def fig32_modality_tme():
+    """The resistance sweep, on a SIGNED scale, split by cell state.
+
+    Two things this figure exists to show, neither of which survives a
+    conventional treatment.
+
+    THE SCALE MUST BE SIGNED. An earlier version of the analysis behind this
+    took the absolute value of every change and reported an arm that "loses
+    121%" -- impossible, and worse, it hid a real result: one axis HELPS.
+    Clonal heterogeneity raises the pharmacologic arm's kill, because widening
+    the antioxidant setpoint while holding its mean supplies a low-glutathione
+    tail that dies while the average cell resists. A magnitude colour map would
+    paint that the same shade as a catastrophic loss, so the map is diverging
+    and zero is the neutral colour.
+
+    IT IS SPLIT BY PHENOTYPE because the answer changes with the cell state,
+    and that IS the finding. An earlier sweep ran one phenotype and reported
+    two axes inert -- correctly for that run, and misleadingly, because what
+    was inert was the configuration's ability to see them.
+
+    Every value is read from `analysis/modality-tme.json`.
+    """
+    src = Path(__file__).resolve().parent.parent / "analysis" / "modality-tme.json"
+    if not src.exists():
+        print("  fig32: analysis/modality-tme.json missing - skipping")
+        return
+    d = json.loads(src.read_text())
+    ebp = d["effects_by_phenotype"]
+    undef = d.get("undefined_cells", {})
+    phenos = d["phenotypes"]
+    axes_order = list(ebp[phenos[0]].keys())
+    arms = d["arms"]
+
+    fig, axs = plt.subplots(1, len(phenos), figsize=(13.0, 5.6), sharey=True)
+    vmax = max(abs(v) for ph in phenos for ax in axes_order
+               for v in ebp[ph][ax].values()) or 1.0
+    for k, ph in enumerate(phenos):
+        M = np.array([[ebp[ph][ax].get(a, 0.0) for ax in axes_order]
+                      for a in arms], dtype=float)
+        ax = axs[k]
+        # `RdBu` and NOT `RdBu_r`: low values must be RED. The first draft
+        # used the reversed map, which drew every loss in blue and every gain
+        # in red while the caption below said the opposite -- a figure
+        # contradicting its own legend, which is the defect this campaign has
+        # spent three review rounds removing from prose.
+        im = ax.imshow(M, cmap="RdBu", vmin=-vmax, vmax=vmax, aspect="auto")
+        ax.set_xticks(range(len(axes_order)))
+        ax.set_xticklabels(axes_order, rotation=28, ha="right", fontsize=8.5)
+        ax.set_yticks(range(len(arms)))
+        if k == 0:
+            ax.set_yticklabels(arms, fontsize=8.5)
+        ax.set_title(f"{ph} state", fontsize=10.5, fontweight="bold")
+        for i in range(M.shape[0]):
+            for j in range(M.shape[1]):
+                v = M[i, j]
+                # A cell is left blank ONLY at exactly zero. The threshold was
+                # 0.005, which blanked three cells carrying a real effect --
+                # and one arm-axis pair was blank in one panel and drawn as
+                # -10 in the other, so the same pair was simultaneously called
+                # inert and shown acting. A sub-1% effect is printed as <1
+                # rather than hidden.
+                if arms[i] in undef.get(ph, {}).get(axes_order[j], []):
+                    # UNDEFINED, not zero. The relative change has no
+                    # denominator when the unstressed kill is 0, and a blank
+                    # cell said the axis could not move the arm -- a different
+                    # claim, and false for this whole row.
+                    ax.text(j, i, "n/a", ha="center", va="center",
+                            fontsize=6.2, color="#999", style="italic")
+                    continue
+                if v == 0.0:
+                    continue
+                if abs(v) < 0.005:
+                    ax.text(j, i, "<1" if v > 0 else ">-1", ha="center",
+                            va="center", fontsize=6.4, color="#666")
+                    continue
+                ax.text(j, i, f"{v * 100:+.0f}", ha="center", va="center",
+                        fontsize=7.0,
+                        color="white" if abs(v) > 0.55 * vmax else "#222")
+        ax.set_xticks(np.arange(-0.5, len(axes_order), 1), minor=True)
+        ax.set_yticks(np.arange(-0.5, len(arms), 1), minor=True)
+        ax.grid(which="minor", color="white", linewidth=1.1)
+        ax.tick_params(which="minor", length=0)
+
+    # LAYOUT BEFORE COLORBAR. `subplots_adjust` after `colorbar(ax=axs)` undoes
+    # the space the colorbar reserved, and it drew over the rightmost column of
+    # the persister panel -- the clonal-heterogeneity column carrying +124 and
+    # +116, which is the figure's stated finding.
+    fig.subplots_adjust(bottom=0.30, top=0.88, left=0.115, right=0.86)
+    cax = fig.add_axes([0.885, 0.30, 0.016, 0.58])
+    cb = fig.colorbar(im, cax=cax)
+    # ONE unit. The cells print percent and the bar was ticked in fractions,
+    # which is two notations for one quantity in one image -- the defect the
+    # sibling function's own comment congratulates itself on avoiding.
+    cb.set_ticks(np.linspace(-vmax, vmax, 5))
+    cb.set_ticklabels([f"{v * 100:+.0f}" for v in np.linspace(-vmax, vmax, 5)])
+    # RELATIVE change, and the unit matters: `modality_tme_report._effect`
+    # returns `(got - base) / base`, so +124 is "kills 2.24x as much", NOT a
+    # 124-point move in a fraction bounded by one -- which would be the same
+    # impossibility this chapter retracts.
+    cb.set_label("change in kill RELATIVE to the unstressed run (%)  -  "
+                 "negative is resistance", fontsize=8.2)
+    fig.suptitle("What the microenvironment does to every arm, by cell state",
+                 fontsize=12.5, fontweight="bold", y=0.985)
+    fig.text(0.5, 0.02,
+             "NOT a ranking. Signed deliberately: red is a loss, blue a GAIN, "
+             "and the gains are real - clonal heterogeneity supplies a "
+             "low-defence tail that dies while the average cell resists. A "
+             "blank cell is EXACTLY zero for that arm - a cell the axis "
+             "cannot move at all in this run, which is a property of the run "
+             "rather than of the biology; an effect too small to round to a "
+             "whole percent prints as <1 or >-1 rather than vanishing, and a "
+             "cell whose relative change has NO DENOMINATOR - the arm kills "
+             "nothing unstressed - prints n/a, because a blank there would "
+             "claim the axis cannot move it. Every arm but "
+             "radiation's DNA channel is parameterised with placeholders.",
+             ha="center", fontsize=7.2, color="#555", wrap=True)
+    save(fig, "fig32_modality_tme")
+
+
+# ── Figure 33: the CAR-T barrier cascade ──────────────────────────────
+
+def fig33_adoptive_barriers():
+    """One construct, two diseases, as a waterfall.
+
+    The point is that no single step looks catastrophic. Three barriers at
+    plausible values leave six per cent, exhaustion removes most of what is
+    left, and the product is the difference between a therapy that cures a
+    blood cancer and one that does very little in a solid tumour. A single
+    efficacy scalar would fit the same endpoints and lose exactly that.
+
+    The bars are DERIVED from `analysis/modality-panel.json` and their product
+    is asserted against the collapse before anything is drawn, because the
+    decomposition beside them was a residual once -- the antigen term absorbed
+    whatever the other two did not explain, which made it unfalsifiable.
+    """
+    src = Path(__file__).resolve().parent.parent / "analysis" / "modality-panel.json"
+    if not src.exists():
+        print("  fig33: analysis/modality-panel.json missing - skipping")
+        return
+    ab = json.loads(src.read_text()).get("adoptive_barriers")
+    if not ab:
+        print("  fig33: no adoptive_barriers block - skipping")
+        return
+    leuk = ab["leukaemia_kill_fraction"]
+    solid = ab["solid_tumour_kill_fraction"]
+    steps = [
+        ("infused\n(leukaemia)", leuk, COLORS.get("immune", "#FFD700")),
+        ("after the three\ndelivery barriers",
+         leuk * ab["delivery_efficiency_solid"], "#CD5C5C"),
+        ("after persistence",
+         leuk * ab["delivery_efficiency_solid"]
+         * ab["persistence_at_run_end_solid"], "#8B0000"),
+        ("after the\nantigen ceiling", solid, "#4B0000"),
+    ]
+    # The drawing must not be able to disagree with the binary, IN EITHER
+    # DIRECTION. The first version was `... < 0.05 or binds`, which the `or`
+    # made vacuous exactly when the ceiling binds -- the case its own message
+    # described. Both directions are checked now.
+    moved = abs(steps[-2][1] / solid - 1.0) > 1e-9
+    assert moved == bool(ab["antigen_ceiling_binds"]), (
+        f"the binary says the antigen ceiling binds="
+        f"{ab['antigen_ceiling_binds']} while the drawn steps "
+        f"{'move' if moved else 'do not move'} across it")
+
+    fig, ax = plt.subplots(figsize=(8.4, 4.8))
+    xs = np.arange(len(steps))
+    vals = [v for _, v, _ in steps]
+    ax.bar(xs, vals, 0.58, color=[c for _, _, c in steps],
+           edgecolor="black", linewidth=0.6)
+    ax.set_yscale("log")
+    ax.set_ylabel("kill fraction (log scale)", fontsize=9.5)
+    ax.set_xticks(xs)
+    ax.set_xticklabels([n for n, _, _ in steps], fontsize=8.6)
+    # ONE format for all four bars. The first draft printed "0.12%" beside
+    # "6.93e-05", which are the same kind of quantity in two notations and
+    # invites a reader to compare them by eye and get it wrong.
+    for x, v in zip(xs, vals):
+        ax.text(x, v * 1.55, f"{v * 100:.4g}%", ha="center", fontsize=8.6,
+                fontweight="bold")
+    ax.set_ylim(min(vals) * 0.45, max(vals) * 4.0)
+    for i in range(len(steps) - 1):
+        drop = vals[i] / vals[i + 1] if vals[i + 1] > 0 else float("inf")
+        if drop < 1.01:
+            label = "no effect"
+        else:
+            label = f"/{drop:,.1f}"
+        ax.annotate(label, xy=(i + 0.5, (vals[i] * vals[i + 1]) ** 0.5),
+                    ha="center", fontsize=8.6, color="#333",
+                    fontweight="bold")
+    inert = sum(1 for i in range(len(steps) - 1)
+                if vals[i] / vals[i + 1] < 1.01)
+    ax.set_title(
+        f"The same CAR-T construct, twice: a {leuk / solid:,.0f}x collapse "
+        f"across delivery, persistence and the antigen ceiling - "
+        f"{inert} of the three doing nothing here",
+        fontsize=11.0, fontweight="bold", pad=14)
+    fig.text(0.5, 0.005,
+             "NOT a clinical comparison. Every barrier value is an "
+             "uncalibrated placeholder; the corpus establishes that the "
+             "barriers are real and GENERAL rather than antigen-specific, not "
+             "which of them dominates. The antigen ceiling is a CAP, so it "
+             "contributes nothing unless it fires - here it does not, and the "
+             "figure shows that rather than hiding it.",
+             ha="center", fontsize=7.2, color="#555", wrap=True)
+    fig.tight_layout(rect=[0, 0.08, 1, 1])
+    save(fig, "fig33_adoptive_barriers")
+
+
+
+# ── Figure 30: how far each modality reaches ──────────────────────────
+
+def fig34_depth_reach():
+    """Physical reach, which is the manuscript's tissue-access argument.
+
+    Drawn because the argument is currently prose beside a table, and the
+    thing that makes it an argument is a SHAPE: three physical modalities
+    whose delivered energy falls off at rates two orders of magnitude apart,
+    against a pharmacologic arm whose delivery does not fall off at all.
+
+    The control is what keeps it honest. `Control` retains 400% of its surface
+    kill, which is not robustness -- it is what a ratio does when both terms
+    are near zero, and a panel RANKED on retention would put an untreated
+    tumour at the top. Both panels therefore keep the SAME order, sorted by
+    absolute kill at depth, so the control sits last in both and its bar is
+    read against its neighbour rather than crowning a ranking. An earlier
+    caption said panel (b) "ranks the untreated arm first", which is not what
+    the figure draws: it is the tallest bar, not the first one.
+    """
+    src = Path(__file__).resolve().parent.parent / "analysis" / "depth-reach-comparison.json"
+    if not src.exists():
+        print("  fig34: analysis/depth-reach-comparison.json missing - skipping")
+        return
+    d = json.loads(src.read_text())
+    rows = [r for r in d["rows"]]
+    order = sorted(rows, key=lambda r: -r["deep_kill_pct"])
+    names = [r["treatment"] for r in order]
+    deep_mm = order[0]["deep_mm"]
+
+    fig, (axA, axB) = plt.subplots(1, 2, figsize=(11.6, 4.6))
+    x = np.arange(len(names))
+    axA.bar(x - 0.2, [r["surface_kill_pct"] for r in order], 0.4,
+            label="at the surface", color="#4169E1", edgecolor="black",
+            linewidth=0.5)
+    axA.bar(x + 0.2, [r["deep_kill_pct"] for r in order], 0.4,
+            label=f"at {deep_mm:.1f} mm", color="#8B0000", edgecolor="black",
+            linewidth=0.5)
+    axA.set_xticks(x)
+    axA.set_xticklabels(names, rotation=20, ha="right", fontsize=8.6)
+    axA.set_ylabel("kill (%)", fontsize=9.5)
+    axA.set_title("(a) Kill at the surface and at depth", fontsize=10.5,
+                  fontweight="bold")
+    axA.legend(fontsize=8.2)
+    axA.grid(axis="y", alpha=0.25)
+
+    ret = [r["kill_retained_pct"] for r in order]
+    cols = ["#BFBFBF" if r["treatment"] == "Control" else "#CD5C5C"
+            for r in order]
+    axB.bar(x, ret, 0.55, color=cols, edgecolor="black", linewidth=0.5)
+    axB.axhline(100, color="black", linewidth=0.8, linestyle="--")
+    axB.set_xticks(x)
+    axB.set_xticklabels(names, rotation=20, ha="right", fontsize=8.6)
+    axB.set_ylabel("share of surface kill retained (%)", fontsize=9.5)
+    axB.set_title("(b) Retention - and why it cannot be read alone",
+                  fontsize=10.5, fontweight="bold")
+    ctrl = next((r for r in order if r["treatment"] == "Control"), None)
+    if ctrl:
+        i = names.index("Control")
+        axB.annotate("a ratio of two\nnear-zero numbers",
+                     xy=(i, ctrl["kill_retained_pct"]),
+                     xytext=(i - 0.1, ctrl["kill_retained_pct"] * 0.72),
+                     ha="center", fontsize=7.6, color="#333",
+                     arrowprops=dict(arrowstyle="->", color="#666", lw=0.8))
+    for a in (axA, axB):
+        a.spines[["top", "right"]].set_visible(False)
+
+    mu = d["constants"]
+    fig.suptitle("How far each modality reaches into tissue", fontsize=12.5,
+                 fontweight="bold")
+    fig.text(0.5, 0.015,
+             "NOT a ranking. Both panels share one order, sorted by kill at "
+             "depth, so the UNTREATED arm sits last in both - and in (b) it is "
+             "the TALLEST bar, which is the point: retention is a ratio, and a "
+             "ratio of two near-zero numbers is not robustness. Read (a) and "
+             "(b) together or neither. "
+             f"Attenuation is fixed physics and the two constants are quoted "
+             f"in ONE unit here: PDT {mu['pdt_mu_eff_per_mm']}/mm against "
+             f"radiation {mu['radiation_mu_per_cm'] / 10:g}/mm, a factor of "
+             f"{mu['pdt_mu_eff_per_mm'] / (mu['radiation_mu_per_cm'] / 10):.0f}. "
+             "Printing one per mm and the other per cm made a hundredfold "
+             "difference read as a tenfold one. Every kill magnitude rests on "
+             "uncalibrated biochemistry.",
+             ha="center", fontsize=7.2, color="#555", wrap=True)
+    fig.tight_layout(rect=[0, 0.09, 1, 0.94])
+    save(fig, "fig34_depth_reach")
+
+
+# ── Figure 31: what a published target could and could not settle ─────
+
+def fig35_calibration_verdicts():
+    """The calibration outcome per arm, INCLUDING the ones that failed.
+
+    A figure of what is fitted would be marketing. The interesting cells are
+    the three that are not: one arm is INADMISSIBLE because its published band
+    constrains a PRODUCT of two unidentifiable factors, and one has NO TARGET
+    at all. Drawing those beside the successes is the whole reason the panel
+    is worth a figure.
+    """
+    src = Path(__file__).resolve().parent.parent / "analysis" / "modality-calibration.json"
+    if not src.exists():
+        print("  fig35: analysis/modality-calibration.json missing - skipping")
+        return
+    arms = json.loads(src.read_text())["arms"]
+    order = {"ADMISSIBLE": 0, "UNCONSTRAINED": 1, "INADMISSIBLE": 2,
+             "NO TARGET": 3}
+    colour = {"ADMISSIBLE": "#2E7D32", "UNCONSTRAINED": "#F9A825",
+              "INADMISSIBLE": "#C62828", "NO TARGET": "#9E9E9E"}
+    rows = sorted(arms, key=lambda a: (order.get(a.get("verdict"), 9),
+                                       a["arm"]))
+    fig, ax = plt.subplots(figsize=(10.2, 4.4))
+    y = np.arange(len(rows))
+    for i, a in enumerate(rows):
+        v = a.get("verdict", "NO TARGET")
+        ax.barh(i, 1.0, color=colour.get(v, "#9E9E9E"), edgecolor="black",
+                linewidth=0.5)
+        ax.text(0.02, i, f"{a['arm']}", va="center", fontsize=9,
+                color="white", fontweight="bold")
+        ax.text(0.98, i, v, va="center", ha="right", fontsize=8.6,
+                color="white", fontweight="bold")
+    ax.set_yticks([])
+    ax.set_xticks([])
+    ax.set_xlim(0, 1)
+    ax.invert_yaxis()
+    for sp in ax.spines.values():
+        sp.set_visible(False)
+    counts = {v: sum(1 for a in arms if a.get("verdict") == v)
+              for v in order}
+    ax.set_title(
+        f"What a published target could settle, per arm "
+        f"({counts['ADMISSIBLE']} fitted, {counts['UNCONSTRAINED']} "
+        f"unconstrained, {counts['INADMISSIBLE']} inadmissible, "
+        f"{counts['NO TARGET']} with no target)",
+        fontsize=11, fontweight="bold")
+    fig.text(0.5, 0.02,
+             "ADMISSIBLE means a parameter reproduces a published band, NOT "
+             "that the arm is validated - none of these feeds a number the "
+             "manuscript's quantitative chapters report. The three rows that "
+             "are not green are the informative ones: an UNCONSTRAINED arm has "
+             "a target so loose it admits almost the whole scanned range, an "
+             "INADMISSIBLE one has a target that constrains a PRODUCT of "
+             "factors neither of which is identifiable from it, and an arm "
+             "with NO TARGET has nothing published to fit at all.",
+             ha="center", fontsize=7.2, color="#555", wrap=True)
+    fig.tight_layout(rect=[0, 0.10, 1, 1])
+    save(fig, "fig35_calibration_verdicts")
+
+
+
 if __name__ == "__main__":
     print("Generating conceptual diagrams...")
     fig18_hypoxia()
@@ -828,4 +1187,8 @@ if __name__ == "__main__":
     fig23_census_flow()
     fig30_modality_landscape()
     fig31_modality_panel()
+    fig32_modality_tme()
+    fig33_adoptive_barriers()
+    fig34_depth_reach()
+    fig35_calibration_verdicts()
     print("Done.")

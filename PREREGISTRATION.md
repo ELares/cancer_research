@@ -42,7 +42,7 @@ source. This file is the registrable, time-stampable version.
 > the predictions below are fixed as of the commit that added this document, and
 > any later change is visible in the diff.
 
-## Part 1: Falsifiable predictions (P1 to P8)
+## Part 1: Falsifiable predictions (P1 to P13)
 
 Each prediction is **directional**: it states the sign of an effect, not a
 calibrated magnitude, because most of the simulation layers are uncalibrated
@@ -84,6 +84,56 @@ re-interpretation.
 **P8. A persister-targeting ferroptosis inducer (RSL3) has the OPPOSITE size-dependence to generic cytotoxics.**
 - *Quantitative model output:* with size-aware zone thresholds, RSL3 kill is near zero below about 280 um radius and rises as the persister core appears (a non-monotone profile), whereas generic cytotoxics fall monotonically with size (the model's fixed-threshold supply-gradient leg gives RSL3 kill 3.6 percent to 0.19 percent over 144 to 540 um). The net direction depends on the inducer's phenotype specificity (#333; `analysis/calibration/spheroid-kill-vs-size.md`).
 - *Falsification threshold:* a ferroptosis inducer shows the same monotone bigger-resists-more profile as generic cytotoxics (no persister-targeting inversion below about 280 um radius), or its kill is size-independent.
+
+### Predictions for the modality arms (P9 to P13)
+
+P1 to P8 all concern ferroptosis or the physical-ROS modalities. Before the
+five below were registered `analysis/scope-audit.md` reported that as 8 of 8;
+it now reports 8 of 13. That is the sharpest measure of
+this project's narrowness -- sharper than code volume or figure count, because
+a falsifiable prediction is the currency this repository treats as real. An
+engine that can EXPRESS nine modalities while having committed to being wrong
+about only one is still a ferroptosis project by its own chosen measure. The
+five below are registered against the arms added in the modality campaign.
+Model outputs are derived in `analysis/modality-predictions.md`; the
+thresholds are stated here.
+
+**P9. PARP inhibition enhances radiation MORE at low dose per fraction than at high.**
+- *Quantitative model output:* an alpha-only boost raises the single-hit term while beta is untouched, so the sensitizer enhancement ratio decays with dose. One boost must hold the published 1.2 to 1.7 band at surviving fractions [0.5, 0.1, 0.01], i.e. 2.24 to 9.38 Gy; that admits boosts 0.544 to 0.948, and across the whole of that window SER(2 Gy)/SER(6 Gy) is 1.113 to 1.168. The decay is analytic in dose, not an artefact of the sampled points.
+- *Falsification threshold:* EITHER measured clonogenic SER at 6 Gy at or above SER at 2 Gy in the same line (ratio at or below 1.0, against the 1.113 the model requires at its most conservative admissible boost), OR measured SER outside 1.2 to 1.7 anywhere in 2.24 to 9.38 Gy -- the second clause matters because the ratio alone can be satisfied while the band the window was derived from is violated at every dose.
+- *Stated scope:* the window is a claim about 2.24 to 9.38 Gy and nothing wider. Requiring the same band at 1.8 Gy and 20 Gy as well empties it, which is a limit of the alpha-only form and is registered as such rather than discovered later.
+
+**P10. The ADC bystander effect is STARVED by the antigen escape it is supposed to answer.**
+- *Quantitative model output:* bystander payload comes from cells that took up the ADC, so it scales with the dying antigen-positive population, and it is apportioned across the surviving pool rather than aimed at antigen-negative cells. The share of the antigen-NEGATIVE pool it reaches falls from 77.1% at 0.9 antigen-positive to 2.6% at 0.1, while the relative advantage over a non-cleavable linker stays exactly flat at 1.3x.
+- *Falsification threshold:* in a graded-antigen co-culture the cleavable arm's kill of antigen-NEGATIVE cells, as a share of the antigen-negative population, is flat or rising as the antigen-positive fraction falls; or the cleavable-to-non-cleavable total-kill ratio rises by more than 10 percent across the same range.
+- *Note:* this has the OPPOSITE sign to the intuition the module was built on, and to a guard this repository shipped and has now retracted. An earlier version of this entry published the share as 216 percent, which no experiment can produce -- the bystander term is bounded by every surviving cell, antigen-positive ones included, so dividing it by the antigen-negative pool is not a share of anything.
+
+**P11. The adoptive-cell barriers MULTIPLY, so opening one buys only its own reciprocal.**
+- *Quantitative model output:* delivery efficiency is 0.06 as the product of three barriers, of which trafficking is 0.3. Intratumoural rather than intravenous administration sets trafficking to roughly 1 and leaves infiltration and activation untouched, predicting a 3.333x gain in kill -- not the 632.6x that separates the two diseases.
+- *Falsification threshold:* the measured gain from intratumoural delivery exceeds 2x the predicted single-barrier factor (delivery gates something the product does not represent), or falls below half of it (the barriers are not independent). Either refutes the multiplicative FORM, which is the only part of this layer a measurement can reach -- every barrier VALUE is a placeholder.
+
+**P12. Whether an oncolytic infection establishes is dose-INDEPENDENT.**
+- *Quantitative model output:* simulated, not asserted. Across 5 orders of magnitude of initial infected fraction (1e-06 to 0.1) the verdict is identical and the cumulative lysed fraction spans only 0.0084. Effective replication is 0.63 against a removal rate of 0.35, and it is that comparison -- not the titre -- which decides the outcome. Note the crate's own `spread_threshold_ratio` compares replication against CLEARANCE alone (3.15), so a config above that ratio can still die out once lysis is counted.
+- *Falsification threshold:* at fixed tumour permissiveness, raising the input titre flips a non-establishing infection to an establishing one, or moves the cumulative lysed fraction by more than 10 percentage points across the 5 orders of magnitude tested.
+
+**P13. Recurrence after ablation tracks margin GEOMETRY and not delivered energy.**
+- *Quantitative model output:* read from `ablation.rs`, not asserted: above threshold `margin_survival_fraction` returns one minus the covered fraction, its signature takes only the config and the coverage, and while its body DOES read temperature, duration and field strength, it reads them only to test whether the threshold is crossed -- above it the return value does not vary with them. An earlier version of this entry said the body read none of them, which was false. Doubling delivered energy at fixed coverage therefore changes predicted survival by exactly zero.
+- *Falsification threshold:* recurrence correlates with delivered energy at matched coverage fraction (a dose-response above threshold), or coverage fails to predict recurrence at matched energy.
+
+### Honesty clause for P9 to P13
+
+**All five are DIRECTIONAL and every barrier value behind them is an
+uncalibrated placeholder** (`CALIBRATION_STATUS.md` records each as feeding no
+reported number). A magnitude in P10 to P13 is a property of a preset, not a
+prediction. P9 is the deliberate exception: its band is published, which is
+why it is the only one whose model output is quantitative, and it is
+correspondingly the easiest of the five to kill.
+
+**P10 is registered against this project's own prior belief.** The module was
+built expecting the bystander advantage to GROW as antigen is lost, and shipped
+a guard asserting it. The guard was vacuous, the belief was wrong, and the
+prediction registered here has the opposite sign. Reporting that is the point
+of preregistering at all.
 
 ### Honesty clause
 

@@ -178,13 +178,29 @@ def test_the_ordering_follows_the_mechanisms(d, md):
     assert "That ordering was not tuned for" in md
 
 
-def test_the_page_refuses_the_three_over_readings(md):
-    """Each names a limit that would change a claim if lifted."""
-    for frag in ("they were not visible",
-                 "is a PREDICTION, not a measurement",
+def test_the_page_refuses_the_three_over_readings(d, md):
+    """Each names a limit that would change a claim if lifted.
+
+    The inert-axis refusal is BRANCH-AWARE. This guard used to pin the
+    sentence "two of the three axes were not tested, they were not visible"
+    by presence, so it held that sentence in place after the sweep grew and
+    nothing was inert any more -- a guard keeping a stale claim alive rather
+    than catching it.
+    """
+    for frag in ("is a PREDICTION, not a measurement",
                  "the model being consistent, not a result",
                  "the ORDERING is the result, and the numbers are not"):
         assert frag in md, f"the page no longer says: {frag}"
+    if d["inert_axes"]:
+        assert "they were not visible" in md, (
+            f"{len(d['inert_axes'])} axes are inert and the page does not say "
+            "they were untested rather than survived")
+    else:
+        assert "Every axis in this sweep moves at least one arm" in md, (
+            "no axis is inert and the page does not say so; the previous "
+            "wording claimed two were")
+        assert "they were not visible" not in md, (
+            "the page still says axes were not visible while none is inert")
 
 
 def test_the_phenotype_is_a_stratum_and_not_an_axis(d, md):
@@ -217,15 +233,34 @@ def test_the_dominant_axis_differs_by_phenotype(d, md):
     """
     dom = d["dominant_axis"]
     assert len(dom) >= 2, dom
-    axes = {axis for axis, _ in dom.values()}
+    axes = {r["axis"] for r in dom.values()}
     assert len(axes) > 1, (
         f"the same axis dominates in every phenotype ({axes}); the page "
         "claims they differ")
-    for ph, (axis, worst) in dom.items():
-        assert worst >= 0.10, (
-            f"{ph}'s dominant axis {axis} moves nothing ({worst:.3f})")
-        assert f"**{ph}** — {axis}" in md, (
-            f"the report does not name {ph}'s dominant axis")
+    # SIGN-AWARE. The stored field was `max(abs(v))`, so this guard could not
+    # tell a 124% GAIN from a 124% loss and the page called both a "pressure".
+    # A guard that reads its expected value out of an absolute-valued field
+    # inherits that field's blindness.
+    for ph, r in dom.items():
+        assert abs(r["value"]) >= 0.10, (
+            f"{ph}'s dominant axis {r['axis']} moves nothing ({r['value']:.3f})")
+        assert r["direction"] == ("gain" if r["value"] > 0 else "loss")
+        live = d["effects_by_phenotype"][ph][r["axis"]]
+        assert live[r["arm"]] == r["value"], (
+            f"{ph}: the stored dominant value {r['value']} is not what "
+            f"{r['arm']} actually shows on {r['axis']} ({live[r['arm']]})")
+        # and it must really be the largest, ties included
+        top = max(abs(v) for ax in d["effects_by_phenotype"][ph].values()
+                  for v in ax.values())
+        assert abs(abs(r["value"]) - top) < 1e-9, (
+            f"{ph}: {r['axis']} is not the largest mover")
+        assert f"**{ph}** — {r['axis']}, a {r['direction']} of" in md, (
+            f"the report does not name {ph}'s dominant axis WITH its direction")
+        if r["tied_with"]:
+            assert "tied exactly with" in md, (
+                f"{ph}'s dominant axis ties with {r['tied_with']} and the "
+                "report presents it as a unique winner, which makes the stated "
+                "finding a property of a hard-coded list order")
 
 
 def test_the_sweep_reproduces_the_repos_own_persister_target(d):

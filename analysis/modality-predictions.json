@@ -1,0 +1,93 @@
+{
+ "P9": {
+  "published_band": [
+   1.2,
+   1.7
+  ],
+  "sampled_at_surviving_fractions": [
+   0.5,
+   0.1,
+   0.01
+  ],
+  "dose_range_gy": [
+   2.24,
+   9.38
+  ],
+  "boost_window": [
+   0.544,
+   0.948
+  ],
+  "scan_ceiling": 2.0,
+  "window_share_of_scan": 0.202,
+  "ser_by_dose": {
+   "0.544": {
+    "2": 1.405,
+    "6": 1.262
+   },
+   "0.746": {
+    "2": 1.562,
+    "6": 1.366
+   },
+   "0.948": {
+    "2": 1.72,
+    "6": 1.472
+   }
+  },
+  "low_over_high_dose_ratio": [
+   1.113,
+   1.168
+  ]
+ },
+ "P10": {
+  "reach_of_negative_pool": {
+   "0.9": 0.7714,
+   "0.6": 0.2769,
+   "0.3": 0.0947,
+   "0.1": 0.0261
+  },
+  "constants": {
+   "payload_escape_fraction": 0.5,
+   "neighbours_in_reach": 0.6,
+   "direct_kill_probability": 0.8
+  },
+  "relative_advantage": 1.3
+ },
+ "P11": {
+  "delivery_efficiency": 0.06,
+  "trafficking_barrier": 0.3,
+  "predicted_gain_from_opening_trafficking_only": 3.333,
+  "total_collapse": 632.6
+ },
+ "P12": {
+  "effective_replication": 0.63,
+  "removal_rate": 0.35,
+  "crate_threshold_ratio": 3.15,
+  "establishes": true,
+  "titres_tested": [
+   1e-06,
+   1e-05,
+   0.0001,
+   0.001,
+   0.01,
+   0.1
+  ],
+  "orders_of_magnitude": 5,
+  "cumulative_lysed_by_titre": {
+   "1e-06": 0.6417,
+   "1e-05": 0.6417,
+   "0.0001": 0.6418,
+   "0.001": 0.6418,
+   "0.01": 0.6426,
+   "0.1": 0.6501
+  },
+  "verdict_is_the_same_at_every_titre": true,
+  "lysed_spread_across_titres": 0.0084
+ },
+ "P13": {
+  "threshold_v_per_cm": 1000.0,
+  "returns_one_minus_covered": true,
+  "reads_energy_only_to_test_the_threshold": true,
+  "return_value_varies_with_energy": false,
+  "signature_takes_only_config_and_coverage": true
+ }
+}

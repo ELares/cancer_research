@@ -231,6 +231,13 @@ figs = {
     '22': ('fig25_bliss_synergy', 'Dual-pathway depletion synergy. (a) RSL3+FSP1i kills 84.1\\%, far above the 42.2\\% Bliss-independent prediction (1.99$\\times$ synergy); (b) pairwise synergy scores (SDT pairs excluded for a 100\\% single-agent ceiling). Drug potencies are estimates; the directional finding (dual-pathway $>$ single) held across the $\\pm$50\\% sensitivity sweep (Section 5).'),
     '23': ('fig26_vulnerability_window', 'The ferroptosis-sensitive treatment window. (a) After chemotherapy, RSL3 kill collapses from 42.4\\% to 1.4\\% by day 3 and to ${\\sim}0$ by day 7 as GPX4 is re-expressed, while SDT holds ${\\sim}100\\%{\\to}99.5\\%$ through day 28; (b) the RSL3 collapse tracks mean GPX4 recovery (twin axis). Defense-recovery half-times (GPX4 3 d, FSP1 7 d, NRF2 5 d, GSH 1 d) are literature-estimated, so the window durations are approximate (medium confidence) until experimentally validated.'),
     '24': ('fig27_resistance_asymmetry', 'The resistance-mechanism asymmetry (2D model, flagship). Under each tumor-microenvironment resistance mechanism, pharmacologic RSL3 collapses while physical SDT holds; each panel uses the same metric its section reports, so the figure and the text agree. (a) Hypoxia (Section 7.1): overall kill, RSL3 falls from 3.7\\% to 0.1\\% (normoxic to hypoxic) while SDT holds 91.9\\% to 87.8\\% only under the contested O$_2$-independent assumption, so the hypoxic-zone SDT result is best read as the bracket 0\\% to 86.6\\% (it collapses to roughly 0\\% if SDT\'s ROS is instead fully O$_2$-dependent, the regime the lead clinical agent occupies). (b) Stromal/CAF (Section 7.3): kill among the CAF-adjacent boundary cells, RSL3 halved from 3.0\\% to 1.5\\% while SDT barely moves (96.1\\% to 91.2\\%). (c) Acidic pH (Section 7.4): ferroptosis kills (an immune-free counter), RSL3 from 163 to 77 (a 53\\% drop) while SDT is unaffected (139,640 to 140,693). (d) Immune/ICD coupling (Section 7.2): SDT produces 521 ICD-driven immune kills versus 5 for RSL3 (104:1 in 2D). Panel (a) is computed without the immune layer (a clean O$_2$-only comparison); panels (b)-(d) share the gradient-O$_2$ plus immune-on baseline the sim runs those mechanisms under (the pH ``neutral\'\' bar reuses the stromal-off run, the only available reference). \\textbf{Confidence tiers differ per panel} (titles): the hypoxia leg is the most contested (SDT is modeled O$_2$-independent, an optimistic upper bound, Section 7.1) and the 2D immune ratio over-extrapolates (${\\sim}4{:}1$ under 3D volumetric dilution). Magnitudes rest on uncalibrated biochemistry; the cross-modality direction, not the numbers, is the result.'),
+    '25': ('fig30_modality_landscape', 'What the engine can be asked, against what the field publishes. Panel (a) is per-mechanism census volume against engine representation; panel (b) changes subject once nothing is absent, because a column emptied to zero invites a reader to take it as a result. The informative split is then APPLICABILITY -- how many mechanisms a run can actually select -- which is a harder number and a smaller one.'),
+    '26': ('fig31_modality_panel', 'Every applicable arm against the identical tumour from the identical seed, so a difference between two rows is the arm and nothing else. Bars are coloured by ROUTE rather than ranked, because a chart of kill fractions alone invites exactly the reading the analysis refuses. All but radiation\\textquotesingle s DNA channel are uncalibrated placeholders.'),
+    '27': ('fig32_modality_tme', 'What the microenvironment does to every arm, split by cell state and drawn on a SIGNED scale. Red is a loss and blue a gain, and the gains are real: clonal heterogeneity supplies a low-glutathione tail that dies while the average cell resists. Which axis bites depends on the cell state, which is why one phenotype alone reported two axes inert -- a statement about the run, not the biology.'),
+    '28': ('fig33_adoptive_barriers', 'The same CAR-T construct against a leukaemia and a solid tumour, on a log axis. No single step looks catastrophic: three barriers leave six per cent, exhaustion removes most of the remainder, and the antigen ceiling is drawn although it contributes nothing here, because it is a cap rather than a coefficient. Every barrier value is an uncalibrated placeholder.'),
+    '29': ('fig29_rare_event_resolution', 'How far down the death-rate tail a given sample size can see. Several conditions report exactly 0\\% at one million cells; because the support is unbounded, such a rate is a statement about the sample size rather than about the biology, and it can be pushed down by simulating more cells. The curve is the resolution floor, not a result.'),
+    '30': ('fig34_depth_reach', 'How far each modality reaches into tissue. (a) Kill at the surface and at 9.4 mm: photodynamic therapy falls from 92.5\\% to 0.6\\% while megavoltage radiation goes 45.4\\% to 43.7\\%, and the pharmacologic arm does not attenuate at all. (b) Retention as a share of surface kill. Both panels share one order, sorted by kill at depth, and the UNTREATED arm is the TALLEST bar in (b) at 400\\% -- a ratio of two near-zero numbers is not robustness, and the two panels must be read together or neither. Attenuation is fixed physics; every kill magnitude rests on uncalibrated biochemistry.'),
+    '31': ('fig35_calibration_verdicts', 'What a published target could settle, per arm. Drawn because the informative rows are the THREE that failed: a thermal-ablation arm whose target admits almost the whole scanned range, checkpoint blockade, whose response band constrains a product of two factors neither of which is identifiable from it, and the antibody-drug-conjugate bystander effect, which has no published target at all. ADMISSIBLE means a parameter reproduces a band, not that the arm is validated -- none of these feeds a number the quantitative chapters of this manuscript report.'),
 }
 def repl_figure(match):
     num = match.group(1)
@@ -241,8 +248,16 @@ def repl_figure(match):
     # Standalone placeholders (with description, on own line) → full figure environment
     # Inline references (no description, inside paragraph) → ref only
     if has_description:
+        # PIN THE PRINTED NUMBER TO THE MANUSCRIPT NUMBER. LaTeX numbers floats
+        # in document order, so the four Chapter 6 figures printed as 13-16
+        # while the prose beside them said 25-28 -- the deliverable was true of
+        # the markdown reading and false of the compiled PDF, and adding any
+        # float shifted every later figure's number. `setcounter` to N-1 makes
+        # the environment's own increment land on N, so `\\ref` and the literal
+        # prose agree.
         return f"""\\begin{{figure}}[ht]
 \\centering
+\\setcounter{{figure}}{{{int(num) - 1}}}
 \\includegraphics[width=\\textwidth]{{../figures/{fn}.pdf}}
 \\caption{{{cap}}}
 \\label{{fig:{fn}}}
@@ -291,6 +306,11 @@ latex = f"""\\documentclass[12pt,a4paper]{{report}}
 \\usepackage[T1]{{fontenc}}
 \\usepackage{{amsmath,amssymb}}
 \\usepackage{{graphicx}}
+% FLAT, PINNED FIGURE NUMBERS. `report.cls` sets \\thefigure to
+% \\thechapter.\\arabic{{figure}}, so the per-float \\setcounter produced 6.25
+% where the prose said 25, and NOT ONE of the 29 citations resolved -- the
+% deliverable was true of the markdown and false of the compiled PDF.
+\\renewcommand{{\\thefigure}}{{\\arabic{{figure}}}}
 \\usepackage{{hyperref}}
 % Citations use inline footnotes — no natbib/bibtex needed
 \\usepackage{{booktabs}}

@@ -102,6 +102,18 @@ def assemble(raw: dict) -> dict:
     # single-phenotype sweep reported two axes inert for that reason alone.
     effects = {label: {a: _effect(conds, a, key) for a in arms}
                for key, label in axes}
+    # WHICH CELLS ARE UNDEFINED RATHER THAN ZERO. `_effect` skips a pair whose
+    # unstressed kill is 0, because the relative change has no denominator --
+    # and `worst` then stays 0.0, which is indistinguishable from an axis that
+    # genuinely cannot move the arm. fig32's footer asserted the second reading
+    # for a whole row that was really the first.
+    undefined = {}
+    for ph in phenos:
+        pool = [c for c in conds if c.get("phenotype") == ph]
+        for _, label in axes:
+            for a in arms:
+                if all(c["arms"].get(a, 0.0) <= 0 for c in pool):
+                    undefined.setdefault(ph, {}).setdefault(label, []).append(a)
     per_pheno = {
         ph: {label: {a: _effect(conds, a, key, ph) for a in arms}
              for key, label in axes}
@@ -113,14 +125,33 @@ def assemble(raw: dict) -> dict:
     live = [label for _, label in axes if label not in inert]
     order = sorted(
         arms, key=lambda a: max((abs(effects[l][a]) for l in live), default=0.0))
-    # Which axis dominates in each phenotype -- the finding the stratification
-    # exists to produce.
-    dominant = {
-        ph: max(((l, max((abs(v) for v in per_pheno[ph][l].values()),
-                         default=0.0))
-                 for _, l in axes), key=lambda kv: kv[1])
-        for ph in phenos
-    }
+    # Which axis MOVES each phenotype most -- the finding the stratification
+    # exists to produce, and it needs three things the first version dropped.
+    #
+    # (1) THE SIGN. `max(abs(v))` reported the persister winner as a
+    #     "pressure" when it is a +124% GAIN -- clonal heterogeneity RAISES the
+    #     pharmacologic arm's kill, which the same section states four
+    #     paragraphs later. That is the sign collapse this whole analysis
+    #     retracts, surviving in the field the headline reads.
+    # (2) THE TIE. On the glycolytic side `acidic pH` and `depth` are both
+    #     exactly 1.0, and `max` returned whichever the hard-coded `axes` list
+    #     mentions first. Swapping two tuples changed the manuscript's stated
+    #     finding on identical data, so ties are reported as ties.
+    # (3) THE ARM. A magnitude with no arm attached cannot be checked against
+    #     the figure that draws it.
+    def _dominant(ph):
+        scored = []
+        for _, l in axes:
+            vals = per_pheno[ph][l]
+            arm = max(vals, key=lambda a: abs(vals[a])) if vals else None
+            scored.append((l, vals.get(arm, 0.0), arm))
+        top = max(abs(v) for _, v, _ in scored)
+        tied = [t for t in scored if abs(abs(t[1]) - top) < 1e-9]
+        label, value, arm = tied[0]
+        return {"axis": label, "value": value, "arm": arm,
+                "direction": "gain" if value > 0 else "loss",
+                "tied_with": sorted(t[0] for t in tied[1:])}
+    dominant = {ph: _dominant(ph) for ph in phenos}
     # The amplification axis, reported separately because it is not a
     # resistance pressure -- it is what an arm's death mode EARNS.
     amp = []
@@ -150,6 +181,7 @@ def assemble(raw: dict) -> dict:
     return dict(raw, amplification=amp, quality_ratio=quality_ratio,
                 arms=arms, phenotypes=phenos, effects=effects,
                 effects_by_phenotype=per_pheno, dominant_axis=dominant,
+                undefined_cells=undefined,
                 inert_axes=inert, live_axes=live, robustness_order=order,
                 inert_threshold=INERT_THRESHOLD)
 
@@ -182,11 +214,25 @@ def render(d: dict) -> str:
           "finding", ""]
     dom = d.get("dominant_axis", {})
     if len(dom) > 1:
-        pairs = "; ".join(
-            f"**{ph}** — {axis} ({abs(worst) * 100:.0f}%)"
-            for ph, (axis, worst) in sorted(dom.items()))
-        L += [f"The dominant pressure is not the same one in each cell state: "
+        def _one(ph, r):
+            tie = (" — tied exactly with " + " and ".join(r["tied_with"])
+                   + ", so which one is named is arbitrary" if r["tied_with"]
+                   else "")
+            return (f"**{ph}** — {r['axis']}, a {r['direction']} of "
+                    f"{abs(r['value']) * 100:.0f}% for `{r['arm']}`{tie}")
+        pairs = "; ".join(_one(ph, r) for ph, r in sorted(dom.items()))
+        L += [f"The axis that moves each cell state most is not the same one: "
               f"{pairs}.", "",
+              "**Read the direction, not just the size.** An earlier version "
+              "of this section called both of these a *pressure* and printed "
+              "the magnitude alone, because the field behind it was "
+              "`max(abs(v))`. One of the two is a GAIN, which makes "
+              "\"dominant pressure\" exactly wrong for it — the same sign "
+              "collapse this page retracts elsewhere, surviving in the field "
+              "the headline reads. Where two axes tie exactly, the winner was "
+              "whichever a hard-coded list mentioned first, so swapping two "
+              "entries changed the stated finding on identical data; ties are "
+              "reported as ties now.", "",
               "**That is why the first version of this sweep reported two "
               "axes INERT.** It ran one phenotype. At the glycolytic state "
               "the delivered arm kills essentially nothing, so ion trapping "
@@ -203,13 +249,19 @@ def render(d: dict) -> str:
 
     if live:
         L += ["## The ordering under the axes that bite", "",
-              "Largest relative loss first:", ""]
+              "**Largest relative MOVE first, and read the verb.** This header "
+              "said \"largest relative loss first\" over a list whose top two "
+              "entries are GAINS, because the sort is on `abs` -- the same "
+              "sign collapse this page retracts elsewhere, surviving in a "
+              "heading. An arm that GAINS is not an arm that is most exposed.",
+              ""]
         rows = sorted(arms,
                       key=lambda a: -max(abs(d["effects"][l][a]) for l in live))
         for a in rows:
             worst_l = max(live, key=lambda l: abs(d["effects"][l][a]))
             worst = d["effects"][worst_l][a]
-            verb = "loses" if worst < 0 else "GAINS"
+            verb = ("loses" if worst < 0
+                    else "GAINS" if worst > 0 else "is unmoved by")
             L.append(f"* `{a}` — {verb} {abs(worst) * 100:.0f}% of its kill, "
                      f"largest to {worst_l}")
         L += ["", "That ordering was not tuned for. It follows from the "
@@ -284,10 +336,17 @@ def render(d: dict) -> str:
               "suspiciously close to a threshold the model defines.", ""]
 
     L += ["## What this does not say", "",
-          "**Two of the three axes were not tested, they were not visible.** "
-          "That is a weaker statement than 'these arms are robust to stroma "
-          "and pH' and it is the true one. An arm can only be shown resistant "
-          "to a pressure the configuration can apply.", "",
+          (f"**{len(inert)} of the {len(axes)} axes were not tested, they were "
+           "not visible.** That is a weaker statement than 'these arms are "
+           "robust to them' and it is the true one. An arm can only be shown "
+           "resistant to a pressure the configuration can apply."
+           if inert else
+           "**Every axis in this sweep moves at least one arm.** That was not "
+           "always so: an earlier configuration left two of them inert and "
+           "this section said so unconditionally, which meant it kept saying "
+           "so after the sweep grew and nothing was inert any more. An axis "
+           "reported inert is a statement about the run, and so is an axis "
+           "reported live."), "",
           "**The immune arm's hypoxia response is a PREDICTION, not a "
           "measurement.** Oxygen does not enter its kill term; what changes "
           "is the suppressor field it meets, and that coupling is asserted by "
