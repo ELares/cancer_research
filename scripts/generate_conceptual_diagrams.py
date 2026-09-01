@@ -906,7 +906,11 @@ def fig32_modality_tme():
     # sibling function's own comment congratulates itself on avoiding.
     cb.set_ticks(np.linspace(-vmax, vmax, 5))
     cb.set_ticklabels([f"{v * 100:+.0f}" for v in np.linspace(-vmax, vmax, 5)])
-    cb.set_label("change in kill fraction (percentage points)  -  "
+    # RELATIVE change, and the unit matters: `modality_tme_report._effect`
+    # returns `(got - base) / base`, so +124 is "kills 2.24x as much", NOT a
+    # 124-point move in a fraction bounded by one -- which would be the same
+    # impossibility this chapter retracts.
+    cb.set_label("change in kill RELATIVE to the unstressed run (%)  -  "
                  "negative is resistance", fontsize=8.2)
     fig.suptitle("What the microenvironment does to every arm, by cell state",
                  fontsize=12.5, fontweight="bold", y=0.985)
@@ -916,8 +920,8 @@ def fig32_modality_tme():
              "low-defence tail that dies while the average cell resists. A "
              "blank cell is EXACTLY zero for that arm - a cell the axis "
              "cannot move at all in this run, which is a property of the run "
-             "rather than of the biology; a real effect under one percentage "
-             "point prints as <1 rather than vanishing. Every arm but "
+             "rather than of the biology; an effect too small to round to a "
+             "whole percent prints as <1 or >-1 rather than vanishing. Every arm but "
              "radiation's DNA channel is parameterised with placeholders.",
              ha="center", fontsize=7.2, color="#555", wrap=True)
     save(fig, "fig32_modality_tme")

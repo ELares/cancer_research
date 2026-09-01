@@ -113,14 +113,33 @@ def assemble(raw: dict) -> dict:
     live = [label for _, label in axes if label not in inert]
     order = sorted(
         arms, key=lambda a: max((abs(effects[l][a]) for l in live), default=0.0))
-    # Which axis dominates in each phenotype -- the finding the stratification
-    # exists to produce.
-    dominant = {
-        ph: max(((l, max((abs(v) for v in per_pheno[ph][l].values()),
-                         default=0.0))
-                 for _, l in axes), key=lambda kv: kv[1])
-        for ph in phenos
-    }
+    # Which axis MOVES each phenotype most -- the finding the stratification
+    # exists to produce, and it needs three things the first version dropped.
+    #
+    # (1) THE SIGN. `max(abs(v))` reported the persister winner as a
+    #     "pressure" when it is a +124% GAIN -- clonal heterogeneity RAISES the
+    #     pharmacologic arm's kill, which the same section states four
+    #     paragraphs later. That is the sign collapse this whole analysis
+    #     retracts, surviving in the field the headline reads.
+    # (2) THE TIE. On the glycolytic side `acidic pH` and `depth` are both
+    #     exactly 1.0, and `max` returned whichever the hard-coded `axes` list
+    #     mentions first. Swapping two tuples changed the manuscript's stated
+    #     finding on identical data, so ties are reported as ties.
+    # (3) THE ARM. A magnitude with no arm attached cannot be checked against
+    #     the figure that draws it.
+    def _dominant(ph):
+        scored = []
+        for _, l in axes:
+            vals = per_pheno[ph][l]
+            arm = max(vals, key=lambda a: abs(vals[a])) if vals else None
+            scored.append((l, vals.get(arm, 0.0), arm))
+        top = max(abs(v) for _, v, _ in scored)
+        tied = [t for t in scored if abs(abs(t[1]) - top) < 1e-9]
+        label, value, arm = tied[0]
+        return {"axis": label, "value": value, "arm": arm,
+                "direction": "gain" if value > 0 else "loss",
+                "tied_with": sorted(t[0] for t in tied[1:])}
+    dominant = {ph: _dominant(ph) for ph in phenos}
     # The amplification axis, reported separately because it is not a
     # resistance pressure -- it is what an arm's death mode EARNS.
     amp = []
@@ -182,11 +201,25 @@ def render(d: dict) -> str:
           "finding", ""]
     dom = d.get("dominant_axis", {})
     if len(dom) > 1:
-        pairs = "; ".join(
-            f"**{ph}** — {axis} ({abs(worst) * 100:.0f}%)"
-            for ph, (axis, worst) in sorted(dom.items()))
-        L += [f"The dominant pressure is not the same one in each cell state: "
+        def _one(ph, r):
+            tie = (" — tied exactly with " + " and ".join(r["tied_with"])
+                   + ", so which one is named is arbitrary" if r["tied_with"]
+                   else "")
+            return (f"**{ph}** — {r['axis']}, a {r['direction']} of "
+                    f"{abs(r['value']) * 100:.0f}% for `{r['arm']}`{tie}")
+        pairs = "; ".join(_one(ph, r) for ph, r in sorted(dom.items()))
+        L += [f"The axis that moves each cell state most is not the same one: "
               f"{pairs}.", "",
+              "**Read the direction, not just the size.** An earlier version "
+              "of this section called both of these a *pressure* and printed "
+              "the magnitude alone, because the field behind it was "
+              "`max(abs(v))`. One of the two is a GAIN, which makes "
+              "\"dominant pressure\" exactly wrong for it — the same sign "
+              "collapse this page retracts elsewhere, surviving in the field "
+              "the headline reads. Where two axes tie exactly, the winner was "
+              "whichever a hard-coded list mentioned first, so swapping two "
+              "entries changed the stated finding on identical data; ties are "
+              "reported as ties now.", "",
               "**That is why the first version of this sweep reported two "
               "axes INERT.** It ran one phenotype. At the glycolytic state "
               "the delivered arm kills essentially nothing, so ion trapping "

@@ -44,9 +44,14 @@ ones known and deliberate:
   `analysis/modality-panel.json`), so unlike the rest of the backlog they
   regenerate offline and every number on them is pinned by
   `tests/test_modality_landscape_figure.py`, `tests/test_modality_panel.py`
-  and `tests/test_chapter6_figures.py` -- the last of which reads the numbers
-  back out of the rendered PDF and compares them to the artifact, which is the
-  only check here that would catch a figure drawing the wrong value. That
+  and `tests/test_chapter6_figures.py` -- the last of which reads the numbers,
+  their POSITIONS and the drawn colours back out of the rendered PDF and
+  compares them to the artifact. That is narrower than it sounds and the
+  narrowness is the point: a reviewer defeated the first version of those
+  checks ten ways, including reversing every row so each value landed on the
+  wrong arm, because they collected drawn numbers into a SET. What is pinned
+  is cell identity, sign, visible refusal text and colour direction -- not
+  every property a figure has. That
   sentence was FALSE when written: it claimed all four were pinned while no
   test named fig32 or fig33 at all, and multiplying every drawn cell in fig32
   by a thousand left the suite green. The PDFs are still not byte-gated here. Eight of the 13 are drawn by `generate_figures.py` from
@@ -743,7 +748,7 @@ def _has_date(data) -> bool:
 
     THAT IS THE ONE OF TWO PLACES A PDF DATE LIVES. An XMP packet can carry
     `xmp:CreateDate` with no Info entry, and this returns False for it, as the
-    byte scan also did. Checked: none of the 31 committed figure PDFs carries
+    byte scan also did. Checked: none of the 34 committed figure PDFs carries
     any XMP packet, so the blind spot is not live -- but it is a blind spot,
     not the "any parser" the sentence used to claim. An encrypted PDF reports
     no metadata and also returns False silently; a non-PDF raises loudly. Measured on

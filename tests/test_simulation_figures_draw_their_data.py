@@ -383,7 +383,7 @@ def _panel_boxes(stem):
         labels, so panel (b) cannot be located" rather than reading one panel
         as two.
       * THE FALLBACK BELOW IS THEREFORE UNREACHABLE ON EVERY FIGURE HERE. It
-        is gated on zero boxes, and none of the 30 committed figures clips
+        is gated on zero boxes, and none of the 34 committed figures clips
         nothing. It is kept for a figure that draws only text, and this note
         says plainly that nothing exercises it -- which is the honest status,
         not a claim that it works.

@@ -235,7 +235,7 @@ figs = {
     '26': ('fig31_modality_panel', 'Every applicable arm against the identical tumour from the identical seed, so a difference between two rows is the arm and nothing else. Bars are coloured by ROUTE rather than ranked, because a chart of kill fractions alone invites exactly the reading the analysis refuses. All but radiation\\textquotesingle s DNA channel are uncalibrated placeholders.'),
     '27': ('fig32_modality_tme', 'What the microenvironment does to every arm, split by cell state and drawn on a SIGNED scale. Red is a loss and blue a gain, and the gains are real: clonal heterogeneity supplies a low-glutathione tail that dies while the average cell resists. Which axis bites depends on the cell state, which is why one phenotype alone reported two axes inert -- a statement about the run, not the biology.'),
     '28': ('fig33_adoptive_barriers', 'The same CAR-T construct against a leukaemia and a solid tumour, on a log axis. No single step looks catastrophic: three barriers leave six per cent, exhaustion removes most of the remainder, and the antigen ceiling is drawn although it contributes nothing here, because it is a cap rather than a coefficient. Every barrier value is an uncalibrated placeholder.'),
-    '29': ('fig29_rare_event_resolution', 'How far down the death-rate tail a given sample size can see. Several conditions report exactly 0\\%% at one million cells; because the support is unbounded, such a rate is a statement about the sample size rather than about the biology, and it can be pushed down by simulating more cells. The curve is the resolution floor, not a result.'),
+    '29': ('fig29_rare_event_resolution', 'How far down the death-rate tail a given sample size can see. Several conditions report exactly 0\\% at one million cells; because the support is unbounded, such a rate is a statement about the sample size rather than about the biology, and it can be pushed down by simulating more cells. The curve is the resolution floor, not a result.'),
 }
 def repl_figure(match):
     num = match.group(1)
@@ -304,6 +304,11 @@ latex = f"""\\documentclass[12pt,a4paper]{{report}}
 \\usepackage[T1]{{fontenc}}
 \\usepackage{{amsmath,amssymb}}
 \\usepackage{{graphicx}}
+% FLAT, PINNED FIGURE NUMBERS. `report.cls` sets \\thefigure to
+% \\thechapter.\\arabic{{figure}}, so the per-float \\setcounter produced 6.25
+% where the prose said 25, and NOT ONE of the 29 citations resolved -- the
+% deliverable was true of the markdown and false of the compiled PDF.
+\\renewcommand{{\\thefigure}}{{\\arabic{{figure}}}}
 \\usepackage{{hyperref}}
 % Citations use inline footnotes — no natbib/bibtex needed
 \\usepackage{{booktabs}}

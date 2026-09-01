@@ -73,7 +73,9 @@ The head-to-head panel asks what each arm does to a NAIVE tumour. This asks the 
 
 ## Which axis bites depends on the phenotype, and that is the finding
 
-The dominant pressure is not the same one in each cell state: **glycolytic** — acidic pH (100%); **persister** — clonal heterogeneity (124%).
+The axis that moves each cell state most is not the same one: **glycolytic** — acidic pH, a loss of 100% for `AntibodyDrugConjugate` — tied exactly with depth, so which one is named is arbitrary; **persister** — clonal heterogeneity, a gain of 124% for `AntibodyDrugConjugate`.
+
+**Read the direction, not just the size.** An earlier version of this section called both of these a *pressure* and printed the magnitude alone, because the field behind it was `max(abs(v))`. One of the two is a GAIN, which makes "dominant pressure" exactly wrong for it — the same sign collapse this page retracts elsewhere, surviving in the field the headline reads. Where two axes tie exactly, the winner was whichever a hard-coded list mentioned first, so swapping two entries changed the stated finding on identical data; ties are reported as ties now.
 
 **That is why the first version of this sweep reported two axes INERT.** It ran one phenotype. At the glycolytic state the delivered arm kills essentially nothing, so ion trapping had nothing to scale and the antioxidant buffer was swamped by an order-of-magnitude ROS insult — and both axes looked dead when what was dead was the configuration's ability to see them. Running the persister state as well, the state this project's thesis is actually about, makes both bite.
 

@@ -3,6 +3,11 @@
 \usepackage[T1]{fontenc}
 \usepackage{amsmath,amssymb}
 \usepackage{graphicx}
+% FLAT, PINNED FIGURE NUMBERS. `report.cls` sets \thefigure to
+% \thechapter.\arabic{figure}, so the per-float \setcounter produced 6.25
+% where the prose said 25, and NOT ONE of the 29 citations resolved -- the
+% deliverable was true of the markdown and false of the compiled PDF.
+\renewcommand{\thefigure}{\arabic{figure}}
 \usepackage{hyperref}
 % Citations use inline footnotes — no natbib/bibtex needed
 \usepackage{booktabs}
@@ -824,7 +829,7 @@ The model is a hypothesis-testing tool, not a digital twin of a tumor. It identi
 \centering
 \setcounter{figure}{28}
 \includegraphics[width=\textwidth]{../figures/fig29_rare_event_resolution.pdf}
-\caption{How far down the death-rate tail a given sample size can see. Several conditions report exactly 0\%% at one million cells; because the support is unbounded, such a rate is a statement about the sample size rather than about the biology, and it can be pushed down by simulating more cells. The curve is the resolution floor, not a result.}
+\caption{How far down the death-rate tail a given sample size can see. Several conditions report exactly 0\% at one million cells; because the support is unbounded, such a rate is a statement about the sample size rather than about the biology, and it can be pushed down by simulating more cells. The curve is the resolution floor, not a result.}
 \label{fig:fig29_rare_event_resolution}
 \end{figure}
 
@@ -884,7 +889,7 @@ The panel asks what each arm does to a naive tumour. The question this project a
 
 `sim-modality-panel --tme-sweep` runs the full factorial --- hypoxia, stromal shielding, acidic pH, depth and clonal heterogeneity, across two cell states --- through the SAME helpers the ferroptosis work uses, so no arm receives a mechanism-specific adjustment. A modality comparison means nothing if the environment is not identical.
 
-\textbf{Which axis bites depends on the cell state, and that is the finding} (Figure 27). The dominant pressure is acidic pH in the glycolytic state (100\%); clonal heterogeneity in the persister state (124\%). That sentence read "hypoxia ... (77\%); clonal heterogeneity ... (121\%)" until Figure 27 was drawn beside it and disagreed: the axis was wrong, and 121\% was the retracted absolute-value artefact this same section calls impossible two paragraphs below. A figure that contradicts the sentence it illustrates is the cheapest review this project has. An earlier version of this sweep ran one phenotype and reported two axes inert --- correctly for that run, and misleadingly, because what was inert was the configuration's ability to see them. At the glycolytic state a delivered drug kills essentially nothing, so ion trapping has nothing to scale and an antioxidant buffer is swamped by an order-of-magnitude ROS insult. In the persister state, which is the state this project's thesis is about, both bite hard. An axis reported inert is a statement about the run and not about the biology.
+\textbf{Which axis bites depends on the cell state, and that is the finding} (Figure 27). The axis that moves each cell state most is not the same one, and the DIRECTION is half the finding: in the glycolytic state it is acidic pH, a loss of 100\% for `AntibodyDrugConjugate` --- tied exactly with depth, so which of the two is named is arbitrary; in the persister state it is clonal heterogeneity, a gain of 124\% for `AntibodyDrugConjugate`. This sentence has now been wrong twice in the same way. It first read "hypoxia (77\%); clonal heterogeneity (121\%)", where the axis was wrong and 121\% was the retracted absolute-value artefact. The correction fixed the digits and left the operation: the field behind it was still `max(abs(v))`, so it called a GAIN a \textit{pressure} and broke an exact tie by the order of a hard-coded list. Changing a number is not the same as changing what produced it. An earlier version of this sweep ran one phenotype and reported two axes inert --- correctly for that run, and misleadingly, because what was inert was the configuration's ability to see them. At the glycolytic state a delivered drug kills essentially nothing, so ion trapping has nothing to scale and an antioxidant buffer is swamped by an order-of-magnitude ROS insult. In the persister state, which is the state this project's thesis is about, both bite hard. An axis reported inert is a statement about the run and not about the biology.
 
 Under the axes that bite, all nine arms rank AntibodyDrugConjugate (gains 124\%), RSL3 (gains 116\%), PDT (loses 100\%), SDT (loses 77\%), AdoptiveCell (loses 56\%) and so on --- and the ordering was not tuned for. A delivered drug is most exposed, because everything between the vessel and the target can stop it. Light dies fastest with depth, losing 100\% where megavoltage photons lose 1\%, which is the manuscript's tissue-access argument appearing inside a resistance sweep rather than beside one. An arm whose lethality depends on oxygen comes next; an arm whose dose is merely modified by oxygen moves less, exactly as an enhancement ratio implies. A threshold arm does not move at all, because a destroyed cell does not care about any of it --- and reporting that as robustness would be circular.
 
@@ -931,6 +936,7 @@ Under the axes that bite, all nine arms rank AntibodyDrugConjugate (gains 124\%)
 \caption{The same CAR-T construct against a leukaemia and a solid tumour, on a log axis. No single step looks catastrophic: three barriers leave six per cent, exhaustion removes most of the remainder, and the antigen ceiling is drawn although it contributes nothing here, because it is a cap rather than a coefficient. Every barrier value is an uncalibrated placeholder.}
 \label{fig:fig33_adoptive_barriers}
 \end{figure}
+
 \chapter{Drug Combinations and Penetration}
 
 \section{Spatial Tumor Simulation: Depth-Dependent Energy Deposition}
