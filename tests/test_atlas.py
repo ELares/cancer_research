@@ -2123,3 +2123,75 @@ def test_the_parser_drops_the_mesh_qualifier_axis_and_that_is_pinned(tmp_path):
         "welcome, but it changes topic attribution inside the census: state "
         "which committed atlas artifacts were recomputed, and update "
         "`analysis/atlas-ingest-sensitivity.md`, before relaxing this test")
+
+
+def test_reparse_writes_qualifiers_side_by_side_and_leaves_records_alone(tmp_path):
+    """#722 step 2: the CODE half, which needs no 66 GB.
+
+    The issue's step 2 has two parts and only one is expensive. The software
+    -- read the qualifier axis, write it somewhere else, re-read files the
+    normal path skips -- costs nothing; running it over 1,590 shards costs
+    roughly four hours and 66 GB. This drives the software over a synthetic
+    shard so the mechanism is verified now and what remains is an operator
+    action rather than an engineering question.
+
+    Three properties, and each is a way the naive version would have gone
+    wrong:
+
+    - `mesh_qual` appears ONLY with `with_qualifiers=True`, so `records/`
+      stays byte-comparable with the frozen census every committed atlas
+      figure was computed on.
+    - The DESCRIPTOR is unchanged either way. Qualifiers change topic
+      ATTRIBUTION inside the census, never MEMBERSHIP -- selection keys on
+      descriptor UIs, and #722's original title claimed otherwise.
+    - Each qualifier keeps its own `MajorTopicYN`, which is what separates
+      "this paper is about the radiotherapy of lung cancer" from a passing
+      mention. Dropping it would make the axis far less useful than the
+      measured gains (surgery +14.0 points) suggest.
+    """
+    c04 = {"D008175": "Lung Neoplasms"}
+    path = _write_baseline(tmp_path, [
+        _article_xml("42", ["D008175"], qualifiers={
+            "D008175": [("Q000532", "radiotherapy"), ("Q000601", "surgery")]}),
+    ])
+
+    plain = list(ab.parse_articles(path, c04))
+    assert len(plain) == 1
+    assert "mesh_qual" not in plain[0], (
+        "the default parse now carries qualifiers, so `records/` would stop "
+        "matching the frozen census")
+
+    rich = list(ab.parse_articles(path, c04, with_qualifiers=True))
+    assert len(rich) == 1
+    quals = rich[0]["mesh_qual"]
+    assert [q["q"] for q in quals] == ["Q000532", "Q000601"]
+    assert {q["d"] for q in quals} == {"D008175"}
+    assert all(q["major"] for q in quals), (
+        "MajorTopicYN was dropped; the axis loses the flag that makes it worth "
+        "the re-parse")
+
+    # MEMBERSHIP is identical -- only attribution grows.
+    assert plain[0]["cancer_ui"] == rich[0]["cancer_ui"] == ["D008175"]
+    assert plain[0]["cancer_basis"] == rich[0]["cancer_basis"] == "C04"
+    assert {k: v for k, v in rich[0].items() if k != "mesh_qual"} == plain[0], (
+        "the re-parse changed a field other than `mesh_qual`, so it would move "
+        "numbers the census already published")
+
+
+def test_reparse_targets_its_own_directory_and_the_manifest_names():
+    """The two properties that make a re-parse SAFE, read from the source.
+
+    `:518` skipped already-parsed files, so there was no re-parse mode at all;
+    `:528` rewrote `records/` in place, and that directory is what every
+    committed atlas figure was computed on. A re-parse that inherited either
+    behaviour would either do nothing or silently move every published number.
+    """
+    src = (Path(ab.__file__)).read_text()
+    assert 'root / ("records_qual" if args.reparse' in src, (
+        "--reparse no longer writes to its own directory")
+    assert 'todo = [f for f in man["files"] if man["files"][f].get("parsed")]' in src, (
+        "--reparse no longer pins its work list to the manifest; taking the "
+        "remote listing instead would change the denominator if it has drifted")
+    assert 'man.setdefault("reparsed_qual", {})' in src, (
+        "--reparse writes into the manifest's `files` entries again, which "
+        "rewrites the provenance of the frozen surface it exists to leave alone")

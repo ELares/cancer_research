@@ -348,7 +348,7 @@ def _text(node) -> str:
     return re.sub(r"\s+", " ", "".join(node.itertext())).strip() if node is not None else ""
 
 
-def parse_articles(path: Path, c04: dict):
+def parse_articles(path: Path, c04: dict, with_qualifiers: bool = False):
     """Yield one record per CANCER article in a baseline file.
 
     An article is cancer if any of its MeSH descriptor UIs is in the C04 set.
@@ -365,12 +365,32 @@ def parse_articles(path: Path, c04: dict):
                 if cit is None:
                     continue
                 mesh_uis, mesh_labels, major = [], [], []
-                for mh in cit.findall("./MeshHeadingList/MeshHeading/DescriptorName"):
+                mesh_qual = []
+                for head in cit.findall("./MeshHeadingList/MeshHeading"):
+                    mh = head.find("DescriptorName")
+                    if mh is None:
+                        continue
                     ui = mh.get("UI", "")
                     mesh_uis.append(ui)
                     mesh_labels.append(mh.text or "")
                     if mh.get("MajorTopicYN") == "Y":
                         major.append(ui)
+                    if not with_qualifiers:
+                        continue
+                    # THE SECOND MeSH AXIS (#722). `Lung Neoplasms/radiotherapy`
+                    # was stored as `Lung Neoplasms`, so the census carried one
+                    # of MeSH's two axes. Each qualifier keeps its own
+                    # MajorTopicYN, which is the flag that distinguishes "this
+                    # paper is ABOUT the radiotherapy of lung cancer" from a
+                    # passing mention -- dropping it would make the axis much
+                    # less useful than the measured gains suggest.
+                    for qn in head.findall("QualifierName"):
+                        mesh_qual.append({
+                            "d": ui,
+                            "q": qn.get("UI", ""),
+                            "label": qn.text or "",
+                            "major": qn.get("MajorTopicYN") == "Y",
+                        })
                 hits = [u for u in mesh_uis if u in c04]
                 adj = [u for u in mesh_uis if u in ADJACENT_DESCRIPTORS]
                 if not hits and not adj:
@@ -403,6 +423,10 @@ def parse_articles(path: Path, c04: dict):
                     "mesh_ui": mesh_uis,
                     "mesh": mesh_labels,
                     "mesh_major": major,
+                    # Present ONLY under --reparse, so `records/` stays
+                    # byte-comparable with the frozen census every committed
+                    # atlas figure was computed on.
+                    **({"mesh_qual": mesh_qual} if with_qualifiers else {}),
                     "cancer_ui": hits,
                     "adjacent_ui": adj,
                     # "C04" = a true Neoplasms-tree descriptor; "adjacent" =
@@ -522,6 +546,10 @@ def main() -> None:
                     help="ingest the daily update files instead of the annual "
                          "baseline, into records_updates/ so the census is not "
                          "mutated")
+    ap.add_argument("--reparse", action="store_true",
+                    help="re-parse already-ingested baseline files WITH the "
+                         "MeSH qualifier axis into records_qual/, side by "
+                         "side; records/ is never touched (#722)")
     ap.add_argument("--recount-updates", action="store_true",
                     help="recompute the new/revised split of every already-"
                          "parsed update file from the records on disk, and "
@@ -578,7 +606,25 @@ def main() -> None:
     url = UPDATES_URL if args.updates else BASELINE_URL
     files = list_baseline_files(url)
     print(f"{'update' if args.updates else 'baseline'} files available: {len(files)}")
-    todo = [f for f in files if not man["files"].get(f, {}).get("parsed")]
+    if args.reparse:
+        # PINNED TO THE MANIFEST, not to whatever the server lists today. A
+        # composition-matched re-parse has to cover exactly the files the
+        # census was built from -- if the remote listing has drifted, taking
+        # it would silently change the denominator, and #722's whole point is
+        # that qualifiers change ATTRIBUTION and must not change membership.
+        todo = [f for f in man["files"] if man["files"][f].get("parsed")]
+        missing = [f for f in todo if f not in set(files)]
+        if missing:
+            print(f"WARNING: {len(missing)} manifest file(s) are no longer "
+                  f"offered by the remote, e.g. {missing[:3]}. The 2027 "
+                  "baseline replaces these; a composition-matched re-parse is "
+                  "no longer possible for them.", file=sys.stderr)
+        already = root / "records_qual"
+        done = {f.name for f in already.glob("*.jsonl.gz")} if already.exists() else set()
+        todo = [f for f in todo
+                if f.replace(".xml.gz", "") + ".jsonl.gz" not in done]
+    else:
+        todo = [f for f in files if not man["files"].get(f, {}).get("parsed")]
     if args.limit:
         todo = todo[:args.limit]
     print(f"to process this run: {len(todo)}")
@@ -588,7 +634,14 @@ def main() -> None:
     # committed atlas figure was computed on, and an update file carries
     # revisions of records already in it, so merging in place would both mutate
     # a frozen surface and double-count.
-    rec_dir = root / ("records_updates" if args.updates else "records")
+    # `--reparse` writes to its OWN directory and re-reads files the normal
+    # path skips. Both properties are the point: `:518` skips parsed files so
+    # there was no re-parse mode at all, and `records/` is rewritten in place
+    # by the normal path -- and that directory is what every committed atlas
+    # figure was computed on, so re-parsing into it would silently move every
+    # published number.
+    rec_dir = root / ("records_qual" if args.reparse
+                      else "records_updates" if args.updates else "records")
     rec_dir.mkdir(parents=True, exist_ok=True)
 
     known = census_pmids(root, include_updates=True) if args.updates else set()
@@ -604,7 +657,7 @@ def main() -> None:
         n = new_here = 0
         seen_here = []
         with gzip.open(out, "wt", encoding="utf-8") as fh:
-            for rec in parse_articles(path, c04):
+            for rec in parse_articles(path, c04, with_qualifiers=args.reparse):
                 fh.write(json.dumps(rec, ensure_ascii=False) + "\n")
                 n += 1
                 if args.updates:
@@ -620,7 +673,16 @@ def main() -> None:
                           "revised_pmids": n - new_here})
             fresh += new_here
             revised += n - new_here
-        man["files"][name] = entry
+        if args.reparse:
+            # The manifest describes `records/`. A re-parse writes elsewhere,
+            # so it records its own progress under a separate key rather than
+            # overwriting the census's own entry -- otherwise a re-parse would
+            # rewrite the provenance of the frozen surface it exists to leave
+            # alone.
+            man.setdefault("reparsed_qual", {})[name] = {
+                "cancer": n, "records": out.name}
+        else:
+            man["files"][name] = entry
         save_manifest(root, man)
         extra = (f", {new_here:,} new / {n - new_here:,} revised"
                  if args.updates else "")

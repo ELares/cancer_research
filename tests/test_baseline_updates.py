@@ -113,8 +113,17 @@ def test_updates_never_write_into_the_census_directory():
     assert isinstance(rec[0].value, ast.BinOp) and isinstance(rec[0].value.right, ast.IfExp), (
         "rec_dir is no longer chosen by a conditional on the update flag")
     names = {c.value for c in ast.walk(rec[0].value) if isinstance(c, ast.Constant)}
-    assert names == {"records_updates", "records"}, (
-        f"rec_dir chooses between {names}, not records_updates/records")
+    # `records_qual` joined this set with #722's `--reparse`, and the SAME
+    # argument that put `records_updates` here is why: a run that is not the
+    # census must not write into the directory the census lives in. What this
+    # guard protects is that every branch is a DIFFERENT directory -- so a
+    # fourth mode may be added, and a mode that aims at `records/` may not.
+    assert names == {"records_updates", "records", "records_qual"}, (
+        f"rec_dir chooses between {names}; expected records / records_updates "
+        "/ records_qual. Adding a mode is fine -- pointing one at `records/` "
+        "is not, because that is the frozen surface every committed atlas "
+        "figure was computed on")
+    assert len(names) == len({n for n in names}), "two modes share a directory"
 
     # ... AND the thing actually opened for writing must derive from rec_dir.
     out = [a for a in ast.walk(main_fn) if isinstance(a, ast.Assign)
