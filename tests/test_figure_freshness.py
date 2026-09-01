@@ -33,22 +33,23 @@ ones known and deliberate:
 - **No PNG content, at all.** The eight census PNGs are checked for existence
   and nothing else. Replacing one with an unrelated image passes. PNG bytes are
   not portable, and no portable comparison is implemented.
-- **Most non-census PDFs.** Twenty-four committed figures come from other
+- **Most non-census PDFs.** 26 committed figures come from other
   generators. Five of them -- the corpus-derived ones, whose inputs are tracked
   -- are regenerated and gated by `tests/test_figure_caption_statistics.py`;
-  the other nineteen are not, and eleven of those nineteen `FIGURES.yaml` marks
-  `type: simulation`. Two of the nineteen are different in kind:
-  `fig30_modality_landscape` and `fig31_modality_panel` read COMMITTED
+  the other 21 are not, and 13 of those 21 `FIGURES.yaml` marks
+  `type: simulation`. FOUR of them are different in kind:
+  `fig30_modality_landscape`, `fig31_modality_panel`, `fig32_modality_tme` and
+  `fig33_adoptive_barriers` read COMMITTED
   artifacts (`analysis/modality-coverage.json`,
   `analysis/modality-panel.json`), so unlike the rest of the backlog they
   regenerate offline and every number on them is pinned by
   `tests/test_modality_landscape_figure.py` and `tests/test_modality_panel.py`
   -- including a parse of each generator that rejects any typed integer above
-  a thousand -- even though the PDFs themselves are not byte-gated here. Eight of the eleven are drawn by `generate_figures.py` from
+  a thousand -- even though the PDFs themselves are not byte-gated here. Eight of the 13 are drawn by `generate_figures.py` from
   `simulations/output/`, which is gitignored, so CI cannot regenerate them at
   all until #788's tracking decision is made; they were regenerated in the #790
   pass and no longer embed a creation date, which is necessary for a freshness
-  check and not sufficient for one. The other three are not blocked that way, and the first
+  check and not sufficient for one. The other five are not blocked that way, and the first
   version of this bullet wrongly said they were:
   `fig29_rare_event_resolution` reads the TRACKED `analysis/rare-event-sweep.jsonl`
   through a deterministic generator, so regenerating it once -- which it
