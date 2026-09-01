@@ -58,7 +58,7 @@ literature and describing a search.
 - **ferroptosis-core library** (MIT, with Python bindings) — embeddable ferroptosis biochemistry engine; module list and current unit-test count in [`simulations/ferroptosis-core/README.md`](simulations/ferroptosis-core/README.md)
 - **Calibration infrastructure** linking simulation parameters to published experimental data
 - **[Model card](MODEL_CARD.md)** with the simulation suite's intended use, out-of-scope cases, assumptions/scope checklist, and per-layer calibration/validation status (the honest "broad but mostly uncalibrated" accounting, consolidated from [`CALIBRATION_STATUS.md`](simulations/calibration/CALIBRATION_STATUS.md))
-- **Book-format manuscript (~115 pp)** with 12 chapters, 3 appendices, and 28 figures (~60,500 words), cross-referenced against all analysis outputs and indexed in [`FIGURES.yaml`](FIGURES.yaml)
+- **Book-format manuscript (~115 pp)** with 12 chapters, 3 appendices, and 28 figures (~60,800 words), cross-referenced against all analysis outputs and indexed in [`FIGURES.yaml`](FIGURES.yaml)
 
 ## What the work is actually about
 
