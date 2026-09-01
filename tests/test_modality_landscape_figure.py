@@ -129,11 +129,12 @@ def test_the_manuscript_section_matches_the_measurement(d, manuscript):
             "nothing is absent any more and the section still reports an "
             "absence count; it has to move to the applicability count")
         assert "Presence is not applicability" in manuscript
-        assert "no mechanism remains absent, but fifteen of sixteen remain " \
-               "inapplicable" in manuscript
-        assert len(treat) == 1, (
-            f"{len(treat)} mechanisms are applicable and the section still "
-            "says one")
+        n_mod = len(d["rows"]) - len(treat)
+        assert f"{len(treat)} of the sixteen can be APPLIED" in manuscript, (
+            f"{len(treat)} mechanisms are applicable and the section says "
+            "otherwise")
+        assert (f"no mechanism remains absent, but {n_mod} of sixteen remain "
+                "inapplicable") in manuscript
         # The opening figure must still be quoted, because it is what makes
         # the closing one mean anything.
         assert "thirteen had **no engine representation at all**" in manuscript
@@ -147,7 +148,7 @@ def test_the_section_keeps_the_refusal_and_the_limits(manuscript):
     for frag in (
         "Volume is not importance, and the table is not a ranking",
         "arms is not parity",
-        "not wired into any binary",
+        "uncalibrated placeholders",
         "chemotherapy and radiotherapy are not even in the taxonomy",
     ):
         assert frag in manuscript, f"the section no longer says: {frag}"

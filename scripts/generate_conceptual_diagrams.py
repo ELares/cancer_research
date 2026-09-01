@@ -714,6 +714,110 @@ def fig30_modality_landscape():
     save(fig, "fig30_modality_landscape")
 
 
+# ── Figure 31: the modality panel ─────────────────────────────────────
+
+def fig31_modality_panel():
+    """Every applicable arm on one tumour, grouped by WHAT KILLS.
+
+    The grouping is the figure. A bar chart of kill fractions alone would
+    invite exactly the reading `analysis/modality-panel.md` refuses -- a
+    ranking of therapies -- so the bars are coloured by ROUTE and the panel
+    beside them shows that most arms no longer go through the ferroptosis
+    engine at all. That is the answer to the criticism this campaign started
+    from, and it is a structural claim rather than an efficacy one.
+
+    Every number is read from `analysis/modality-panel.json`.
+    """
+    src = Path(__file__).resolve().parent.parent / "analysis" / "modality-panel.json"
+    if not src.exists():
+        print("  fig31: analysis/modality-panel.json missing - skipping")
+        return
+    d = json.loads(src.read_text())
+    arms = sorted(d["arms"], key=lambda a: a["kill_fraction"])
+
+    def route_key(r):
+        if "ferroptosis engine" in r:
+            return "ferroptosis engine"
+        if "DNA damage" in r:
+            return "DNA damage"
+        if "threshold" in r:
+            return "threshold ablation"
+        if "immune" in r or "effectors" in r or "ICD" in r:
+            return "immune"
+        return "ferroptosis payload, delivered"
+
+    palette = {
+        "ferroptosis engine": COLORS["sdt"],
+        "DNA damage": COLORS["radiation"],
+        "threshold ablation": COLORS["parp"],
+        "immune": COLORS["checkpoint"],
+        "ferroptosis payload, delivered": COLORS["nano"],
+    }
+
+    fig, (axA, axB) = plt.subplots(
+        1, 2, figsize=(13, 6), gridspec_kw={"width_ratios": [1.7, 1]})
+    fig.patch.set_facecolor("white")
+
+    y = np.arange(len(arms))
+    vals = [a["kill_fraction"] * 100 for a in arms]
+    cols = [palette[route_key(a["route"])] for a in arms]
+    axA.barh(y, vals, color=cols, edgecolor="black", linewidth=0.4)
+    axA.set_yticks(y)
+    axA.set_yticklabels([a["arm"] for a in arms], fontsize=8.5)
+    axA.set_xlabel("Cells killed (%) - NOT a ranking of therapies", fontsize=9)
+    axA.set_title("(a) Every applicable arm, same tumour, same seed",
+                  fontsize=10, fontweight="bold")
+    axA.set_facecolor(COLORS["bg"])
+    axA.set_xlim(0, 100)
+    for i, a in enumerate(arms):
+        axA.text(a["kill_fraction"] * 100 + 1.2, i,
+                 f"{a['kill_fraction'] * 100:.2f}%", va="center", fontsize=7.5,
+                 color="#444")
+    handles = [mpatches.Patch(facecolor=c, edgecolor="black", linewidth=0.4,
+                              label=k)
+               for k, c in palette.items()]
+    axA.legend(handles=handles, fontsize=7.5, loc="lower right",
+               framealpha=0.95, title="what kills", title_fontsize=8)
+
+    # (b) the structural claim: how many arms go through the engine this
+    # repository was built around.
+    ferro = d["n_ferroptosis_routed"]
+    other = d["n_other_routes"]
+    axB.bar([0, 1], [ferro, other], 0.5,
+            color=[COLORS["sdt"], COLORS["checkpoint"]],
+            edgecolor="black", linewidth=0.5)
+    for i, v in enumerate([ferro, other]):
+        axB.text(i, v + 0.15, str(v), ha="center", fontsize=13,
+                 fontweight="bold")
+    axB.set_xticks([0, 1])
+    axB.set_xticklabels(["through the\nferroptosis engine",
+                         "through some\nother route"], fontsize=9)
+    axB.set_ylabel("Arms", fontsize=9)
+    axB.set_ylim(0, max(ferro, other) * 1.4)
+    axB.set_title(f"(b) {len(d['distinct_routes'])} distinct routes to death",
+                  fontsize=10, fontweight="bold")
+    axB.set_facecolor(COLORS["bg"])
+    axB.text(0.5, 0.72,
+             "A reader opening this repository\nbefore this campaign would have\n"
+             "found ONE route and four arms.",
+             transform=axB.transAxes, ha="center", va="center", fontsize=8.5,
+             color="#444", style="italic",
+             bbox=dict(boxstyle="round,pad=0.45", fc="white", ec="#BBB",
+                       alpha=0.95))
+
+    fig.suptitle("Ten arms, seven routes: what the engine can now be asked",
+                 fontsize=12, fontweight="bold", y=0.99)
+    fig.text(0.5, 0.005,
+             "NOT a ranking. Every kill fraction is a function of the "
+             "parameters the arm was given, and all but radiation's DNA "
+             "channel are placeholders - see CALIBRATION_STATUS.md. SDT and "
+             "PDT coincide because this panel is depth-free and their "
+             "exogenous-ROS parameters are equal by default.",
+             ha="center", fontsize=7.2, color="#555", wrap=True)
+    fig.tight_layout(rect=[0, 0.04, 1, 0.96])
+    save(fig, "fig31_modality_panel")
+
+
 if __name__ == "__main__":
     print("Generating conceptual diagrams...")
     fig18_hypoxia()
@@ -723,4 +827,5 @@ if __name__ == "__main__":
     fig22_flowchart()
     fig23_census_flow()
     fig30_modality_landscape()
+    fig31_modality_panel()
     print("Done.")

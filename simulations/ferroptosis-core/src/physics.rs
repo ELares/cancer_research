@@ -159,6 +159,20 @@ pub fn local_ros_multiplier(
         Treatment::Radiation => {
             crate::radiation::intensity_at_depth(z_um, crate::radiation::MU_6MV_SOFT_TISSUE_PER_CM)
         }
+        // These arms have no ENERGY-vs-depth profile of the kind this
+        // function returns, and giving them one would be a fabrication: the
+        // immune arms deliver CELLS rather than energy, ablation is a
+        // threshold with a sharp geometric margin rather than an attenuation
+        // curve, and an ADC's depth behaviour is DRUG TRANSPORT
+        // (`drug_transport::concentration_at_distance`) rather than beam
+        // physics. `1.0` means "this function does not describe the arm", and
+        // the multiplier is only ever read for arms that scale
+        // `exo_ros_peak`, which none of these do.
+        Treatment::Immunotherapy
+        | Treatment::AdoptiveCell
+        | Treatment::OncolyticVirus
+        | Treatment::Ablation
+        | Treatment::AntibodyDrugConjugate => 1.0,
     }
 }
 
@@ -221,6 +235,20 @@ pub fn local_ros_multiplier_3d(radial_depth_um: f64, tx: Treatment, params: &Spa
         Treatment::Radiation => {
             crate::radiation::intensity_at_depth(z_um, crate::radiation::MU_6MV_SOFT_TISSUE_PER_CM)
         }
+        // These arms have no ENERGY-vs-depth profile of the kind this
+        // function returns, and giving them one would be a fabrication: the
+        // immune arms deliver CELLS rather than energy, ablation is a
+        // threshold with a sharp geometric margin rather than an attenuation
+        // curve, and an ADC's depth behaviour is DRUG TRANSPORT
+        // (`drug_transport::concentration_at_distance`) rather than beam
+        // physics. `1.0` means "this function does not describe the arm", and
+        // the multiplier is only ever read for arms that scale
+        // `exo_ros_peak`, which none of these do.
+        Treatment::Immunotherapy
+        | Treatment::AdoptiveCell
+        | Treatment::OncolyticVirus
+        | Treatment::Ablation
+        | Treatment::AntibodyDrugConjugate => 1.0,
     }
 }
 

@@ -5,13 +5,23 @@
   "RSL3",
   "SDT",
   "PDT",
-  "Radiation"
+  "Radiation",
+  "Immunotherapy",
+  "AdoptiveCell",
+  "OncolyticVirus",
+  "Ablation",
+  "AntibodyDrugConjugate"
  ],
  "treatment_kinds": {
   "RSL3": "ferroptosis",
   "SDT": "physical-ROS",
   "PDT": "physical-ROS",
-  "Radiation": "DNA damage, with a separate ferroptosis channel"
+  "Radiation": "DNA damage, with a separate ferroptosis channel",
+  "Immunotherapy": "immune cascade, no ferroptotic death required",
+  "AdoptiveCell": "redirected effectors, bypassing DC priming",
+  "OncolyticVirus": "lysis into the shared ICD chain",
+  "Ablation": "threshold destruction, not a dose-response",
+  "AntibodyDrugConjugate": "ferroptosis payload, delivery-limited"
  },
  "ferroptosis_modules": [
   "acsl4",
@@ -86,7 +96,8 @@
    "kind": "well-mixed cascade",
    "callers": [
     "sim-combo",
-    "sim-icd"
+    "sim-icd",
+    "sim-modality-panel"
    ]
   }
  ],
@@ -154,9 +165,12 @@
    "trial_share": 4.48,
    "growth": 11.62,
    "code_modules": [
+    "biochem",
+    "cell",
     "immune",
     "immune_spatial",
     "params",
+    "physics",
     "senescence"
    ],
    "prose_only_modules": [
@@ -178,7 +192,9 @@
    "code_modules": [
     "immune"
    ],
-   "prose_only_modules": []
+   "prose_only_modules": [
+    "cell"
+   ]
   },
   {
    "mechanism": "metabolic-targeting",
@@ -205,7 +221,11 @@
    "code_modules": [
     "drug_transport"
    ],
-   "prose_only_modules": []
+   "prose_only_modules": [
+    "biochem",
+    "cell",
+    "physics"
+   ]
   },
   {
    "mechanism": "synthetic-lethality",
@@ -228,7 +248,9 @@
    "code_modules": [
     "immune"
    ],
-   "prose_only_modules": []
+   "prose_only_modules": [
+    "cell"
+   ]
   },
   {
    "mechanism": "crispr",
@@ -250,7 +272,9 @@
    "code_modules": [
     "immune"
    ],
-   "prose_only_modules": []
+   "prose_only_modules": [
+    "cell"
+   ]
   },
   {
    "mechanism": "electrochemical-therapy",
@@ -261,7 +285,9 @@
    "code_modules": [
     "ablation"
    ],
-   "prose_only_modules": []
+   "prose_only_modules": [
+    "cell"
+   ]
   },
   {
    "mechanism": "sonodynamic",
@@ -297,6 +323,7 @@
     "ablation"
    ],
    "prose_only_modules": [
+    "cell",
     "oxygen"
    ]
   },
@@ -370,9 +397,12 @@
    "trial_share": 4.48,
    "growth": 11.62,
    "code_modules": [
+    "biochem",
+    "cell",
     "immune",
     "immune_spatial",
     "params",
+    "physics",
     "senescence"
    ],
    "prose_only_modules": [
@@ -384,7 +414,7 @@
     "slab",
     "stromal"
    ],
-   "engine_tier": "modifier"
+   "engine_tier": "treatment"
   },
   {
    "mechanism": "car-t",
@@ -395,7 +425,9 @@
    "code_modules": [
     "immune"
    ],
-   "prose_only_modules": [],
+   "prose_only_modules": [
+    "cell"
+   ],
    "engine_tier": "modifier"
   },
   {
@@ -424,7 +456,11 @@
    "code_modules": [
     "drug_transport"
    ],
-   "prose_only_modules": [],
+   "prose_only_modules": [
+    "biochem",
+    "cell",
+    "physics"
+   ],
    "engine_tier": "modifier"
   },
   {
@@ -449,7 +485,9 @@
    "code_modules": [
     "immune"
    ],
-   "prose_only_modules": [],
+   "prose_only_modules": [
+    "cell"
+   ],
    "engine_tier": "modifier"
   },
   {
@@ -473,7 +511,9 @@
    "code_modules": [
     "immune"
    ],
-   "prose_only_modules": [],
+   "prose_only_modules": [
+    "cell"
+   ],
    "engine_tier": "modifier"
   },
   {
@@ -485,7 +525,9 @@
    "code_modules": [
     "ablation"
    ],
-   "prose_only_modules": [],
+   "prose_only_modules": [
+    "cell"
+   ],
    "engine_tier": "modifier"
   },
   {
@@ -523,6 +565,7 @@
     "ablation"
    ],
    "prose_only_modules": [
+    "cell",
     "oxygen"
    ],
    "engine_tier": "modifier"
@@ -568,7 +611,12 @@
   "RSL3",
   "SDT",
   "PDT",
-  "Radiation"
+  "Radiation",
+  "Immunotherapy",
+  "AdoptiveCell",
+  "OncolyticVirus",
+  "Ablation",
+  "AntibodyDrugConjugate"
  ],
  "absent_count": 0,
  "absent_census": 0,

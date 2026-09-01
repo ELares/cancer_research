@@ -80,6 +80,55 @@ pub enum Treatment {
     /// radiation as a photodynamic agent, which it is not — its dominant
     /// lethal lesion is the DNA double-strand break.
     Radiation,
+
+    // ── Arms below make a MECHANISM APPLICABLE rather than only present ──
+    //
+    // `analysis/modality-coverage.md` draws exactly this line and it is the
+    // one that survived the coverage column emptying: a mechanism whose code
+    // exists is PRESENT, and a mechanism a run can SELECT is applicable.
+    // Every variant here was a MODIFIER first — the machinery landed, then
+    // the arm that reaches it — and none of them is reachable through
+    // `CellState` alone, which is why each carries its own note about where
+    // its lethality actually comes from.
+    /// Checkpoint blockade as a treatment in its own right.
+    ///
+    /// Applicable only because `ImmuneParams::baseline_antigenicity` exists:
+    /// before it, every activation path was gated on ferroptotic death and
+    /// anti-PD-1 multiplied a structurally zero term. Its lethality comes
+    /// entirely from [`crate::immune::immune_cascade`], never from
+    /// [`crate::biochem`].
+    Immunotherapy,
+
+    /// Adoptively transferred or redirected effector T cells (CAR-T,
+    /// bispecific engagers).
+    ///
+    /// Bypasses dendritic-cell priming, so it kills in exactly the case the
+    /// DC cascade returns zero for. Lethality from
+    /// [`crate::immune::adoptive_transfer_kills`].
+    AdoptiveCell,
+
+    /// Oncolytic virus: direct lysis PLUS the immunogenic death it produces.
+    ///
+    /// The second effect is the clinically important one and it routes
+    /// through the SAME ICD chain ferroptotic death uses, which is why the
+    /// modality lives in [`crate::immune`] rather than in its own module.
+    OncolyticVirus,
+
+    /// Physical ablation — HIFU or irreversible electroporation.
+    ///
+    /// A THRESHOLD, not a dose-response: above it everything dies, below it
+    /// essentially nothing does, and no amount of exposure changes that. It
+    /// does not touch [`crate::biochem::CellState`] at all; see
+    /// [`crate::ablation`].
+    Ablation,
+
+    /// Antibody-drug conjugate: a payload delivered on an antibody.
+    ///
+    /// The payload's pharmacology is the ferroptosis engine's, so this DOES
+    /// route through `CellState` — what the arm changes is DELIVERY, via
+    /// [`crate::drug_transport::antibody_drug_conjugate`], and the
+    /// binding-site barrier that makes an ADC's reach ~7 µm.
+    AntibodyDrugConjugate,
 }
 
 /// Cell phenotypes.

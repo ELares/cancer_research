@@ -1216,6 +1216,15 @@ fn run_one_condition_full(
         // its `ros_per_gy` is uncalibrated, so switching it on here means
         // re-running the committed 24-condition matrix.
         Treatment::Radiation => 0.0,
+        // Not wired into this binary. `sim-modality-panel` is the one that
+        // runs these arms; here they would silently behave as Control, which
+        // is why the arm is explicit rather than a `_ =>` catch-all -- a
+        // wildcard would have absorbed every future variant too.
+        Treatment::Immunotherapy
+        | Treatment::AdoptiveCell
+        | Treatment::OncolyticVirus
+        | Treatment::Ablation
+        | Treatment::AntibodyDrugConjugate => 0.0,
     };
 
     // Time-varying dose schedule (#239). `dosed == false` for the default
@@ -1646,7 +1655,13 @@ fn run_one_condition_full(
                 !base_exo.is_empty(),
                 "base_exo must be populated on the dosed SDT/PDT path"
             ),
-            Treatment::Control | Treatment::Radiation => {}
+            Treatment::Control
+            | Treatment::Radiation
+            | Treatment::Immunotherapy
+            | Treatment::AdoptiveCell
+            | Treatment::OncolyticVirus
+            | Treatment::Ablation
+            | Treatment::AntibodyDrugConjugate => {}
         }
     }
 
@@ -1780,7 +1795,13 @@ fn run_one_condition_full(
                         // Radiation is single-fraction and not wired here:
                         // fractionation needs regrowth between fractions,
                         // which needs cell division (#727b).
-                        Treatment::Control | Treatment::Radiation => {}
+                        Treatment::Control
+                        | Treatment::Radiation
+                        | Treatment::Immunotherapy
+                        | Treatment::AdoptiveCell
+                        | Treatment::OncolyticVirus
+                        | Treatment::Ablation
+                        | Treatment::AntibodyDrugConjugate => {}
                     }
                 }
 
@@ -1905,7 +1926,13 @@ fn run_one_condition_full(
                         let drug_intensity = match condition.treatment {
                             // Radiation has no drug availability: its two
                             // channels are dose and depth, not a schedule.
-                            Treatment::Control | Treatment::Radiation => 0.0,
+                            Treatment::Control
+                            | Treatment::Radiation
+                            | Treatment::Immunotherapy
+                            | Treatment::AdoptiveCell
+                            | Treatment::OncolyticVirus
+                            | Treatment::Ablation
+                            | Treatment::AntibodyDrugConjugate => 0.0,
                             Treatment::RSL3 => {
                                 if dosed {
                                     (dose_factor * rsl3_drug_avail[idx]).clamp(0.0, 1.0)
