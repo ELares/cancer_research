@@ -164,3 +164,96 @@ def test_fixture_matches_live_sim_when_present():
             f"{t}: committed fixture is STALE vs live sim; re-run sim-tme, refresh "
             "tests/fixtures/flagship_tme_rows.json and the Figure 24 caption together."
         )
+
+
+FIG27 = REPO_ROOT / "article/figures/fig27_resistance_asymmetry.pdf"
+
+
+def test_fig27_draws_each_panels_numbers_in_that_panel():
+    """This figure is the manuscript's flagship and NOTHING opened it (#793).
+
+    Every other guard in this file validates the INPUT rows -- "asserts the
+    conditions fig27 needs resolve" -- so nothing compared what the figure
+    DRAWS against anything. And a check that a value is merely PRESENT in a
+    four-panel figure cannot say which panel it landed in, while the panel IS
+    the claim: (a) hypoxia, (b) stromal, (c) pH, (d) immune. A number in the
+    wrong panel inverts the comparison the figure exists to make.
+
+    THE PANEL IS THE DRAWN AXES RECTANGLE. Two earlier attempts split on
+    geometry that only looks like a boundary: the midpoint between panel
+    TITLES falls inside the left panel, because a title sits at its panel's
+    left edge; and the widest horizontal gap is INSIDE panel (a), between two
+    bar labels. matplotlib draws each panel as an axes rectangle, and that
+    rectangle is the panel -- the same lesson this repo already learned about
+    clip rectangles.
+
+    `stromal_adjacent_kill_rate`, which #793 first called a missing field and
+    then correctly retracted, is carried by the stromal rows of the fixture, so
+    panel (b) is reachable with no `sim-tme` run. I re-made that same error
+    while writing this, by checking row 0 instead of the union of all rows.
+    """
+    fitz = pytest.importorskip("fitz")
+    doc = fitz.open(FIG27)
+    page = doc[0]
+    spans = [(round(s["bbox"][0], 1), round(s["bbox"][1], 1), s["text"].strip())
+             for b in page.get_text("dict")["blocks"]
+             for l in b.get("lines", []) for s in l["spans"] if s["text"].strip()]
+    rects = [d["rect"] for d in page.get_drawings()
+             if d["rect"].width > 150 and d["rect"].height > 100
+             and d["rect"].width < page.rect.width * 0.8]
+    doc.close()
+
+    assert len(rects) == 4, (
+        f"fig27 draws {len(rects)} panel rectangles; it is a 2x2 figure and a "
+        "change in that count changes what it claims")
+    rects.sort(key=lambda r: (round(r.y0), round(r.x0)))
+    letter_of = {id(r): L for r, L in zip(rects, "abcd")}
+
+    def panel_of(x, y):
+        for r in rects:
+            if r.x0 - 42 <= x <= r.x1 + 8 and r.y0 - 26 <= y <= r.y1 + 30:
+                return letter_of[id(r)]
+        return None
+
+    conds = _conds()
+    checks = []
+    for tx in ("SDT", "RSL3"):
+        base, stressed = _rows(conds, tx)["hyp"]
+        for r in (base, stressed):
+            checks.append(("a", f"{r['overall_kill_rate'] * 100:.1f}"))
+    for c in conds:
+        if "stromal_adjacent_kill_rate" in c:
+            checks.append(("b", f"{c['stromal_adjacent_kill_rate'] * 100:.1f}"))
+        if c.get("ph_mode") and c.get("ferroptosis_kills") is not None:
+            checks.append(("c", str(int(c["ferroptosis_kills"]))))
+        if c.get("immune_mode") == "on" and c.get("immune_kills"):
+            checks.append(("d", str(int(c["immune_kills"]))))
+
+    # A short value can legitimately belong to two panels -- "0.1" is panel
+    # (a)'s RSL3 hypoxic kill AND a stromal rate -- so only values expected in
+    # exactly ONE panel can be bound. Checking the ambiguous ones would report
+    # a correct figure as wrong, which is the failure mode a guard must not
+    # have.
+    from collections import defaultdict
+    expected = defaultdict(set)
+    for letter, value in checks:
+        expected[value].add(letter)
+    unambiguous = [(l, v) for l, v in checks if len(expected[v]) == 1]
+
+    misplaced, drawn = [], 0
+    for letter, value in unambiguous:
+        located = {p for x, y, t in spans if t.rstrip("%") == value
+                   for p in [panel_of(x, y)] if p}
+        if not located:
+            continue
+        drawn += 1
+        if letter not in located:
+            misplaced.append(
+                f"{value} drawn in panel(s) {sorted(located)}, expected {letter}")
+    assert not misplaced, (
+        "fig27 draws values outside the panel whose data they are: "
+        + "; ".join(misplaced[:5]))
+    assert drawn >= 6, (
+        f"only {drawn} of {len(unambiguous)} unambiguous fixture values appear "
+        "in the figure at all, so the panel binding above is checking almost "
+        "nothing")

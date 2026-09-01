@@ -20,6 +20,7 @@ come from the run its panels come from.
 """
 import json
 import re
+import hashlib
 from pathlib import Path
 
 import pytest
@@ -28,6 +29,16 @@ REPO = Path(__file__).resolve().parent.parent
 GEN = REPO / "scripts/generate_figures.py"
 SUMMARY = REPO / "simulations/output/tme/tme_summary.json"
 FIG = REPO / "article/figures/fig17_damp_heatmap.pdf"
+
+# The three panel images, ordered LEFT TO RIGHT (Control, RSL3, SDT). Recorded
+# rather than derived, because the point is to notice a change: a derived
+# expectation would move with the figure and could never object.
+COMMITTED_PANEL_DIGESTS = [
+    "1bb2ee97ae9adc30da91b43c8a5273a1b739a2872a29944d1f6871b19aece72f",
+    "46458e3139d03ccd51622e6e8b4a5cb3d64fa9d7dfed857c91ab85e3ed7a0764",
+    "21ab46784ef969fd3e3727aedb29824188dbd681c7b2f01820d970a2d11177a3",
+]
+
 
 
 FIXTURE = REPO / "tests/fixtures/flagship_tme_rows.json"
@@ -482,3 +493,61 @@ def test_fig7_is_not_drawn_by_the_rust_binary():
                 f"{path} asserts {claim!r} of fig7 again; sim-original links "
                 "no plotting crate and the committed PDF's producer is "
                 "Matplotlib")
+
+
+def test_each_panel_image_is_bound_to_its_position():
+    """The numbers are in the titles; the EVIDENCE is in the images (#793).
+
+    Every other guard here matches drawn TEXT, and fig17's text is well built
+    -- `(Control|RSL3|SDT) (N immune kills)` puts a treatment and its count
+    inside one drawn string, so their adjacency is guaranteed by the string
+    rather than by geometry. That is the cheapest form of binding and it is
+    why those guards are not vulnerable to the pairing inversions #792 found.
+
+    But it is also why the PANELS are unchecked. fig17 is a heatmap grid:
+    swap two panels' image data and leave the titles alone and every text
+    assertion still passes -- which is #790's defect exactly (panels from one
+    scenario, numbers from another) surviving in the very figure it was found
+    in.
+
+    So each panel's PIXELS are hashed and bound to its x position, the way
+    `tests/test_figure_freshness.py` already hashes image surfaces for the
+    census figures. The census gate does not reach fig17 because it is
+    simulation-derived.
+
+    What this pins is that the three panels are DISTINCT and ORDERED. It
+    cannot say which scenario a panel came from -- no guard here can, because
+    the image is the only record of that -- so a swap is caught and a
+    wholesale regeneration from the wrong run is not. That limit is the reason
+    the text guards above exist as well.
+    """
+    fitz = pytest.importorskip("fitz")
+    doc = fitz.open(FIG)
+    page = doc[0]
+    panels = []
+    for img in page.get_images(full=True):
+        xref = img[0]
+        rects = page.get_image_rects(xref)
+        assert len(rects) == 1, (
+            f"image xref {xref} is placed {len(rects)} times; the panel-to-"
+            "position binding assumes one placement each")
+        pix = fitz.Pixmap(doc, xref)
+        panels.append((round(rects[0].x0, 1), hashlib.sha256(pix.samples).hexdigest()))
+        pix = None
+    doc.close()
+
+    assert len(panels) == 3, (
+        f"fig17 draws {len(panels)} panel images; the figure is a three-"
+        "treatment grid and a change in that count changes what it claims")
+    panels.sort()
+    digests = [d for _, d in panels]
+    assert len(set(digests)) == 3, (
+        "two of fig17's panels are pixel-identical, so the figure cannot be "
+        "showing three different DAMP fields")
+    # The left-to-right order is the claim: Control, RSL3, SDT. Swapping two
+    # panels' data leaves every title untouched and every text guard green.
+    assert digests == COMMITTED_PANEL_DIGESTS, (
+        "fig17's panel images changed or were reordered. If the figure was "
+        "regenerated legitimately, update COMMITTED_PANEL_DIGESTS in the same "
+        "commit and say which run produced it; if two panels were swapped, "
+        "the titles will not have moved and nothing else here would notice")
