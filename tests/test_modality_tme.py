@@ -178,13 +178,29 @@ def test_the_ordering_follows_the_mechanisms(d, md):
     assert "That ordering was not tuned for" in md
 
 
-def test_the_page_refuses_the_three_over_readings(md):
-    """Each names a limit that would change a claim if lifted."""
-    for frag in ("they were not visible",
-                 "is a PREDICTION, not a measurement",
+def test_the_page_refuses_the_three_over_readings(d, md):
+    """Each names a limit that would change a claim if lifted.
+
+    The inert-axis refusal is BRANCH-AWARE. This guard used to pin the
+    sentence "two of the three axes were not tested, they were not visible"
+    by presence, so it held that sentence in place after the sweep grew and
+    nothing was inert any more -- a guard keeping a stale claim alive rather
+    than catching it.
+    """
+    for frag in ("is a PREDICTION, not a measurement",
                  "the model being consistent, not a result",
                  "the ORDERING is the result, and the numbers are not"):
         assert frag in md, f"the page no longer says: {frag}"
+    if d["inert_axes"]:
+        assert "they were not visible" in md, (
+            f"{len(d['inert_axes'])} axes are inert and the page does not say "
+            "they were untested rather than survived")
+    else:
+        assert "Every axis in this sweep moves at least one arm" in md, (
+            "no axis is inert and the page does not say so; the previous "
+            "wording claimed two were")
+        assert "they were not visible" not in md, (
+            "the page still says axes were not visible while none is inert")
 
 
 def test_the_phenotype_is_a_stratum_and_not_an_axis(d, md):

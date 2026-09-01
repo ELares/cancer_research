@@ -87,8 +87,9 @@ re-interpretation.
 
 ### Predictions for the modality arms (P9 to P13)
 
-P1 to P8 all concern ferroptosis or the physical-ROS modalities, which
-`analysis/scope-audit.md` reports as 8 of 8. That is the sharpest measure of
+P1 to P8 all concern ferroptosis or the physical-ROS modalities. Before the
+five below were registered `analysis/scope-audit.md` reported that as 8 of 8;
+it now reports 8 of 13. That is the sharpest measure of
 this project's narrowness -- sharper than code volume or figure count, because
 a falsifiable prediction is the currency this repository treats as real. An
 engine that can EXPRESS nine modalities while having committed to being wrong
@@ -116,7 +117,7 @@ thresholds are stated here.
 - *Falsification threshold:* at fixed tumour permissiveness, raising the input titre flips a non-establishing infection to an establishing one, or moves the cumulative lysed fraction by more than 10 percentage points across four orders of magnitude.
 
 **P13. Recurrence after ablation tracks margin GEOMETRY and not delivered energy.**
-- *Quantitative model output:* read from `ablation.rs`, not asserted: above threshold `margin_survival_fraction` returns one minus the covered fraction, its signature takes only the config and the coverage, and its body reads no temperature, duration or field strength. Doubling delivered energy at fixed coverage therefore changes predicted survival by exactly zero.
+- *Quantitative model output:* read from `ablation.rs`, not asserted: above threshold `margin_survival_fraction` returns one minus the covered fraction, its signature takes only the config and the coverage, and while its body DOES read temperature, duration and field strength, it reads them only to test whether the threshold is crossed -- above it the return value does not vary with them. An earlier version of this entry said the body read none of them, which was false. Doubling delivered energy at fixed coverage therefore changes predicted survival by exactly zero.
 - *Falsification threshold:* recurrence correlates with delivered energy at matched coverage fraction (a dose-response above threshold), or coverage fails to predict recurrence at matched energy.
 
 ### Honesty clause for P9 to P13

@@ -348,4 +348,60 @@ mod tests {
              against {cells}"
         );
     }
+
+    /// P12's registered claim, asserted against the ENGINE rather than a
+    /// re-implementation of it.
+    ///
+    /// `scripts/modality_predictions.py` mirrors this loop to derive the
+    /// numbers `PREREGISTRATION.md` publishes, and its first version
+    /// accumulated `lysed` from the POST-update infected count where this
+    /// function uses the pre-update one -- so every published figure was wrong
+    /// against the model it claimed to describe. The Python guard checks the
+    /// same PROPERTY this test asserts, so the two cannot silently part.
+    #[test]
+    fn establishment_is_titre_independent_across_five_orders() {
+        let cfg = OncolyticConfig {
+            initial_infected: 0.0,
+            replication_rate: 0.9,
+            clearance_rate: 0.2,
+            interferon_competence: 0.3,
+            lysis_rate: 0.15,
+        };
+        let titres = [1e-6, 1e-5, 1e-4, 1e-3, 1e-2, 1e-1];
+        let lysed: Vec<f64> = titres
+            .iter()
+            .map(|t| {
+                simulate_spread(
+                    &OncolyticConfig {
+                        initial_infected: *t,
+                        ..cfg
+                    },
+                    180,
+                )
+                .1
+            })
+            .collect();
+        // The verdict is the same at every titre...
+        assert!(
+            lysed.iter().all(|l| *l > 0.01),
+            "the infection fails to establish at some titre: {lysed:?}"
+        );
+        // ...and the OUTCOME barely moves across five orders of magnitude,
+        // which is the content of the prediction. A titre-dependent
+        // establishment would show up here first.
+        let spread = lysed.iter().cloned().fold(f64::MIN, f64::max)
+            - lysed.iter().cloned().fold(f64::MAX, f64::min);
+        assert!(
+            spread < 0.01,
+            "cumulative lysis spans {spread:.4} across five orders of \
+             magnitude of initial titre, so the outcome is titre-DEPENDENT \
+             and P12 must be rewritten rather than this bound relaxed"
+        );
+        // And the criterion that decides it contains no titre term: replication
+        // must beat clearance PLUS lysis, which `spread_threshold_ratio`
+        // (clearance alone) does not capture.
+        let eff = effective_replication(&cfg);
+        assert!(eff > cfg.clearance_rate + cfg.lysis_rate);
+        assert!(spread_threshold_ratio(&cfg) > eff / (cfg.clearance_rate + cfg.lysis_rate));
+    }
 }

@@ -192,7 +192,13 @@ pub fn negative_pool_reached(cfg: &AdcConfig) -> f64 {
     if negative <= 0.0 {
         return 0.0;
     }
-    (bystander_kill_on_negative(cfg) / negative).clamp(0.0, 1.0)
+    // NO CLAMP. A clamp here made the guard policing this bound satisfy
+    // itself: reverting the numerator to the raw bystander term -- literally
+    // the 216% this function exists to retract -- passed every test, because
+    // the clamp capped it and the assertion then checked the clamp. The
+    // apportionment is bounded by construction, so a value above one means the
+    // construction is wrong and must surface rather than be flattened.
+    bystander_kill_on_negative(cfg) / negative
 }
 
 /// Total kill fraction: direct plus bystander.

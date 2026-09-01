@@ -83,7 +83,7 @@ An axis reported inert is a statement about the run, not about the biology, and 
 
 ## The ordering under the axes that bite
 
-Largest relative loss first:
+**Largest relative MOVE first, and read the verb.** This header said "largest relative loss first" over a list whose top two entries are GAINS, because the sort is on `abs` -- the same sign collapse this page retracts elsewhere, surviving in a heading. An arm that GAINS is not an arm that is most exposed.
 
 * `AntibodyDrugConjugate` — GAINS 124% of its kill, largest to clonal heterogeneity
 * `RSL3` — GAINS 116% of its kill, largest to clonal heterogeneity
@@ -93,7 +93,7 @@ Largest relative loss first:
 * `Immunotherapy` — loses 56% of its kill, largest to hypoxia
 * `Radiation` — loses 34% of its kill, largest to hypoxia
 * `OncolyticVirus` — loses 0% of its kill, largest to hypoxia
-* `Ablation` — GAINS 0% of its kill, largest to hypoxia
+* `Ablation` — is unmoved by 0% of its kill, largest to hypoxia
 
 That ordering was not tuned for. It follows from the mechanisms: a delivered drug loses most, because everything between the vessel and the target can stop it; an arm whose lethality depends on oxygen loses next; an arm whose dose is merely modified by oxygen loses less, which is what an enhancement ratio says a dose-modifying factor should do; and a threshold arm loses nothing, because a destroyed cell does not care about any of it.
 
@@ -119,7 +119,7 @@ A quantity that is equal for every arm by construction is not a measurement of a
 
 ## What this does not say
 
-**Two of the three axes were not tested, they were not visible.** That is a weaker statement than 'these arms are robust to stroma and pH' and it is the true one. An arm can only be shown resistant to a pressure the configuration can apply.
+**Every axis in this sweep moves at least one arm.** That was not always so: an earlier configuration left two of them inert and this section said so unconditionally, which meant it kept saying so after the sweep grew and nothing was inert any more. An axis reported inert is a statement about the run, and so is an axis reported live.
 
 **The immune arm's hypoxia response is a PREDICTION, not a measurement.** Oxygen does not enter its kill term; what changes is the suppressor field it meets, and that coupling is asserted by the model rather than fitted. A redirected T cell does not need oxygen to lyse a target, which is why the arm loses less than the ROS arms and more than ablation.
 

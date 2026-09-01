@@ -848,6 +848,7 @@ def fig32_modality_tme():
         return
     d = json.loads(src.read_text())
     ebp = d["effects_by_phenotype"]
+    undef = d.get("undefined_cells", {})
     phenos = d["phenotypes"]
     axes_order = list(ebp[phenos[0]].keys())
     arms = d["arms"]
@@ -880,6 +881,14 @@ def fig32_modality_tme():
                 # -10 in the other, so the same pair was simultaneously called
                 # inert and shown acting. A sub-1% effect is printed as <1
                 # rather than hidden.
+                if arms[i] in undef.get(ph, {}).get(axes_order[j], []):
+                    # UNDEFINED, not zero. The relative change has no
+                    # denominator when the unstressed kill is 0, and a blank
+                    # cell said the axis could not move the arm -- a different
+                    # claim, and false for this whole row.
+                    ax.text(j, i, "n/a", ha="center", va="center",
+                            fontsize=6.2, color="#999", style="italic")
+                    continue
                 if v == 0.0:
                     continue
                 if abs(v) < 0.005:
@@ -921,7 +930,10 @@ def fig32_modality_tme():
              "blank cell is EXACTLY zero for that arm - a cell the axis "
              "cannot move at all in this run, which is a property of the run "
              "rather than of the biology; an effect too small to round to a "
-             "whole percent prints as <1 or >-1 rather than vanishing. Every arm but "
+             "whole percent prints as <1 or >-1 rather than vanishing, and a "
+             "cell whose relative change has NO DENOMINATOR - the arm kills "
+             "nothing unstressed - prints n/a, because a blank there would "
+             "claim the axis cannot move it. Every arm but "
              "radiation's DNA channel is parameterised with placeholders.",
              ha="center", fontsize=7.2, color="#555", wrap=True)
     save(fig, "fig32_modality_tme")
@@ -1024,7 +1036,7 @@ def fig34_depth_reach():
 
     Drawn because the argument is currently prose beside a table, and the
     thing that makes it an argument is a SHAPE: three physical modalities
-    whose delivered energy falls off at rates an order of magnitude apart,
+    whose delivered energy falls off at rates two orders of magnitude apart,
     against a pharmacologic arm whose delivery does not fall off at all.
 
     The control is what keeps it honest. `Control` retains 400% of its surface
@@ -1092,9 +1104,13 @@ def fig34_depth_reach():
              "the TALLEST bar, which is the point: retention is a ratio, and a "
              "ratio of two near-zero numbers is not robustness. Read (a) and "
              "(b) together or neither. "
-             f"Attenuation is fixed physics - PDT {mu['pdt_mu_eff_per_mm']}/mm, "
-             f"radiation {mu['radiation_mu_per_cm']}/cm - while every kill "
-             "magnitude rests on uncalibrated biochemistry.",
+             f"Attenuation is fixed physics and the two constants are quoted "
+             f"in ONE unit here: PDT {mu['pdt_mu_eff_per_mm']}/mm against "
+             f"radiation {mu['radiation_mu_per_cm'] / 10:g}/mm, a factor of "
+             f"{mu['pdt_mu_eff_per_mm'] / (mu['radiation_mu_per_cm'] / 10):.0f}. "
+             "Printing one per mm and the other per cm made a hundredfold "
+             "difference read as a tenfold one. Every kill magnitude rests on "
+             "uncalibrated biochemistry.",
              ha="center", fontsize=7.2, color="#555", wrap=True)
     fig.tight_layout(rect=[0, 0.09, 1, 0.94])
     save(fig, "fig34_depth_reach")

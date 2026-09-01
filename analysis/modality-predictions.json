@@ -73,20 +73,21 @@
   ],
   "orders_of_magnitude": 5,
   "cumulative_lysed_by_titre": {
-   "1e-06": 0.6238,
-   "1e-05": 0.6238,
-   "0.0001": 0.6238,
-   "0.001": 0.6239,
-   "0.01": 0.6247,
-   "0.1": 0.6316
+   "1e-06": 0.6417,
+   "1e-05": 0.6417,
+   "0.0001": 0.6418,
+   "0.001": 0.6418,
+   "0.01": 0.6426,
+   "0.1": 0.6501
   },
   "verdict_is_the_same_at_every_titre": true,
-  "lysed_spread_across_titres": 0.0078
+  "lysed_spread_across_titres": 0.0084
  },
  "P13": {
   "threshold_v_per_cm": 1000.0,
   "returns_one_minus_covered": true,
-  "reads_any_energy_quantity": false,
+  "reads_energy_only_to_test_the_threshold": true,
+  "return_value_varies_with_energy": false,
   "signature_takes_only_config_and_coverage": true
  }
 }

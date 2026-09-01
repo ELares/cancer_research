@@ -80,9 +80,17 @@ def test_every_constant_is_read_from_the_crate_not_from_this_script():
     body = re.search(r"pub fn margin_survival_fraction\(.*?\n\}", abl, re.S)
     assert body, "ablation.rs no longer defines margin_survival_fraction"
     assert d["P13"]["returns_one_minus_covered"] == ("1.0 - covered" in body.group(0))
-    assert d["P13"]["reads_any_energy_quantity"] is False, (
-        "margin_survival_fraction now reads an energy quantity, so P13's "
-        "geometry-not-dose claim must be rewritten rather than left standing")
+    # P13 registers that the RETURN VALUE does not vary with energy, not that
+    # the body never reads it -- the body reads temperature, duration and field
+    # strength to test the threshold, and an earlier version of this claim
+    # denied that.
+    assert d["P13"]["return_value_varies_with_energy"] is False, (
+        "margin_survival_fraction's return now varies with an energy "
+        "quantity, so P13's geometry-not-dose claim must be rewritten rather "
+        "than left standing")
+    assert d["P13"]["reads_energy_only_to_test_the_threshold"] is True, (
+        "the threshold test is gone from margin_survival_fraction, so the "
+        "'above threshold' scope P13 registers no longer applies")
 
 
 def test_every_new_prediction_is_registered_with_a_threshold():

@@ -329,6 +329,8 @@ def test_the_drawn_numbers_are_the_artifact_numbers():
     # label's y relative to its values. Anchor on the ARM NAME's y and require
     # each of its drawn values to share that row.
     ys = {t: y for x, y, t in spans if t in arms}
+    axis_order = list(tme["effects_by_phenotype"]["glycolytic"].keys())
+    panel_split = (min(x for x, _, _ in spans) + max(x for x, _, _ in spans)) / 2
     assert len(ys) == len(arms), (
         f"fig32 does not label every arm row: missing {sorted(set(arms) - set(ys))}")
     missing = []
@@ -345,6 +347,27 @@ def test_the_drawn_numbers_are_the_artifact_numbers():
     assert not missing, (
         f"fig32 draws these measured effects on the wrong row, or not at all: "
         f"{sorted(missing)[:6]}")
+
+    # AND IN THE RIGHT COLUMN. The row check binds `x` and discards it, so a
+    # value need only appear somewhere on its arm's row across BOTH panels --
+    # swapping the hypoxia and depth column labels, which inverts the
+    # tissue-access claim the manuscript makes while citing this figure, was
+    # fully green. Left-to-right order within a row is what a column swap
+    # breaks, and it needs no absolute geometry.
+    for ph, axmap in tme["effects_by_phenotype"].items():
+        lo, hi = ((0, panel_split) if ph == "glycolytic"
+                  else (panel_split, 1e9))
+        for arm, row_y in ys.items():
+            want_seq = [f"{axmap[ax][arm] * 100:+.0f}" for ax in axis_order
+                        if abs(axmap[ax].get(arm, 0.0)) >= 0.005]
+            if len(want_seq) < 2:
+                continue
+            got = [t for x, y, t in sorted(spans)
+                   if abs(y - row_y) < 4.0 and lo <= x < hi
+                   and re.fullmatch(r"[+-]\d+", t)]
+            assert got == want_seq, (
+                f"fig32's {ph} row for {arm} reads {got} left to right; the "
+                f"sweep gives {want_seq} in axis order {axis_order}")
     assert f"{max(abs(v) for ax in tme['effects_by_phenotype'].values() for a in ax.values() for v in a.values()) * 100:+.0f}" in labels
 
     panel = json.loads((REPO / "analysis/modality-panel.json").read_text())
@@ -466,16 +489,45 @@ def test_the_depth_figure_draws_its_control_rather_than_dropping_it():
     assert f"at {ctrl['deep_mm']:.1f} mm" in w, (
         f"fig34's legend does not state the live depth {ctrl['deep_mm']:.1f} mm")
     labels = set(re.findall(r"\d+", w))
-    for r in rows:
-        for v in (r["surface_kill_pct"], r["deep_kill_pct"]):
-            pass
+    order = sorted(rows, key=lambda r: -r["deep_kill_pct"])
+    # THIS LOOP'S BODY WAS `pass`, directly under a comment claiming it checked
+    # numbers rather than substrings. fig34 draws no data labels, so the honest
+    # check is against the PLOTTED BAR HEIGHTS -- and it has to PAIR them by
+    # position: a first attempt searched all height ratios for one matching the
+    # data, which any bag of bars satisfies, and rescaling a whole series
+    # passed.
+    doc3 = fitz.open(REPO / "article/figures/fig34_depth_reach.pdf")
+    draws = [d for d in doc3[0].get_drawings() if d.get("fill") is not None]
+    doc3.close()
+    # Panel (a)'s bars share one width; legend swatches and the two panel
+    # backgrounds do not. Pair-by-index fails because the near-zero arms draw
+    # no visible bar at all, so the check anchors on the TALLEST pair, which is
+    # one arm's surface and depth bars.
+    widths = {}
+    for d in draws:
+        widths.setdefault(round(d["rect"].width, 1), []).append(d["rect"])
+    panel_a_w = min((wd for wd in widths if 20.0 < wd < 32.0), default=None)
+    assert panel_a_w, f"fig34 draws no grouped bars; widths seen {sorted(widths)}"
+    # THE LEFTMOST PAIR, not the tallest. Sorting by height let a rescaled
+    # depth series promote two SURFACE bars into the top two, whose ratio
+    # happened to sit inside tolerance. The arms are drawn sorted by kill at
+    # depth, so the first two bars are the leading arm's surface and depth.
+    lefts = sorted(widths[panel_a_w], key=lambda r: r.x0)[:2]
+    assert len(lefts) == 2, "fig34 panel (a) draws fewer than two bars"
+    surf_h, deep_h = lefts[0].height, lefts[1].height
+    top = order[0]
+    want = top["deep_kill_pct"] / top["surface_kill_pct"]
+    got = deep_h / surf_h if surf_h > 0 else 0.0
+    assert abs(got - want) < 0.03, (
+        f"fig34 draws {top['treatment']} with a depth/surface bar ratio of "
+        f"{got:.3f}; the data gives {want:.3f}, so a series has been rescaled "
+        "or swapped")
     # the axis must span the retention values, so the control's magnitude shows
     top = max(r["kill_retained_pct"] for r in rows)
     assert any(int(t) >= int(top * 0.9) for t in labels if t.isdigit()), (
         f"fig34's retention axis does not reach the control's {top:.0f}%")
     # and the ORDER must be the one both captions claim: by kill at depth
-    order = [r["treatment"] for r in
-             sorted(rows, key=lambda r: -r["deep_kill_pct"])]
+    order_names = [r["treatment"] for r in order]
     doc2 = fitz.open(REPO / "article/figures/fig34_depth_reach.pdf")
     pg = doc2[0]
     xs = {}
@@ -483,14 +535,14 @@ def test_the_depth_figure_draws_its_control_rather_than_dropping_it():
         for l in b.get("lines", []):
             for s0 in l["spans"]:
                 t = s0["text"].strip()
-                if t in order:
+                if t in order_names:
                     xs.setdefault(t, []).append(s0["bbox"][0])
     doc2.close()
     left = {k: min(v) for k, v in xs.items()}
     drawn = [k for k, _ in sorted(left.items(), key=lambda kv: kv[1])]
-    assert drawn[:len(order)] == order, (
+    assert drawn[:len(order_names)] == order_names, (
         f"fig34 draws the arms in {drawn} but both captions describe the "
-        f"order {order}, sorted by kill at depth")
+        f"order {order_names}, sorted by kill at depth")
     assert "ratio of two near-zero numbers" in w, (
         "fig34 no longer explains why the control tops panel (b)")
     assert "NOT a ranking" in w

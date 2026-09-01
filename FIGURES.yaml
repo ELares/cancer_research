@@ -509,8 +509,10 @@ figures:
       coincide to the last digit because this panel is DEPTH-FREE and their
       exogenous-ROS parameters are equal by default; the thing that separates
       them is a geometry, not a mechanism, and it lives in
-      `analysis/depth-reach-comparison.md`. Every number is read from
-      analysis/modality-panel.json; nothing on the figure is typed.
+      `analysis/depth-reach-comparison.md`. The kill fractions and the route split are
+      read from analysis/modality-panel.json. The subtitle's arm and route
+      COUNTS are typed, which this note previously denied; they are pinned by
+      tests/test_modality_panel.py rather than derived at draw time.
 
   - manuscript_figure: 27
     filename: fig32_modality_tme
@@ -571,7 +573,7 @@ figures:
     note: >-
       The manuscript's tissue-access argument, drawn, because what makes it an
       argument is a SHAPE: three physical modalities whose delivered energy
-      falls off at rates an order of magnitude apart, against a pharmacologic
+      falls off at rates two orders of magnitude apart, against a pharmacologic
       arm whose delivery does not fall off at all. PDT goes 92.5% to 0.6% over
       9.4 mm while radiation goes 45.4% to 43.7%. THE CONTROL IS DRAWN RATHER
       THAN DROPPED and it is the reason for the second panel: the untreated arm
@@ -592,10 +594,13 @@ figures:
     note: >-
       Per-arm calibration outcome INCLUDING the arms where fitting failed,
       which is the only reason it is worth a figure. A chart of what is fitted
-      would be marketing. The two rows that are not green carry the content:
-      checkpoint blockade is INADMISSIBLE because its published response band
-      constrains a PRODUCT of antigen presentation and kill rate, neither
-      identifiable from it alone, and the ADC bystander effect has NO TARGET
-      because nothing comparable is published. ADMISSIBLE means a parameter
+      would be marketing. The THREE rows that are not green carry the
+      content, and an earlier version of this note said two -- omitting the
+      widest failure on the page. A thermal-ablation arm is UNCONSTRAINED
+      because its target admits almost the whole scanned range; checkpoint
+      blockade is INADMISSIBLE because its published response band constrains a
+      PRODUCT of antigen presentation and kill rate, neither identifiable from
+      it alone; and the ADC bystander effect has NO TARGET because nothing
+      comparable is published. ADMISSIBLE means a parameter
       reproduces a band, NOT that an arm is validated -- every arm here still
       feeds no number the manuscript reports.

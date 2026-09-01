@@ -5,7 +5,7 @@ WHY
 ---
 `scripts/scope_audit.py` counts what this project's work is ABOUT and answers
 "overwhelmingly ferroptosis": 15 committed ferroptosis analyses against 1 for
-any other therapy, and 8 of 8 preregistered predictions. That is the subject
+any other therapy, and 8 of 13 preregistered predictions. That is the subject
 measured, and it is a fair criticism of a repository whose README invites the
 whole cancer community.
 

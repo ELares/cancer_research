@@ -119,7 +119,7 @@ def _parp_arm() -> dict:
         L = -math.log(sf)
         return dose(alpha, beta, L) / dose(alpha * (1 + boost), beta, L)
 
-    # ONE boost must satisfy the band across the whole survival range, which
+    # ONE boost must satisfy the band across the surviving fractions it samples (2.24 to 9.38 Gy), which
     # is what makes this a joint constraint rather than a single equation.
     def worst_case(boost):
         vals = [ser(boost, sf) for sf in (0.5, 0.1, 0.01)]

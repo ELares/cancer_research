@@ -102,6 +102,18 @@ def assemble(raw: dict) -> dict:
     # single-phenotype sweep reported two axes inert for that reason alone.
     effects = {label: {a: _effect(conds, a, key) for a in arms}
                for key, label in axes}
+    # WHICH CELLS ARE UNDEFINED RATHER THAN ZERO. `_effect` skips a pair whose
+    # unstressed kill is 0, because the relative change has no denominator --
+    # and `worst` then stays 0.0, which is indistinguishable from an axis that
+    # genuinely cannot move the arm. fig32's footer asserted the second reading
+    # for a whole row that was really the first.
+    undefined = {}
+    for ph in phenos:
+        pool = [c for c in conds if c.get("phenotype") == ph]
+        for _, label in axes:
+            for a in arms:
+                if all(c["arms"].get(a, 0.0) <= 0 for c in pool):
+                    undefined.setdefault(ph, {}).setdefault(label, []).append(a)
     per_pheno = {
         ph: {label: {a: _effect(conds, a, key, ph) for a in arms}
              for key, label in axes}
@@ -169,6 +181,7 @@ def assemble(raw: dict) -> dict:
     return dict(raw, amplification=amp, quality_ratio=quality_ratio,
                 arms=arms, phenotypes=phenos, effects=effects,
                 effects_by_phenotype=per_pheno, dominant_axis=dominant,
+                undefined_cells=undefined,
                 inert_axes=inert, live_axes=live, robustness_order=order,
                 inert_threshold=INERT_THRESHOLD)
 
@@ -236,13 +249,19 @@ def render(d: dict) -> str:
 
     if live:
         L += ["## The ordering under the axes that bite", "",
-              "Largest relative loss first:", ""]
+              "**Largest relative MOVE first, and read the verb.** This header "
+              "said \"largest relative loss first\" over a list whose top two "
+              "entries are GAINS, because the sort is on `abs` -- the same "
+              "sign collapse this page retracts elsewhere, surviving in a "
+              "heading. An arm that GAINS is not an arm that is most exposed.",
+              ""]
         rows = sorted(arms,
                       key=lambda a: -max(abs(d["effects"][l][a]) for l in live))
         for a in rows:
             worst_l = max(live, key=lambda l: abs(d["effects"][l][a]))
             worst = d["effects"][worst_l][a]
-            verb = "loses" if worst < 0 else "GAINS"
+            verb = ("loses" if worst < 0
+                    else "GAINS" if worst > 0 else "is unmoved by")
             L.append(f"* `{a}` — {verb} {abs(worst) * 100:.0f}% of its kill, "
                      f"largest to {worst_l}")
         L += ["", "That ordering was not tuned for. It follows from the "
@@ -317,10 +336,17 @@ def render(d: dict) -> str:
               "suspiciously close to a threshold the model defines.", ""]
 
     L += ["## What this does not say", "",
-          "**Two of the three axes were not tested, they were not visible.** "
-          "That is a weaker statement than 'these arms are robust to stroma "
-          "and pH' and it is the true one. An arm can only be shown resistant "
-          "to a pressure the configuration can apply.", "",
+          (f"**{len(inert)} of the {len(axes)} axes were not tested, they were "
+           "not visible.** That is a weaker statement than 'these arms are "
+           "robust to them' and it is the true one. An arm can only be shown "
+           "resistant to a pressure the configuration can apply."
+           if inert else
+           "**Every axis in this sweep moves at least one arm.** That was not "
+           "always so: an earlier configuration left two of them inert and "
+           "this section said so unconditionally, which meant it kept saying "
+           "so after the sweep grew and nothing was inert any more. An axis "
+           "reported inert is a statement about the run, and so is an axis "
+           "reported live."), "",
           "**The immune arm's hypoxia response is a PREDICTION, not a "
           "measurement.** Oxygen does not enter its kill term; what changes "
           "is the suppressor field it meets, and that coupling is asserted by "

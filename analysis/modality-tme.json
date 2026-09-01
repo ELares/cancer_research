@@ -3564,6 +3564,25 @@
    "tied_with": []
   }
  },
+ "undefined_cells": {
+  "glycolytic": {
+   "hypoxia": [
+    "RSL3"
+   ],
+   "stromal shielding": [
+    "RSL3"
+   ],
+   "acidic pH": [
+    "RSL3"
+   ],
+   "depth": [
+    "RSL3"
+   ],
+   "clonal heterogeneity": [
+    "RSL3"
+   ]
+  }
+ },
  "inert_axes": [],
  "live_axes": [
   "hypoxia",
