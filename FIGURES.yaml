@@ -5,7 +5,7 @@
 # to the figs dict in scripts/generate_latex.py.
 #
 # Fields:
-#   manuscript_figure: number in the compiled manuscript (1-24), or null
+#   manuscript_figure: number in the compiled manuscript (1-29), or null
 #   filename: basename without extension (both PDF and PNG exist)
 #   generator:
 #     script: path relative to repo root (or null for orphans)
@@ -20,7 +20,7 @@
 # validates that this file stays in sync with disk.
 
 figures:
-  # ── Manuscript figures (1-24) ──────────────────────────────────
+  # ── Manuscript figures (1-29) ──────────────────────────────────
 
   - manuscript_figure: 1
     filename: fig1c_ratio_straddle
@@ -421,7 +421,7 @@ figures:
       offline in seconds; it is a separate script from generate_figures.py,
       which loads the whole corpus and several gitignored simulation outputs.
 
-  - manuscript_figure: null
+  - manuscript_figure: 29
     filename: fig29_rare_event_resolution
     generator:
       script: scripts/rare_event_analysis.py
@@ -429,7 +429,7 @@ figures:
     inputs:
       - analysis/rare-event-sweep.jsonl
     type: simulation
-    status: supplementary
+    status: manuscript
     note: >
       How far down the death-rate tail a given sample size can see. Several
       conditions in Figure 7 report exactly 0% at n = 1,000,000; because
