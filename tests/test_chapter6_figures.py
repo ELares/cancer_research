@@ -18,7 +18,9 @@ REPO = Path(__file__).resolve().parent.parent
 MANUSCRIPT = REPO / "article/drafts/v1.md"
 GEN = REPO / "scripts/generate_conceptual_diagrams.py"
 FIGURES = REPO / "FIGURES.yaml"
-CHAPTER6_FIGURES = {27: "fig32_modality_tme", 28: "fig33_adoptive_barriers"}
+CHAPTER6_FIGURES = {27: "fig32_modality_tme", 28: "fig33_adoptive_barriers",
+                    30: "fig34_depth_reach",
+                    31: "fig35_calibration_verdicts"}
 
 
 @pytest.fixture(scope="module")
@@ -437,3 +439,53 @@ def test_the_latex_cannot_silently_stop_compiling():
     assert r"\renewcommand{\thefigure}{\arabic{figure}}" in tex, (
         "v1.tex does not flatten figure numbering, so report.cls will print "
         "chapter-prefixed numbers (6.25) while the prose says 25")
+
+
+def test_the_depth_figure_draws_its_control_rather_than_dropping_it():
+    """The control is what makes panel (b) honest.
+
+    `Control` retains 400% of its surface kill, which is not robustness -- it
+    is what a ratio does when both terms are near zero. A panel plotting
+    retention alone would rank an untreated tumour first, so dropping the
+    control would turn the figure into the error it exists to expose.
+    """
+    fitz = pytest.importorskip("fitz")
+    rows = json.loads(
+        (REPO / "analysis/depth-reach-comparison.json").read_text())["rows"]
+    ctrl = next(r for r in rows if r["treatment"] == "Control")
+    assert ctrl["kill_retained_pct"] > 100, (
+        "the control no longer exceeds 100% retention, so the figure's "
+        "cautionary point must be re-derived rather than left standing")
+    doc = fitz.open(REPO / "article/figures/fig34_depth_reach.pdf")
+    w = " ".join(" ".join(pg.get_text("text").split()) for pg in doc)
+    doc.close()
+    assert "Control" in w, "fig34 dropped the control arm"
+    assert "ratio of two near-zero numbers" in w, (
+        "fig34 no longer explains why the control tops panel (b)")
+    assert "NOT a ranking" in w
+
+
+def test_the_calibration_figure_draws_the_arms_that_failed():
+    """A chart of what is fitted would be marketing.
+
+    The two non-green rows carry the content: one arm's target constrains a
+    product of unidentifiable factors, and one has nothing published to fit.
+    """
+    fitz = pytest.importorskip("fitz")
+    arms = json.loads(
+        (REPO / "analysis/modality-calibration.json").read_text())["arms"]
+    verdicts = {a["arm"]: a.get("verdict") for a in arms}
+    failed = [k for k, v in verdicts.items()
+              if v in ("INADMISSIBLE", "NO TARGET", "UNCONSTRAINED")]
+    assert failed, (
+        "every arm now fits its target, which would make this figure a "
+        "success chart; re-derive its caption rather than leaving it")
+    doc = fitz.open(REPO / "article/figures/fig35_calibration_verdicts.pdf")
+    w = " ".join(" ".join(pg.get_text("text").split()) for pg in doc)
+    doc.close()
+    for arm in failed:
+        assert arm in w, f"fig35 omits {arm}, whose verdict is {verdicts[arm]}"
+    for v in {verdicts[a] for a in failed}:
+        assert v in w, f"fig35 does not print the verdict {v}"
+    assert "NOT that the arm is validated" in w, (
+        "fig35 no longer says ADMISSIBLE is not validation")

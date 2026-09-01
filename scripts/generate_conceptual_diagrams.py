@@ -1017,6 +1017,144 @@ def fig33_adoptive_barriers():
 
 
 
+# ── Figure 30: how far each modality reaches ──────────────────────────
+
+def fig34_depth_reach():
+    """Physical reach, which is the manuscript's tissue-access argument.
+
+    Drawn because the argument is currently prose beside a table, and the
+    thing that makes it an argument is a SHAPE: three physical modalities
+    whose delivered energy falls off at rates an order of magnitude apart,
+    against a pharmacologic arm whose delivery does not fall off at all.
+
+    The control is what keeps it honest. `Control` retains 400% of its
+    surface kill, which is not robustness -- it is what a ratio does when
+    both terms are near zero, and a panel that plotted retention alone would
+    rank an untreated tumour first. So retention is drawn BESIDE the absolute
+    kill, and the control is drawn rather than dropped.
+    """
+    src = Path(__file__).resolve().parent.parent / "analysis" / "depth-reach-comparison.json"
+    if not src.exists():
+        print("  fig34: analysis/depth-reach-comparison.json missing - skipping")
+        return
+    d = json.loads(src.read_text())
+    rows = [r for r in d["rows"]]
+    order = sorted(rows, key=lambda r: -r["deep_kill_pct"])
+    names = [r["treatment"] for r in order]
+    deep_mm = order[0]["deep_mm"]
+
+    fig, (axA, axB) = plt.subplots(1, 2, figsize=(11.6, 4.6))
+    x = np.arange(len(names))
+    axA.bar(x - 0.2, [r["surface_kill_pct"] for r in order], 0.4,
+            label="at the surface", color="#4169E1", edgecolor="black",
+            linewidth=0.5)
+    axA.bar(x + 0.2, [r["deep_kill_pct"] for r in order], 0.4,
+            label=f"at {deep_mm:.1f} mm", color="#8B0000", edgecolor="black",
+            linewidth=0.5)
+    axA.set_xticks(x)
+    axA.set_xticklabels(names, rotation=20, ha="right", fontsize=8.6)
+    axA.set_ylabel("kill (%)", fontsize=9.5)
+    axA.set_title("(a) Kill at the surface and at depth", fontsize=10.5,
+                  fontweight="bold")
+    axA.legend(fontsize=8.2)
+    axA.grid(axis="y", alpha=0.25)
+
+    ret = [r["kill_retained_pct"] for r in order]
+    cols = ["#BFBFBF" if r["treatment"] == "Control" else "#CD5C5C"
+            for r in order]
+    axB.bar(x, ret, 0.55, color=cols, edgecolor="black", linewidth=0.5)
+    axB.axhline(100, color="black", linewidth=0.8, linestyle="--")
+    axB.set_xticks(x)
+    axB.set_xticklabels(names, rotation=20, ha="right", fontsize=8.6)
+    axB.set_ylabel("share of surface kill retained (%)", fontsize=9.5)
+    axB.set_title("(b) Retention - and why it cannot be read alone",
+                  fontsize=10.5, fontweight="bold")
+    ctrl = next((r for r in order if r["treatment"] == "Control"), None)
+    if ctrl:
+        i = names.index("Control")
+        axB.annotate("a ratio of two\nnear-zero numbers",
+                     xy=(i, ctrl["kill_retained_pct"]),
+                     xytext=(i - 0.1, ctrl["kill_retained_pct"] * 0.72),
+                     ha="center", fontsize=7.6, color="#333",
+                     arrowprops=dict(arrowstyle="->", color="#666", lw=0.8))
+    for a in (axA, axB):
+        a.spines[["top", "right"]].set_visible(False)
+
+    mu = d["constants"]
+    fig.suptitle("How far each modality reaches into tissue", fontsize=12.5,
+                 fontweight="bold")
+    fig.text(0.5, 0.015,
+             "NOT a ranking. Panel (b) ranks the UNTREATED arm first, which is "
+             "the point: retention is a ratio, and a ratio of two near-zero "
+             "numbers is not robustness. Read (a) and (b) together or neither. "
+             f"Attenuation is fixed physics - PDT {mu['pdt_mu_eff_per_mm']}/mm, "
+             f"radiation {mu['radiation_mu_per_cm']}/cm - while every kill "
+             "magnitude rests on uncalibrated biochemistry.",
+             ha="center", fontsize=7.2, color="#555", wrap=True)
+    fig.tight_layout(rect=[0, 0.09, 1, 0.94])
+    save(fig, "fig34_depth_reach")
+
+
+# ── Figure 31: what a published target could and could not settle ─────
+
+def fig35_calibration_verdicts():
+    """The calibration outcome per arm, INCLUDING the ones that failed.
+
+    A figure of what is fitted would be marketing. The interesting cells are
+    the two that are not: one arm is INADMISSIBLE because its published band
+    constrains a PRODUCT of two unidentifiable factors, and one has NO TARGET
+    at all. Drawing those beside the successes is the whole reason the panel
+    is worth a figure.
+    """
+    src = Path(__file__).resolve().parent.parent / "analysis" / "modality-calibration.json"
+    if not src.exists():
+        print("  fig35: analysis/modality-calibration.json missing - skipping")
+        return
+    arms = json.loads(src.read_text())["arms"]
+    order = {"ADMISSIBLE": 0, "UNCONSTRAINED": 1, "INADMISSIBLE": 2,
+             "NO TARGET": 3}
+    colour = {"ADMISSIBLE": "#2E7D32", "UNCONSTRAINED": "#F9A825",
+              "INADMISSIBLE": "#C62828", "NO TARGET": "#9E9E9E"}
+    rows = sorted(arms, key=lambda a: (order.get(a.get("verdict"), 9),
+                                       a["arm"]))
+    fig, ax = plt.subplots(figsize=(10.2, 4.4))
+    y = np.arange(len(rows))
+    for i, a in enumerate(rows):
+        v = a.get("verdict", "NO TARGET")
+        ax.barh(i, 1.0, color=colour.get(v, "#9E9E9E"), edgecolor="black",
+                linewidth=0.5)
+        ax.text(0.02, i, f"{a['arm']}", va="center", fontsize=9,
+                color="white", fontweight="bold")
+        ax.text(0.98, i, v, va="center", ha="right", fontsize=8.6,
+                color="white", fontweight="bold")
+    ax.set_yticks([])
+    ax.set_xticks([])
+    ax.set_xlim(0, 1)
+    ax.invert_yaxis()
+    for sp in ax.spines.values():
+        sp.set_visible(False)
+    counts = {v: sum(1 for a in arms if a.get("verdict") == v)
+              for v in order}
+    ax.set_title(
+        f"What a published target could settle, per arm "
+        f"({counts['ADMISSIBLE']} fitted, {counts['UNCONSTRAINED']} "
+        f"unconstrained, {counts['INADMISSIBLE']} inadmissible, "
+        f"{counts['NO TARGET']} with no target)",
+        fontsize=11, fontweight="bold")
+    fig.text(0.5, 0.02,
+             "ADMISSIBLE means a parameter reproduces a published band, NOT "
+             "that the arm is validated - every one of these still feeds no "
+             "number the manuscript reports. The two rows that are not green "
+             "are the informative ones: an inadmissible arm has a target that "
+             "constrains a PRODUCT of factors neither of which is identifiable "
+             "from it, and an arm with no target has nothing published to fit "
+             "at all.",
+             ha="center", fontsize=7.2, color="#555", wrap=True)
+    fig.tight_layout(rect=[0, 0.10, 1, 1])
+    save(fig, "fig35_calibration_verdicts")
+
+
+
 if __name__ == "__main__":
     print("Generating conceptual diagrams...")
     fig18_hypoxia()
@@ -1029,4 +1167,6 @@ if __name__ == "__main__":
     fig31_modality_panel()
     fig32_modality_tme()
     fig33_adoptive_barriers()
+    fig34_depth_reach()
+    fig35_calibration_verdicts()
     print("Done.")

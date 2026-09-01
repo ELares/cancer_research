@@ -5,7 +5,7 @@
 # to the figs dict in scripts/generate_latex.py.
 #
 # Fields:
-#   manuscript_figure: number in the compiled manuscript (1-29), or null
+#   manuscript_figure: number in the compiled manuscript (1-31), or null
 #   filename: basename without extension (both PDF and PNG exist)
 #   generator:
 #     script: path relative to repo root (or null for orphans)
@@ -20,7 +20,7 @@
 # validates that this file stays in sync with disk.
 
 figures:
-  # ── Manuscript figures (1-29) ──────────────────────────────────
+  # ── Manuscript figures (1-31) ──────────────────────────────────
 
   - manuscript_figure: 1
     filename: fig1c_ratio_straddle
@@ -558,3 +558,44 @@ figures:
       three always act. The generator asserts the drawn factors against the
       binary's own binds flag before drawing, since that decomposition was a
       residual once and could not disagree with itself.
+
+  - manuscript_figure: 30
+    filename: fig34_depth_reach
+    generator:
+      script: scripts/generate_conceptual_diagrams.py
+      function: fig34_depth_reach
+    inputs:
+      - analysis/depth-reach-comparison.json
+    type: simulation
+    status: manuscript
+    note: >-
+      The manuscript's tissue-access argument, drawn, because what makes it an
+      argument is a SHAPE: three physical modalities whose delivered energy
+      falls off at rates an order of magnitude apart, against a pharmacologic
+      arm whose delivery does not fall off at all. PDT goes 92.5% to 0.6% over
+      9.4 mm while radiation goes 45.4% to 43.7%. THE CONTROL IS DRAWN RATHER
+      THAN DROPPED and it is the reason for the second panel: the untreated arm
+      "retains" 400% of its surface kill, which is not robustness but what a
+      ratio does when both terms are near zero. A panel plotting retention
+      alone would rank an untreated tumour first, so retention and absolute
+      kill are shown together and the caption says to read neither alone.
+
+  - manuscript_figure: 31
+    filename: fig35_calibration_verdicts
+    generator:
+      script: scripts/generate_conceptual_diagrams.py
+      function: fig35_calibration_verdicts
+    inputs:
+      - analysis/modality-calibration.json
+    type: simulation
+    status: manuscript
+    note: >-
+      Per-arm calibration outcome INCLUDING the arms where fitting failed,
+      which is the only reason it is worth a figure. A chart of what is fitted
+      would be marketing. The two rows that are not green carry the content:
+      checkpoint blockade is INADMISSIBLE because its published response band
+      constrains a PRODUCT of antigen presentation and kill rate, neither
+      identifiable from it alone, and the ADC bystander effect has NO TARGET
+      because nothing comparable is published. ADMISSIBLE means a parameter
+      reproduces a band, NOT that an arm is validated -- every arm here still
+      feeds no number the manuscript reports.
