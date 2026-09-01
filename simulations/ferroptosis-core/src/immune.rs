@@ -120,13 +120,27 @@ pub const TVEC_DURABLE_RESPONSE: (f64, f64) = (0.16, 0.02);
 /// `infected_fraction = 0.0` returns `(0.0, 0.0)`, so an unconfigured run is
 /// unmoved.
 ///
-/// ## What is NOT modelled, and it is most of the virology
+/// ## `infected_fraction` is an input HERE, and derived next door
 ///
-/// Replication kinetics, antiviral immunity clearing the virus before it
-/// spreads, and the interferon response that makes some tumours permissive and
-/// others resistant — all absent. `infected_fraction` is an input, not a
-/// result, which means this cannot answer "will the virus spread?", only "if
-/// it spreads this far, what follows?".
+/// This function deliberately takes the infected fraction rather than
+/// computing it, and for most of its life that was a real limitation: its
+/// docs recorded that replication kinetics, antiviral clearance and the
+/// interferon response were all absent, so it could answer "if it spreads
+/// this far, what follows?" and not "will it spread?".
+///
+/// [`crate::oncolytic`] answers the second question now, and the split is
+/// deliberate rather than left over. Spread is a race between replication and
+/// clearance with its own threshold behaviour; what happens to the cells the
+/// virus reaches is the ICD chain, which is shared with ferroptotic death. Two
+/// mechanisms, two modules, and a consumer composes them:
+/// `oncolytic::simulate_spread` produces the lysed fraction that this function
+/// consumes.
+///
+/// What remains absent is SPATIAL structure. Both modules are well-mixed, so
+/// neither can represent a virus that takes a tumour's rim and never reaches
+/// its core — a real failure mode, and the one
+/// `analysis/depth-reach-comparison.md` would predict for an agent that has to
+/// travel cell to cell.
 #[must_use = "both outputs carry the modality's two effects"]
 pub fn oncolytic_lysis(
     total_tumor_cells: usize,

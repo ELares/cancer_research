@@ -41,7 +41,7 @@
   "trigger_wave",
   "tumor_pk"
  ],
- "module_count": 34,
+ "module_count": 35,
  "taxonomy_named": [
   "antibody-drug-conjugate",
   "bioelectric",
@@ -144,7 +144,8 @@
    ],
    "prose_only_modules": [
     "biochem",
-    "cell"
+    "cell",
+    "oncolytic"
    ]
   },
   {
@@ -176,6 +177,7 @@
    "prose_only_modules": [
     "clonal",
     "ifngamma",
+    "oncolytic",
     "oxygen",
     "ph",
     "radiation",
@@ -249,7 +251,8 @@
     "immune"
    ],
    "prose_only_modules": [
-    "cell"
+    "cell",
+    "oncolytic"
    ]
   },
   {
@@ -374,7 +377,8 @@
    ],
    "prose_only_modules": [
     "biochem",
-    "cell"
+    "cell",
+    "oncolytic"
    ],
    "engine_tier": "modifier"
   },
@@ -408,6 +412,7 @@
    "prose_only_modules": [
     "clonal",
     "ifngamma",
+    "oncolytic",
     "oxygen",
     "ph",
     "radiation",
@@ -486,7 +491,8 @@
     "immune"
    ],
    "prose_only_modules": [
-    "cell"
+    "cell",
+    "oncolytic"
    ],
    "engine_tier": "modifier"
   },
