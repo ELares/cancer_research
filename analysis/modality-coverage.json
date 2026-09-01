@@ -90,6 +90,14 @@
    ]
   }
  ],
+ "baseline_antigenicity": {
+  "field": "baseline_antigenicity",
+  "exists": true,
+  "default": 0.0,
+  "consumed_by": [
+   "immune"
+  ]
+ },
  "phenotype_term_credits": [
   "cell",
   "grid",

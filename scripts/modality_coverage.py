@@ -471,6 +471,30 @@ def _treatment_variants() -> list:
     return out
 
 
+def _baseline_antigenicity() -> dict:
+    """Is there a ferroptosis-INDEPENDENT antigen source, and is it on?
+
+    Derived, because this file's central paragraph used to say both immune
+    models are "gated on ferroptotic death by construction" and the
+    immunotherapy arm (#728) made that false the moment it landed. A sentence
+    describing the engine has to be read off the engine.
+    """
+    params = strip_test_blocks(strip_rust_comments((CORE / "params.rs").read_text()))
+    immune = strip_test_blocks(strip_rust_comments((CORE / "immune.rs").read_text()))
+    spatial = strip_test_blocks(
+        strip_rust_comments((CORE / "immune_spatial.rs").read_text()))
+    field = "baseline_antigenicity"
+    m = re.search(rf"{field}:\s*([0-9.]+)", params)
+    return {
+        "field": field,
+        "exists": field in params,
+        "default": float(m.group(1)) if m else None,
+        "consumed_by": sorted(
+            n for n, t in (("immune", immune), ("immune_spatial", spatial))
+            if field in t),
+    }
+
+
 def _immune_models() -> list:
     """The engine's immune kill paths and every file that calls them.
 
@@ -541,6 +565,7 @@ def scan() -> dict:
         "taxonomy_named": named,
         "taxonomy_without_a_row": sorted(set(named) - rows_present),
         "immune_models": _immune_models(),
+        "baseline_antigenicity": _baseline_antigenicity(),
         # The two detector defects the report narrates, RECOMPUTED under the
         # rules the report currently describes rather than quoted from the
         # version that had them. Both were typed, and both had gone stale:
@@ -579,6 +604,50 @@ def assemble(raw: dict) -> dict:
                 absent_census=sum(r["census"] for r in absent),
                 absent_trials=sum(r["trials"] for r in absent),
                 total_census=sum(r["census"] for r in rows))
+
+
+def _antigen_paragraph(d: dict) -> list:
+    """The gating sentence, derived from the crate rather than asserted.
+
+    It used to read "both are gated on ferroptotic death by construction",
+    which the immunotherapy arm (#728) falsified the day it landed -- one
+    model now has a ferroptosis-independent path. Which model, and whether it
+    is on, are read off `params.rs` and the two modules.
+    """
+    b = d.get("baseline_antigenicity") or {}
+    if not b.get("exists"):
+        return ["Both paths are gated on ferroptotic death by construction: "
+                "there is no ferroptosis-independent antigen source anywhere "
+                "in the engine.", ""]
+    on = b.get("default") not in (0.0, None)
+    consumers = ", ".join(f"`{c}`" for c in b.get("consumed_by", [])) or "nothing"
+    ungated = [m["module"] for m in d["immune_models"]
+               if m["module"] in b.get("consumed_by", [])]
+    gated = [m["module"] for m in d["immune_models"] if m["module"] not in ungated]
+    return [
+        f"**One of them is no longer gated on ferroptotic death.** "
+        f"`ImmuneParams::{b['field']}` (default `{b['default']}`) adds a "
+        "ferroptosis-independent presenting fraction, which is the mechanism "
+        "real tumours use and the reason checkpoint blockade is a "
+        f"monotherapy at all. It is consumed by {consumers}"
+        + (f", so `{'`, `'.join(gated)}` remains gated and "
+           f"`{'`, `'.join(ungated)}` does not" if gated and ungated else "")
+        + ". "
+        + ("It is ON by default, so every immune number in this repository "
+           "now includes it."
+           if on else
+           "It is **OFF by default**, so every committed number is unmoved and "
+           "the engine can be ASKED the question rather than answering it: "
+           "nothing is fit to the published anti-PD-1 monotherapy response "
+           "band yet, and `CALIBRATION_STATUS.md` says so."),
+        "",
+        "That is why this row still reads MODIFIER rather than **treatment**. "
+        "The tier is about whether a run can APPLY the modality, and that "
+        "needs a `Treatment` variant and a binary that uses it. What changed "
+        "is that the question is now reachable at all — before it, anti-PD-1 "
+        "multiplied a term that was structurally zero.",
+        "",
+    ]
 
 
 def render(d: dict) -> str:
@@ -644,8 +713,7 @@ def render(d: dict) -> str:
                 + (", ".join(f"`{c}`" for c in m["callers"]) or "nowhere")
                 for m in models)
             L += [f"Immunotherapy is the sharpest case. The engine has "
-                  f"**{len(models)} immune kill paths** — {desc} — and both "
-                  "are gated on ferroptotic death by construction.", "",
+                  f"**{len(models)} immune kill paths** — {desc}.", "",
                   "The two gate on ferroptotic death in DIFFERENT ways, and "
                   "conflating them was wrong in an earlier draft of this "
                   "paragraph. The spatial one gates on DAMPs: "
@@ -661,11 +729,14 @@ def render(d: dict) -> str:
                   "anti-PD-1 enters only through `brake`, a multiplier on a "
                   "term that is already zero. The four-axis checkpoint panel, "
                   "the Treg/MDSC suppressor field, exhaustion and the DC "
-                  "subsets are all real and all downstream. Blockade can be "
-                  "observed as a coefficient on ferroptosis; it cannot be "
-                  "given as a treatment arm. That is a modifier carrying "
-                  f"{imm['census']:,} census articles and {imm['trials']:,} "
-                  "trials.", "",
+                  "subsets are all real and all downstream of it. **At the "
+                  "committed defaults that is still the whole story** — see "
+                  "the next paragraph for the one path that now has an "
+                  "alternative, and note it is off. That is a modifier "
+                  f"carrying {imm['census']:,} census articles and "
+                  f"{imm['trials']:,} trials, the largest trial count in the "
+                  "table.", "",
+                  ] + _antigen_paragraph(d) + [
                   "**What is proved, and what is not.** The well-mixed chain "
                   "is proved END TO END in Rust: "
                   "`no_ferroptotic_death_end_to_end_means_no_kills_at_any_"
