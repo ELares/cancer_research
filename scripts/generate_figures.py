@@ -1133,8 +1133,16 @@ def fig8_simulation_by_treatment():
     collapses with depth; SDT (ultrasound, acoustic) penetrates to centimeters; RSL3
     (systemic drug) is a depth-independent uniform baseline whose limit is biochemical,
     not penetration. Calibrated 2D physics (sim-spatial). Replaces the prior
-    externally-post-processed Figure 8 with a tracked, reproducible generator."""
-    print("Figure 8 (fig8_simulation_by_treatment): Depth-kill curves (PDT vs SDT vs RSL3)...")
+    externally-post-processed Figure 8 with a tracked, reproducible generator.
+
+    #726 adds a FOURTH curve, and it is the control the other three never had.
+    Radiation is a physical modality whose reach is NOT the limiting factor --
+    6 MV photons lose ~3% per cm -- so the panel now shows the full range of
+    what "physical delivery" can mean rather than only the modalities this
+    project's thesis is about. Its kill is DNA-damage lethality from the
+    linear-quadratic model at 2 Gy, not exogenous ROS; the ferroptosis channel
+    is off by default because `ros_per_gy` is uncalibrated."""
+    print("Figure 8 (fig8_simulation_by_treatment): Depth-kill curves (PDT vs SDT vs RSL3 vs Radiation)...")
     if not SPATIAL_CURVES.exists():
         print(f"  {SPATIAL_CURVES} not found — run `cargo run --release -p sim-spatial` first. Skipping.")
         return
@@ -1145,6 +1153,9 @@ def fig8_simulation_by_treatment():
     if not all(t in rows for t in ("PDT", "SDT", "RSL3")):
         print("  missing PDT/SDT/RSL3 in depth_kill_curves.csv — skipping")
         return
+    # Radiation (#726) is present only when sim-spatial ran with a dose, so
+    # the figure degrades to its three-curve form rather than failing.
+    has_rad = "Radiation" in rows
 
     # Pool the 20-µm rows into coarser depth bins, weighting each row by its
     # tumor-cell count, so the spheroid's sparse poles (few cells/row) do not
@@ -1168,9 +1179,10 @@ def fig8_simulation_by_treatment():
         "PDT": ("#C44E52", "o-", "PDT (light, Beer-Lambert)"),
         "SDT": ("#4C72B0", "s-", "SDT (ultrasound, acoustic)"),
         "RSL3": ("#55A868", "^-", "RSL3 (systemic drug, uniform)"),
+        "Radiation": ("#8172B2", "d-", "Radiation (2 Gy, DNA damage)"),
     }
     series = {}
-    for tx in ("SDT", "PDT", "RSL3"):
+    for tx in (("SDT", "PDT", "RSL3", "Radiation") if has_rad else ("SDT", "PDT", "RSL3")):
         x, y = binned(tx)
         series[tx] = (x, y)
         col, ls, lab = style[tx]
@@ -1187,6 +1199,21 @@ def fig8_simulation_by_treatment():
             f"PDT: {py[0]:.0f}% at surface,\n{py[-1]:.0f}% at {px[-1]:.0f} mm",
             xy=(px[-1], py[-1]), xytext=(px[-1] * 0.45, 60), fontsize=8, color="#C44E52",
             ha="center", arrowprops=dict(arrowstyle="->", color="#C44E52"))
+
+    # Radiation's flatness is the POINT of adding it: it is the physical
+    # modality whose reach is not the limiting factor, and until #726 this
+    # comparison had no such control. Annotated from the measured series
+    # rather than typed.
+    if has_rad:
+        rx, ry = series["Radiation"]
+        # Skip the last bin: the spheroid's pole holds a handful of cells and
+        # its rate is noise at any treatment.
+        if len(ry) > 2:
+            axA.annotate(
+                f"Radiation: {ry[0]:.0f}% at surface,\n{ry[-2]:.0f}% at {rx[-2]:.0f} mm",
+                xy=(rx[-2], ry[-2]), xytext=(rx[-2] * 0.55, 22), fontsize=8,
+                color="#8172B2", ha="center",
+                arrowprops=dict(arrowstyle="->", color="#8172B2"))
 
     # Panel (b): the penetration physics that drives panel (a), computed from the
     # model's OWN equations and default constants (ferroptosis-core/src/physics.rs
@@ -1217,6 +1244,14 @@ def fig8_simulation_by_treatment():
     # RSL3 dotted (not solid like the attenuating modalities) to flag that this is
     # DRUG AVAILABILITY, not kill: it is flat at 100% here yet flat near zero in
     # panel (a) — a biochemical, not a penetration, limit.
+    # Radiation: exp(-mu*z_cm), mu = 0.03 /cm (radiation.rs
+    # MU_6MV_SOFT_TISSUE_PER_CM). Nearly flat -- 97% at 1 cm, 74% at 10 cm --
+    # which is what makes it the control this panel never had. Guarded against
+    # the Rust constant by tests/test_depth_kill_physics_constants.py.
+    RADIATION_MU_PER_CM = 0.03  # radiation.rs MU_6MV_SOFT_TISSUE_PER_CM
+    rad_I = np.exp(-RADIATION_MU_PER_CM * (z_mm / 10.0))
+    axB.plot(z_mm, rad_I * 100, "-", color="#8172B2", lw=2,
+             label=f"Radiation: exp(-{RADIATION_MU_PER_CM}/cm) (6 MV photons)")
     axB.plot(z_mm, rsl3_I * 100, ":", color="#55A868", lw=2.5,
              label="RSL3 availability (uniform; kills little, see a)")
     axB.axhline(50, ls=":", color="gray", lw=0.8)

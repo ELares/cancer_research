@@ -30,6 +30,13 @@ COUPLED = [
     ("sdt_freq_mhz", "SDT_FREQ_MHZ"),
 ]
 
+# Radiation's constant lives in `radiation.rs` rather than `params.rs` (#726),
+# so it needs its own source, but the drift it can cause is identical: panel
+# (b) re-implements the attenuation in Python and panel (a) comes from the
+# Rust binary.
+COUPLED_RADIATION = [("MU_6MV_SOFT_TISSUE_PER_CM", "RADIATION_MU_PER_CM")]
+RADIATION_RS = REPO_ROOT / "simulations" / "ferroptosis-core" / "src" / "radiation.rs"
+
 
 def _rust_default(field: str) -> float:
     text = PARAMS_RS.read_text()
@@ -56,3 +63,38 @@ def test_figure_physics_matches_rust_defaults(rust_field, fig_const):
         f"match params.rs (and regenerate depth_kill_curves.csv with default "
         f"sim-spatial flags), or vice versa."
     )
+
+
+def _rust_const(path, name: str) -> float:
+    text = path.read_text()
+    m = re.search(rf"\b{re.escape(name)}: f64 = ([0-9]+\.?[0-9]*)", text)
+    assert m, f"{name} not found in {path}"
+    return float(m.group(1))
+
+
+@pytest.mark.parametrize("rust_const,fig_const", COUPLED_RADIATION)
+def test_the_radiation_attenuation_matches_the_rust_constant(rust_const, fig_const):
+    """The fourth curve has the same drift hazard as the other three.
+
+    `radiation.rs` owns the constant and `generate_figures.py` re-implements
+    `exp(-mu * z_cm)` for panel (b); if they part, the panel showing radiation
+    as the flat modality stops describing the binary that produced panel (a).
+    """
+    rust_val = _rust_const(RADIATION_RS, rust_const)
+    fig_val = _figure_const(fig_const)
+    assert rust_val == fig_val, (
+        f"Depth-kill figure drift: radiation.rs {rust_const}={rust_val} but "
+        f"generate_figures.py {fig_const}={fig_val}."
+    )
+
+
+def test_the_figure_reimplements_the_radiation_form_not_just_the_constant():
+    """A matching constant in a different formula is still drift.
+
+    `pdt` uses `exp(-mu * z_mm)` and radiation uses `exp(-mu * z_cm)`; the two
+    differ by a factor of ten in the exponent and both look plausible.
+    """
+    text = GENERATE_FIGURES.read_text()
+    assert "np.exp(-RADIATION_MU_PER_CM * (z_mm / 10.0))" in text, (
+        "panel (b)'s radiation curve is no longer exp(-mu * z_cm); check it "
+        "against radiation::intensity_at_depth, which divides um by 10,000")
