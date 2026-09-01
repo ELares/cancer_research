@@ -150,7 +150,7 @@ LIVE = [g[0] for g in GENERATORS
 # Pinned EXACTLY, not as a floor. A floor with slack lets a generator drop out
 # of the gate silently: at `>= 25` against 26, deleting the marker from one
 # script left the suite green with two parametrised cases quietly gone.
-EXPECTED_GENERATORS = 54
+EXPECTED_GENERATORS = 55
 
 
 def test_the_generator_list_is_discovered_not_listed():

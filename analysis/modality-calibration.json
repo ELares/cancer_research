@@ -1,0 +1,82 @@
+{
+ "arms": [
+  {
+   "arm": "Radiation (DNA channel)",
+   "parameter": "RadiationConfig::alpha_per_gy",
+   "target": "SF2 = 0.5445 at alpha/beta = 10.0",
+   "source": "PMID 32307022 (glioblastoma, EUD-model input)",
+   "target_kind": "round trip -- the paper DERIVED its third number from the first two through this same model, so reproducing it checks the implementation and not the biology",
+   "range_scanned": [
+    0.0,
+    2.0
+   ],
+   "fit": {
+    "lo": 0.25321,
+    "hi": 0.25336,
+    "width_fraction": 7.499999999999174e-05
+   },
+   "mapping": null,
+   "verdict": "ADMISSIBLE"
+  },
+  {
+   "arm": "Synthetic lethality (PARP)",
+   "parameter": "RadiationConfig::parp_alpha_boost",
+   "target": "sensitizer enhancement ratio 1.2-1.7",
+   "source": "PMID 35205750 (glioma cells)",
+   "target_kind": "model-internal (the observable IS the model output)",
+   "range_scanned": [
+    0.0,
+    2.0
+   ],
+   "fit": {
+    "lo": 0.544,
+    "hi": 0.9485,
+    "width_fraction": 0.20224999999999999
+   },
+   "mapping": null,
+   "verdict": "ADMISSIBLE"
+  },
+  {
+   "arm": "Checkpoint blockade",
+   "parameter": "ImmuneParams::baseline_antigenicity",
+   "target": "anti-PD-1 monotherapy ORR 20-30%",
+   "source": "PMID 31877341 (melanoma 30%, RCC 30%, NSCLC ~20%)",
+   "target_kind": "clinical -- DIRECTION-ANCHORED only",
+   "range_scanned": [
+    0.0,
+    1.0
+   ],
+   "fit": null,
+   "ceiling_at_full_presentation": 0.10320000000000001,
+   "antigenicity_required": 1.937984496124031,
+   "diagnosis": "At the panel's `tcell_kill_rate = 0.02`, the whole cascade collapses to `kill = 0.1032 * antigenicity`, so even at FULL presentation (10.3%) it cannot reach the 20% floor -- it would need an antigenicity of 1.94, and that parameter is a fraction bounded by 1. Raising the kill rate to the engine default (3.0) instead saturates the survivor cap immediately. **The target constrains the PRODUCT `antigenicity x kill_rate`, and neither factor is identifiable from it alone.** That is the same finding `analysis/identifiability-report.md` reports for the ferroptosis engine's rate constants, arriving independently in the immune layer, and it is why this row is INADMISSIBLE rather than fitted to a number that would look precise and mean nothing.",
+   "mapping": "An objective response in a patient is mapped onto a KILL FRACTION in a lattice. Those are different quantities and no fit makes them the same one: a partial response is a 30% diameter reduction, roughly a 66% volume reduction, and a responding patient is not a dead tumour. Even had the fit succeeded, this mapping would be the weakest link in the row.",
+   "verdict": "INADMISSIBLE"
+  },
+  {
+   "arm": "Oncolytic virus",
+   "parameter": "oncolytic_lysis immunogenicity",
+   "target": "durable-response ratio 8.0x (16% treated vs 2% control)",
+   "source": "PMID 27298410 (T-VEC, OPTiM)",
+   "target_kind": "clinical RATIO -- less mapping-sensitive than a rate, because a ratio of response rates and a ratio of DC activations are both dimensionless",
+   "range_scanned": [
+    0.0,
+    1.0
+   ],
+   "fit": {
+    "lo": 0.3385,
+    "hi": 0.525,
+    "width_fraction": 0.1865
+   },
+   "mapping": "A durable-response RATIO is mapped onto a ratio of DC-activation fractions. Both are dimensionless, which makes this less fragile than the ORR row -- but it assumes the clinical advantage is entirely immunological, and T-VEC also lyses cells directly.",
+   "verdict": "ADMISSIBLE"
+  }
+ ],
+ "unconstrained_width": 0.5,
+ "verdict_counts": {
+  "ADMISSIBLE": 3,
+  "UNCONSTRAINED": 0,
+  "INADMISSIBLE": 1
+ },
+ "n_clinical": 2
+}
