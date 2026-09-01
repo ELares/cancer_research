@@ -51,20 +51,30 @@ jobs:
       - name: Generate LaTeX from Markdown
         run: python3 scripts/generate_latex.py
 
-      - name: Compile PDF (pdflatex, 2-pass)
+      - name: Compile PDF (pdflatex, 3-pass)
         working-directory: article/drafts
         run: |
           # Start from a clean slate so a pass that aborts WITHOUT rewriting can
-          # never leave a stale PDF/log for the verify step to bless.
-          rm -f v1.pdf v1.log
+          # never leave a stale PDF/log for the verify step to bless. The .ent
+          # file is the endnotes scratch pad and is rewritten every pass.
+          rm -f v1.pdf v1.log v1.aux v1.toc v1.out v1.ent
+          # THREE passes, not two. The book has a table of contents whose page
+          # numbers move the pages they are printed on, so the document needs a
+          # third pass to converge: at two the released PDF's contents were off
+          # by two pages against the body, which nothing detected because the
+          # build succeeded. The convergence check below is what actually
+          # enforces it -- the pass count is only how it is reached.
+          #
           # pdflatex exits NON-ZERO on RECOVERABLE errors (e.g. a missing glyph
-          # for an unmapped Unicode char) even when it emits a complete PDF. Pass
-          # 1 is allowed to fail (cross-refs aren't resolved yet); the SECOND pass
-          # is the gate. We capture its exit code and tolerate a non-zero exit
-          # ONLY when the sole issue is the known recoverable Unicode-character
-          # class. Any OTHER non-zero exit — a fatal LaTeX error, or an OOM/timeout
-          # kill that aborts pass 2 and would otherwise leave a stale pass-1 PDF —
-          # fails the build loudly rather than releasing a stale/broken artifact.
+          # for an unmapped Unicode char) even when it emits a complete PDF. The
+          # early passes are allowed to fail (cross-refs aren't resolved yet);
+          # the LAST pass is the gate. We capture its exit code and tolerate a
+          # non-zero exit ONLY when the sole issue is the known recoverable
+          # Unicode-character class. Any OTHER non-zero exit — a fatal LaTeX
+          # error, or an OOM/timeout kill that aborts the pass and would
+          # otherwise leave a stale earlier PDF — fails the build loudly rather
+          # than releasing a stale/broken artifact.
+          pdflatex -interaction=nonstopmode v1.tex || true
           pdflatex -interaction=nonstopmode v1.tex || true
           set +e
           pdflatex -interaction=nonstopmode v1.tex
@@ -72,12 +82,21 @@ jobs:
           set -e
           if [ "$RC" -ne 0 ]; then
             if [ -f v1.log ] && grep -q "Unicode character" v1.log; then
-              echo "::warning::pdflatex pass 2 exited ${RC} but only with recoverable Unicode-character errors (an unmapped glyph in scripts/generate_latex.py); tolerating and continuing to the verify gate."
+              echo "::warning::pdflatex final pass exited ${RC} but only with recoverable Unicode-character errors (an unmapped glyph in scripts/generate_latex.py); tolerating and continuing to the verify gate."
             else
-              echo "ERROR: pdflatex pass 2 exited ${RC} with no recoverable-Unicode marker — treating as a real failure (fatal error or aborted run)."
+              echo "ERROR: pdflatex final pass exited ${RC} with no recoverable-Unicode marker — treating as a real failure (fatal error or aborted run)."
               tail -n 40 v1.log 2>/dev/null || true
               exit 1
             fi
+          fi
+          # CONVERGENCE. LaTeX says so itself, and it is the only thing that
+          # can: a document still asking to be re-run has printed at least one
+          # page number, cross-reference or contents entry that is wrong.
+          if grep -qE "Rerun to get|There were undefined references" v1.log; then
+            echo "ERROR: the document had not converged after three passes:"
+            grep -nE "Rerun to get|There were undefined references" v1.log | head -10
+            echo "Add a pass, or find what is oscillating."
+            exit 1
           fi
 
       - name: Verify PDF was generated
