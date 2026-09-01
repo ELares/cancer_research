@@ -460,6 +460,37 @@ def test_the_depth_figure_draws_its_control_rather_than_dropping_it():
     w = " ".join(" ".join(pg.get_text("text").split()) for pg in doc)
     doc.close()
     assert "Control" in w, "fig34 dropped the control arm"
+    # NUMBERS, not substrings. A reviewer reversed the sort, halved the depth
+    # in the legend and scaled retention tenfold, and all sixteen guards
+    # passed -- the checks were three phrases.
+    assert f"at {ctrl['deep_mm']:.1f} mm" in w, (
+        f"fig34's legend does not state the live depth {ctrl['deep_mm']:.1f} mm")
+    labels = set(re.findall(r"\d+", w))
+    for r in rows:
+        for v in (r["surface_kill_pct"], r["deep_kill_pct"]):
+            pass
+    # the axis must span the retention values, so the control's magnitude shows
+    top = max(r["kill_retained_pct"] for r in rows)
+    assert any(int(t) >= int(top * 0.9) for t in labels if t.isdigit()), (
+        f"fig34's retention axis does not reach the control's {top:.0f}%")
+    # and the ORDER must be the one both captions claim: by kill at depth
+    order = [r["treatment"] for r in
+             sorted(rows, key=lambda r: -r["deep_kill_pct"])]
+    doc2 = fitz.open(REPO / "article/figures/fig34_depth_reach.pdf")
+    pg = doc2[0]
+    xs = {}
+    for b in pg.get_text("dict")["blocks"]:
+        for l in b.get("lines", []):
+            for s0 in l["spans"]:
+                t = s0["text"].strip()
+                if t in order:
+                    xs.setdefault(t, []).append(s0["bbox"][0])
+    doc2.close()
+    left = {k: min(v) for k, v in xs.items()}
+    drawn = [k for k, _ in sorted(left.items(), key=lambda kv: kv[1])]
+    assert drawn[:len(order)] == order, (
+        f"fig34 draws the arms in {drawn} but both captions describe the "
+        f"order {order}, sorted by kill at depth")
     assert "ratio of two near-zero numbers" in w, (
         "fig34 no longer explains why the control tops panel (b)")
     assert "NOT a ranking" in w
@@ -483,9 +514,30 @@ def test_the_calibration_figure_draws_the_arms_that_failed():
     doc = fitz.open(REPO / "article/figures/fig35_calibration_verdicts.pdf")
     w = " ".join(" ".join(pg.get_text("text").split()) for pg in doc)
     doc.close()
-    for arm in failed:
-        assert arm in w, f"fig35 omits {arm}, whose verdict is {verdicts[arm]}"
-    for v in {verdicts[a] for a in failed}:
-        assert v in w, f"fig35 does not print the verdict {v}"
+    # PAIRED, not merely present. A reviewer rotated the verdicts by one row --
+    # checkpoint blockade drawn NO TARGET, the ADC drawn ADMISSIBLE -- and the
+    # guard passed because it only asked whether each string appeared anywhere.
+    doc2 = fitz.open(REPO / "article/figures/fig35_calibration_verdicts.pdf")
+    pg = doc2[0]
+    spans = [(s0["bbox"][1], s0["text"].strip())
+             for b in pg.get_text("dict")["blocks"]
+             for l in b.get("lines", []) for s0 in l["spans"]]
+    doc2.close()
+    for a in arms:
+        ys = [y for y, t in spans if t == a["arm"]]
+        assert ys, f"fig35 omits the row for {a['arm']}"
+        row = [t for y, t in spans if abs(y - ys[0]) < 4.0]
+        assert a["verdict"] in row, (
+            f"fig35 draws {a['arm']} on a row carrying {row}, not its verdict "
+            f"{a['verdict']}")
+    # and the title's counts must be the live ones
+    counts = {}
+    for a in arms:
+        counts[a["verdict"]] = counts.get(a["verdict"], 0) + 1
+    for v, n in counts.items():
+        token = {"ADMISSIBLE": "fitted", "UNCONSTRAINED": "unconstrained",
+                 "INADMISSIBLE": "inadmissible", "NO TARGET": "with no target"}[v]
+        assert f"{n} {token}" in w, (
+            f"fig35's title does not state the live count {n} {token}")
     assert "NOT that the arm is validated" in w, (
         "fig35 no longer says ADMISSIBLE is not validation")

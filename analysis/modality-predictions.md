@@ -8,15 +8,15 @@ These are the model outputs behind P9–P13 in `PREREGISTRATION.md`. The thresho
 
 ## P9 — the PARP sensitizer ratio falls with dose per fraction
 
-Under the linear-quadratic model with an alpha-only boost, ONE boost must hold the published 1.2-1.7 enhancement band across the whole survival range. Only 18% of the scanned range does, and the admissible boosts are 0.567 to 0.922. Within that window the ratio is larger at low dose per fraction than high, by a factor of 1.117 to 1.165:
+Under the linear-quadratic model with an alpha-only boost, ONE boost must hold the published 1.2-1.7 enhancement band at every surviving fraction in [0.5, 0.1, 0.01] — which is 2.24 to 9.38 Gy and NOT the whole survival range, a claim an earlier version made and this one withdraws. The admissible boosts are 0.544 to 0.948, which is 20% of a scan whose ceiling is 2.0 — a share quoted without its ceiling measures the ceiling, since the same window is 36% of a 0-to-1 scan. Within the window the ratio is larger at low dose per fraction than high, by a factor of 1.113 to 1.168:
 
 | boost | SER at 2 Gy | SER at 6 Gy |
 |---|--:|--:|
-| 0.567 | 1.423 | 1.274 |
-| 0.744 | 1.561 | 1.365 |
-| 0.922 | 1.7 | 1.458 |
+| 0.544 | 1.405 | 1.262 |
+| 0.746 | 1.562 | 1.366 |
+| 0.948 | 1.72 | 1.472 |
 
-**The direction does not depend on the fit**, which is what makes it worth preregistering: it holds across the entire window the published band permits. Beta is untouched by the boost because unrepaired single-strand breaks convert to double-strand breaks at replication — one-track damage — so the linear term rises alone and the ratio must decay with dose.
+**The direction does not depend on the fit**, which is what makes it worth preregistering: it holds across the entire window the published band permits, and it holds analytically at every dose rather than only at the sampled ones. What the window itself does NOT survive is a wider fractionation range — requiring the band at 1.8 Gy and at 20 Gy as well empties it, so the window is a statement about 2.24 to 9.38 Gy and the page says which. Beta is untouched by the boost because unrepaired single-strand breaks convert to double-strand breaks at replication — one-track damage — so the linear term rises alone and the ratio must decay with dose.
 
 ## P10 — the bystander effect is starved by the escape it answers
 
@@ -24,10 +24,10 @@ The prediction has the OPPOSITE sign to the intuition the module was built on, a
 
 | antigen-positive fraction | share of the negative pool reached |
 |---|--:|
-| 0.9 | 216.0% |
-| 0.6 | 36.0% |
-| 0.3 | 10.3% |
-| 0.1 | 2.7% |
+| 0.9 | 77.1% |
+| 0.6 | 27.7% |
+| 0.3 | 9.5% |
+| 0.1 | 2.6% |
 
 The RELATIVE advantage meanwhile is exactly flat at 1.3x, and a guard asserting it was non-decreasing was satisfied by that constant for the life of the module — see the retraction in `CALIBRATION_STATUS.md`.
 

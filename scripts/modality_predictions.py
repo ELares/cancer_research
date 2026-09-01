@@ -48,6 +48,32 @@ def _rust_const(stem: str, name: str) -> float:
     return float(m.group(1))
 
 
+def _rust_struct_field(stem: str, fn_name: str, field: str) -> float:
+    """Read one field out of a named constructor in the crate.
+
+    EVERY P10-P13 constant used to be a Python literal, and `scan()` even read
+    `adc.rs` and threw the result away, which made the script LOOK derived. A
+    reviewer changed four literals so they contradicted the Rust and published
+    a preregistration disagreeing with its own cited module on every P10 and
+    P11 number, with a fully green suite. A preregistration that can drift
+    from the model it registers is worse than none, because the timestamp
+    makes it look like a commitment.
+    """
+    src = (CORE / f"{stem}.rs").read_text()
+    m = re.search(rf"fn {fn_name}\(\)[^{{]*{{(.*?)\n    }}", src, re.S)
+    if m is None:
+        raise SystemExit(f"{stem}.rs: no constructor {fn_name}()")
+    f = re.search(rf"\b{field}:\s*([0-9.]+)", m.group(1))
+    if f is None:
+        raise SystemExit(f"{stem}.rs::{fn_name}: no field {field}")
+    return float(f.group(1))
+
+
+def _rust_test_fixture(stem: str, fn_name: str, field: str) -> float:
+    """Same, for a fixture that lives inside `#[cfg(test)]`."""
+    return _rust_struct_field(stem, fn_name, field)
+
+
 def _rust_tuple(stem: str, name: str) -> tuple[float, float]:
     src = (CORE / f"{stem}.rs").read_text()
     m = re.search(rf"{name}: \(f64, f64\) = \(([0-9.]+), ([0-9.]+)\)", src)
@@ -75,15 +101,37 @@ def scan() -> dict:
     beta = alpha / ab
     lo, hi = _rust_tuple("radiation", "PARP_SER_BAND")
 
-    # The admissible boost window: one boost must hold the published band
-    # across the whole survival range, which is what makes P9 constrained.
-    window = [b / 1000.0 for b in range(0, 2001)
-              if all(lo <= _ser(alpha, beta, b / 1000.0, d) <= hi
-                     for d in (2.0, 4.0, 6.0, 8.0, 10.0))]
+    # SAMPLED ON SURVIVING FRACTION, exactly as `calibrate_modality_arms.py`
+    # does, because two committed artifacts published DIFFERENT admissible
+    # windows for the same band: this script sampled doses {2..10 Gy} and gave
+    # [0.567, 0.922] while the calibration sampled sf {0.5, 0.1, 0.01} and gave
+    # [0.544, 0.949], and `fig35` drew the PARP row ADMISSIBLE off the second
+    # while the preregistration published the first. Neither stated its
+    # parameterisation.
+    SF_POINTS = (0.5, 0.1, 0.01)
+
+    def _dose_at(sf: float, a: float) -> float:
+        L = -math.log(sf)
+        return (-a + math.sqrt(a * a + 4.0 * beta * L)) / (2.0 * beta)
+
+    def _ser_at_sf(boost: float, sf: float) -> float:
+        return _dose_at(sf, alpha) / _dose_at(sf, alpha * (1.0 + boost))
+
+    STEPS = 2001
+    window = [b / 1000.0 for b in range(STEPS)
+              if all(lo <= _ser_at_sf(b / 1000.0, sf) <= hi
+                     for sf in SF_POINTS)]
     p9 = {
         "published_band": [lo, hi],
+        "sampled_at_surviving_fractions": list(SF_POINTS),
+        "dose_range_gy": [round(min(_dose_at(sf, alpha) for sf in SF_POINTS), 2),
+                          round(max(_dose_at(sf, alpha) for sf in SF_POINTS), 2)],
         "boost_window": [round(min(window), 3), round(max(window), 3)],
-        "window_share_of_scan": round(len(window) / 2001.0, 3),
+        # Reported as an INTERVAL, and the share is kept only WITH its ceiling,
+        # because the same window is 36% of a 0-1 scan and 3.6% of a 0-10 one:
+        # a bare "18%" measures the author's choice of ceiling.
+        "scan_ceiling": (STEPS - 1) / 1000.0,
+        "window_share_of_scan": round(len(window) / float(STEPS), 3),
         "ser_by_dose": {
             f"{b:.3f}": {str(int(d)): round(_ser(alpha, beta, b, d), 3)
                          for d in (2, 6)}
@@ -95,40 +143,96 @@ def scan() -> dict:
         ],
     }
 
-    # P10: the bystander effect is STARVED by the escape it answers.
-    src = (CORE / "adc.rs").read_text()
-    esc, reach, dkp = 0.5, 0.6, 0.8   # the module's own `heterogeneous()`
-    p10 = {"reach_of_negative_pool": {}}
+    # P10 -- every constant READ FROM `adc.rs`, and the quantity is the one an
+    # escape experiment can produce. Dividing the whole bystander term by the
+    # antigen-negative pool published 216% as a "share", which is impossible:
+    # the term is bounded by every SURVIVING cell, antigen-positive ones
+    # included. `adc::bystander_kill_on_negative` apportions it.
+    esc = _rust_test_fixture("adc", "heterogeneous", "payload_escape_fraction")
+    reach = _rust_test_fixture("adc", "heterogeneous", "neighbours_in_reach")
+    dkp = _rust_test_fixture("adc", "heterogeneous", "direct_kill_probability")
+    p10 = {"reach_of_negative_pool": {}, "constants": {
+        "payload_escape_fraction": esc, "neighbours_in_reach": reach,
+        "direct_kill_probability": dkp}}
     for apf in (0.9, 0.6, 0.3, 0.1):
         dying = apf * dkp
-        byst = min(dying * esc * reach, max(1.0 - dying, 0.0))
-        p10["reach_of_negative_pool"][str(apf)] = round(byst / (1.0 - apf), 4)
+        surviving = max(1.0 - dying, 0.0)
+        byst = min(dying * esc * reach, surviving)
+        on_negative = byst * ((1.0 - apf) / surviving) if surviving else 0.0
+        p10["reach_of_negative_pool"][str(apf)] = round(
+            on_negative / (1.0 - apf), 4)
     p10["relative_advantage"] = round(1.0 + esc * reach, 4)
 
     panel = json.loads((REPO / "analysis" / "modality-panel.json").read_text())
     ab_block = panel["adoptive_barriers"]
+    traffick = _rust_struct_field("adoptive", "solid_tumour", "trafficking")
     p11 = {
         "delivery_efficiency": round(ab_block["delivery_efficiency_solid"], 4),
-        "predicted_gain_from_opening_trafficking_only":
-            round(1.0 / 0.3, 3),   # the preset's trafficking barrier
+        "trafficking_barrier": traffick,
+        "predicted_gain_from_opening_trafficking_only": round(1.0 / traffick, 3),
         "total_collapse": round(ab_block["leukaemia_kill_fraction"]
                                 / ab_block["solid_tumour_kill_fraction"], 1),
     }
 
-    # P12: establishment is threshold-governed and dose-INDEPENDENT.
+    # P12 -- SIMULATED, not asserted. The first version stated the verdict from
+    # a one-line inequality that has no titre term BY CONSTRUCTION, listed four
+    # titres it never used, and called their span "four orders of magnitude"
+    # when 1e-4 to 1e-1 is three. It also used its own criterion rather than
+    # the crate's: `oncolytic::spread_threshold_ratio` compares replication
+    # against CLEARANCE alone, while lysis also removes infected cells, so a
+    # config above that ratio can still die out.
     onc = {"replication": 0.9, "interferon": 0.3, "clearance": 0.2,
            "lysis": 0.15}
     eff_r = onc["replication"] * (1.0 - onc["interferon"])
+
+    def _spread(initial, steps=180):
+        infected, lysed = initial, 0.0
+        for _ in range(steps):
+            susceptible = max(1.0 - infected - lysed, 0.0)
+            infected = min(max(infected + eff_r * infected * susceptible
+                               - onc["clearance"] * infected
+                               - onc["lysis"] * infected, 0.0), 1.0)
+            lysed = min(lysed + onc["lysis"] * infected, 1.0)
+            if infected <= 0.0:
+                break
+        return infected, lysed
+
+    titres = [1e-6, 1e-5, 1e-4, 1e-3, 1e-2, 1e-1]
+    runs = {f"{t:g}": round(_spread(t)[1], 4) for t in titres}
+    verdicts = {k: v > 0.01 for k, v in runs.items()}
     p12 = {
         "effective_replication": round(eff_r, 4),
         "removal_rate": round(onc["clearance"] + onc["lysis"], 4),
+        "crate_threshold_ratio": round(eff_r / onc["clearance"], 4),
         "establishes": eff_r > onc["clearance"] + onc["lysis"],
-        "titres_tested": [1e-4, 1e-3, 1e-2, 1e-1],
+        "titres_tested": titres,
+        "orders_of_magnitude": len(titres) - 1,
+        "cumulative_lysed_by_titre": runs,
+        "verdict_is_the_same_at_every_titre": len(set(verdicts.values())) == 1,
+        "lysed_spread_across_titres": round(max(runs.values()) - min(runs.values()), 4),
     }
 
-    p13 = {"threshold_v_per_cm":
-           _rust_const("ablation", "IRREVERSIBLE_ELECTROPORATION_THRESHOLD_V_PER_CM"),
-           "survival_is_one_minus_coverage": True}
+    # P13 -- READ FROM `ablation.rs`, because `"survival_is_one_minus_coverage":
+    # True` was a Python literal. If the function ever gained an energy term
+    # the literal would stay True and the prediction would keep being
+    # published, which is the drift this whole script exists to prevent.
+    abl = (CORE / "ablation.rs").read_text()
+    body = re.search(r"pub fn margin_survival_fraction\(.*?\n}", abl, re.S)
+    if body is None:
+        raise SystemExit("ablation.rs: no margin_survival_fraction")
+    src13 = body.group(0)
+    p13 = {
+        "threshold_v_per_cm":
+            _rust_const("ablation",
+                        "IRREVERSIBLE_ELECTROPORATION_THRESHOLD_V_PER_CM"),
+        "returns_one_minus_covered": "1.0 - covered" in src13,
+        "reads_any_energy_quantity": any(
+            t in src13 for t in ("temperature_c", "minutes", "field_v_per_cm",
+                                 "cem43", "joules")),
+        "signature_takes_only_config_and_coverage":
+            bool(re.search(r"margin_survival_fraction\(\s*cfg: &AblationConfig,"
+                           r"\s*covered_fraction: f64,?\s*\)", src13)),
+    }
     return {"P9": p9, "P10": p10, "P11": p11, "P12": p12, "P13": p13}
 
 
@@ -152,11 +256,17 @@ def render(d: dict) -> str:
          "## P9 — the PARP sensitizer ratio falls with dose per fraction", "",
          f"Under the linear-quadratic model with an alpha-only boost, ONE "
          f"boost must hold the published {band_lo}-{band_hi} enhancement band "
-         f"across the whole survival range. Only {p9['window_share_of_scan']:.0%} "
-         f"of the scanned range does, and the admissible boosts are "
-         f"{p9['boost_window'][0]} to {p9['boost_window'][1]}. Within that "
-         f"window the ratio is larger at low dose per fraction than high, by a "
-         f"factor of {lo_r} to {hi_r}:", "",
+         f"at every surviving fraction in "
+         f"{p9['sampled_at_surviving_fractions']} — which is "
+         f"{p9['dose_range_gy'][0]} to {p9['dose_range_gy'][1]} Gy and NOT the "
+         f"whole survival range, a claim an earlier version made and this one "
+         f"withdraws. The admissible boosts are {p9['boost_window'][0]} to "
+         f"{p9['boost_window'][1]}, which is "
+         f"{p9['window_share_of_scan']:.0%} of a scan whose ceiling is "
+         f"{p9['scan_ceiling']} — a share quoted without its ceiling measures "
+         f"the ceiling, since the same window is 36% of a 0-to-1 scan. Within "
+         f"the window the ratio is larger at low dose per fraction than high, "
+         f"by a factor of {lo_r} to {hi_r}:", "",
          "| boost | SER at 2 Gy | SER at 6 Gy |", "|---|--:|--:|"]
     # Sorted HERE, on the boost, because a renderer that inherits dict order
     # publishes whatever the serialiser happened to do.
@@ -165,7 +275,12 @@ def render(d: dict) -> str:
     L += ["",
           "**The direction does not depend on the fit**, which is what makes "
           "it worth preregistering: it holds across the entire window the "
-          "published band permits. Beta is untouched by the boost because "
+          "published band permits, and it holds analytically at every dose "
+          "rather than only at the sampled ones. What the window itself does "
+          "NOT survive is a wider fractionation range — requiring the band at "
+          "1.8 Gy and at 20 Gy as well empties it, so the window is a "
+          "statement about 2.24 to 9.38 Gy and the page says which. Beta is "
+          "untouched by the boost because "
           "unrepaired single-strand breaks convert to double-strand breaks at "
           "replication — one-track damage — so the linear term rises alone and "
           "the ratio must decay with dose.", "",

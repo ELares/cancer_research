@@ -1027,11 +1027,14 @@ def fig34_depth_reach():
     whose delivered energy falls off at rates an order of magnitude apart,
     against a pharmacologic arm whose delivery does not fall off at all.
 
-    The control is what keeps it honest. `Control` retains 400% of its
-    surface kill, which is not robustness -- it is what a ratio does when
-    both terms are near zero, and a panel that plotted retention alone would
-    rank an untreated tumour first. So retention is drawn BESIDE the absolute
-    kill, and the control is drawn rather than dropped.
+    The control is what keeps it honest. `Control` retains 400% of its surface
+    kill, which is not robustness -- it is what a ratio does when both terms
+    are near zero, and a panel RANKED on retention would put an untreated
+    tumour at the top. Both panels therefore keep the SAME order, sorted by
+    absolute kill at depth, so the control sits last in both and its bar is
+    read against its neighbour rather than crowning a ranking. An earlier
+    caption said panel (b) "ranks the untreated arm first", which is not what
+    the figure draws: it is the tallest bar, not the first one.
     """
     src = Path(__file__).resolve().parent.parent / "analysis" / "depth-reach-comparison.json"
     if not src.exists():
@@ -1084,9 +1087,11 @@ def fig34_depth_reach():
     fig.suptitle("How far each modality reaches into tissue", fontsize=12.5,
                  fontweight="bold")
     fig.text(0.5, 0.015,
-             "NOT a ranking. Panel (b) ranks the UNTREATED arm first, which is "
-             "the point: retention is a ratio, and a ratio of two near-zero "
-             "numbers is not robustness. Read (a) and (b) together or neither. "
+             "NOT a ranking. Both panels share one order, sorted by kill at "
+             "depth, so the UNTREATED arm sits last in both - and in (b) it is "
+             "the TALLEST bar, which is the point: retention is a ratio, and a "
+             "ratio of two near-zero numbers is not robustness. Read (a) and "
+             "(b) together or neither. "
              f"Attenuation is fixed physics - PDT {mu['pdt_mu_eff_per_mm']}/mm, "
              f"radiation {mu['radiation_mu_per_cm']}/cm - while every kill "
              "magnitude rests on uncalibrated biochemistry.",
@@ -1143,12 +1148,13 @@ def fig35_calibration_verdicts():
         fontsize=11, fontweight="bold")
     fig.text(0.5, 0.02,
              "ADMISSIBLE means a parameter reproduces a published band, NOT "
-             "that the arm is validated - every one of these still feeds no "
-             "number the manuscript reports. The two rows that are not green "
-             "are the informative ones: an inadmissible arm has a target that "
-             "constrains a PRODUCT of factors neither of which is identifiable "
-             "from it, and an arm with no target has nothing published to fit "
-             "at all.",
+             "that the arm is validated - none of these feeds a number the "
+             "manuscript's quantitative chapters report. The three rows that "
+             "are not green are the informative ones: an UNCONSTRAINED arm has "
+             "a target so loose it admits almost the whole scanned range, an "
+             "INADMISSIBLE one has a target that constrains a PRODUCT of "
+             "factors neither of which is identifiable from it, and an arm "
+             "with NO TARGET has nothing published to fit at all.",
              ha="center", fontsize=7.2, color="#555", wrap=True)
     fig.tight_layout(rect=[0, 0.10, 1, 1])
     save(fig, "fig35_calibration_verdicts")

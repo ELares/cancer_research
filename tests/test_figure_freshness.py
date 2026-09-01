@@ -41,13 +41,20 @@ ones known and deliberate:
   `fig30_modality_landscape`, `fig31_modality_panel`, `fig32_modality_tme` and
   `fig33_adoptive_barriers`, `fig34_depth_reach` and `fig35_calibration_verdicts` read COMMITTED
   artifacts (`analysis/modality-tme.json`, `analysis/modality-coverage.json`,
+  `analysis/depth-reach-comparison.json`, `analysis/modality-calibration.json`,
   `analysis/modality-panel.json`), so unlike the rest of the backlog they
   regenerate offline and every number on them is pinned by
   `tests/test_modality_landscape_figure.py`, `tests/test_modality_panel.py`
-  and `tests/test_chapter6_figures.py` -- the last of which reads the numbers,
-  their POSITIONS and the drawn colours back out of the rendered PDF and
-  compares them to the artifact. That is narrower than it sounds and the
-  narrowness is the point: a reviewer defeated the first version of those
+  and `tests/test_chapter6_figures.py` -- the last of which reads numbers,
+  positions, drawn colours and row pairings back out of the rendered PDFs.
+  THIS SENTENCE HAS BEEN FALSE TWICE. It first claimed all four figures were
+  number-pinned while no test named fig32 or fig33; the retraction was written
+  for those two and the SAME claim was re-asserted for fig34 and fig35 in the
+  same edit, and a reviewer then reversed fig34's order, halved its stated
+  depth, rotated fig35's verdicts and inflated its title counts with all
+  sixteen guards green. Both are pinned now. What is pinned is cell identity,
+  sign, visible refusal text, colour direction, row pairing and the drawn
+  order -- not every property a figure has: a reviewer defeated the first version of those
   checks ten ways, including reversing every row so each value landed on the
   wrong arm, because they collected drawn numbers into a SET. What is pinned
   is cell identity, sign, visible refusal text and colour direction -- not
@@ -64,7 +71,7 @@ ones known and deliberate:
   through a deterministic generator, so regenerating it once -- which it
   needs anyway, being one of the seven below -- would bring it under a
   gate; `fig31_modality_panel` reads the TRACKED `analysis/modality-panel.json` and
-  is one of six `type: simulation` figures whose every number is pinned by a
+  is one of five `type: simulation` figures (fig30_modality_landscape is `type: conceptual`) whose every number is pinned by a
   test (this bullet said "the only" while the bullet above it said four,
   contradicting itself in one docstring); and `fig32_modality_tme`, `fig33_adoptive_barriers`, `fig34_depth_reach` and
   `fig35_calibration_verdicts` read TRACKED analysis JSON through the same
@@ -748,7 +755,7 @@ def _has_date(data) -> bool:
 
     THAT IS THE ONE OF TWO PLACES A PDF DATE LIVES. An XMP packet can carry
     `xmp:CreateDate` with no Info entry, and this returns False for it, as the
-    byte scan also did. Checked: none of the 38 committed figure PDFs carries
+    byte scan also did. Checked: none of the 36 committed figure PDFs carries
     any XMP packet, so the blind spot is not live -- but it is a blind spot,
     not the "any parser" the sentence used to claim. An encrypted PDF reports
     no metadata and also returns False silently; a non-PDF raises loudly. Measured on

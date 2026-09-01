@@ -11,10 +11,10 @@
   },
   {
    "module": "adc",
-   "pub_fns": 5,
+   "pub_fns": 7,
    "pub_types": 2,
    "pub_consts": 0,
-   "code_lines": 62,
+   "code_lines": 80,
    "serves": "Antibody-drug conjugate bystander effect",
    "reach": 1
   },
@@ -127,16 +127,16 @@
  "engine_pub_fns": 186,
  "engine_code_lines": 3988,
  "dedicated_modules": 5,
- "dedicated_pub_fns": 29,
- "dedicated_code_lines": 348,
+ "dedicated_pub_fns": 31,
+ "dedicated_code_lines": 366,
  "shared_modules": 5,
  "shared_pub_fns": 58,
  "shared_code_lines": 817,
  "engine_modules_with_shared": 32,
  "engine_pub_fns_with_shared": 244,
  "engine_code_lines_with_shared": 4805,
- "line_ratio_narrow": 11.5,
- "line_ratio_wide": 13.8,
- "fn_ratio_narrow": 6.4,
- "fn_ratio_wide": 8.4
+ "line_ratio_narrow": 10.9,
+ "line_ratio_wide": 13.1,
+ "fn_ratio_narrow": 6.0,
+ "fn_ratio_wide": 7.9
 }
