@@ -64,6 +64,30 @@ def test_the_figure_reads_the_artifact_and_types_no_number():
     # And the legend's tier names must be the tiers the artifact actually uses.
     for tier in ("treatment", "modifier", "absent"):
         assert f'"{tier}"' in src, f"the {tier} tier is no longer drawn"
+    # Panel (b) must CHANGE SUBJECT when the absent column empties, for the
+    # same reason the report does: a 100%-vs-0% stack draws a bar with nothing
+    # in it, collides its own labels, and invites a reader to take an emptied
+    # column as a result. Both branches must exist.
+    assert "if absent:" in src and "else:" in src, (
+        "panel (b) has only one form; at zero absent it will draw an empty "
+        "stack and report it as an achievement")
+    assert "Presence is not applicability" in src
+
+
+def test_panel_b_reports_applicability_once_nothing_is_absent(d):
+    """Which branch is live is decided by the data, so this asserts the one
+    that matches it -- and that the figure's own claim is the harder count."""
+    absent = [r for r in d["rows"] if r["engine_tier"] == "absent"]
+    treat = [r for r in d["rows"] if r["engine_tier"] == "treatment"]
+    src = DIAGRAMS.read_text()
+    if absent:
+        assert "mechanisms are absent" in src
+        return
+    assert len(treat) >= 1, "nothing is applicable and nothing is absent"
+    assert "is applicable" in src, (
+        "the absent column is empty and panel (b) does not report "
+        "applicability, which is the only distinction it has left")
+    assert "The absent column emptied." in src
 
 
 def test_the_figure_is_registered_with_its_input():
@@ -85,19 +109,35 @@ def test_the_manuscript_section_matches_the_measurement(d, manuscript):
     section fails the day an arm lands and it is not re-derived.
     """
     absent = [r for r in d["rows"] if r["engine_tier"] == "absent"]
-    a_vol = sum(r["census"] for r in absent)
-    a_tr = sum(r["trials"] for r in absent)
+    treat = [r for r in d["rows"] if r["engine_tier"] == "treatment"]
     assert "What This Engine Cannot Be Asked" in manuscript, (
         "Section 10.2 is gone; the criticism it answers has not gone away")
-    assert f"**{len(absent)} have no engine representation at all**" in manuscript, (
-        f"the section does not state the measured {len(absent)} absent "
-        "mechanisms")
-    assert f"{a_vol:,} census articles" in manuscript
-    assert f"{a_tr:,} registered trials" in manuscript
-    pct = f"{a_vol / d['total_census'] * 100:.0f}%"
-    assert f"({pct} of the taxonomy's volume)" in manuscript
-    # The closing accounting must use the SAME number, not a rounder one.
-    assert f"{len(absent)} of sixteen mechanisms remain absent" in manuscript
+    if absent:
+        a_vol = sum(r["census"] for r in absent)
+        a_tr = sum(r["trials"] for r in absent)
+        pct = f"{a_vol / d['total_census'] * 100:.0f}%"
+        assert f"**{len(absent)} have no engine representation at all**" in manuscript
+        assert f"{a_vol:,} census articles" in manuscript
+        assert f"{a_tr:,} registered trials" in manuscript
+        assert f"({pct} of the taxonomy's volume)" in manuscript
+        assert f"{len(absent)} of sixteen mechanisms remain absent" in manuscript
+    else:
+        # The count reached zero, which is where the section has to change
+        # what it is ABOUT rather than change a number. Presence is not
+        # applicability, and the harder count must now be the stated one.
+        assert "That column is now empty" in manuscript, (
+            "nothing is absent any more and the section still reports an "
+            "absence count; it has to move to the applicability count")
+        assert "Presence is not applicability" in manuscript
+        assert "no mechanism remains absent, but fifteen of sixteen remain " \
+               "inapplicable" in manuscript
+        assert len(treat) == 1, (
+            f"{len(treat)} mechanisms are applicable and the section still "
+            "says one")
+        # The opening figure must still be quoted, because it is what makes
+        # the closing one mean anything.
+        assert "thirteen had **no engine representation at all**" in manuscript
+        assert "90,019 census articles" in manuscript
 
 
 def test_the_section_keeps_the_refusal_and_the_limits(manuscript):

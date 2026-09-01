@@ -31,7 +31,7 @@
   "trigger_wave",
   "tumor_pk"
  ],
- "module_count": 33,
+ "module_count": 34,
  "taxonomy_named": [
   "antibody-drug-conjugate",
   "bioelectric",
@@ -236,7 +236,9 @@
    "trials": 6,
    "trial_share": 0.16,
    "growth": 8.13,
-   "code_modules": [],
+   "code_modules": [
+    "cell"
+   ],
    "prose_only_modules": []
   },
   {
@@ -256,7 +258,9 @@
    "trials": 142,
    "trial_share": 5.65,
    "growth": 0.81,
-   "code_modules": [],
+   "code_modules": [
+    "ablation"
+   ],
    "prose_only_modules": []
   },
   {
@@ -272,6 +276,7 @@
     "physics"
    ],
    "prose_only_modules": [
+    "ablation",
     "dose_schedule",
     "grid",
     "immune",
@@ -288,7 +293,9 @@
    "trials": 96,
    "trial_share": 7.1,
    "growth": 1.16,
-   "code_modules": [],
+   "code_modules": [
+    "ablation"
+   ],
    "prose_only_modules": [
     "oxygen"
    ]
@@ -310,7 +317,9 @@
    "trials": 12,
    "trial_share": 3.16,
    "growth": null,
-   "code_modules": [],
+   "code_modules": [
+    "immune"
+   ],
    "prose_only_modules": []
   },
   {
@@ -319,7 +328,9 @@
    "trials": 2,
    "trial_share": 0.66,
    "growth": null,
-   "code_modules": [],
+   "code_modules": [
+    "immune"
+   ],
    "prose_only_modules": []
   }
  ],
@@ -447,9 +458,11 @@
    "trials": 6,
    "trial_share": 0.16,
    "growth": 8.13,
-   "code_modules": [],
+   "code_modules": [
+    "cell"
+   ],
    "prose_only_modules": [],
-   "engine_tier": "absent"
+   "engine_tier": "modifier"
   },
   {
    "mechanism": "bispecific-antibody",
@@ -469,9 +482,11 @@
    "trials": 142,
    "trial_share": 5.65,
    "growth": 0.81,
-   "code_modules": [],
+   "code_modules": [
+    "ablation"
+   ],
    "prose_only_modules": [],
-   "engine_tier": "absent"
+   "engine_tier": "modifier"
   },
   {
    "mechanism": "sonodynamic",
@@ -486,6 +501,7 @@
     "physics"
    ],
    "prose_only_modules": [
+    "ablation",
     "dose_schedule",
     "grid",
     "immune",
@@ -503,11 +519,13 @@
    "trials": 96,
    "trial_share": 7.1,
    "growth": 1.16,
-   "code_modules": [],
+   "code_modules": [
+    "ablation"
+   ],
    "prose_only_modules": [
     "oxygen"
    ],
-   "engine_tier": "absent"
+   "engine_tier": "modifier"
   },
   {
    "mechanism": "phagocytosis-checkpoint",
@@ -527,9 +545,11 @@
    "trials": 12,
    "trial_share": 3.16,
    "growth": null,
-   "code_modules": [],
+   "code_modules": [
+    "immune"
+   ],
    "prose_only_modules": [],
-   "engine_tier": "absent"
+   "engine_tier": "modifier"
   },
   {
    "mechanism": "mrna-vaccine",
@@ -537,9 +557,11 @@
    "trials": 2,
    "trial_share": 0.66,
    "growth": null,
-   "code_modules": [],
+   "code_modules": [
+    "immune"
+   ],
    "prose_only_modules": [],
-   "engine_tier": "absent"
+   "engine_tier": "modifier"
   }
  ],
  "active_treatments": [
@@ -548,8 +570,8 @@
   "PDT",
   "Radiation"
  ],
- "absent_count": 5,
- "absent_census": 8222,
- "absent_trials": 258,
+ "absent_count": 0,
+ "absent_census": 0,
+ "absent_trials": 0,
  "total_census": 165700
 }

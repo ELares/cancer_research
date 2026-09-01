@@ -93,6 +93,70 @@ pub enum Phenotype {
     Stromal,
 }
 
+/// A CRISPR/Cas9 knockout target: a PERMANENT edit to a cell's parameters, as opposed to
+/// the reversible inhibition every drug in this engine applies.
+///
+/// The taxonomy's `crispr` mechanism (3,674 census articles, and the lowest
+/// trial count in the table at 6 — a preclinical tool far more than a
+/// therapy, which the row records rather than glosses).
+///
+/// **The distinction from a drug is the entire content of this type**, and
+/// getting it wrong would make CRISPR indistinguishable from an inhibitor at
+/// 100% efficacy. `Params::rsl3_gpx4_inhib` scales GPX4 down and the cell
+/// recovers as GPX4 is resynthesised — `Cell::gpx4` is a level that
+/// regenerates. A knockout removes the GENE, so the protein never comes back
+/// and every daughter inherits the edit. In this engine that is the difference
+/// between scaling a state variable and setting the value it recovers TOWARD.
+///
+/// So this applies at cell GENERATION rather than as a per-step effect, and
+/// `efficiency` is the transfection/editing rate — the fraction of cells that
+/// actually take the edit, which is the quantity that limits every real
+/// CRISPR experiment and is why an unedited subpopulation survives.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub enum CrisprKnockoutTarget {
+    /// GPX4: the ferroptosis engine's central defence.
+    Gpx4,
+    /// FSP1: the GPX4-independent parallel defence.
+    Fsp1,
+    /// ACSL4: removes the substrate rather than the defence — an
+    /// anti-ferroptotic edit, and the direction matters. A model that only
+    /// offered sensitising knockouts would misrepresent what the tool is for.
+    Acsl4,
+}
+
+/// Apply a knockout to a generated cell.
+///
+/// Returns the cell unchanged when `efficiency` is `0.0` (the default a
+/// consumer should carry), so an unconfigured run is bit-identical.
+///
+/// `rng` decides whether THIS cell took the edit, which is why editing is a
+/// population phenomenon here and not a parameter: at 70% efficiency, 30% of
+/// the tumour is untouched and behaves exactly as it did before.
+pub fn apply_crispr_knockout(
+    mut cell: Cell,
+    target: CrisprKnockoutTarget,
+    efficiency: f64,
+    rng: &mut StdRng,
+) -> Cell {
+    if efficiency <= 0.0 {
+        return cell;
+    }
+    if rng.gen::<f64>() >= efficiency.min(1.0) {
+        return cell;
+    }
+    match target {
+        // Zero, not "low": the gene is gone. `lipid_unsat` is left alone
+        // because a GPX4 knockout does not change what the membrane is made
+        // of, only whether the peroxides get cleared.
+        CrisprKnockoutTarget::Gpx4 => cell.gpx4 = 0.0,
+        CrisprKnockoutTarget::Fsp1 => cell.fsp1 = 0.0,
+        // ACSL4 loads PUFAs into membrane phospholipids, so removing it takes
+        // away the OXIDISABLE SUBSTRATE and protects the cell.
+        CrisprKnockoutTarget::Acsl4 => cell.lipid_unsat = 0.0,
+    }
+    cell
+}
+
 /// Generate a cell with stochastic parameters for the given phenotype.
 /// Identical to the original v3 simulation for the four base phenotypes.
 pub fn gen_cell(pheno: Phenotype, rng: &mut StdRng) -> Cell {

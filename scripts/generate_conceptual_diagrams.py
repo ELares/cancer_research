@@ -635,29 +635,67 @@ def fig30_modality_landscape():
     axA.set_xlim(0, max(census) * 1.18)
 
     absent = [r for r in rows if r["engine_tier"] == "absent"]
-    covered = [r for r in rows if r["engine_tier"] != "absent"]
-    cov_vals = [sum(r["census"] for r in covered), sum(r["trials"] for r in covered)]
-    abs_vals = [sum(r["census"] for r in absent), sum(r["trials"] for r in absent)]
-    labels = ["census articles", "registered trials"]
-    x = np.arange(len(labels))
-    tot = [c + a for c, a in zip(cov_vals, abs_vals)]
-    axB.bar(x, [c / t * 100 for c, t in zip(cov_vals, tot)], 0.55,
-            color=COLORS["checkpoint"], edgecolor="black", linewidth=0.5,
-            label="engine can express it")
-    axB.bar(x, [a / t * 100 for a, t in zip(abs_vals, tot)], 0.55,
-            bottom=[c / t * 100 for c, t in zip(cov_vals, tot)],
-            color="#BFBFBF", edgecolor="black", linewidth=0.5,
-            label="no engine representation")
-    for i, (a, t) in enumerate(zip(abs_vals, tot)):
-        axB.text(i, 100 - (a / t * 100) / 2, f"{a:,}\n({a / t * 100:.0f}%)",
-                 ha="center", va="center", fontsize=8.5, fontweight="bold")
-    axB.set_xticks(x)
-    axB.set_xticklabels(labels, fontsize=9)
-    axB.set_ylabel("Share of the 16 measurable mechanisms (%)", fontsize=9)
-    axB.set_ylim(0, 100)
-    axB.set_title(f"(b) {len(absent)} of {len(rows)} mechanisms are absent",
-                  fontsize=10, fontweight="bold")
-    axB.legend(fontsize=7.5, loc="lower left", framealpha=0.95)
+    treatment = [r for r in rows if r["engine_tier"] == "treatment"]
+    modifier = [r for r in rows if r["engine_tier"] == "modifier"]
+
+    # PANEL (b) CHANGES SUBJECT WHEN THE ABSENT COLUMN EMPTIES, for the same
+    # reason the report does. Stacking 100% against 0% draws a bar with
+    # nothing in it and collides its own labels, and worse, it invites a
+    # reader to take an emptied column as a result. Once nothing is absent the
+    # informative split is APPLICABILITY -- how many mechanisms a run can
+    # actually select -- which is a harder number and a smaller one.
+    if absent:
+        cov_vals = [sum(r["census"] for r in rows) - sum(r["census"] for r in absent),
+                    sum(r["trials"] for r in rows) - sum(r["trials"] for r in absent)]
+        abs_vals = [sum(r["census"] for r in absent), sum(r["trials"] for r in absent)]
+        labels = ["census articles", "registered trials"]
+        x = np.arange(len(labels))
+        tot = [c + a for c, a in zip(cov_vals, abs_vals)]
+        axB.bar(x, [c / t * 100 for c, t in zip(cov_vals, tot)], 0.55,
+                color=COLORS["checkpoint"], edgecolor="black", linewidth=0.5,
+                label="engine can express it")
+        axB.bar(x, [a / t * 100 for a, t in zip(abs_vals, tot)], 0.55,
+                bottom=[c / t * 100 for c, t in zip(cov_vals, tot)],
+                color="#BFBFBF", edgecolor="black", linewidth=0.5,
+                label="no engine representation")
+        for i, (a, t) in enumerate(zip(abs_vals, tot)):
+            axB.text(i, 100 - (a / t * 100) / 2, f"{a:,}\n({a / t * 100:.0f}%)",
+                     ha="center", va="center", fontsize=8.5, fontweight="bold")
+        axB.set_xticks(x)
+        axB.set_xticklabels(labels, fontsize=9)
+        axB.set_ylabel("Share of the 16 measurable mechanisms (%)", fontsize=9)
+        axB.set_ylim(0, 100)
+        axB.set_title(f"(b) {len(absent)} of {len(rows)} mechanisms are absent",
+                      fontsize=10, fontweight="bold")
+        axB.legend(fontsize=7.5, loc="lower left", framealpha=0.95)
+    else:
+        cats = ["applicable\nas a treatment", "present, but only\nas a modifier"]
+        counts = [len(treatment), len(modifier)]
+        vols = [sum(r["census"] for r in treatment),
+                sum(r["census"] for r in modifier)]
+        x = np.arange(len(cats))
+        axB.bar(x, counts, 0.5,
+                color=[COLORS["sdt"], COLORS["checkpoint"]],
+                edgecolor="black", linewidth=0.5)
+        for i, (c, v) in enumerate(zip(counts, vols)):
+            axB.text(i, c + max(counts) * 0.03,
+                     f"{c} of {len(rows)}\n{v:,} articles",
+                     ha="center", va="bottom", fontsize=9, fontweight="bold")
+        axB.set_xticks(x)
+        axB.set_xticklabels(cats, fontsize=8.5)
+        axB.set_ylabel("Mechanisms", fontsize=9)
+        axB.set_ylim(0, max(counts) * 1.35)
+        axB.set_title(
+            f"(b) Every mechanism is present; {len(treatment)} of {len(rows)} "
+            "is applicable",
+            fontsize=10, fontweight="bold")
+        axB.text(0.5, 0.42,
+                 "The absent column emptied.\nPresence is not applicability —\n"
+                 "a modifier is only ever a coefficient\non something else.",
+                 transform=axB.transAxes, ha="center", va="center",
+                 fontsize=8, color="#444", style="italic",
+                 bbox=dict(boxstyle="round,pad=0.45", fc="white",
+                           ec="#BBB", alpha=0.95))
     axB.set_facecolor(COLORS["bg"])
 
     active = d["active_treatments"]
