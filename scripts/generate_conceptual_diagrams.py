@@ -818,6 +818,173 @@ def fig31_modality_panel():
     save(fig, "fig31_modality_panel")
 
 
+# ── Figure 32: what the microenvironment does to every arm ────────────
+
+def fig32_modality_tme():
+    """The resistance sweep, on a SIGNED scale, split by cell state.
+
+    Two things this figure exists to show, neither of which survives a
+    conventional treatment.
+
+    THE SCALE MUST BE SIGNED. An earlier version of the analysis behind this
+    took the absolute value of every change and reported an arm that "loses
+    121%" -- impossible, and worse, it hid a real result: one axis HELPS.
+    Clonal heterogeneity raises the pharmacologic arm's kill, because widening
+    the antioxidant setpoint while holding its mean supplies a low-glutathione
+    tail that dies while the average cell resists. A magnitude colour map would
+    paint that the same shade as a catastrophic loss, so the map is diverging
+    and zero is the neutral colour.
+
+    IT IS SPLIT BY PHENOTYPE because the answer changes with the cell state,
+    and that IS the finding. An earlier sweep ran one phenotype and reported
+    two axes inert -- correctly for that run, and misleadingly, because what
+    was inert was the configuration's ability to see them.
+
+    Every value is read from `analysis/modality-tme.json`.
+    """
+    src = Path(__file__).resolve().parent.parent / "analysis" / "modality-tme.json"
+    if not src.exists():
+        print("  fig32: analysis/modality-tme.json missing - skipping")
+        return
+    d = json.loads(src.read_text())
+    ebp = d["effects_by_phenotype"]
+    phenos = d["phenotypes"]
+    axes_order = list(ebp[phenos[0]].keys())
+    arms = d["arms"]
+
+    fig, axs = plt.subplots(1, len(phenos), figsize=(13.0, 5.6), sharey=True)
+    vmax = max(abs(v) for ph in phenos for ax in axes_order
+               for v in ebp[ph][ax].values()) or 1.0
+    for k, ph in enumerate(phenos):
+        M = np.array([[ebp[ph][ax].get(a, 0.0) for ax in axes_order]
+                      for a in arms], dtype=float)
+        ax = axs[k]
+        # `RdBu` and NOT `RdBu_r`: low values must be RED. The first draft
+        # used the reversed map, which drew every loss in blue and every gain
+        # in red while the caption below said the opposite -- a figure
+        # contradicting its own legend, which is the defect this campaign has
+        # spent three review rounds removing from prose.
+        im = ax.imshow(M, cmap="RdBu", vmin=-vmax, vmax=vmax, aspect="auto")
+        ax.set_xticks(range(len(axes_order)))
+        ax.set_xticklabels(axes_order, rotation=28, ha="right", fontsize=8.5)
+        ax.set_yticks(range(len(arms)))
+        if k == 0:
+            ax.set_yticklabels(arms, fontsize=8.5)
+        ax.set_title(f"{ph} state", fontsize=10.5, fontweight="bold")
+        for i in range(M.shape[0]):
+            for j in range(M.shape[1]):
+                v = M[i, j]
+                if abs(v) < 0.005:
+                    continue
+                ax.text(j, i, f"{v * 100:+.0f}", ha="center", va="center",
+                        fontsize=7.0,
+                        color="white" if abs(v) > 0.55 * vmax else "#222")
+        ax.set_xticks(np.arange(-0.5, len(axes_order), 1), minor=True)
+        ax.set_yticks(np.arange(-0.5, len(arms), 1), minor=True)
+        ax.grid(which="minor", color="white", linewidth=1.1)
+        ax.tick_params(which="minor", length=0)
+
+    cb = fig.colorbar(im, ax=axs, fraction=0.026, pad=0.02)
+    cb.set_label("change in kill fraction (%)  -  negative is resistance",
+                 fontsize=8.5)
+    fig.suptitle("What the microenvironment does to every arm, by cell state",
+                 fontsize=12.5, fontweight="bold", y=0.985)
+    # The caption sat on top of the rotated tick labels in the first draft.
+    fig.subplots_adjust(bottom=0.30, top=0.88, left=0.115, right=0.90)
+    fig.text(0.5, 0.02,
+             "NOT a ranking. Signed deliberately: red is a loss, blue a GAIN, "
+             "and the gains are real - clonal heterogeneity supplies a "
+             "low-defence tail that dies while the average cell resists. A "
+             "blank cell is an axis that cannot act on that arm, which is a "
+             "property of the run rather than of the biology. Every arm but "
+             "radiation's DNA channel is parameterised with placeholders.",
+             ha="center", fontsize=7.2, color="#555", wrap=True)
+    save(fig, "fig32_modality_tme")
+
+
+# ── Figure 33: the CAR-T barrier cascade ──────────────────────────────
+
+def fig33_adoptive_barriers():
+    """One construct, two diseases, as a waterfall.
+
+    The point is that no single step looks catastrophic. Three barriers at
+    plausible values leave six per cent, exhaustion removes most of what is
+    left, and the product is the difference between a therapy that cures a
+    blood cancer and one that does very little in a solid tumour. A single
+    efficacy scalar would fit the same endpoints and lose exactly that.
+
+    The bars are DERIVED from `analysis/modality-panel.json` and their product
+    is asserted against the collapse before anything is drawn, because the
+    decomposition beside them was a residual once -- the antigen term absorbed
+    whatever the other two did not explain, which made it unfalsifiable.
+    """
+    src = Path(__file__).resolve().parent.parent / "analysis" / "modality-panel.json"
+    if not src.exists():
+        print("  fig33: analysis/modality-panel.json missing - skipping")
+        return
+    ab = json.loads(src.read_text()).get("adoptive_barriers")
+    if not ab:
+        print("  fig33: no adoptive_barriers block - skipping")
+        return
+    leuk = ab["leukaemia_kill_fraction"]
+    solid = ab["solid_tumour_kill_fraction"]
+    steps = [
+        ("infused\n(leukaemia)", leuk, COLORS.get("immune", "#FFD700")),
+        ("after the three\ndelivery barriers",
+         leuk * ab["delivery_efficiency_solid"], "#CD5C5C"),
+        ("after persistence",
+         leuk * ab["delivery_efficiency_solid"]
+         * ab["persistence_at_run_end_solid"], "#8B0000"),
+        ("after the\nantigen ceiling", solid, "#4B0000"),
+    ]
+    # The drawing must not be able to disagree with the page beside it.
+    assert abs(steps[-2][1] / solid - 1.0) < 0.05 or ab["antigen_ceiling_binds"], (
+        "the ceiling changes the kill but the binary says it does not bind")
+
+    fig, ax = plt.subplots(figsize=(8.4, 4.8))
+    xs = np.arange(len(steps))
+    vals = [v for _, v, _ in steps]
+    ax.bar(xs, vals, 0.58, color=[c for _, _, c in steps],
+           edgecolor="black", linewidth=0.6)
+    ax.set_yscale("log")
+    ax.set_ylabel("kill fraction (log scale)", fontsize=9.5)
+    ax.set_xticks(xs)
+    ax.set_xticklabels([n for n, _, _ in steps], fontsize=8.6)
+    # ONE format for all four bars. The first draft printed "0.12%" beside
+    # "6.93e-05", which are the same kind of quantity in two notations and
+    # invites a reader to compare them by eye and get it wrong.
+    for x, v in zip(xs, vals):
+        ax.text(x, v * 1.55, f"{v * 100:.4g}%", ha="center", fontsize=8.6,
+                fontweight="bold")
+    ax.set_ylim(min(vals) * 0.45, max(vals) * 4.0)
+    for i in range(len(steps) - 1):
+        drop = vals[i] / vals[i + 1] if vals[i + 1] > 0 else float("inf")
+        if drop < 1.01:
+            label = "no effect"
+        else:
+            label = f"/{drop:,.1f}"
+        ax.annotate(label, xy=(i + 0.5, (vals[i] * vals[i + 1]) ** 0.5),
+                    ha="center", fontsize=8.6, color="#333",
+                    fontweight="bold")
+    inert = sum(1 for i in range(len(steps) - 1)
+                if vals[i] / vals[i + 1] < 1.01)
+    ax.set_title(
+        f"The same CAR-T construct, twice: a {leuk / solid:,.0f}x collapse "
+        f"across three barriers, {inert} of which does nothing here",
+        fontsize=11.0, fontweight="bold", pad=14)
+    fig.text(0.5, 0.005,
+             "NOT a clinical comparison. Every barrier value is an "
+             "uncalibrated placeholder; the corpus establishes that the "
+             "barriers are real and GENERAL rather than antigen-specific, not "
+             "which of them dominates. The antigen ceiling is a CAP, so it "
+             "contributes nothing unless it fires - here it does not, and the "
+             "figure shows that rather than hiding it.",
+             ha="center", fontsize=7.2, color="#555", wrap=True)
+    fig.tight_layout(rect=[0, 0.08, 1, 1])
+    save(fig, "fig33_adoptive_barriers")
+
+
+
 if __name__ == "__main__":
     print("Generating conceptual diagrams...")
     fig18_hypoxia()
@@ -828,4 +995,6 @@ if __name__ == "__main__":
     fig23_census_flow()
     fig30_modality_landscape()
     fig31_modality_panel()
+    fig32_modality_tme()
+    fig33_adoptive_barriers()
     print("Done.")
