@@ -1,0 +1,3579 @@
+{
+ "amplification": [
+  {
+   "phenotype": "glycolytic",
+   "stressed": false,
+   "heterogeneous": false,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 15.733327921751082,
+    "PDT": 16.07229478722598,
+    "RSL3": 0.0,
+    "SDT": 16.07229478722598
+   },
+   "kill": {
+    "AntibodyDrugConjugate": 0.63375,
+    "PDT": 0.8705,
+    "RSL3": 0.0,
+    "SDT": 0.8705
+   }
+  },
+  {
+   "phenotype": "glycolytic",
+   "stressed": true,
+   "heterogeneous": false,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 0.0,
+    "PDT": 16.07229478722598,
+    "RSL3": 0.0,
+    "SDT": 16.07229478722598
+   },
+   "kill": {
+    "AntibodyDrugConjugate": 0.0,
+    "PDT": 0.8705,
+    "RSL3": 0.0,
+    "SDT": 0.8705
+   }
+  },
+  {
+   "phenotype": "glycolytic",
+   "stressed": true,
+   "heterogeneous": false,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 15.73335350663781,
+    "PDT": 16.072177445106014,
+    "RSL3": 0.0,
+    "SDT": 16.072177445106014
+   },
+   "kill": {
+    "AntibodyDrugConjugate": 0.632,
+    "PDT": 0.87025,
+    "RSL3": 0.0,
+    "SDT": 0.87025
+   }
+  },
+  {
+   "phenotype": "glycolytic",
+   "stressed": true,
+   "heterogeneous": false,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 0.0,
+    "PDT": 16.072177445106014,
+    "RSL3": 0.0,
+    "SDT": 16.072177445106014
+   },
+   "kill": {
+    "AntibodyDrugConjugate": 0.0,
+    "PDT": 0.87025,
+    "RSL3": 0.0,
+    "SDT": 0.87025
+   }
+  },
+  {
+   "phenotype": "glycolytic",
+   "stressed": true,
+   "heterogeneous": false,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 15.733327921751082,
+    "PDT": 15.649639186822277,
+    "RSL3": 0.0,
+    "SDT": 15.649639186822277
+   },
+   "kill": {
+    "AntibodyDrugConjugate": 0.63375,
+    "PDT": 0.2795,
+    "RSL3": 0.0,
+    "SDT": 0.2795
+   }
+  },
+  {
+   "phenotype": "glycolytic",
+   "stressed": true,
+   "heterogeneous": false,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 0.0,
+    "PDT": 15.649639186822277,
+    "RSL3": 0.0,
+    "SDT": 15.649639186822277
+   },
+   "kill": {
+    "AntibodyDrugConjugate": 0.0,
+    "PDT": 0.2795,
+    "RSL3": 0.0,
+    "SDT": 0.2795
+   }
+  },
+  {
+   "phenotype": "glycolytic",
+   "stressed": true,
+   "heterogeneous": false,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 15.73335350663781,
+    "PDT": 15.649863013182756,
+    "RSL3": 0.0,
+    "SDT": 15.649863013182756
+   },
+   "kill": {
+    "AntibodyDrugConjugate": 0.632,
+    "PDT": 0.27925,
+    "RSL3": 0.0,
+    "SDT": 0.27925
+   }
+  },
+  {
+   "phenotype": "glycolytic",
+   "stressed": true,
+   "heterogeneous": false,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 0.0,
+    "PDT": 15.649863013182756,
+    "RSL3": 0.0,
+    "SDT": 15.649863013182756
+   },
+   "kill": {
+    "AntibodyDrugConjugate": 0.0,
+    "PDT": 0.27925,
+    "RSL3": 0.0,
+    "SDT": 0.27925
+   }
+  },
+  {
+   "phenotype": "glycolytic",
+   "stressed": true,
+   "heterogeneous": false,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 0.0,
+    "PDT": 0.0,
+    "RSL3": 0.0,
+    "SDT": 15.921900274684534
+   },
+   "kill": {
+    "AntibodyDrugConjugate": 0.0,
+    "PDT": 0.0,
+    "RSL3": 0.0,
+    "SDT": 0.80175
+   }
+  },
+  {
+   "phenotype": "glycolytic",
+   "stressed": true,
+   "heterogeneous": false,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 0.0,
+    "PDT": 0.0,
+    "RSL3": 0.0,
+    "SDT": 15.921900274684534
+   },
+   "kill": {
+    "AntibodyDrugConjugate": 0.0,
+    "PDT": 0.0,
+    "RSL3": 0.0,
+    "SDT": 0.80175
+   }
+  },
+  {
+   "phenotype": "glycolytic",
+   "stressed": true,
+   "heterogeneous": false,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 0.0,
+    "PDT": 0.0,
+    "RSL3": 0.0,
+    "SDT": 15.924004778656226
+   },
+   "kill": {
+    "AntibodyDrugConjugate": 0.0,
+    "PDT": 0.0,
+    "RSL3": 0.0,
+    "SDT": 0.80025
+   }
+  },
+  {
+   "phenotype": "glycolytic",
+   "stressed": true,
+   "heterogeneous": false,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 0.0,
+    "PDT": 0.0,
+    "RSL3": 0.0,
+    "SDT": 15.924004778656226
+   },
+   "kill": {
+    "AntibodyDrugConjugate": 0.0,
+    "PDT": 0.0,
+    "RSL3": 0.0,
+    "SDT": 0.80025
+   }
+  },
+  {
+   "phenotype": "glycolytic",
+   "stressed": true,
+   "heterogeneous": false,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 0.0,
+    "PDT": 0.0,
+    "RSL3": 0.0,
+    "SDT": 15.663023853163063
+   },
+   "kill": {
+    "AntibodyDrugConjugate": 0.0,
+    "PDT": 0.0,
+    "RSL3": 0.0,
+    "SDT": 0.188
+   }
+  },
+  {
+   "phenotype": "glycolytic",
+   "stressed": true,
+   "heterogeneous": false,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 0.0,
+    "PDT": 0.0,
+    "RSL3": 0.0,
+    "SDT": 15.663023853163063
+   },
+   "kill": {
+    "AntibodyDrugConjugate": 0.0,
+    "PDT": 0.0,
+    "RSL3": 0.0,
+    "SDT": 0.188
+   }
+  },
+  {
+   "phenotype": "glycolytic",
+   "stressed": true,
+   "heterogeneous": false,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 0.0,
+    "PDT": 0.0,
+    "RSL3": 0.0,
+    "SDT": 15.667897854237701
+   },
+   "kill": {
+    "AntibodyDrugConjugate": 0.0,
+    "PDT": 0.0,
+    "RSL3": 0.0,
+    "SDT": 0.186
+   }
+  },
+  {
+   "phenotype": "glycolytic",
+   "stressed": true,
+   "heterogeneous": false,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 0.0,
+    "PDT": 0.0,
+    "RSL3": 0.0,
+    "SDT": 15.667897854237701
+   },
+   "kill": {
+    "AntibodyDrugConjugate": 0.0,
+    "PDT": 0.0,
+    "RSL3": 0.0,
+    "SDT": 0.186
+   }
+  },
+  {
+   "phenotype": "persister",
+   "stressed": false,
+   "heterogeneous": false,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 19.55802904088117,
+    "PDT": 20.049123201505687,
+    "RSL3": 17.728982967046697,
+    "SDT": 20.049123201505687
+   },
+   "kill": {
+    "AntibodyDrugConjugate": 1.0,
+    "PDT": 1.0,
+    "RSL3": 0.415,
+    "SDT": 1.0
+   }
+  },
+  {
+   "phenotype": "persister",
+   "stressed": true,
+   "heterogeneous": false,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 17.675316793548312,
+    "PDT": 20.049123201505687,
+    "RSL3": 17.518746392062905,
+    "SDT": 20.049123201505687
+   },
+   "kill": {
+    "AntibodyDrugConjugate": 0.9615,
+    "PDT": 1.0,
+    "RSL3": 0.02075,
+    "SDT": 1.0
+   }
+  },
+  {
+   "phenotype": "persister",
+   "stressed": true,
+   "heterogeneous": false,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 19.561048248397913,
+    "PDT": 20.044597978666054,
+    "RSL3": 17.721813312514584,
+    "SDT": 20.044597978666054
+   },
+   "kill": {
+    "AntibodyDrugConjugate": 1.0,
+    "PDT": 1.0,
+    "RSL3": 0.40675,
+    "SDT": 1.0
+   }
+  },
+  {
+   "phenotype": "persister",
+   "stressed": true,
+   "heterogeneous": false,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 17.673343510642585,
+    "PDT": 20.044597978666054,
+    "RSL3": 17.881778605414517,
+    "SDT": 20.044597978666054
+   },
+   "kill": {
+    "AntibodyDrugConjugate": 0.95825,
+    "PDT": 1.0,
+    "RSL3": 0.019,
+    "SDT": 1.0
+   }
+  },
+  {
+   "phenotype": "persister",
+   "stressed": true,
+   "heterogeneous": false,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 19.55802904088117,
+    "PDT": 19.098257337295074,
+    "RSL3": 17.728982967046697,
+    "SDT": 19.098257337295074
+   },
+   "kill": {
+    "AntibodyDrugConjugate": 1.0,
+    "PDT": 1.0,
+    "RSL3": 0.415,
+    "SDT": 1.0
+   }
+  },
+  {
+   "phenotype": "persister",
+   "stressed": true,
+   "heterogeneous": false,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 17.675316793548312,
+    "PDT": 19.098257337295074,
+    "RSL3": 17.518746392062905,
+    "SDT": 19.098257337295074
+   },
+   "kill": {
+    "AntibodyDrugConjugate": 0.9615,
+    "PDT": 1.0,
+    "RSL3": 0.02075,
+    "SDT": 1.0
+   }
+  },
+  {
+   "phenotype": "persister",
+   "stressed": true,
+   "heterogeneous": false,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 19.561048248397913,
+    "PDT": 19.100564911518184,
+    "RSL3": 17.721813312514584,
+    "SDT": 19.100564911518184
+   },
+   "kill": {
+    "AntibodyDrugConjugate": 1.0,
+    "PDT": 1.0,
+    "RSL3": 0.40675,
+    "SDT": 1.0
+   }
+  },
+  {
+   "phenotype": "persister",
+   "stressed": true,
+   "heterogeneous": false,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 17.673343510642585,
+    "PDT": 19.100564911518184,
+    "RSL3": 17.881778605414517,
+    "SDT": 19.100564911518184
+   },
+   "kill": {
+    "AntibodyDrugConjugate": 0.95825,
+    "PDT": 1.0,
+    "RSL3": 0.019,
+    "SDT": 1.0
+   }
+  },
+  {
+   "phenotype": "persister",
+   "stressed": true,
+   "heterogeneous": false,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 17.54638283037662,
+    "PDT": 17.609546347875533,
+    "RSL3": 17.728982967046697,
+    "SDT": 19.864989357334085
+   },
+   "kill": {
+    "AntibodyDrugConjugate": 0.0105,
+    "PDT": 0.92125,
+    "RSL3": 0.415,
+    "SDT": 1.0
+   }
+  },
+  {
+   "phenotype": "persister",
+   "stressed": true,
+   "heterogeneous": false,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 17.49987974813158,
+    "PDT": 17.609546347875533,
+    "RSL3": 17.518746392062905,
+    "SDT": 19.864989357334085
+   },
+   "kill": {
+    "AntibodyDrugConjugate": 0.0105,
+    "PDT": 0.92125,
+    "RSL3": 0.02075,
+    "SDT": 1.0
+   }
+  },
+  {
+   "phenotype": "persister",
+   "stressed": true,
+   "heterogeneous": false,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 17.792325417213892,
+    "PDT": 17.608052183157916,
+    "RSL3": 17.721813312514584,
+    "SDT": 19.861873823492402
+   },
+   "kill": {
+    "AntibodyDrugConjugate": 0.0095,
+    "PDT": 0.9185,
+    "RSL3": 0.40675,
+    "SDT": 1.0
+   }
+  },
+  {
+   "phenotype": "persister",
+   "stressed": true,
+   "heterogeneous": false,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 17.779556108244254,
+    "PDT": 17.608052183157916,
+    "RSL3": 17.881778605414517,
+    "SDT": 19.861873823492402
+   },
+   "kill": {
+    "AntibodyDrugConjugate": 0.0095,
+    "PDT": 0.9185,
+    "RSL3": 0.019,
+    "SDT": 1.0
+   }
+  },
+  {
+   "phenotype": "persister",
+   "stressed": true,
+   "heterogeneous": false,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 17.54638283037662,
+    "PDT": 17.550015292665464,
+    "RSL3": 17.728982967046697,
+    "SDT": 18.965339031963772
+   },
+   "kill": {
+    "AntibodyDrugConjugate": 0.0105,
+    "PDT": 0.58025,
+    "RSL3": 0.415,
+    "SDT": 1.0
+   }
+  },
+  {
+   "phenotype": "persister",
+   "stressed": true,
+   "heterogeneous": false,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 17.49987974813158,
+    "PDT": 17.550015292665464,
+    "RSL3": 17.518746392062905,
+    "SDT": 18.965339031963772
+   },
+   "kill": {
+    "AntibodyDrugConjugate": 0.0105,
+    "PDT": 0.58025,
+    "RSL3": 0.02075,
+    "SDT": 1.0
+   }
+  },
+  {
+   "phenotype": "persister",
+   "stressed": true,
+   "heterogeneous": false,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 17.792325417213892,
+    "PDT": 17.532030479161907,
+    "RSL3": 17.721813312514584,
+    "SDT": 18.966780157504466
+   },
+   "kill": {
+    "AntibodyDrugConjugate": 0.0095,
+    "PDT": 0.5695,
+    "RSL3": 0.40675,
+    "SDT": 1.0
+   }
+  },
+  {
+   "phenotype": "persister",
+   "stressed": true,
+   "heterogeneous": false,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 17.779556108244254,
+    "PDT": 17.532030479161907,
+    "RSL3": 17.881778605414517,
+    "SDT": 18.966780157504466
+   },
+   "kill": {
+    "AntibodyDrugConjugate": 0.0095,
+    "PDT": 0.5695,
+    "RSL3": 0.019,
+    "SDT": 1.0
+   }
+  },
+  {
+   "phenotype": "glycolytic",
+   "stressed": true,
+   "heterogeneous": true,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 15.730657899790847,
+    "PDT": 16.08160095086264,
+    "RSL3": 0.0,
+    "SDT": 16.08160095086264
+   },
+   "kill": {
+    "AntibodyDrugConjugate": 0.6395,
+    "PDT": 0.87075,
+    "RSL3": 0.0,
+    "SDT": 0.87075
+   }
+  },
+  {
+   "phenotype": "glycolytic",
+   "stressed": true,
+   "heterogeneous": true,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 0.0,
+    "PDT": 16.08160095086264,
+    "RSL3": 0.0,
+    "SDT": 16.08160095086264
+   },
+   "kill": {
+    "AntibodyDrugConjugate": 0.0,
+    "PDT": 0.87075,
+    "RSL3": 0.0,
+    "SDT": 0.87075
+   }
+  },
+  {
+   "phenotype": "glycolytic",
+   "stressed": true,
+   "heterogeneous": true,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 15.732857968820001,
+    "PDT": 16.082370244833154,
+    "RSL3": 0.0,
+    "SDT": 16.082370244833154
+   },
+   "kill": {
+    "AntibodyDrugConjugate": 0.63825,
+    "PDT": 0.87025,
+    "RSL3": 0.0,
+    "SDT": 0.87025
+   }
+  },
+  {
+   "phenotype": "glycolytic",
+   "stressed": true,
+   "heterogeneous": true,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 0.0,
+    "PDT": 16.082370244833154,
+    "RSL3": 0.0,
+    "SDT": 16.082370244833154
+   },
+   "kill": {
+    "AntibodyDrugConjugate": 0.0,
+    "PDT": 0.87025,
+    "RSL3": 0.0,
+    "SDT": 0.87025
+   }
+  },
+  {
+   "phenotype": "glycolytic",
+   "stressed": true,
+   "heterogeneous": true,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 15.730657899790847,
+    "PDT": 15.610847282828239,
+    "RSL3": 0.0,
+    "SDT": 15.610847282828239
+   },
+   "kill": {
+    "AntibodyDrugConjugate": 0.6395,
+    "PDT": 0.29,
+    "RSL3": 0.0,
+    "SDT": 0.29
+   }
+  },
+  {
+   "phenotype": "glycolytic",
+   "stressed": true,
+   "heterogeneous": true,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 0.0,
+    "PDT": 15.610847282828239,
+    "RSL3": 0.0,
+    "SDT": 15.610847282828239
+   },
+   "kill": {
+    "AntibodyDrugConjugate": 0.0,
+    "PDT": 0.29,
+    "RSL3": 0.0,
+    "SDT": 0.29
+   }
+  },
+  {
+   "phenotype": "glycolytic",
+   "stressed": true,
+   "heterogeneous": true,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 15.732857968820001,
+    "PDT": 15.611589654961989,
+    "RSL3": 0.0,
+    "SDT": 15.611589654961989
+   },
+   "kill": {
+    "AntibodyDrugConjugate": 0.63825,
+    "PDT": 0.2885,
+    "RSL3": 0.0,
+    "SDT": 0.2885
+   }
+  },
+  {
+   "phenotype": "glycolytic",
+   "stressed": true,
+   "heterogeneous": true,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 0.0,
+    "PDT": 15.611589654961989,
+    "RSL3": 0.0,
+    "SDT": 15.611589654961989
+   },
+   "kill": {
+    "AntibodyDrugConjugate": 0.0,
+    "PDT": 0.2885,
+    "RSL3": 0.0,
+    "SDT": 0.2885
+   }
+  },
+  {
+   "phenotype": "glycolytic",
+   "stressed": true,
+   "heterogeneous": true,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 0.0,
+    "PDT": 0.0,
+    "RSL3": 0.0,
+    "SDT": 15.927697085671563
+   },
+   "kill": {
+    "AntibodyDrugConjugate": 0.0,
+    "PDT": 0.0,
+    "RSL3": 0.0,
+    "SDT": 0.804
+   }
+  },
+  {
+   "phenotype": "glycolytic",
+   "stressed": true,
+   "heterogeneous": true,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 0.0,
+    "PDT": 0.0,
+    "RSL3": 0.0,
+    "SDT": 15.927697085671563
+   },
+   "kill": {
+    "AntibodyDrugConjugate": 0.0,
+    "PDT": 0.0,
+    "RSL3": 0.0,
+    "SDT": 0.804
+   }
+  },
+  {
+   "phenotype": "glycolytic",
+   "stressed": true,
+   "heterogeneous": true,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 0.0,
+    "PDT": 0.0,
+    "RSL3": 0.0,
+    "SDT": 15.926861192173893
+   },
+   "kill": {
+    "AntibodyDrugConjugate": 0.0,
+    "PDT": 0.0,
+    "RSL3": 0.0,
+    "SDT": 0.8035
+   }
+  },
+  {
+   "phenotype": "glycolytic",
+   "stressed": true,
+   "heterogeneous": true,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 0.0,
+    "PDT": 0.0,
+    "RSL3": 0.0,
+    "SDT": 15.926861192173893
+   },
+   "kill": {
+    "AntibodyDrugConjugate": 0.0,
+    "PDT": 0.0,
+    "RSL3": 0.0,
+    "SDT": 0.8035
+   }
+  },
+  {
+   "phenotype": "glycolytic",
+   "stressed": true,
+   "heterogeneous": true,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 0.0,
+    "PDT": 0.0,
+    "RSL3": 0.0,
+    "SDT": 15.62117885466891
+   },
+   "kill": {
+    "AntibodyDrugConjugate": 0.0,
+    "PDT": 0.0,
+    "RSL3": 0.0,
+    "SDT": 0.19325
+   }
+  },
+  {
+   "phenotype": "glycolytic",
+   "stressed": true,
+   "heterogeneous": true,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 0.0,
+    "PDT": 0.0,
+    "RSL3": 0.0,
+    "SDT": 15.62117885466891
+   },
+   "kill": {
+    "AntibodyDrugConjugate": 0.0,
+    "PDT": 0.0,
+    "RSL3": 0.0,
+    "SDT": 0.19325
+   }
+  },
+  {
+   "phenotype": "glycolytic",
+   "stressed": true,
+   "heterogeneous": true,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 0.0,
+    "PDT": 0.0,
+    "RSL3": 0.0,
+    "SDT": 15.630189646989598
+   },
+   "kill": {
+    "AntibodyDrugConjugate": 0.0,
+    "PDT": 0.0,
+    "RSL3": 0.0,
+    "SDT": 0.1915
+   }
+  },
+  {
+   "phenotype": "glycolytic",
+   "stressed": true,
+   "heterogeneous": true,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 0.0,
+    "PDT": 0.0,
+    "RSL3": 0.0,
+    "SDT": 15.630189646989598
+   },
+   "kill": {
+    "AntibodyDrugConjugate": 0.0,
+    "PDT": 0.0,
+    "RSL3": 0.0,
+    "SDT": 0.1915
+   }
+  },
+  {
+   "phenotype": "persister",
+   "stressed": true,
+   "heterogeneous": true,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 19.57052332180348,
+    "PDT": 20.065589774902897,
+    "RSL3": 17.67893442884732,
+    "SDT": 20.065589774902897
+   },
+   "kill": {
+    "AntibodyDrugConjugate": 1.0,
+    "PDT": 1.0,
+    "RSL3": 0.45525,
+    "SDT": 1.0
+   }
+  },
+  {
+   "phenotype": "persister",
+   "stressed": true,
+   "heterogeneous": true,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 17.69349865395929,
+    "PDT": 20.065589774902897,
+    "RSL3": 17.720473273971745,
+    "SDT": 20.065589774902897
+   },
+   "kill": {
+    "AntibodyDrugConjugate": 0.9565,
+    "PDT": 1.0,
+    "RSL3": 0.043,
+    "SDT": 1.0
+   }
+  },
+  {
+   "phenotype": "persister",
+   "stressed": true,
+   "heterogeneous": true,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 19.571144177620724,
+    "PDT": 20.064941074086,
+    "RSL3": 17.677173709389997,
+    "SDT": 20.064941074086
+   },
+   "kill": {
+    "AntibodyDrugConjugate": 1.0,
+    "PDT": 1.0,
+    "RSL3": 0.4435,
+    "SDT": 1.0
+   }
+  },
+  {
+   "phenotype": "persister",
+   "stressed": true,
+   "heterogeneous": true,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 17.695438107340223,
+    "PDT": 20.064941074086,
+    "RSL3": 17.609591108293575,
+    "SDT": 20.064941074086
+   },
+   "kill": {
+    "AntibodyDrugConjugate": 0.953,
+    "PDT": 1.0,
+    "RSL3": 0.041,
+    "SDT": 1.0
+   }
+  },
+  {
+   "phenotype": "persister",
+   "stressed": true,
+   "heterogeneous": true,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 19.57052332180348,
+    "PDT": 19.09141614375605,
+    "RSL3": 17.67893442884732,
+    "SDT": 19.09141614375605
+   },
+   "kill": {
+    "AntibodyDrugConjugate": 1.0,
+    "PDT": 1.0,
+    "RSL3": 0.45525,
+    "SDT": 1.0
+   }
+  },
+  {
+   "phenotype": "persister",
+   "stressed": true,
+   "heterogeneous": true,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 17.69349865395929,
+    "PDT": 19.09141614375605,
+    "RSL3": 17.720473273971745,
+    "SDT": 19.09141614375605
+   },
+   "kill": {
+    "AntibodyDrugConjugate": 0.9565,
+    "PDT": 1.0,
+    "RSL3": 0.043,
+    "SDT": 1.0
+   }
+  },
+  {
+   "phenotype": "persister",
+   "stressed": true,
+   "heterogeneous": true,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 19.571144177620724,
+    "PDT": 19.091541793685067,
+    "RSL3": 17.677173709389997,
+    "SDT": 19.091541793685067
+   },
+   "kill": {
+    "AntibodyDrugConjugate": 1.0,
+    "PDT": 1.0,
+    "RSL3": 0.4435,
+    "SDT": 1.0
+   }
+  },
+  {
+   "phenotype": "persister",
+   "stressed": true,
+   "heterogeneous": true,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 17.695438107340223,
+    "PDT": 19.091541793685067,
+    "RSL3": 17.609591108293575,
+    "SDT": 19.091541793685067
+   },
+   "kill": {
+    "AntibodyDrugConjugate": 0.953,
+    "PDT": 1.0,
+    "RSL3": 0.041,
+    "SDT": 1.0
+   }
+  },
+  {
+   "phenotype": "persister",
+   "stressed": true,
+   "heterogeneous": true,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 17.835799578185878,
+    "PDT": 17.633763384535843,
+    "RSL3": 17.67893442884732,
+    "SDT": 19.87247718326567
+   },
+   "kill": {
+    "AntibodyDrugConjugate": 0.02175,
+    "PDT": 0.9075,
+    "RSL3": 0.45525,
+    "SDT": 1.0
+   }
+  },
+  {
+   "phenotype": "persister",
+   "stressed": true,
+   "heterogeneous": true,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 17.815939474451547,
+    "PDT": 17.633763384535843,
+    "RSL3": 17.720473273971745,
+    "SDT": 19.87247718326567
+   },
+   "kill": {
+    "AntibodyDrugConjugate": 0.02175,
+    "PDT": 0.9075,
+    "RSL3": 0.043,
+    "SDT": 1.0
+   }
+  },
+  {
+   "phenotype": "persister",
+   "stressed": true,
+   "heterogeneous": true,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 17.3327053500364,
+    "PDT": 17.631581596682064,
+    "RSL3": 17.677173709389997,
+    "SDT": 19.870212081078986
+   },
+   "kill": {
+    "AntibodyDrugConjugate": 0.02125,
+    "PDT": 0.9035,
+    "RSL3": 0.4435,
+    "SDT": 1.0
+   }
+  },
+  {
+   "phenotype": "persister",
+   "stressed": true,
+   "heterogeneous": true,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 17.32508533505483,
+    "PDT": 17.631581596682064,
+    "RSL3": 17.609591108293575,
+    "SDT": 19.870212081078986
+   },
+   "kill": {
+    "AntibodyDrugConjugate": 0.02125,
+    "PDT": 0.9035,
+    "RSL3": 0.041,
+    "SDT": 1.0
+   }
+  },
+  {
+   "phenotype": "persister",
+   "stressed": true,
+   "heterogeneous": true,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 17.835799578185878,
+    "PDT": 17.567587318715912,
+    "RSL3": 17.67893442884732,
+    "SDT": 18.966444358349747
+   },
+   "kill": {
+    "AntibodyDrugConjugate": 0.02175,
+    "PDT": 0.5675,
+    "RSL3": 0.45525,
+    "SDT": 1.0
+   }
+  },
+  {
+   "phenotype": "persister",
+   "stressed": true,
+   "heterogeneous": true,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 17.815939474451547,
+    "PDT": 17.567587318715912,
+    "RSL3": 17.720473273971745,
+    "SDT": 18.966444358349747
+   },
+   "kill": {
+    "AntibodyDrugConjugate": 0.02175,
+    "PDT": 0.5675,
+    "RSL3": 0.043,
+    "SDT": 1.0
+   }
+  },
+  {
+   "phenotype": "persister",
+   "stressed": true,
+   "heterogeneous": true,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 17.3327053500364,
+    "PDT": 17.55454387908239,
+    "RSL3": 17.677173709389997,
+    "SDT": 18.969509210043412
+   },
+   "kill": {
+    "AntibodyDrugConjugate": 0.02125,
+    "PDT": 0.558,
+    "RSL3": 0.4435,
+    "SDT": 1.0
+   }
+  },
+  {
+   "phenotype": "persister",
+   "stressed": true,
+   "heterogeneous": true,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 17.32508533505483,
+    "PDT": 17.55454387908239,
+    "RSL3": 17.609591108293575,
+    "SDT": 18.969509210043412
+   },
+   "kill": {
+    "AntibodyDrugConjugate": 0.02125,
+    "PDT": 0.558,
+    "RSL3": 0.041,
+    "SDT": 1.0
+   }
+  }
+ ],
+ "axes": [
+  "hypoxia",
+  "stroma",
+  "acidic pH",
+  "depth",
+  "clonal heterogeneity"
+ ],
+ "conditions": [
+  {
+   "acidic": false,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.00519617596893708,
+    "AntibodyDrugConjugate": 0.63375,
+    "Immunotherapy": 0.0003715200000000001,
+    "OncolyticVirus": 0.1357329103448276,
+    "PDT": 0.8705,
+    "RSL3": 0.0,
+    "Radiation": 0.4555047171958997,
+    "SDT": 0.8705
+   },
+   "clonal_spread": 0.0,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 15.733327921751082,
+    "PDT": 16.07229478722598,
+    "RSL3": 0.0,
+    "SDT": 16.07229478722598
+   },
+   "deep": false,
+   "depth_um": 0.0,
+   "exo_factor": 1.0,
+   "heterogeneous": false,
+   "hypoxic": false,
+   "immune_amplification": {
+    "RSL3": 0.0,
+    "SDT": 0.0077670676664716816
+   },
+   "ion_trap_factor": 1.0,
+   "o2_supply": 1.0,
+   "ph": 7.4,
+   "phenotype": "glycolytic",
+   "stroma": false
+  },
+  {
+   "acidic": true,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.00519617596893708,
+    "AntibodyDrugConjugate": 0.0,
+    "Immunotherapy": 0.0003715200000000001,
+    "OncolyticVirus": 0.1357329103448276,
+    "PDT": 0.8705,
+    "RSL3": 0.0,
+    "Radiation": 0.4555047171958997,
+    "SDT": 0.8705
+   },
+   "clonal_spread": 0.0,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 0.0,
+    "PDT": 16.07229478722598,
+    "RSL3": 0.0,
+    "SDT": 16.07229478722598
+   },
+   "deep": false,
+   "depth_um": 0.0,
+   "exo_factor": 1.0,
+   "heterogeneous": false,
+   "hypoxic": false,
+   "immune_amplification": {
+    "RSL3": 0.0,
+    "SDT": 0.0077670676664716816
+   },
+   "ion_trap_factor": 0.3,
+   "o2_supply": 1.0,
+   "ph": 6.5,
+   "phenotype": "glycolytic",
+   "stroma": false
+  },
+  {
+   "acidic": false,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.00519617596893708,
+    "AntibodyDrugConjugate": 0.632,
+    "Immunotherapy": 0.0003715200000000001,
+    "OncolyticVirus": 0.1357329103448276,
+    "PDT": 0.87025,
+    "RSL3": 0.0,
+    "Radiation": 0.4555047171958997,
+    "SDT": 0.87025
+   },
+   "clonal_spread": 0.0,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 15.73335350663781,
+    "PDT": 16.072177445106014,
+    "RSL3": 0.0,
+    "SDT": 16.072177445106014
+   },
+   "deep": false,
+   "depth_um": 0.0,
+   "exo_factor": 1.0,
+   "heterogeneous": false,
+   "hypoxic": false,
+   "immune_amplification": {
+    "RSL3": 0.0,
+    "SDT": 0.007764836283109703
+   },
+   "ion_trap_factor": 1.0,
+   "o2_supply": 1.0,
+   "ph": 7.4,
+   "phenotype": "glycolytic",
+   "stroma": true
+  },
+  {
+   "acidic": true,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.00519617596893708,
+    "AntibodyDrugConjugate": 0.0,
+    "Immunotherapy": 0.0003715200000000001,
+    "OncolyticVirus": 0.1357329103448276,
+    "PDT": 0.87025,
+    "RSL3": 0.0,
+    "Radiation": 0.4555047171958997,
+    "SDT": 0.87025
+   },
+   "clonal_spread": 0.0,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 0.0,
+    "PDT": 16.072177445106014,
+    "RSL3": 0.0,
+    "SDT": 16.072177445106014
+   },
+   "deep": false,
+   "depth_um": 0.0,
+   "exo_factor": 1.0,
+   "heterogeneous": false,
+   "hypoxic": false,
+   "immune_amplification": {
+    "RSL3": 0.0,
+    "SDT": 0.007764836283109703
+   },
+   "ion_trap_factor": 0.3,
+   "o2_supply": 1.0,
+   "ph": 6.5,
+   "phenotype": "glycolytic",
+   "stroma": true
+  },
+  {
+   "acidic": false,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.0023094115417498133,
+    "AntibodyDrugConjugate": 0.63375,
+    "Immunotherapy": 0.00016512000000000005,
+    "OncolyticVirus": 0.1353257379310345,
+    "PDT": 0.2795,
+    "RSL3": 0.0,
+    "Radiation": 0.3015514060714153,
+    "SDT": 0.2795
+   },
+   "clonal_spread": 0.0,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 15.733327921751082,
+    "PDT": 15.649639186822277,
+    "RSL3": 0.0,
+    "SDT": 15.649639186822277
+   },
+   "deep": false,
+   "depth_um": 0.0,
+   "exo_factor": 0.6292682926829268,
+   "heterogeneous": false,
+   "hypoxic": true,
+   "immune_amplification": {
+    "RSL3": 0.0,
+    "SDT": 0.0025425915451826844
+   },
+   "ion_trap_factor": 1.0,
+   "o2_supply": 0.05,
+   "ph": 7.4,
+   "phenotype": "glycolytic",
+   "stroma": false
+  },
+  {
+   "acidic": true,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.0023094115417498133,
+    "AntibodyDrugConjugate": 0.0,
+    "Immunotherapy": 0.00016512000000000005,
+    "OncolyticVirus": 0.1353257379310345,
+    "PDT": 0.2795,
+    "RSL3": 0.0,
+    "Radiation": 0.3015514060714153,
+    "SDT": 0.2795
+   },
+   "clonal_spread": 0.0,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 0.0,
+    "PDT": 15.649639186822277,
+    "RSL3": 0.0,
+    "SDT": 15.649639186822277
+   },
+   "deep": false,
+   "depth_um": 0.0,
+   "exo_factor": 0.6292682926829268,
+   "heterogeneous": false,
+   "hypoxic": true,
+   "immune_amplification": {
+    "RSL3": 0.0,
+    "SDT": 0.0025425915451826844
+   },
+   "ion_trap_factor": 0.3,
+   "o2_supply": 0.05,
+   "ph": 6.5,
+   "phenotype": "glycolytic",
+   "stroma": false
+  },
+  {
+   "acidic": false,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.0023094115417498133,
+    "AntibodyDrugConjugate": 0.632,
+    "Immunotherapy": 0.00016512000000000005,
+    "OncolyticVirus": 0.1353257379310345,
+    "PDT": 0.27925,
+    "RSL3": 0.0,
+    "Radiation": 0.3015514060714153,
+    "SDT": 0.27925
+   },
+   "clonal_spread": 0.0,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 15.73335350663781,
+    "PDT": 15.649863013182756,
+    "RSL3": 0.0,
+    "SDT": 15.649863013182756
+   },
+   "deep": false,
+   "depth_um": 0.0,
+   "exo_factor": 0.6292682926829268,
+   "heterogeneous": false,
+   "hypoxic": true,
+   "immune_amplification": {
+    "RSL3": 0.0,
+    "SDT": 0.002540472218684358
+   },
+   "ion_trap_factor": 1.0,
+   "o2_supply": 0.05,
+   "ph": 7.4,
+   "phenotype": "glycolytic",
+   "stroma": true
+  },
+  {
+   "acidic": true,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.0023094115417498133,
+    "AntibodyDrugConjugate": 0.0,
+    "Immunotherapy": 0.00016512000000000005,
+    "OncolyticVirus": 0.1353257379310345,
+    "PDT": 0.27925,
+    "RSL3": 0.0,
+    "Radiation": 0.3015514060714153,
+    "SDT": 0.27925
+   },
+   "clonal_spread": 0.0,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 0.0,
+    "PDT": 15.649863013182756,
+    "RSL3": 0.0,
+    "SDT": 15.649863013182756
+   },
+   "deep": false,
+   "depth_um": 0.0,
+   "exo_factor": 0.6292682926829268,
+   "heterogeneous": false,
+   "hypoxic": true,
+   "immune_amplification": {
+    "RSL3": 0.0,
+    "SDT": 0.002540472218684358
+   },
+   "ion_trap_factor": 0.3,
+   "o2_supply": 0.05,
+   "ph": 6.5,
+   "phenotype": "glycolytic",
+   "stroma": true
+  },
+  {
+   "acidic": false,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.00519617596893708,
+    "AntibodyDrugConjugate": 0.0,
+    "Immunotherapy": 0.0003715200000000001,
+    "OncolyticVirus": 0.1357329103448276,
+    "PDT": 0.0,
+    "RSL3": 0.0,
+    "Radiation": 0.4497374032387358,
+    "SDT": 0.80175
+   },
+   "clonal_spread": 0.0,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 0.0,
+    "PDT": 0.0,
+    "RSL3": 0.0,
+    "SDT": 15.921900274684534
+   },
+   "deep": true,
+   "depth_um": 5000.0,
+   "exo_factor": 1.0,
+   "heterogeneous": false,
+   "hypoxic": false,
+   "immune_amplification": {
+    "RSL3": 0.0,
+    "SDT": 0.0071151856865979725
+   },
+   "ion_trap_factor": 1.0,
+   "o2_supply": 1.0,
+   "ph": 7.4,
+   "phenotype": "glycolytic",
+   "stroma": false
+  },
+  {
+   "acidic": true,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.00519617596893708,
+    "AntibodyDrugConjugate": 0.0,
+    "Immunotherapy": 0.0003715200000000001,
+    "OncolyticVirus": 0.1357329103448276,
+    "PDT": 0.0,
+    "RSL3": 0.0,
+    "Radiation": 0.4497374032387358,
+    "SDT": 0.80175
+   },
+   "clonal_spread": 0.0,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 0.0,
+    "PDT": 0.0,
+    "RSL3": 0.0,
+    "SDT": 15.921900274684534
+   },
+   "deep": true,
+   "depth_um": 5000.0,
+   "exo_factor": 1.0,
+   "heterogeneous": false,
+   "hypoxic": false,
+   "immune_amplification": {
+    "RSL3": 0.0,
+    "SDT": 0.0071151856865979725
+   },
+   "ion_trap_factor": 0.3,
+   "o2_supply": 1.0,
+   "ph": 6.5,
+   "phenotype": "glycolytic",
+   "stroma": false
+  },
+  {
+   "acidic": false,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.00519617596893708,
+    "AntibodyDrugConjugate": 0.0,
+    "Immunotherapy": 0.0003715200000000001,
+    "OncolyticVirus": 0.1357329103448276,
+    "PDT": 0.0,
+    "RSL3": 0.0,
+    "Radiation": 0.4497374032387358,
+    "SDT": 0.80025
+   },
+   "clonal_spread": 0.0,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 0.0,
+    "PDT": 0.0,
+    "RSL3": 0.0,
+    "SDT": 15.924004778656226
+   },
+   "deep": true,
+   "depth_um": 5000.0,
+   "exo_factor": 1.0,
+   "heterogeneous": false,
+   "hypoxic": false,
+   "immune_amplification": {
+    "RSL3": 0.0,
+    "SDT": 0.007102840792646069
+   },
+   "ion_trap_factor": 1.0,
+   "o2_supply": 1.0,
+   "ph": 7.4,
+   "phenotype": "glycolytic",
+   "stroma": true
+  },
+  {
+   "acidic": true,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.00519617596893708,
+    "AntibodyDrugConjugate": 0.0,
+    "Immunotherapy": 0.0003715200000000001,
+    "OncolyticVirus": 0.1357329103448276,
+    "PDT": 0.0,
+    "RSL3": 0.0,
+    "Radiation": 0.4497374032387358,
+    "SDT": 0.80025
+   },
+   "clonal_spread": 0.0,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 0.0,
+    "PDT": 0.0,
+    "RSL3": 0.0,
+    "SDT": 15.924004778656226
+   },
+   "deep": true,
+   "depth_um": 5000.0,
+   "exo_factor": 1.0,
+   "heterogeneous": false,
+   "hypoxic": false,
+   "immune_amplification": {
+    "RSL3": 0.0,
+    "SDT": 0.007102840792646069
+   },
+   "ion_trap_factor": 0.3,
+   "o2_supply": 1.0,
+   "ph": 6.5,
+   "phenotype": "glycolytic",
+   "stroma": true
+  },
+  {
+   "acidic": false,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.0023094115417498133,
+    "AntibodyDrugConjugate": 0.0,
+    "Immunotherapy": 0.00016512000000000005,
+    "OncolyticVirus": 0.1353257379310345,
+    "PDT": 0.0,
+    "RSL3": 0.0,
+    "Radiation": 0.2973961544425532,
+    "SDT": 0.188
+   },
+   "clonal_spread": 0.0,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 0.0,
+    "PDT": 0.0,
+    "RSL3": 0.0,
+    "SDT": 15.663023853163063
+   },
+   "deep": true,
+   "depth_um": 5000.0,
+   "exo_factor": 0.6292682926829268,
+   "heterogeneous": false,
+   "hypoxic": true,
+   "immune_amplification": {
+    "RSL3": 0.0,
+    "SDT": 0.0017584146159833165
+   },
+   "ion_trap_factor": 1.0,
+   "o2_supply": 0.05,
+   "ph": 7.4,
+   "phenotype": "glycolytic",
+   "stroma": false
+  },
+  {
+   "acidic": true,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.0023094115417498133,
+    "AntibodyDrugConjugate": 0.0,
+    "Immunotherapy": 0.00016512000000000005,
+    "OncolyticVirus": 0.1353257379310345,
+    "PDT": 0.0,
+    "RSL3": 0.0,
+    "Radiation": 0.2973961544425532,
+    "SDT": 0.188
+   },
+   "clonal_spread": 0.0,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 0.0,
+    "PDT": 0.0,
+    "RSL3": 0.0,
+    "SDT": 15.663023853163063
+   },
+   "deep": true,
+   "depth_um": 5000.0,
+   "exo_factor": 0.6292682926829268,
+   "heterogeneous": false,
+   "hypoxic": true,
+   "immune_amplification": {
+    "RSL3": 0.0,
+    "SDT": 0.0017584146159833165
+   },
+   "ion_trap_factor": 0.3,
+   "o2_supply": 0.05,
+   "ph": 6.5,
+   "phenotype": "glycolytic",
+   "stroma": false
+  },
+  {
+   "acidic": false,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.0023094115417498133,
+    "AntibodyDrugConjugate": 0.0,
+    "Immunotherapy": 0.00016512000000000005,
+    "OncolyticVirus": 0.1353257379310345,
+    "PDT": 0.0,
+    "RSL3": 0.0,
+    "Radiation": 0.2973961544425532,
+    "SDT": 0.186
+   },
+   "clonal_spread": 0.0,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 0.0,
+    "PDT": 0.0,
+    "RSL3": 0.0,
+    "SDT": 15.667897854237701
+   },
+   "deep": true,
+   "depth_um": 5000.0,
+   "exo_factor": 0.6292682926829268,
+   "heterogeneous": false,
+   "hypoxic": true,
+   "immune_amplification": {
+    "RSL3": 0.0,
+    "SDT": 0.0017416184324469798
+   },
+   "ion_trap_factor": 1.0,
+   "o2_supply": 0.05,
+   "ph": 7.4,
+   "phenotype": "glycolytic",
+   "stroma": true
+  },
+  {
+   "acidic": true,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.0023094115417498133,
+    "AntibodyDrugConjugate": 0.0,
+    "Immunotherapy": 0.00016512000000000005,
+    "OncolyticVirus": 0.1353257379310345,
+    "PDT": 0.0,
+    "RSL3": 0.0,
+    "Radiation": 0.2973961544425532,
+    "SDT": 0.186
+   },
+   "clonal_spread": 0.0,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 0.0,
+    "PDT": 0.0,
+    "RSL3": 0.0,
+    "SDT": 15.667897854237701
+   },
+   "deep": true,
+   "depth_um": 5000.0,
+   "exo_factor": 0.6292682926829268,
+   "heterogeneous": false,
+   "hypoxic": true,
+   "immune_amplification": {
+    "RSL3": 0.0,
+    "SDT": 0.0017416184324469798
+   },
+   "ion_trap_factor": 0.3,
+   "o2_supply": 0.05,
+   "ph": 6.5,
+   "phenotype": "glycolytic",
+   "stroma": true
+  },
+  {
+   "acidic": false,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.00519617596893708,
+    "AntibodyDrugConjugate": 1.0,
+    "Immunotherapy": 0.0003715200000000001,
+    "OncolyticVirus": 0.1357329103448276,
+    "PDT": 1.0,
+    "RSL3": 0.415,
+    "Radiation": 0.4555047171958997,
+    "SDT": 1.0
+   },
+   "clonal_spread": 0.0,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 19.55802904088117,
+    "PDT": 20.049123201505687,
+    "RSL3": 17.728982967046697,
+    "SDT": 20.049123201505687
+   },
+   "deep": false,
+   "depth_um": 0.0,
+   "exo_factor": 1.0,
+   "heterogeneous": false,
+   "hypoxic": false,
+   "immune_amplification": {
+    "RSL3": 0.004054748307804205,
+    "SDT": 0.0
+   },
+   "ion_trap_factor": 1.0,
+   "o2_supply": 1.0,
+   "ph": 7.4,
+   "phenotype": "persister",
+   "stroma": false
+  },
+  {
+   "acidic": true,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.00519617596893708,
+    "AntibodyDrugConjugate": 0.9615,
+    "Immunotherapy": 0.0003715200000000001,
+    "OncolyticVirus": 0.1357329103448276,
+    "PDT": 1.0,
+    "RSL3": 0.02075,
+    "Radiation": 0.4555047171958997,
+    "SDT": 1.0
+   },
+   "clonal_spread": 0.0,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 17.675316793548312,
+    "PDT": 20.049123201505687,
+    "RSL3": 17.518746392062905,
+    "SDT": 20.049123201505687
+   },
+   "deep": false,
+   "depth_um": 0.0,
+   "exo_factor": 1.0,
+   "heterogeneous": false,
+   "hypoxic": false,
+   "immune_amplification": {
+    "RSL3": 0.00033782029812700075,
+    "SDT": 0.0
+   },
+   "ion_trap_factor": 0.3,
+   "o2_supply": 1.0,
+   "ph": 6.5,
+   "phenotype": "persister",
+   "stroma": false
+  },
+  {
+   "acidic": false,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.00519617596893708,
+    "AntibodyDrugConjugate": 1.0,
+    "Immunotherapy": 0.0003715200000000001,
+    "OncolyticVirus": 0.1357329103448276,
+    "PDT": 1.0,
+    "RSL3": 0.40675,
+    "Radiation": 0.4555047171958997,
+    "SDT": 1.0
+   },
+   "clonal_spread": 0.0,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 19.561048248397913,
+    "PDT": 20.044597978666054,
+    "RSL3": 17.721813312514584,
+    "SDT": 20.044597978666054
+   },
+   "deep": false,
+   "depth_um": 0.0,
+   "exo_factor": 1.0,
+   "heterogeneous": false,
+   "hypoxic": false,
+   "immune_amplification": {
+    "RSL3": 0.003975860070515817,
+    "SDT": 0.0
+   },
+   "ion_trap_factor": 1.0,
+   "o2_supply": 1.0,
+   "ph": 7.4,
+   "phenotype": "persister",
+   "stroma": true
+  },
+  {
+   "acidic": true,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.00519617596893708,
+    "AntibodyDrugConjugate": 0.95825,
+    "Immunotherapy": 0.0003715200000000001,
+    "OncolyticVirus": 0.1357329103448276,
+    "PDT": 1.0,
+    "RSL3": 0.019,
+    "Radiation": 0.4555047171958997,
+    "SDT": 1.0
+   },
+   "clonal_spread": 0.0,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 17.673343510642585,
+    "PDT": 20.044597978666054,
+    "RSL3": 17.881778605414517,
+    "SDT": 20.044597978666054
+   },
+   "deep": false,
+   "depth_um": 0.0,
+   "exo_factor": 1.0,
+   "heterogeneous": false,
+   "hypoxic": false,
+   "immune_amplification": {
+    "RSL3": 0.0003241829123718324,
+    "SDT": 0.0
+   },
+   "ion_trap_factor": 0.3,
+   "o2_supply": 1.0,
+   "ph": 6.5,
+   "phenotype": "persister",
+   "stroma": true
+  },
+  {
+   "acidic": false,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.0023094115417498133,
+    "AntibodyDrugConjugate": 1.0,
+    "Immunotherapy": 0.00016512000000000005,
+    "OncolyticVirus": 0.1353257379310345,
+    "PDT": 1.0,
+    "RSL3": 0.415,
+    "Radiation": 0.3015514060714153,
+    "SDT": 1.0
+   },
+   "clonal_spread": 0.0,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 19.55802904088117,
+    "PDT": 19.098257337295074,
+    "RSL3": 17.728982967046697,
+    "SDT": 19.098257337295074
+   },
+   "deep": false,
+   "depth_um": 0.0,
+   "exo_factor": 0.6292682926829268,
+   "heterogeneous": false,
+   "hypoxic": true,
+   "immune_amplification": {
+    "RSL3": 0.004054748307804205,
+    "SDT": 0.0
+   },
+   "ion_trap_factor": 1.0,
+   "o2_supply": 0.05,
+   "ph": 7.4,
+   "phenotype": "persister",
+   "stroma": false
+  },
+  {
+   "acidic": true,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.0023094115417498133,
+    "AntibodyDrugConjugate": 0.9615,
+    "Immunotherapy": 0.00016512000000000005,
+    "OncolyticVirus": 0.1353257379310345,
+    "PDT": 1.0,
+    "RSL3": 0.02075,
+    "Radiation": 0.3015514060714153,
+    "SDT": 1.0
+   },
+   "clonal_spread": 0.0,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 17.675316793548312,
+    "PDT": 19.098257337295074,
+    "RSL3": 17.518746392062905,
+    "SDT": 19.098257337295074
+   },
+   "deep": false,
+   "depth_um": 0.0,
+   "exo_factor": 0.6292682926829268,
+   "heterogeneous": false,
+   "hypoxic": true,
+   "immune_amplification": {
+    "RSL3": 0.00033782029812700075,
+    "SDT": 0.0
+   },
+   "ion_trap_factor": 0.3,
+   "o2_supply": 0.05,
+   "ph": 6.5,
+   "phenotype": "persister",
+   "stroma": false
+  },
+  {
+   "acidic": false,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.0023094115417498133,
+    "AntibodyDrugConjugate": 1.0,
+    "Immunotherapy": 0.00016512000000000005,
+    "OncolyticVirus": 0.1353257379310345,
+    "PDT": 1.0,
+    "RSL3": 0.40675,
+    "Radiation": 0.3015514060714153,
+    "SDT": 1.0
+   },
+   "clonal_spread": 0.0,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 19.561048248397913,
+    "PDT": 19.100564911518184,
+    "RSL3": 17.721813312514584,
+    "SDT": 19.100564911518184
+   },
+   "deep": false,
+   "depth_um": 0.0,
+   "exo_factor": 0.6292682926829268,
+   "heterogeneous": false,
+   "hypoxic": true,
+   "immune_amplification": {
+    "RSL3": 0.003975860070515817,
+    "SDT": 0.0
+   },
+   "ion_trap_factor": 1.0,
+   "o2_supply": 0.05,
+   "ph": 7.4,
+   "phenotype": "persister",
+   "stroma": true
+  },
+  {
+   "acidic": true,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.0023094115417498133,
+    "AntibodyDrugConjugate": 0.95825,
+    "Immunotherapy": 0.00016512000000000005,
+    "OncolyticVirus": 0.1353257379310345,
+    "PDT": 1.0,
+    "RSL3": 0.019,
+    "Radiation": 0.3015514060714153,
+    "SDT": 1.0
+   },
+   "clonal_spread": 0.0,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 17.673343510642585,
+    "PDT": 19.100564911518184,
+    "RSL3": 17.881778605414517,
+    "SDT": 19.100564911518184
+   },
+   "deep": false,
+   "depth_um": 0.0,
+   "exo_factor": 0.6292682926829268,
+   "heterogeneous": false,
+   "hypoxic": true,
+   "immune_amplification": {
+    "RSL3": 0.0003241829123718324,
+    "SDT": 0.0
+   },
+   "ion_trap_factor": 0.3,
+   "o2_supply": 0.05,
+   "ph": 6.5,
+   "phenotype": "persister",
+   "stroma": true
+  },
+  {
+   "acidic": false,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.00519617596893708,
+    "AntibodyDrugConjugate": 0.0105,
+    "Immunotherapy": 0.0003715200000000001,
+    "OncolyticVirus": 0.1357329103448276,
+    "PDT": 0.92125,
+    "RSL3": 0.415,
+    "Radiation": 0.4497374032387358,
+    "SDT": 1.0
+   },
+   "clonal_spread": 0.0,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 17.54638283037662,
+    "PDT": 17.609546347875533,
+    "RSL3": 17.728982967046697,
+    "SDT": 19.864989357334085
+   },
+   "deep": true,
+   "depth_um": 5000.0,
+   "exo_factor": 1.0,
+   "heterogeneous": false,
+   "hypoxic": false,
+   "immune_amplification": {
+    "RSL3": 0.004054748307804205,
+    "SDT": 0.0
+   },
+   "ion_trap_factor": 1.0,
+   "o2_supply": 1.0,
+   "ph": 7.4,
+   "phenotype": "persister",
+   "stroma": false
+  },
+  {
+   "acidic": true,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.00519617596893708,
+    "AntibodyDrugConjugate": 0.0105,
+    "Immunotherapy": 0.0003715200000000001,
+    "OncolyticVirus": 0.1357329103448276,
+    "PDT": 0.92125,
+    "RSL3": 0.02075,
+    "Radiation": 0.4497374032387358,
+    "SDT": 1.0
+   },
+   "clonal_spread": 0.0,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 17.49987974813158,
+    "PDT": 17.609546347875533,
+    "RSL3": 17.518746392062905,
+    "SDT": 19.864989357334085
+   },
+   "deep": true,
+   "depth_um": 5000.0,
+   "exo_factor": 1.0,
+   "heterogeneous": false,
+   "hypoxic": false,
+   "immune_amplification": {
+    "RSL3": 0.00033782029812700075,
+    "SDT": 0.0
+   },
+   "ion_trap_factor": 0.3,
+   "o2_supply": 1.0,
+   "ph": 6.5,
+   "phenotype": "persister",
+   "stroma": false
+  },
+  {
+   "acidic": false,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.00519617596893708,
+    "AntibodyDrugConjugate": 0.0095,
+    "Immunotherapy": 0.0003715200000000001,
+    "OncolyticVirus": 0.1357329103448276,
+    "PDT": 0.9185,
+    "RSL3": 0.40675,
+    "Radiation": 0.4497374032387358,
+    "SDT": 1.0
+   },
+   "clonal_spread": 0.0,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 17.792325417213892,
+    "PDT": 17.608052183157916,
+    "RSL3": 17.721813312514584,
+    "SDT": 19.861873823492402
+   },
+   "deep": true,
+   "depth_um": 5000.0,
+   "exo_factor": 1.0,
+   "heterogeneous": false,
+   "hypoxic": false,
+   "immune_amplification": {
+    "RSL3": 0.003975860070515817,
+    "SDT": 0.0
+   },
+   "ion_trap_factor": 1.0,
+   "o2_supply": 1.0,
+   "ph": 7.4,
+   "phenotype": "persister",
+   "stroma": true
+  },
+  {
+   "acidic": true,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.00519617596893708,
+    "AntibodyDrugConjugate": 0.0095,
+    "Immunotherapy": 0.0003715200000000001,
+    "OncolyticVirus": 0.1357329103448276,
+    "PDT": 0.9185,
+    "RSL3": 0.019,
+    "Radiation": 0.4497374032387358,
+    "SDT": 1.0
+   },
+   "clonal_spread": 0.0,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 17.779556108244254,
+    "PDT": 17.608052183157916,
+    "RSL3": 17.881778605414517,
+    "SDT": 19.861873823492402
+   },
+   "deep": true,
+   "depth_um": 5000.0,
+   "exo_factor": 1.0,
+   "heterogeneous": false,
+   "hypoxic": false,
+   "immune_amplification": {
+    "RSL3": 0.0003241829123718324,
+    "SDT": 0.0
+   },
+   "ion_trap_factor": 0.3,
+   "o2_supply": 1.0,
+   "ph": 6.5,
+   "phenotype": "persister",
+   "stroma": true
+  },
+  {
+   "acidic": false,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.0023094115417498133,
+    "AntibodyDrugConjugate": 0.0105,
+    "Immunotherapy": 0.00016512000000000005,
+    "OncolyticVirus": 0.1353257379310345,
+    "PDT": 0.58025,
+    "RSL3": 0.415,
+    "Radiation": 0.2973961544425532,
+    "SDT": 1.0
+   },
+   "clonal_spread": 0.0,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 17.54638283037662,
+    "PDT": 17.550015292665464,
+    "RSL3": 17.728982967046697,
+    "SDT": 18.965339031963772
+   },
+   "deep": true,
+   "depth_um": 5000.0,
+   "exo_factor": 0.6292682926829268,
+   "heterogeneous": false,
+   "hypoxic": true,
+   "immune_amplification": {
+    "RSL3": 0.004054748307804205,
+    "SDT": 0.0
+   },
+   "ion_trap_factor": 1.0,
+   "o2_supply": 0.05,
+   "ph": 7.4,
+   "phenotype": "persister",
+   "stroma": false
+  },
+  {
+   "acidic": true,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.0023094115417498133,
+    "AntibodyDrugConjugate": 0.0105,
+    "Immunotherapy": 0.00016512000000000005,
+    "OncolyticVirus": 0.1353257379310345,
+    "PDT": 0.58025,
+    "RSL3": 0.02075,
+    "Radiation": 0.2973961544425532,
+    "SDT": 1.0
+   },
+   "clonal_spread": 0.0,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 17.49987974813158,
+    "PDT": 17.550015292665464,
+    "RSL3": 17.518746392062905,
+    "SDT": 18.965339031963772
+   },
+   "deep": true,
+   "depth_um": 5000.0,
+   "exo_factor": 0.6292682926829268,
+   "heterogeneous": false,
+   "hypoxic": true,
+   "immune_amplification": {
+    "RSL3": 0.00033782029812700075,
+    "SDT": 0.0
+   },
+   "ion_trap_factor": 0.3,
+   "o2_supply": 0.05,
+   "ph": 6.5,
+   "phenotype": "persister",
+   "stroma": false
+  },
+  {
+   "acidic": false,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.0023094115417498133,
+    "AntibodyDrugConjugate": 0.0095,
+    "Immunotherapy": 0.00016512000000000005,
+    "OncolyticVirus": 0.1353257379310345,
+    "PDT": 0.5695,
+    "RSL3": 0.40675,
+    "Radiation": 0.2973961544425532,
+    "SDT": 1.0
+   },
+   "clonal_spread": 0.0,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 17.792325417213892,
+    "PDT": 17.532030479161907,
+    "RSL3": 17.721813312514584,
+    "SDT": 18.966780157504466
+   },
+   "deep": true,
+   "depth_um": 5000.0,
+   "exo_factor": 0.6292682926829268,
+   "heterogeneous": false,
+   "hypoxic": true,
+   "immune_amplification": {
+    "RSL3": 0.003975860070515817,
+    "SDT": 0.0
+   },
+   "ion_trap_factor": 1.0,
+   "o2_supply": 0.05,
+   "ph": 7.4,
+   "phenotype": "persister",
+   "stroma": true
+  },
+  {
+   "acidic": true,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.0023094115417498133,
+    "AntibodyDrugConjugate": 0.0095,
+    "Immunotherapy": 0.00016512000000000005,
+    "OncolyticVirus": 0.1353257379310345,
+    "PDT": 0.5695,
+    "RSL3": 0.019,
+    "Radiation": 0.2973961544425532,
+    "SDT": 1.0
+   },
+   "clonal_spread": 0.0,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 17.779556108244254,
+    "PDT": 17.532030479161907,
+    "RSL3": 17.881778605414517,
+    "SDT": 18.966780157504466
+   },
+   "deep": true,
+   "depth_um": 5000.0,
+   "exo_factor": 0.6292682926829268,
+   "heterogeneous": false,
+   "hypoxic": true,
+   "immune_amplification": {
+    "RSL3": 0.0003241829123718324,
+    "SDT": 0.0
+   },
+   "ion_trap_factor": 0.3,
+   "o2_supply": 0.05,
+   "ph": 6.5,
+   "phenotype": "persister",
+   "stroma": true
+  },
+  {
+   "acidic": false,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.00519617596893708,
+    "AntibodyDrugConjugate": 0.6395,
+    "Immunotherapy": 0.0003715200000000001,
+    "OncolyticVirus": 0.1357329103448276,
+    "PDT": 0.87075,
+    "RSL3": 0.0,
+    "Radiation": 0.4555047171958997,
+    "SDT": 0.87075
+   },
+   "clonal_spread": 0.35,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 15.730657899790847,
+    "PDT": 16.08160095086264,
+    "RSL3": 0.0,
+    "SDT": 16.08160095086264
+   },
+   "deep": false,
+   "depth_um": 0.0,
+   "exo_factor": 1.0,
+   "heterogeneous": true,
+   "hypoxic": false,
+   "immune_amplification": {
+    "RSL3": 0.0,
+    "SDT": 0.007772597639175546
+   },
+   "ion_trap_factor": 1.0,
+   "o2_supply": 1.0,
+   "ph": 7.4,
+   "phenotype": "glycolytic",
+   "stroma": false
+  },
+  {
+   "acidic": true,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.00519617596893708,
+    "AntibodyDrugConjugate": 0.0,
+    "Immunotherapy": 0.0003715200000000001,
+    "OncolyticVirus": 0.1357329103448276,
+    "PDT": 0.87075,
+    "RSL3": 0.0,
+    "Radiation": 0.4555047171958997,
+    "SDT": 0.87075
+   },
+   "clonal_spread": 0.35,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 0.0,
+    "PDT": 16.08160095086264,
+    "RSL3": 0.0,
+    "SDT": 16.08160095086264
+   },
+   "deep": false,
+   "depth_um": 0.0,
+   "exo_factor": 1.0,
+   "heterogeneous": true,
+   "hypoxic": false,
+   "immune_amplification": {
+    "RSL3": 0.0,
+    "SDT": 0.007772597639175546
+   },
+   "ion_trap_factor": 0.3,
+   "o2_supply": 1.0,
+   "ph": 6.5,
+   "phenotype": "glycolytic",
+   "stroma": false
+  },
+  {
+   "acidic": false,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.00519617596893708,
+    "AntibodyDrugConjugate": 0.63825,
+    "Immunotherapy": 0.0003715200000000001,
+    "OncolyticVirus": 0.1357329103448276,
+    "PDT": 0.87025,
+    "RSL3": 0.0,
+    "Radiation": 0.4555047171958997,
+    "SDT": 0.87025
+   },
+   "clonal_spread": 0.35,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 15.732857968820001,
+    "PDT": 16.082370244833154,
+    "RSL3": 0.0,
+    "SDT": 16.082370244833154
+   },
+   "deep": false,
+   "depth_um": 0.0,
+   "exo_factor": 1.0,
+   "heterogeneous": true,
+   "hypoxic": false,
+   "immune_amplification": {
+    "RSL3": 0.0,
+    "SDT": 0.007768493121745622
+   },
+   "ion_trap_factor": 1.0,
+   "o2_supply": 1.0,
+   "ph": 7.4,
+   "phenotype": "glycolytic",
+   "stroma": true
+  },
+  {
+   "acidic": true,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.00519617596893708,
+    "AntibodyDrugConjugate": 0.0,
+    "Immunotherapy": 0.0003715200000000001,
+    "OncolyticVirus": 0.1357329103448276,
+    "PDT": 0.87025,
+    "RSL3": 0.0,
+    "Radiation": 0.4555047171958997,
+    "SDT": 0.87025
+   },
+   "clonal_spread": 0.35,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 0.0,
+    "PDT": 16.082370244833154,
+    "RSL3": 0.0,
+    "SDT": 16.082370244833154
+   },
+   "deep": false,
+   "depth_um": 0.0,
+   "exo_factor": 1.0,
+   "heterogeneous": true,
+   "hypoxic": false,
+   "immune_amplification": {
+    "RSL3": 0.0,
+    "SDT": 0.007768493121745622
+   },
+   "ion_trap_factor": 0.3,
+   "o2_supply": 1.0,
+   "ph": 6.5,
+   "phenotype": "glycolytic",
+   "stroma": true
+  },
+  {
+   "acidic": false,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.0023094115417498133,
+    "AntibodyDrugConjugate": 0.6395,
+    "Immunotherapy": 0.00016512000000000005,
+    "OncolyticVirus": 0.1353257379310345,
+    "PDT": 0.29,
+    "RSL3": 0.0,
+    "Radiation": 0.3015514060714153,
+    "SDT": 0.29
+   },
+   "clonal_spread": 0.35,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 15.730657899790847,
+    "PDT": 15.610847282828239,
+    "RSL3": 0.0,
+    "SDT": 15.610847282828239
+   },
+   "deep": false,
+   "depth_um": 0.0,
+   "exo_factor": 0.6292682926829268,
+   "heterogeneous": true,
+   "hypoxic": true,
+   "immune_amplification": {
+    "RSL3": 0.0,
+    "SDT": 0.0026279984908315827
+   },
+   "ion_trap_factor": 1.0,
+   "o2_supply": 0.05,
+   "ph": 7.4,
+   "phenotype": "glycolytic",
+   "stroma": false
+  },
+  {
+   "acidic": true,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.0023094115417498133,
+    "AntibodyDrugConjugate": 0.0,
+    "Immunotherapy": 0.00016512000000000005,
+    "OncolyticVirus": 0.1353257379310345,
+    "PDT": 0.29,
+    "RSL3": 0.0,
+    "Radiation": 0.3015514060714153,
+    "SDT": 0.29
+   },
+   "clonal_spread": 0.35,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 0.0,
+    "PDT": 15.610847282828239,
+    "RSL3": 0.0,
+    "SDT": 15.610847282828239
+   },
+   "deep": false,
+   "depth_um": 0.0,
+   "exo_factor": 0.6292682926829268,
+   "heterogeneous": true,
+   "hypoxic": true,
+   "immune_amplification": {
+    "RSL3": 0.0,
+    "SDT": 0.0026279984908315827
+   },
+   "ion_trap_factor": 0.3,
+   "o2_supply": 0.05,
+   "ph": 6.5,
+   "phenotype": "glycolytic",
+   "stroma": false
+  },
+  {
+   "acidic": false,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.0023094115417498133,
+    "AntibodyDrugConjugate": 0.63825,
+    "Immunotherapy": 0.00016512000000000005,
+    "OncolyticVirus": 0.1353257379310345,
+    "PDT": 0.2885,
+    "RSL3": 0.0,
+    "Radiation": 0.3015514060714153,
+    "SDT": 0.2885
+   },
+   "clonal_spread": 0.35,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 15.732857968820001,
+    "PDT": 15.611589654961989,
+    "RSL3": 0.0,
+    "SDT": 15.611589654961989
+   },
+   "deep": false,
+   "depth_um": 0.0,
+   "exo_factor": 0.6292682926829268,
+   "heterogeneous": true,
+   "hypoxic": true,
+   "immune_amplification": {
+    "RSL3": 0.0,
+    "SDT": 0.0026152397765258685
+   },
+   "ion_trap_factor": 1.0,
+   "o2_supply": 0.05,
+   "ph": 7.4,
+   "phenotype": "glycolytic",
+   "stroma": true
+  },
+  {
+   "acidic": true,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.0023094115417498133,
+    "AntibodyDrugConjugate": 0.0,
+    "Immunotherapy": 0.00016512000000000005,
+    "OncolyticVirus": 0.1353257379310345,
+    "PDT": 0.2885,
+    "RSL3": 0.0,
+    "Radiation": 0.3015514060714153,
+    "SDT": 0.2885
+   },
+   "clonal_spread": 0.35,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 0.0,
+    "PDT": 15.611589654961989,
+    "RSL3": 0.0,
+    "SDT": 15.611589654961989
+   },
+   "deep": false,
+   "depth_um": 0.0,
+   "exo_factor": 0.6292682926829268,
+   "heterogeneous": true,
+   "hypoxic": true,
+   "immune_amplification": {
+    "RSL3": 0.0,
+    "SDT": 0.0026152397765258685
+   },
+   "ion_trap_factor": 0.3,
+   "o2_supply": 0.05,
+   "ph": 6.5,
+   "phenotype": "glycolytic",
+   "stroma": true
+  },
+  {
+   "acidic": false,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.00519617596893708,
+    "AntibodyDrugConjugate": 0.0,
+    "Immunotherapy": 0.0003715200000000001,
+    "OncolyticVirus": 0.1357329103448276,
+    "PDT": 0.0,
+    "RSL3": 0.0,
+    "Radiation": 0.4497374032387358,
+    "SDT": 0.804
+   },
+   "clonal_spread": 0.35,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 0.0,
+    "PDT": 0.0,
+    "RSL3": 0.0,
+    "SDT": 15.927697085671563
+   },
+   "deep": true,
+   "depth_um": 5000.0,
+   "exo_factor": 1.0,
+   "heterogeneous": true,
+   "hypoxic": false,
+   "immune_amplification": {
+    "RSL3": 0.0,
+    "SDT": 0.0071366796297556686
+   },
+   "ion_trap_factor": 1.0,
+   "o2_supply": 1.0,
+   "ph": 7.4,
+   "phenotype": "glycolytic",
+   "stroma": false
+  },
+  {
+   "acidic": true,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.00519617596893708,
+    "AntibodyDrugConjugate": 0.0,
+    "Immunotherapy": 0.0003715200000000001,
+    "OncolyticVirus": 0.1357329103448276,
+    "PDT": 0.0,
+    "RSL3": 0.0,
+    "Radiation": 0.4497374032387358,
+    "SDT": 0.804
+   },
+   "clonal_spread": 0.35,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 0.0,
+    "PDT": 0.0,
+    "RSL3": 0.0,
+    "SDT": 15.927697085671563
+   },
+   "deep": true,
+   "depth_um": 5000.0,
+   "exo_factor": 1.0,
+   "heterogeneous": true,
+   "hypoxic": false,
+   "immune_amplification": {
+    "RSL3": 0.0,
+    "SDT": 0.0071366796297556686
+   },
+   "ion_trap_factor": 0.3,
+   "o2_supply": 1.0,
+   "ph": 6.5,
+   "phenotype": "glycolytic",
+   "stroma": false
+  },
+  {
+   "acidic": false,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.00519617596893708,
+    "AntibodyDrugConjugate": 0.0,
+    "Immunotherapy": 0.0003715200000000001,
+    "OncolyticVirus": 0.1357329103448276,
+    "PDT": 0.0,
+    "RSL3": 0.0,
+    "Radiation": 0.4497374032387358,
+    "SDT": 0.8035
+   },
+   "clonal_spread": 0.35,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 0.0,
+    "PDT": 0.0,
+    "RSL3": 0.0,
+    "SDT": 15.926861192173893
+   },
+   "deep": true,
+   "depth_um": 5000.0,
+   "exo_factor": 1.0,
+   "heterogeneous": true,
+   "hypoxic": false,
+   "immune_amplification": {
+    "RSL3": 0.0,
+    "SDT": 0.007132052798417035
+   },
+   "ion_trap_factor": 1.0,
+   "o2_supply": 1.0,
+   "ph": 7.4,
+   "phenotype": "glycolytic",
+   "stroma": true
+  },
+  {
+   "acidic": true,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.00519617596893708,
+    "AntibodyDrugConjugate": 0.0,
+    "Immunotherapy": 0.0003715200000000001,
+    "OncolyticVirus": 0.1357329103448276,
+    "PDT": 0.0,
+    "RSL3": 0.0,
+    "Radiation": 0.4497374032387358,
+    "SDT": 0.8035
+   },
+   "clonal_spread": 0.35,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 0.0,
+    "PDT": 0.0,
+    "RSL3": 0.0,
+    "SDT": 15.926861192173893
+   },
+   "deep": true,
+   "depth_um": 5000.0,
+   "exo_factor": 1.0,
+   "heterogeneous": true,
+   "hypoxic": false,
+   "immune_amplification": {
+    "RSL3": 0.0,
+    "SDT": 0.007132052798417035
+   },
+   "ion_trap_factor": 0.3,
+   "o2_supply": 1.0,
+   "ph": 6.5,
+   "phenotype": "glycolytic",
+   "stroma": true
+  },
+  {
+   "acidic": false,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.0023094115417498133,
+    "AntibodyDrugConjugate": 0.0,
+    "Immunotherapy": 0.00016512000000000005,
+    "OncolyticVirus": 0.1353257379310345,
+    "PDT": 0.0,
+    "RSL3": 0.0,
+    "Radiation": 0.2973961544425532,
+    "SDT": 0.19325
+   },
+   "clonal_spread": 0.35,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 0.0,
+    "PDT": 0.0,
+    "RSL3": 0.0,
+    "SDT": 15.62117885466891
+   },
+   "deep": true,
+   "depth_um": 5000.0,
+   "exo_factor": 0.6292682926829268,
+   "heterogeneous": true,
+   "hypoxic": true,
+   "immune_amplification": {
+    "RSL3": 0.0,
+    "SDT": 0.001800119917208701
+   },
+   "ion_trap_factor": 1.0,
+   "o2_supply": 0.05,
+   "ph": 7.4,
+   "phenotype": "glycolytic",
+   "stroma": false
+  },
+  {
+   "acidic": true,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.0023094115417498133,
+    "AntibodyDrugConjugate": 0.0,
+    "Immunotherapy": 0.00016512000000000005,
+    "OncolyticVirus": 0.1353257379310345,
+    "PDT": 0.0,
+    "RSL3": 0.0,
+    "Radiation": 0.2973961544425532,
+    "SDT": 0.19325
+   },
+   "clonal_spread": 0.35,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 0.0,
+    "PDT": 0.0,
+    "RSL3": 0.0,
+    "SDT": 15.62117885466891
+   },
+   "deep": true,
+   "depth_um": 5000.0,
+   "exo_factor": 0.6292682926829268,
+   "heterogeneous": true,
+   "hypoxic": true,
+   "immune_amplification": {
+    "RSL3": 0.0,
+    "SDT": 0.001800119917208701
+   },
+   "ion_trap_factor": 0.3,
+   "o2_supply": 0.05,
+   "ph": 6.5,
+   "phenotype": "glycolytic",
+   "stroma": false
+  },
+  {
+   "acidic": false,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.0023094115417498133,
+    "AntibodyDrugConjugate": 0.0,
+    "Immunotherapy": 0.00016512000000000005,
+    "OncolyticVirus": 0.1353257379310345,
+    "PDT": 0.0,
+    "RSL3": 0.0,
+    "Radiation": 0.2973961544425532,
+    "SDT": 0.1915
+   },
+   "clonal_spread": 0.35,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 0.0,
+    "PDT": 0.0,
+    "RSL3": 0.0,
+    "SDT": 15.630189646989598
+   },
+   "deep": true,
+   "depth_um": 5000.0,
+   "exo_factor": 0.6292682926829268,
+   "heterogeneous": true,
+   "hypoxic": true,
+   "immune_amplification": {
+    "RSL3": 0.0,
+    "SDT": 0.0017858439136917673
+   },
+   "ion_trap_factor": 1.0,
+   "o2_supply": 0.05,
+   "ph": 7.4,
+   "phenotype": "glycolytic",
+   "stroma": true
+  },
+  {
+   "acidic": true,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.0023094115417498133,
+    "AntibodyDrugConjugate": 0.0,
+    "Immunotherapy": 0.00016512000000000005,
+    "OncolyticVirus": 0.1353257379310345,
+    "PDT": 0.0,
+    "RSL3": 0.0,
+    "Radiation": 0.2973961544425532,
+    "SDT": 0.1915
+   },
+   "clonal_spread": 0.35,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 0.0,
+    "PDT": 0.0,
+    "RSL3": 0.0,
+    "SDT": 15.630189646989598
+   },
+   "deep": true,
+   "depth_um": 5000.0,
+   "exo_factor": 0.6292682926829268,
+   "heterogeneous": true,
+   "hypoxic": true,
+   "immune_amplification": {
+    "RSL3": 0.0,
+    "SDT": 0.0017858439136917673
+   },
+   "ion_trap_factor": 0.3,
+   "o2_supply": 0.05,
+   "ph": 6.5,
+   "phenotype": "glycolytic",
+   "stroma": true
+  },
+  {
+   "acidic": false,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.00519617596893708,
+    "AntibodyDrugConjugate": 1.0,
+    "Immunotherapy": 0.0003715200000000001,
+    "OncolyticVirus": 0.1357329103448276,
+    "PDT": 1.0,
+    "RSL3": 0.45525,
+    "Radiation": 0.4555047171958997,
+    "SDT": 1.0
+   },
+   "clonal_spread": 0.35,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 19.57052332180348,
+    "PDT": 20.065589774902897,
+    "RSL3": 17.67893442884732,
+    "SDT": 20.065589774902897
+   },
+   "deep": false,
+   "depth_um": 0.0,
+   "exo_factor": 1.0,
+   "heterogeneous": true,
+   "hypoxic": false,
+   "immune_amplification": {
+    "RSL3": 0.004425096604128574,
+    "SDT": 0.0
+   },
+   "ion_trap_factor": 1.0,
+   "o2_supply": 1.0,
+   "ph": 7.4,
+   "phenotype": "persister",
+   "stroma": false
+  },
+  {
+   "acidic": true,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.00519617596893708,
+    "AntibodyDrugConjugate": 0.9565,
+    "Immunotherapy": 0.0003715200000000001,
+    "OncolyticVirus": 0.1357329103448276,
+    "PDT": 1.0,
+    "RSL3": 0.043,
+    "Radiation": 0.4555047171958997,
+    "SDT": 1.0
+   },
+   "clonal_spread": 0.35,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 17.69349865395929,
+    "PDT": 20.065589774902897,
+    "RSL3": 17.720473273971745,
+    "SDT": 20.065589774902897
+   },
+   "deep": false,
+   "depth_um": 0.0,
+   "exo_factor": 1.0,
+   "heterogeneous": true,
+   "hypoxic": false,
+   "immune_amplification": {
+    "RSL3": 0.0005490664636842022,
+    "SDT": 0.0
+   },
+   "ion_trap_factor": 0.3,
+   "o2_supply": 1.0,
+   "ph": 6.5,
+   "phenotype": "persister",
+   "stroma": false
+  },
+  {
+   "acidic": false,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.00519617596893708,
+    "AntibodyDrugConjugate": 1.0,
+    "Immunotherapy": 0.0003715200000000001,
+    "OncolyticVirus": 0.1357329103448276,
+    "PDT": 1.0,
+    "RSL3": 0.4435,
+    "Radiation": 0.4555047171958997,
+    "SDT": 1.0
+   },
+   "clonal_spread": 0.35,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 19.571144177620724,
+    "PDT": 20.064941074086,
+    "RSL3": 17.677173709389997,
+    "SDT": 20.064941074086
+   },
+   "deep": false,
+   "depth_um": 0.0,
+   "exo_factor": 1.0,
+   "heterogeneous": true,
+   "hypoxic": false,
+   "immune_amplification": {
+    "RSL3": 0.004314294649951697,
+    "SDT": 0.0
+   },
+   "ion_trap_factor": 1.0,
+   "o2_supply": 1.0,
+   "ph": 7.4,
+   "phenotype": "persister",
+   "stroma": true
+  },
+  {
+   "acidic": true,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.00519617596893708,
+    "AntibodyDrugConjugate": 0.953,
+    "Immunotherapy": 0.0003715200000000001,
+    "OncolyticVirus": 0.1357329103448276,
+    "PDT": 1.0,
+    "RSL3": 0.041,
+    "Radiation": 0.4555047171958997,
+    "SDT": 1.0
+   },
+   "clonal_spread": 0.35,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 17.695438107340223,
+    "PDT": 20.064941074086,
+    "RSL3": 17.609591108293575,
+    "SDT": 20.064941074086
+   },
+   "deep": false,
+   "depth_um": 0.0,
+   "exo_factor": 1.0,
+   "heterogeneous": true,
+   "hypoxic": false,
+   "immune_amplification": {
+    "RSL3": 0.0005284388946859487,
+    "SDT": 0.0
+   },
+   "ion_trap_factor": 0.3,
+   "o2_supply": 1.0,
+   "ph": 6.5,
+   "phenotype": "persister",
+   "stroma": true
+  },
+  {
+   "acidic": false,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.0023094115417498133,
+    "AntibodyDrugConjugate": 1.0,
+    "Immunotherapy": 0.00016512000000000005,
+    "OncolyticVirus": 0.1353257379310345,
+    "PDT": 1.0,
+    "RSL3": 0.45525,
+    "Radiation": 0.3015514060714153,
+    "SDT": 1.0
+   },
+   "clonal_spread": 0.35,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 19.57052332180348,
+    "PDT": 19.09141614375605,
+    "RSL3": 17.67893442884732,
+    "SDT": 19.09141614375605
+   },
+   "deep": false,
+   "depth_um": 0.0,
+   "exo_factor": 0.6292682926829268,
+   "heterogeneous": true,
+   "hypoxic": true,
+   "immune_amplification": {
+    "RSL3": 0.004425096604128574,
+    "SDT": 0.0
+   },
+   "ion_trap_factor": 1.0,
+   "o2_supply": 0.05,
+   "ph": 7.4,
+   "phenotype": "persister",
+   "stroma": false
+  },
+  {
+   "acidic": true,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.0023094115417498133,
+    "AntibodyDrugConjugate": 0.9565,
+    "Immunotherapy": 0.00016512000000000005,
+    "OncolyticVirus": 0.1353257379310345,
+    "PDT": 1.0,
+    "RSL3": 0.043,
+    "Radiation": 0.3015514060714153,
+    "SDT": 1.0
+   },
+   "clonal_spread": 0.35,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 17.69349865395929,
+    "PDT": 19.09141614375605,
+    "RSL3": 17.720473273971745,
+    "SDT": 19.09141614375605
+   },
+   "deep": false,
+   "depth_um": 0.0,
+   "exo_factor": 0.6292682926829268,
+   "heterogeneous": true,
+   "hypoxic": true,
+   "immune_amplification": {
+    "RSL3": 0.0005490664636842022,
+    "SDT": 0.0
+   },
+   "ion_trap_factor": 0.3,
+   "o2_supply": 0.05,
+   "ph": 6.5,
+   "phenotype": "persister",
+   "stroma": false
+  },
+  {
+   "acidic": false,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.0023094115417498133,
+    "AntibodyDrugConjugate": 1.0,
+    "Immunotherapy": 0.00016512000000000005,
+    "OncolyticVirus": 0.1353257379310345,
+    "PDT": 1.0,
+    "RSL3": 0.4435,
+    "Radiation": 0.3015514060714153,
+    "SDT": 1.0
+   },
+   "clonal_spread": 0.35,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 19.571144177620724,
+    "PDT": 19.091541793685067,
+    "RSL3": 17.677173709389997,
+    "SDT": 19.091541793685067
+   },
+   "deep": false,
+   "depth_um": 0.0,
+   "exo_factor": 0.6292682926829268,
+   "heterogeneous": true,
+   "hypoxic": true,
+   "immune_amplification": {
+    "RSL3": 0.004314294649951697,
+    "SDT": 0.0
+   },
+   "ion_trap_factor": 1.0,
+   "o2_supply": 0.05,
+   "ph": 7.4,
+   "phenotype": "persister",
+   "stroma": true
+  },
+  {
+   "acidic": true,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.0023094115417498133,
+    "AntibodyDrugConjugate": 0.953,
+    "Immunotherapy": 0.00016512000000000005,
+    "OncolyticVirus": 0.1353257379310345,
+    "PDT": 1.0,
+    "RSL3": 0.041,
+    "Radiation": 0.3015514060714153,
+    "SDT": 1.0
+   },
+   "clonal_spread": 0.35,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 17.695438107340223,
+    "PDT": 19.091541793685067,
+    "RSL3": 17.609591108293575,
+    "SDT": 19.091541793685067
+   },
+   "deep": false,
+   "depth_um": 0.0,
+   "exo_factor": 0.6292682926829268,
+   "heterogeneous": true,
+   "hypoxic": true,
+   "immune_amplification": {
+    "RSL3": 0.0005284388946859487,
+    "SDT": 0.0
+   },
+   "ion_trap_factor": 0.3,
+   "o2_supply": 0.05,
+   "ph": 6.5,
+   "phenotype": "persister",
+   "stroma": true
+  },
+  {
+   "acidic": false,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.00519617596893708,
+    "AntibodyDrugConjugate": 0.02175,
+    "Immunotherapy": 0.0003715200000000001,
+    "OncolyticVirus": 0.1357329103448276,
+    "PDT": 0.9075,
+    "RSL3": 0.45525,
+    "Radiation": 0.4497374032387358,
+    "SDT": 1.0
+   },
+   "clonal_spread": 0.35,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 17.835799578185878,
+    "PDT": 17.633763384535843,
+    "RSL3": 17.67893442884732,
+    "SDT": 19.87247718326567
+   },
+   "deep": true,
+   "depth_um": 5000.0,
+   "exo_factor": 1.0,
+   "heterogeneous": true,
+   "hypoxic": false,
+   "immune_amplification": {
+    "RSL3": 0.004425096604128574,
+    "SDT": 0.0
+   },
+   "ion_trap_factor": 1.0,
+   "o2_supply": 1.0,
+   "ph": 7.4,
+   "phenotype": "persister",
+   "stroma": false
+  },
+  {
+   "acidic": true,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.00519617596893708,
+    "AntibodyDrugConjugate": 0.02175,
+    "Immunotherapy": 0.0003715200000000001,
+    "OncolyticVirus": 0.1357329103448276,
+    "PDT": 0.9075,
+    "RSL3": 0.043,
+    "Radiation": 0.4497374032387358,
+    "SDT": 1.0
+   },
+   "clonal_spread": 0.35,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 17.815939474451547,
+    "PDT": 17.633763384535843,
+    "RSL3": 17.720473273971745,
+    "SDT": 19.87247718326567
+   },
+   "deep": true,
+   "depth_um": 5000.0,
+   "exo_factor": 1.0,
+   "heterogeneous": true,
+   "hypoxic": false,
+   "immune_amplification": {
+    "RSL3": 0.0005490664636842022,
+    "SDT": 0.0
+   },
+   "ion_trap_factor": 0.3,
+   "o2_supply": 1.0,
+   "ph": 6.5,
+   "phenotype": "persister",
+   "stroma": false
+  },
+  {
+   "acidic": false,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.00519617596893708,
+    "AntibodyDrugConjugate": 0.02125,
+    "Immunotherapy": 0.0003715200000000001,
+    "OncolyticVirus": 0.1357329103448276,
+    "PDT": 0.9035,
+    "RSL3": 0.4435,
+    "Radiation": 0.4497374032387358,
+    "SDT": 1.0
+   },
+   "clonal_spread": 0.35,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 17.3327053500364,
+    "PDT": 17.631581596682064,
+    "RSL3": 17.677173709389997,
+    "SDT": 19.870212081078986
+   },
+   "deep": true,
+   "depth_um": 5000.0,
+   "exo_factor": 1.0,
+   "heterogeneous": true,
+   "hypoxic": false,
+   "immune_amplification": {
+    "RSL3": 0.004314294649951697,
+    "SDT": 0.0
+   },
+   "ion_trap_factor": 1.0,
+   "o2_supply": 1.0,
+   "ph": 7.4,
+   "phenotype": "persister",
+   "stroma": true
+  },
+  {
+   "acidic": true,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.00519617596893708,
+    "AntibodyDrugConjugate": 0.02125,
+    "Immunotherapy": 0.0003715200000000001,
+    "OncolyticVirus": 0.1357329103448276,
+    "PDT": 0.9035,
+    "RSL3": 0.041,
+    "Radiation": 0.4497374032387358,
+    "SDT": 1.0
+   },
+   "clonal_spread": 0.35,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 17.32508533505483,
+    "PDT": 17.631581596682064,
+    "RSL3": 17.609591108293575,
+    "SDT": 19.870212081078986
+   },
+   "deep": true,
+   "depth_um": 5000.0,
+   "exo_factor": 1.0,
+   "heterogeneous": true,
+   "hypoxic": false,
+   "immune_amplification": {
+    "RSL3": 0.0005284388946859487,
+    "SDT": 0.0
+   },
+   "ion_trap_factor": 0.3,
+   "o2_supply": 1.0,
+   "ph": 6.5,
+   "phenotype": "persister",
+   "stroma": true
+  },
+  {
+   "acidic": false,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.0023094115417498133,
+    "AntibodyDrugConjugate": 0.02175,
+    "Immunotherapy": 0.00016512000000000005,
+    "OncolyticVirus": 0.1353257379310345,
+    "PDT": 0.5675,
+    "RSL3": 0.45525,
+    "Radiation": 0.2973961544425532,
+    "SDT": 1.0
+   },
+   "clonal_spread": 0.35,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 17.835799578185878,
+    "PDT": 17.567587318715912,
+    "RSL3": 17.67893442884732,
+    "SDT": 18.966444358349747
+   },
+   "deep": true,
+   "depth_um": 5000.0,
+   "exo_factor": 0.6292682926829268,
+   "heterogeneous": true,
+   "hypoxic": true,
+   "immune_amplification": {
+    "RSL3": 0.004425096604128574,
+    "SDT": 0.0
+   },
+   "ion_trap_factor": 1.0,
+   "o2_supply": 0.05,
+   "ph": 7.4,
+   "phenotype": "persister",
+   "stroma": false
+  },
+  {
+   "acidic": true,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.0023094115417498133,
+    "AntibodyDrugConjugate": 0.02175,
+    "Immunotherapy": 0.00016512000000000005,
+    "OncolyticVirus": 0.1353257379310345,
+    "PDT": 0.5675,
+    "RSL3": 0.043,
+    "Radiation": 0.2973961544425532,
+    "SDT": 1.0
+   },
+   "clonal_spread": 0.35,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 17.815939474451547,
+    "PDT": 17.567587318715912,
+    "RSL3": 17.720473273971745,
+    "SDT": 18.966444358349747
+   },
+   "deep": true,
+   "depth_um": 5000.0,
+   "exo_factor": 0.6292682926829268,
+   "heterogeneous": true,
+   "hypoxic": true,
+   "immune_amplification": {
+    "RSL3": 0.0005490664636842022,
+    "SDT": 0.0
+   },
+   "ion_trap_factor": 0.3,
+   "o2_supply": 0.05,
+   "ph": 6.5,
+   "phenotype": "persister",
+   "stroma": false
+  },
+  {
+   "acidic": false,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.0023094115417498133,
+    "AntibodyDrugConjugate": 0.02125,
+    "Immunotherapy": 0.00016512000000000005,
+    "OncolyticVirus": 0.1353257379310345,
+    "PDT": 0.558,
+    "RSL3": 0.4435,
+    "Radiation": 0.2973961544425532,
+    "SDT": 1.0
+   },
+   "clonal_spread": 0.35,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 17.3327053500364,
+    "PDT": 17.55454387908239,
+    "RSL3": 17.677173709389997,
+    "SDT": 18.969509210043412
+   },
+   "deep": true,
+   "depth_um": 5000.0,
+   "exo_factor": 0.6292682926829268,
+   "heterogeneous": true,
+   "hypoxic": true,
+   "immune_amplification": {
+    "RSL3": 0.004314294649951697,
+    "SDT": 0.0
+   },
+   "ion_trap_factor": 1.0,
+   "o2_supply": 0.05,
+   "ph": 7.4,
+   "phenotype": "persister",
+   "stroma": true
+  },
+  {
+   "acidic": true,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.0023094115417498133,
+    "AntibodyDrugConjugate": 0.02125,
+    "Immunotherapy": 0.00016512000000000005,
+    "OncolyticVirus": 0.1353257379310345,
+    "PDT": 0.558,
+    "RSL3": 0.041,
+    "Radiation": 0.2973961544425532,
+    "SDT": 1.0
+   },
+   "clonal_spread": 0.35,
+   "damp_per_death": {
+    "AntibodyDrugConjugate": 17.32508533505483,
+    "PDT": 17.55454387908239,
+    "RSL3": 17.609591108293575,
+    "SDT": 18.969509210043412
+   },
+   "deep": true,
+   "depth_um": 5000.0,
+   "exo_factor": 0.6292682926829268,
+   "heterogeneous": true,
+   "hypoxic": true,
+   "immune_amplification": {
+    "RSL3": 0.0005284388946859487,
+    "SDT": 0.0
+   },
+   "ion_trap_factor": 0.3,
+   "o2_supply": 0.05,
+   "ph": 6.5,
+   "phenotype": "persister",
+   "stroma": true
+  }
+ ],
+ "endpoints": {
+  "o2_hypoxic": 0.05,
+  "o2_normoxic": 1.0,
+  "ph_core": 6.5,
+  "ph_edge": 7.4,
+  "stromal_gsh_boost": 1.5
+ },
+ "n_cells": 4000,
+ "note": "Every axis is applied through the SAME helpers the ferroptosis chapters use, so a modality comparison is under an identical environment. Arms absent from a row are unaffected by that axis BY CONSTRUCTION, which is a prediction and not an omission -- see the function docs.",
+ "seed": 42,
+ "strata": [
+  "phenotype"
+ ],
+ "quality_ratio": {
+  "phenotype": "persister",
+  "sdt": 20.049123201505687,
+  "rsl3": 17.728982967046697,
+  "ratio": 1.130867080123631,
+  "kill_ratio": 2.4096385542168677
+ },
+ "arms": [
+  "Ablation",
+  "AdoptiveCell",
+  "AntibodyDrugConjugate",
+  "Immunotherapy",
+  "OncolyticVirus",
+  "PDT",
+  "RSL3",
+  "Radiation",
+  "SDT"
+ ],
+ "phenotypes": [
+  "glycolytic",
+  "persister"
+ ],
+ "effects": {
+  "hypoxia": {
+   "Ablation": 0.0,
+   "AdoptiveCell": -0.5555555555555556,
+   "AntibodyDrugConjugate": 0.0,
+   "Immunotherapy": -0.5555555555555555,
+   "OncolyticVirus": -0.0029998061100928166,
+   "PDT": -0.6791151967825337,
+   "RSL3": 0.0,
+   "Radiation": -0.3387337759748542,
+   "SDT": -0.7675726335520149
+  },
+  "stromal shielding": {
+   "Ablation": 0.0,
+   "AdoptiveCell": 0.0,
+   "AntibodyDrugConjugate": -0.09523809523809532,
+   "Immunotherapy": 0.0,
+   "OncolyticVirus": 0.0,
+   "PDT": -0.018526497199483044,
+   "RSL3": -0.08433734939759044,
+   "Radiation": 0.0,
+   "SDT": -0.010638297872340436
+  },
+  "acidic pH": {
+   "Ablation": 0.0,
+   "AdoptiveCell": 0.0,
+   "AntibodyDrugConjugate": -1.0,
+   "Immunotherapy": 0.0,
+   "OncolyticVirus": 0.0,
+   "PDT": 0.0,
+   "RSL3": -0.9532882606023355,
+   "Radiation": 0.0,
+   "SDT": 0.0
+  },
+  "depth": {
+   "Ablation": 0.0,
+   "AdoptiveCell": 0.0,
+   "AntibodyDrugConjugate": -1.0,
+   "Immunotherapy": 0.0,
+   "OncolyticVirus": 0.0,
+   "PDT": -1.0,
+   "RSL3": 0.0,
+   "Radiation": -0.013779579684261288,
+   "SDT": -0.33622183708838815
+  },
+  "clonal heterogeneity": {
+   "Ablation": 0.0,
+   "AdoptiveCell": 0.0,
+   "AntibodyDrugConjugate": 1.2368421052631582,
+   "Immunotherapy": 0.0,
+   "OncolyticVirus": 0.0,
+   "PDT": 0.037567084078711815,
+   "RSL3": 1.1578947368421053,
+   "Radiation": 0.0,
+   "SDT": 0.037567084078711815
+  }
+ },
+ "effects_by_phenotype": {
+  "glycolytic": {
+   "hypoxia": {
+    "Ablation": 0.0,
+    "AdoptiveCell": -0.5555555555555556,
+    "AntibodyDrugConjugate": 0.0,
+    "Immunotherapy": -0.5555555555555555,
+    "OncolyticVirus": -0.0029998061100928166,
+    "PDT": -0.6791151967825337,
+    "RSL3": 0.0,
+    "Radiation": -0.3387337759748542,
+    "SDT": -0.7675726335520149
+   },
+   "stromal shielding": {
+    "Ablation": 0.0,
+    "AdoptiveCell": 0.0,
+    "AntibodyDrugConjugate": -0.0027613412228797304,
+    "Immunotherapy": 0.0,
+    "OncolyticVirus": 0.0,
+    "PDT": -0.005172413793103453,
+    "RSL3": 0.0,
+    "Radiation": 0.0,
+    "SDT": -0.010638297872340436
+   },
+   "acidic pH": {
+    "Ablation": 0.0,
+    "AdoptiveCell": 0.0,
+    "AntibodyDrugConjugate": -1.0,
+    "Immunotherapy": 0.0,
+    "OncolyticVirus": 0.0,
+    "PDT": 0.0,
+    "RSL3": 0.0,
+    "Radiation": 0.0,
+    "SDT": 0.0
+   },
+   "depth": {
+    "Ablation": 0.0,
+    "AdoptiveCell": 0.0,
+    "AntibodyDrugConjugate": -1.0,
+    "Immunotherapy": 0.0,
+    "OncolyticVirus": 0.0,
+    "PDT": -1.0,
+    "RSL3": 0.0,
+    "Radiation": -0.013779579684261288,
+    "SDT": -0.33622183708838815
+   },
+   "clonal heterogeneity": {
+    "Ablation": 0.0,
+    "AdoptiveCell": 0.0,
+    "AntibodyDrugConjugate": 0.009889240506329078,
+    "Immunotherapy": 0.0,
+    "OncolyticVirus": 0.0,
+    "PDT": 0.037567084078711815,
+    "RSL3": 0.0,
+    "Radiation": 0.0,
+    "SDT": 0.037567084078711815
+   }
+  },
+  "persister": {
+   "hypoxia": {
+    "Ablation": 0.0,
+    "AdoptiveCell": -0.5555555555555556,
+    "AntibodyDrugConjugate": 0.0,
+    "Immunotherapy": -0.5555555555555555,
+    "OncolyticVirus": -0.0029998061100928166,
+    "PDT": -0.38240177089097943,
+    "RSL3": 0.0,
+    "Radiation": -0.3387337759748542,
+    "SDT": 0.0
+   },
+   "stromal shielding": {
+    "Ablation": 0.0,
+    "AdoptiveCell": 0.0,
+    "AntibodyDrugConjugate": -0.09523809523809532,
+    "Immunotherapy": 0.0,
+    "OncolyticVirus": 0.0,
+    "PDT": -0.018526497199483044,
+    "RSL3": -0.08433734939759044,
+    "Radiation": 0.0,
+    "SDT": 0.0
+   },
+   "acidic pH": {
+    "Ablation": 0.0,
+    "AdoptiveCell": 0.0,
+    "AntibodyDrugConjugate": -0.04700000000000004,
+    "Immunotherapy": 0.0,
+    "OncolyticVirus": 0.0,
+    "PDT": 0.0,
+    "RSL3": -0.9532882606023355,
+    "Radiation": 0.0,
+    "SDT": 0.0
+   },
+   "depth": {
+    "Ablation": 0.0,
+    "AdoptiveCell": 0.0,
+    "AntibodyDrugConjugate": -0.9905,
+    "Immunotherapy": 0.0,
+    "OncolyticVirus": 0.0,
+    "PDT": -0.44199999999999995,
+    "RSL3": 0.0,
+    "Radiation": -0.013779579684261288,
+    "SDT": 0.0
+   },
+   "clonal heterogeneity": {
+    "Ablation": 0.0,
+    "AdoptiveCell": 0.0,
+    "AntibodyDrugConjugate": 1.2368421052631582,
+    "Immunotherapy": 0.0,
+    "OncolyticVirus": 0.0,
+    "PDT": -0.021973287376131044,
+    "RSL3": 1.1578947368421053,
+    "Radiation": 0.0,
+    "SDT": 0.0
+   }
+  }
+ },
+ "dominant_axis": {
+  "glycolytic": [
+   "acidic pH",
+   1.0
+  ],
+  "persister": [
+   "clonal heterogeneity",
+   1.2368421052631582
+  ]
+ },
+ "inert_axes": [],
+ "live_axes": [
+  "hypoxia",
+  "stromal shielding",
+  "acidic pH",
+  "depth",
+  "clonal heterogeneity"
+ ],
+ "robustness_order": [
+  "Ablation",
+  "OncolyticVirus",
+  "Radiation",
+  "Immunotherapy",
+  "AdoptiveCell",
+  "SDT",
+  "PDT",
+  "RSL3",
+  "AntibodyDrugConjugate"
+ ],
+ "inert_threshold": 0.02
+}
