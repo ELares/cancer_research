@@ -40,14 +40,14 @@
    "window_hours": 48.0
   }
  ],
- "library_modules": 33,
+ "library_modules": 34,
  "modules": {
   "biochem.rs": {
    "examples": [
     {
      "context": "/// the ~48-72h SCD1/MUFA enrichment is already complete). An acute/naive",
      "form": "magnitude",
-     "line": 706,
+     "line": 717,
      "value": "72h"
     }
    ],
@@ -59,25 +59,25 @@
     {
      "context": "/// FSP1 re-expression half-time (days). Slowest \u2014 epigenetic.",
      "form": "bare-unit",
-     "line": 155,
+     "line": 162,
      "value": "(days)"
     },
     {
      "context": "/// GPX4 re-expression half-time (days). Transcriptional.",
      "form": "bare-unit",
-     "line": 157,
+     "line": 164,
      "value": "(days)"
     },
     {
      "context": "/// NRF2 re-activation half-time (days).",
      "form": "bare-unit",
-     "line": 159,
+     "line": 166,
      "value": "(days)"
     },
     {
      "context": "/// GSH resynthesis half-time (days). Fastest \u2014 metabolic.",
      "form": "bare-unit",
-     "line": 161,
+     "line": 168,
      "value": "(days)"
     }
    ],
@@ -98,6 +98,18 @@
    "examples": [],
    "per_step_mentions": 10,
    "real_time_mentions": 0
+  },
+  "drug_transport.rs": {
+   "examples": [
+    {
+     "context": "/// \"over 5% of the injected dose per gram tumor at 48 h\" for redox",
+     "form": "magnitude",
+     "line": 199,
+     "value": "48 h"
+    }
+   ],
+   "per_step_mentions": 0,
+   "real_time_mentions": 1
   },
   "ifngamma.rs": {
    "examples": [],
@@ -141,7 +153,7 @@
      "value": "48 h"
     }
    ],
-   "per_step_mentions": 14,
+   "per_step_mentions": 15,
    "real_time_mentions": 4
   },
   "persister.rs": {
@@ -225,19 +237,19 @@
     {
      "context": "/// Porfimer defaults: t_half=504 h (Bellnier 2006), t_dist=0 h",
      "form": "magnitude",
-     "line": 54,
+     "line": 69,
      "value": "504 h"
     },
     {
      "context": "/// Porfimer defaults: t_half=504 h (Bellnier 2006), t_dist=0 h",
      "form": "magnitude",
-     "line": 54,
+     "line": 69,
      "value": "0 h"
     },
     {
      "context": "/// (legacy \"light at peak\"; set ~24\u201348 h to model porfimer absorption",
      "form": "magnitude",
-     "line": 55,
+     "line": 70,
      "value": "48 h"
     }
    ],
@@ -277,7 +289,7 @@
     {
      "context": "eprintln!(\"Immune model: resident T cell phase only (0-48h), not systemic.\\n\");",
      "form": "magnitude",
-     "line": 1208,
+     "line": 1229,
      "value": "48h"
     }
    ],
@@ -398,7 +410,7 @@
    "real_time_mentions": 16
   }
  },
- "modules_total": 47,
+ "modules_total": 48,
  "n_solver_timestep_conventions": 1,
  "n_solver_timestep_matches": 3,
  "n_step_bindings": 6,
@@ -545,6 +557,10 @@
    "sim-tumor-pk",
    "sim-window"
   ],
+  "drug_transport.rs": [
+   "sim-tissue-pk",
+   "sim-tumor-pk"
+  ],
   "params.rs": [
    "sim-combo",
    "sim-combo-mech",
@@ -578,6 +594,7 @@
  },
  "real_time_only": [
   "cell.rs",
+  "drug_transport.rs",
   "photosensitizer_pk.rs",
   "senescence.rs",
   "sim-combo/main.rs",
