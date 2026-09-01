@@ -33,11 +33,16 @@ ones known and deliberate:
 - **No PNG content, at all.** The eight census PNGs are checked for existence
   and nothing else. Replacing one with an unrelated image passes. PNG bytes are
   not portable, and no portable comparison is implemented.
-- **Most non-census PDFs.** Twenty-two committed figures come from other
+- **Most non-census PDFs.** Twenty-three committed figures come from other
   generators. Five of them -- the corpus-derived ones, whose inputs are tracked
   -- are regenerated and gated by `tests/test_figure_caption_statistics.py`;
-  the other seventeen are not, and ten of those seventeen `FIGURES.yaml` marks
-  `type: simulation`. Eight of the ten are drawn by `generate_figures.py` from
+  the other eighteen are not, and ten of those eighteen `FIGURES.yaml` marks
+  `type: simulation`. The eighteenth is `fig30_modality_landscape`, which is
+  conceptual but reads a COMMITTED artifact
+  (`analysis/modality-coverage.json`), so unlike the rest of the backlog it is
+  regenerable offline and its numbers are pinned by
+  `tests/test_modality_landscape_figure.py` even though the PDF itself is not
+  byte-gated here. Eight of the ten are drawn by `generate_figures.py` from
   `simulations/output/`, which is gitignored, so CI cannot regenerate them at
   all until #788's tracking decision is made; they were regenerated in the #790
   pass and no longer embed a creation date, which is necessary for a freshness
@@ -848,7 +853,8 @@ def _spell(n: int) -> str:
     """Small numbers as the docstring writes them."""
     words = {0: "no", 1: "one", 2: "two", 3: "three", 5: "five", 7: "seven",
              8: "eight", 9: "nine", 10: "ten", 15: "fifteen",
-             17: "seventeen", 22: "twenty-two"}
+             17: "seventeen", 18: "eighteen", 22: "twenty-two",
+             23: "twenty-three"}
     return words.get(n, str(n))
 
 
@@ -895,9 +901,15 @@ def test_the_corpus_figure_backlog_is_stated_and_shrinking():
     # a false message from a guard about counting honestly.
     total = len([n for n in names if n not in census])
     gated = len(_corpus_derived_stems())
-    assert f"Twenty-two committed figures" in doc and total == 22, (
-        f"{total} non-census figures are committed; the docstring says "
-        "twenty-two")
+    # DERIVED from the count rather than pinned as a literal. The old form
+    # hard-coded "Twenty-two" on BOTH sides of the `and`, so adding a figure
+    # produced a failure naming the right number in the message and the wrong
+    # one in the assertion, and the fix looked like editing two constants
+    # instead of one.
+    spelled = _spell(total).capitalize()
+    assert f"{spelled} committed figures" in doc, (
+        f"{total} non-census figures are committed; the docstring does not "
+        f"say {spelled.lower()}")
     assert f"the other {_spell(total - gated)} are not" in doc, (
         f"{total - gated} non-census figures are ungated and the docstring "
         "says otherwise")
@@ -944,7 +956,10 @@ def test_the_corpus_figure_backlog_is_stated_and_shrinking():
     # today (both dated figures are inside the seventeen), and a dated
     # corpus-derived figure would make the guard demand a sentence that is
     # wrong about its own scope.
-    assert f"{_spell(n_sim)} of those seventeen" in doc, (
+    # The denominator is DERIVED too. It was pinned as the literal
+    # "seventeen" beside a derived numerator, so adding one ungated figure
+    # made a true sentence fail for the wrong reason.
+    assert f"{_spell(n_sim)} of those {_spell(total - gated)}" in doc, (
         f"FIGURES.yaml marks {n_sim} of the ungated figures as simulation and "
         "the docstring says otherwise -- the first version said eight, which "
         "was the number this branch regenerated rather than the number that "

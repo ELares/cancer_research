@@ -15,6 +15,7 @@ Usage:
 import shutil
 import subprocess
 
+import json
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
@@ -131,6 +132,13 @@ COLORS = {
     "acid": "#FF6347",
     "neutral": "#87CEEB",
     "bg": "#FAFAFA",
+    # The non-ferroptosis arms (#726 onward). Kept distinct from the SDT /
+    # RSL3 / PDT palette above so a reader can see at a glance which entries
+    # belong to this project's original thesis and which do not.
+    "radiation": "#8172B2",
+    "parp": "#937860",
+    "nano": "#DA8BC3",
+    "checkpoint": "#64B5CD",
     "text": "#1a1a1a",
 }
 
@@ -568,6 +576,106 @@ def fig23_census_flow():
     print(f"  fig23_census_flow")
 
 
+# ── Figure 30: What the engine can be asked ───────────────────────────
+
+def fig30_modality_landscape():
+    """The engine's coverage against the field's attention, per mechanism.
+
+    EVERY NUMBER IS READ FROM `analysis/modality-coverage.json`, which is
+    itself generated and guarded. Nothing on this figure is typed, because a
+    diagram summarising a measurement is the easiest place for one to go
+    stale -- this repository has shipped that defect in prose more than once,
+    and a picture is harder to notice it in.
+
+    The figure exists because a reader cannot otherwise see the shape of the
+    problem: the engine models one mechanism in depth and most of the
+    taxonomy not at all, and the mechanisms it misses are not small.
+    """
+    src = Path(__file__).resolve().parent.parent / "analysis" / "modality-coverage.json"
+    if not src.exists():
+        print("  fig30: analysis/modality-coverage.json missing - skipping")
+        return
+    d = json.loads(src.read_text())
+    rows = sorted(d["rows"], key=lambda r: r["census"])
+
+    tier_color = {
+        "treatment": COLORS["sdt"],
+        "modifier": COLORS["checkpoint"],
+        "absent": "#BFBFBF",
+    }
+    tier_label = {
+        "treatment": "applicable as a treatment",
+        "modifier": "present, but cannot be applied alone",
+        "absent": "no engine representation",
+    }
+
+    fig, (axA, axB) = plt.subplots(
+        1, 2, figsize=(12, 6), gridspec_kw={"width_ratios": [1.55, 1]})
+    fig.patch.set_facecolor("white")
+
+    names = [r["mechanism"] for r in rows]
+    census = [r["census"] for r in rows]
+    colors = [tier_color[r["engine_tier"]] for r in rows]
+    ypos = np.arange(len(rows))
+    axA.barh(ypos, census, color=colors, edgecolor="black", linewidth=0.4)
+    axA.set_yticks(ypos)
+    axA.set_yticklabels(names, fontsize=8)
+    axA.set_xlabel("Cancer articles carrying the mechanism's MeSH descriptor",
+                   fontsize=9)
+    axA.set_title("(a) The field's attention, by what the engine can express",
+                  fontsize=10, fontweight="bold")
+    axA.set_facecolor(COLORS["bg"])
+    for i, r in enumerate(rows):
+        axA.text(r["census"] + max(census) * 0.012, i, f"{r['census']:,}",
+                 va="center", fontsize=7, color="#444")
+    handles = [mpatches.Patch(facecolor=tier_color[t], edgecolor="black",
+                              linewidth=0.4, label=tier_label[t])
+               for t in ("treatment", "modifier", "absent")]
+    axA.legend(handles=handles, fontsize=7.5, loc="lower right", framealpha=0.95)
+    axA.set_xlim(0, max(census) * 1.18)
+
+    absent = [r for r in rows if r["engine_tier"] == "absent"]
+    covered = [r for r in rows if r["engine_tier"] != "absent"]
+    cov_vals = [sum(r["census"] for r in covered), sum(r["trials"] for r in covered)]
+    abs_vals = [sum(r["census"] for r in absent), sum(r["trials"] for r in absent)]
+    labels = ["census articles", "registered trials"]
+    x = np.arange(len(labels))
+    tot = [c + a for c, a in zip(cov_vals, abs_vals)]
+    axB.bar(x, [c / t * 100 for c, t in zip(cov_vals, tot)], 0.55,
+            color=COLORS["checkpoint"], edgecolor="black", linewidth=0.5,
+            label="engine can express it")
+    axB.bar(x, [a / t * 100 for a, t in zip(abs_vals, tot)], 0.55,
+            bottom=[c / t * 100 for c, t in zip(cov_vals, tot)],
+            color="#BFBFBF", edgecolor="black", linewidth=0.5,
+            label="no engine representation")
+    for i, (a, t) in enumerate(zip(abs_vals, tot)):
+        axB.text(i, 100 - (a / t * 100) / 2, f"{a:,}\n({a / t * 100:.0f}%)",
+                 ha="center", va="center", fontsize=8.5, fontweight="bold")
+    axB.set_xticks(x)
+    axB.set_xticklabels(labels, fontsize=9)
+    axB.set_ylabel("Share of the 16 measurable mechanisms (%)", fontsize=9)
+    axB.set_ylim(0, 100)
+    axB.set_title(f"(b) {len(absent)} of {len(rows)} mechanisms are absent",
+                  fontsize=10, fontweight="bold")
+    axB.legend(fontsize=7.5, loc="lower left", framealpha=0.95)
+    axB.set_facecolor(COLORS["bg"])
+
+    active = d["active_treatments"]
+    kinds = d.get("treatment_kinds", {})
+    arms = "; ".join(f"{v} ({kinds.get(v, '?')})" for v in active)
+    fig.suptitle(
+        "What this engine can be asked, against what the field publishes",
+        fontsize=12, fontweight="bold", y=0.99)
+    fig.text(0.5, 0.005,
+             f"Treatment arms: {arms}.  "
+             "Volume is NOT comparable across mechanisms - descriptor breadth "
+             "varies, so this is not a ranking; the ENGINE colour is the "
+             "content.  Generated from analysis/modality-coverage.json.",
+             ha="center", fontsize=7.2, color="#555", wrap=True)
+    fig.tight_layout(rect=[0, 0.035, 1, 0.96])
+    save(fig, "fig30_modality_landscape")
+
+
 if __name__ == "__main__":
     print("Generating conceptual diagrams...")
     fig18_hypoxia()
@@ -576,4 +684,5 @@ if __name__ == "__main__":
     fig21_ph()
     fig22_flowchart()
     fig23_census_flow()
+    fig30_modality_landscape()
     print("Done.")
