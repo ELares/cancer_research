@@ -35,15 +35,45 @@ INDEX_FILE = PROJECT_ROOT / "corpus" / "INDEX.jsonl"
 
 
 def get_tracked_files():
-    """Return list of git-tracked file paths (relative to repo root)."""
-    result = subprocess.run(
-        ["git", "ls-files"],
-        capture_output=True, text=True, cwd=PROJECT_ROOT,
-    )
-    if result.returncode != 0:
-        print(f"Error running git ls-files: {result.stderr}", file=sys.stderr)
-        sys.exit(1)
-    return [f for f in result.stdout.strip().split("\n") if f]
+    """Every file the release would ship: tracked, plus untracked-not-ignored.
+
+    THE FOOTGUN THIS CLOSES (#796). `git ls-files` alone lists only TRACKED
+    files, and a newly created file is untracked until `git add`. So the
+    obvious order -- regenerate, then stage -- produced a manifest missing the
+    very file the author had just written, and `test_manifest_freshness` then
+    failed with "tracked file(s) in a manifested directory have no manifest
+    entry". The working idiom was to regenerate TWICE, straddling the `git
+    add`, which is a thing nobody discovers from the error message.
+
+    `--others --exclude-standard` adds files that are untracked but not
+    ignored, which is exactly the set that a following `git add -A` would
+    stage. Ignored files stay out, so build output and the scratch tree cannot
+    leak into a release manifest.
+
+    Anything picked up this way is NAMED on stderr rather than absorbed
+    silently: a manifest is a statement about what a release contains, and a
+    file appearing in one without the author knowing is the opposite of the
+    guarantee it exists to give.
+    """
+    def _ls(*args):
+        r = subprocess.run(["git", "ls-files", *args],
+                           capture_output=True, text=True, cwd=PROJECT_ROOT)
+        if r.returncode != 0:
+            print(f"Error running git ls-files {' '.join(args)}: {r.stderr}",
+                  file=sys.stderr)
+            sys.exit(1)
+        return [f for f in r.stdout.strip().split("\n") if f]
+
+    tracked = _ls()
+    untracked = [f for f in _ls("--others", "--exclude-standard")
+                 if f not in set(tracked)]
+    if untracked:
+        shown = ", ".join(sorted(untracked)[:8])
+        more = "" if len(untracked) <= 8 else f" (+{len(untracked) - 8} more)"
+        print(f"note: {len(untracked)} untracked file(s) included, which a "
+              f"following `git add -A` would stage: {shown}{more}",
+              file=sys.stderr)
+    return sorted(set(tracked) | set(untracked))
 
 
 def filter_files(files):
