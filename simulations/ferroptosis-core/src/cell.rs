@@ -73,6 +73,13 @@ pub enum Treatment {
     RSL3,
     SDT,
     PDT,
+    /// Ionizing radiation (#726). TWO channels, not one: the linear-quadratic
+    /// DNA-damage model in [`crate::radiation`] does not pass through
+    /// [`crate::biochem::CellState`] at all, and radiation-induced ferroptosis
+    /// enters separately through `exo_ros_peak`. Collapsing them would model
+    /// radiation as a photodynamic agent, which it is not — its dominant
+    /// lethal lesion is the DNA double-strand break.
+    Radiation,
 }
 
 /// Cell phenotypes.

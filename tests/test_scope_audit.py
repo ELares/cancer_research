@@ -431,6 +431,14 @@ def test_the_module_rows_are_each_pinned_to_their_own_figure():
         assert f"{label} | **{em[key]} of {em['modules']}**" in md, (
             f"the `{label}` row does not carry its own measured value "
             f"{em[key]}")
+        # AND on the README, which is the front door and was NOT checked here:
+        # `r` was read and never used for these rows, so #799 shipped a
+        # PRODUCTION-code figure of 16 against a generator saying 15 -- the
+        # value came from a sibling artifact measuring a different term set --
+        # and this file stayed green.
+        assert f"{label} | **{em[key]} of {em['modules']}**" in r, (
+            f"README's `{label}` row is not the measured value {em[key]} of "
+            f"{em['modules']}; the front door disagrees with the generator")
 
 
 def test_the_denominator_verdict_is_checked_against_a_live_count():

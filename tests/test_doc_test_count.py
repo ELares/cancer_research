@@ -34,7 +34,7 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 # Collected-test expectations. Bump these (and the doc strings) in lockstep with
 # intentional test additions/removals — that lockstep is the whole point.
 EXPECTED_TESTS_DIR = 1655  # `tests/` total, including this meta-test
-EXPECTED_BINDINGS = 12  # `simulations/ferroptosis-python/test_bindings.py`
+EXPECTED_BINDINGS = 13  # `simulations/ferroptosis-python/test_bindings.py`
 EXPECTED_TOTAL = EXPECTED_TESTS_DIR + EXPECTED_BINDINGS  # the documented "NNN Python tests"
 
 BINDINGS_FILE = REPO_ROOT / "simulations" / "ferroptosis-python" / "test_bindings.py"

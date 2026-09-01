@@ -565,6 +565,73 @@ impl Default for ImmuneParams {
     }
 }
 
+/// Ionizing-radiation configuration (#726).
+///
+/// Two channels, deliberately separate — see [`crate::radiation`] for why
+/// collapsing them would misrepresent the modality.
+///
+/// [`Default`] is the IDENTITY: `dose_gy = 0.0` makes every helper in
+/// `crate::radiation` return its no-op value, so a run carrying this config is
+/// byte-identical to one with no radiation model. `ros_per_gy` defaults to
+/// `0.0` on top of that, so even a configured dose leaves the ferroptosis
+/// channel off until a caller opts in — the uncalibrated knob cannot be
+/// switched on by accident.
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+pub struct RadiationConfig {
+    /// Prescribed dose at the surface, in gray. `0.0` ⇒ the whole layer is
+    /// inert.
+    #[serde(default)]
+    pub dose_gy: f64,
+    /// Linear-quadratic α, per Gy. Published per cell line with its β; see
+    /// [`crate::radiation::ALPHA_BETA_TUMOUR_GY`].
+    #[serde(default)]
+    pub alpha_per_gy: f64,
+    /// Linear-quadratic β, per Gy². Zero makes the model purely exponential
+    /// and removes the fractionation effect entirely.
+    #[serde(default)]
+    pub beta_per_gy2: f64,
+    /// Exogenous-ROS peak produced per effective gray. **UNCALIBRATED**: the
+    /// radiation-ferroptosis literature gives the direction and no conversion.
+    /// `0.0` (default) ⇒ the ferroptosis channel is off.
+    #[serde(default)]
+    pub ros_per_gy: f64,
+    /// How much of the oxygen effect applies, in `[0, 1]`. `0.0` ⇒ dose is
+    /// unmodified by O₂ (bit-identical), `1.0` ⇒ the full hyperbola.
+    #[serde(default)]
+    pub o2_dependence: f64,
+    /// The pO₂ in mmHg that `o2_supply = 1.0` denotes. Defaults to
+    /// [`crate::oxygen::OER_REFERENCE_PO2_MMHG`] so the DNA channel and the
+    /// SDT path place a given supply at the same point on the same curve.
+    #[serde(default = "default_p_full_mmhg")]
+    pub p_full_mmhg: f64,
+    /// Linear attenuation coefficient, per cm. Defaults to
+    /// [`crate::radiation::MU_6MV_SOFT_TISSUE_PER_CM`].
+    #[serde(default = "default_mu_per_cm")]
+    pub mu_per_cm: f64,
+}
+
+fn default_p_full_mmhg() -> f64 {
+    crate::oxygen::OER_REFERENCE_PO2_MMHG
+}
+
+fn default_mu_per_cm() -> f64 {
+    crate::radiation::MU_6MV_SOFT_TISSUE_PER_CM
+}
+
+impl Default for RadiationConfig {
+    fn default() -> Self {
+        Self {
+            dose_gy: 0.0,
+            alpha_per_gy: 0.0,
+            beta_per_gy2: 0.0,
+            ros_per_gy: 0.0,
+            o2_dependence: 0.0,
+            p_full_mmhg: default_p_full_mmhg(),
+            mu_per_cm: default_mu_per_cm(),
+        }
+    }
+}
+
 /// Spatial immune-coupling params used by sim-tme (2D) and sim-tme-3d (3D).
 ///
 /// Distinct from [`ImmuneParams`] — that struct models the full DC→T-cell

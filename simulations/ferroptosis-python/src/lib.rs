@@ -42,19 +42,46 @@ fn parse_phenotype(s: &str) -> PyResult<Phenotype> {
     }
 }
 
+/// Every treatment name `parse_treatment` accepts.
+///
+/// NOT every `Treatment` variant: `Radiation` is excluded on purpose, because
+/// this entry point cannot deliver it (see the match arm below).
+///
+/// Kept beside the match and asserted against it, because the error message
+/// quoting a hand-typed list is how a binding ends up accepting a name it
+/// calls invalid.
+const TREATMENT_NAMES: [&str; 4] = ["Control", "RSL3", "SDT", "PDT"];
+
 fn parse_treatment(s: &str) -> PyResult<Treatment> {
     match s {
         "Control" => Ok(Treatment::Control),
         "RSL3" => Ok(Treatment::RSL3),
         "SDT" => Ok(Treatment::SDT),
         "PDT" => Ok(Treatment::PDT),
+        // `Treatment::Radiation` is deliberately NOT accepted here. `sim_cell`
+        // takes no dose, no alpha/beta and no depth, so a Radiation cell built
+        // through this entry point carries zero exogenous ROS and no
+        // DNA-damage roll -- it would be bit-identical to Control at every
+        // seed while advertising a modality. That is the
+        // layer-without-a-caller shape this project keeps finding, and a
+        // public surface is the worst place for it. The name is admitted once
+        // the binding grows a dose argument.
+        // The valid list is DERIVED from the arms above rather than typed:
+        // the first version hard-coded it, so adding an arm shipped a binding
+        // that ACCEPTS the new name while telling the caller it is invalid.
         _ => Err(PyValueError::new_err(format!(
-            "Unknown treatment '{}'. Valid: Control, RSL3, SDT, PDT",
-            s
+            "Unknown treatment '{}'. Valid: {}",
+            s,
+            TREATMENT_NAMES.join(", ")
         ))),
     }
 }
 
+// NOTE: this crate is a pyo3 cdylib and cannot run `cargo test` -- the test
+// harness links without the Python symbols and aborts on `_PyBool_Type`. The
+// both-directions check on TREATMENT_NAMES therefore lives in
+// `test_bindings.py`, which runs against the BUILT module and is the only
+// place that can exercise the binding at all.
 fn parse_context(s: &str) -> PyResult<Params> {
     match s {
         "2d" | "default" => Ok(Params::default()),

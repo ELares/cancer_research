@@ -26,6 +26,7 @@
 //! | [`physics`] | Depth-dependent energy deposition (Beer-Lambert, acoustic; 2D + 3D dispatchers) |
 //! | [`grid`] | 2D and 3D tumor grids with heterogeneous architecture |
 //! | [`oxygen`] | 3D radial oxygen gradients for spheroid tumors |
+//! | [`radiation`] | Ionizing radiation: linear-quadratic DNA lethality and radiation-induced ferroptosis as SEPARATE channels, both O2-scaled by the OER |
 //! | [`ph`] | 3D radial pH gradient + iron-release and ion-trapping modulation helpers |
 //! | [`stromal`] | 3D CAF-shielded boundary detection (26-Moore) + shielded kill rate |
 //! | [`immune`] | ICD/DAMP immune cascade model (dimensionless, single-event) |
@@ -72,6 +73,7 @@ pub mod ph;
 pub mod phenotype_mufa;
 pub mod photosensitizer_pk;
 pub mod physics;
+pub mod radiation;
 pub mod reaction_diffusion;
 pub mod repair;
 pub mod senescence;

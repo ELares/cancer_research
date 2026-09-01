@@ -146,10 +146,10 @@
   ]
  },
  "engine_modules": {
-  "in_code": 20,
+  "in_code": 21,
   "in_production_code": 15,
-  "mention": 29,
-  "modules": 32,
+  "mention": 30,
+  "modules": 33,
   "silent": [
    "reaction_diffusion.rs",
    "spheroid.rs",

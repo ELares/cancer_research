@@ -152,6 +152,13 @@ pub fn local_ros_multiplier(
         Treatment::PDT => pdt_intensity_at_depth(z_um, params),
         Treatment::RSL3 => rsl3_concentration(z_um),
         Treatment::Control => 0.0,
+        // Megavoltage photons are nearly flat over a tumour: ~97% of the
+        // surface dose at 1 cm against SDT's 85% and PDT's ~4.5%. Radiation
+        // is the physical modality whose REACH is not the limiting factor,
+        // which is the control this comparison has never had.
+        Treatment::Radiation => {
+            crate::radiation::intensity_at_depth(z_um, crate::radiation::MU_6MV_SOFT_TISSUE_PER_CM)
+        }
     }
 }
 
@@ -207,6 +214,13 @@ pub fn local_ros_multiplier_3d(radial_depth_um: f64, tx: Treatment, params: &Spa
         Treatment::PDT => pdt_intensity_at_depth(z_um, params),
         Treatment::RSL3 => rsl3_concentration(z_um),
         Treatment::Control => 0.0,
+        // Megavoltage photons are nearly flat over a tumour: ~97% of the
+        // surface dose at 1 cm against SDT's 85% and PDT's ~4.5%. Radiation
+        // is the physical modality whose REACH is not the limiting factor,
+        // which is the control this comparison has never had.
+        Treatment::Radiation => {
+            crate::radiation::intensity_at_depth(z_um, crate::radiation::MU_6MV_SOFT_TISSUE_PER_CM)
+        }
     }
 }
 

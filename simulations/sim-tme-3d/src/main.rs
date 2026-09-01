@@ -1211,6 +1211,11 @@ fn run_one_condition_full(
         Treatment::SDT => params.sdt_ros,
         Treatment::PDT => params.pdt_ros,
         Treatment::RSL3 | Treatment::Control => 0.0,
+        // Not wired into this binary's condition matrix (#726 lands the
+        // engine layer only); radiation's exogenous ROS is dose-driven and
+        // its `ros_per_gy` is uncalibrated, so switching it on here means
+        // re-running the committed 24-condition matrix.
+        Treatment::Radiation => 0.0,
     };
 
     // Time-varying dose schedule (#239). `dosed == false` for the default
@@ -1641,7 +1646,7 @@ fn run_one_condition_full(
                 !base_exo.is_empty(),
                 "base_exo must be populated on the dosed SDT/PDT path"
             ),
-            Treatment::Control => {}
+            Treatment::Control | Treatment::Radiation => {}
         }
     }
 
@@ -1772,7 +1777,10 @@ fn run_one_condition_full(
                             let decay = exo_decay_factor(step).max(1e-9);
                             gc.state.exo_ros_peak = base_exo[idx] * dose_factor / decay;
                         }
-                        Treatment::Control => {}
+                        // Radiation is single-fraction and not wired here:
+                        // fractionation needs regrowth between fractions,
+                        // which needs cell division (#727b).
+                        Treatment::Control | Treatment::Radiation => {}
                     }
                 }
 
@@ -1895,7 +1903,9 @@ fn run_one_condition_full(
                         // invariant the GPX4 inactivation above relies on — the
                         // pre-loop `debug_assert` only documents it in debug).
                         let drug_intensity = match condition.treatment {
-                            Treatment::Control => 0.0,
+                            // Radiation has no drug availability: its two
+                            // channels are dose and depth, not a schedule.
+                            Treatment::Control | Treatment::Radiation => 0.0,
                             Treatment::RSL3 => {
                                 if dosed {
                                     (dose_factor * rsl3_drug_avail[idx]).clamp(0.0, 1.0)

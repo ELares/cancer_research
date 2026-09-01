@@ -84,6 +84,41 @@ def test_bad_phenotype_raises():
         assert "InvalidPhenotype" in str(e)
 
 
+def test_the_advertised_treatments_are_exactly_the_accepted_ones():
+    """The error message must BE the accepted list, in both directions.
+
+    It used to hard-code "Control, RSL3, SDT, PDT", so adding the Radiation
+    arm (#726) shipped a binding that ACCEPTED a name while telling the caller
+    it was invalid -- one artifact describing another. The Rust side derives
+    the message from `TREATMENT_NAMES`; this checks the built module agrees.
+    """
+    expected = ["Control", "RSL3", "SDT", "PDT"]
+    for name in expected:
+        # Accepted: a good treatment does not raise.
+        fc.sim_cell("Glycolytic", name, seed=1)
+
+    msg = None
+    try:
+        fc.sim_cell("Glycolytic", "Radiotherapy", seed=1)
+    except ValueError as e:
+        msg = str(e)
+    assert msg is not None, "an unknown treatment did not raise"
+    for name in expected:
+        assert name in msg, f"the error message omits {name}: {msg}"
+
+    # And nothing outside the list parses, so the message is not merely a
+    # superset of what works. `Radiation` is deliberately here: the engine has
+    # the arm, but `sim_cell` takes no dose, so a binding that accepted the
+    # name would return Control at every seed while advertising a modality.
+    for bogus in ("Radiation", "radiation", "SDT ", ""):
+        raised = False
+        try:
+            fc.sim_cell("Glycolytic", bogus, seed=1)
+        except ValueError:
+            raised = True
+        assert raised, f"{bogus!r} was accepted"
+
+
 def test_bad_treatment_raises():
     try:
         fc.sim_cell("Persister", "BadTreatment", seed=42)
