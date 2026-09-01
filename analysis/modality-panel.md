@@ -11,17 +11,17 @@
 | Ablation | 85.00% | threshold destruction (not a dose-response) | margin geometry -- coverage, and nothing else | thresholds published; applicator field not modelled |
 | OncolyticVirus | 58.14% | direct lysis + the SHARED ICD chain | infection spread, which this engine takes as an input | uncalibrated; T-VEC durable-response band not fitted |
 | Radiation | 45.18% | linear-quadratic DNA damage (not CellState) | dose, and oxygen through the OER | form checked against a published parameterisation |
-| AntibodyDrugConjugate | 1.84% | ferroptosis payload, delivered on an antibody (+ bystander) | the binding-site barrier (~7 um penetration) | transport anchored; payload pharmacology is RSL3's |
+| AntibodyDrugConjugate | 1.84% | ferroptosis payload, delivered on an antibody (+ bystander) | the binding-site barrier (~7 um penetration) | transport anchored; payload is the SDT exo-ROS constant, not RSL3 pharmacology |
 | AdoptiveCell | 0.12% | redirected effectors (bypasses DC priming) | per-effector kill rate and the PD-1 brake (barriers open here; the solid-tumour case is reported separately) | uncalibrated; B-ALL remission band not fitted |
 | Immunotherapy | 0.04% | immune cascade (no ferroptotic death required) | antigen availability and the checkpoint brake | uncalibrated; published ORR band not fitted |
-| Control | 0.00% | ferroptosis engine (lipid peroxidation) | energy delivery to depth | uncalibrated (direction-only) |
+| Control | 0.00% | none -- untreated baseline | nothing: this is what the other arms are read against | not applicable (untreated baseline) |
 | RSL3 | 0.00% | ferroptosis engine (lipid peroxidation) | endogenous ROS supply and antioxidant defence | uncalibrated (direction-only) |
 
-**10 arms, 7 distinct routes to death**, and only 4 of them go through the ferroptosis engine. That is the number this whole campaign was about: a reader who opened this repository a month ago would have found one route and four arms.
+**9 treatment arms plus an untreated baseline, 7 distinct routes to death**, and only 3 of the arms go through the ferroptosis engine. That is the number this whole campaign was about: a reader who opened this repository a month ago would have found one route and three arms. The baseline is excluded from the route counts -- it inherited the ferroptosis loop's route string and was counted as a route to death while killing nothing.
 
 ## The sharpest row is the one about delivery
 
-`AntibodyDrugConjugate` kills 1.84% against `SDT`'s 87.24% — a factor of 48 — **and they share the payload's pharmacology exactly**. The ADC arm runs the same ferroptosis engine with the same parameters; what differs is that the payload arrives on a ~150 kDa antibody, and the binding-site barrier holds its penetration to about 7 µm.
+`AntibodyDrugConjugate` kills 1.84% against `SDT`'s 87.24% — a factor of 48 — **and the same exogenous-ROS constant drives both**. It is NOT that they share RSL3's pharmacology: the GPX4-inhibition branch fires only for `Treatment::RSL3`, and this report said otherwise until it was checked against the code. What the two rows share is the payload constant (`params.sdt_ros`) and the engine; what differs is that the payload arrives on a ~150 kDa antibody, and the binding-site barrier holds its penetration to about 7 µm. So the ratio prices THIS MODEL'S transport layer, which is arithmetic more than it is a discovery.
 
 This project has argued since Chapter 6 that delivery dominates the in-vitro-to-in-vivo gap. This is the first row in the repository where the SAME pharmacology is run through two delivery routes and the gap is the only difference between them.
 

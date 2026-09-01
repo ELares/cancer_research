@@ -43,7 +43,7 @@ experiment.
 the count.** The ferroptosis and physical-ROS work carries the calibrated legs
 and every number the manuscript reports; the arms added later are roughly 11 to
 13 times smaller by line count, and each is recorded in
-`simulations/calibration/CALIBRATION_STATUS.md` as feeding no reported number.
+`simulations/calibration/CALIBRATION_STATUS.md` as feeding no number in the manuscript's QUANTITATIVE chapters (Chapter 6 does report these arms' own figures, which is a different thing).
 Use a newer arm to ask whether a mechanism's DIRECTION is internally
 consistent. Do not read a magnitude off one.
 

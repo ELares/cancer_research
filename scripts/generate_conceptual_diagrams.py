@@ -588,8 +588,11 @@ def fig30_modality_landscape():
     and a picture is harder to notice it in.
 
     The figure exists because a reader cannot otherwise see the shape of the
-    problem: the engine models one mechanism in depth and most of the
-    taxonomy not at all, and the mechanisms it misses are not small.
+    problem, and that shape MOVED: no measurable mechanism is without engine
+    representation any more, so the gap the figure draws is no longer presence
+    but DEPTH and applicability -- one mechanism modelled deeply, the rest
+    represented by arms an order of magnitude smaller, half of them reachable
+    only as modifiers of another treatment.
     """
     src = Path(__file__).resolve().parent.parent / "analysis" / "modality-coverage.json"
     if not src.exists():

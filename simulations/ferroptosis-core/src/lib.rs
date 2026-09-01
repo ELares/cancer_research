@@ -1,6 +1,12 @@
 //! # ferroptosis-core
 //!
-//! Embeddable ferroptosis biochemistry engine for cancer simulation.
+//! Embeddable cancer-therapy simulation engine.
+//!
+//! The crate is NAMED for ferroptosis and began as a ferroptosis engine; it
+//! now also carries radiation, ablation, oncolytic spread, ADC bystander
+//! killing and adoptive-cell barriers. The ferroptosis layers remain the
+//! deepest and carry the calibrated legs -- see
+//! `analysis/modality-module-depth.md` for the measured gap.
 //!
 //! This library models the ferroptosis cell death pathway at single-cell resolution:
 //! ROS generation, GSH depletion, GPX4/FSP1 repair, lipid peroxidation, and

@@ -463,15 +463,41 @@ def test_the_treatment_tier_is_derived_from_the_enum_not_pinned(d):
     assert modelled, (
         "no mechanism scores as a treatment, yet the enum carries "
         f"{variants}. The detector has stopped reaching the variants.")
-    # Every mechanism in the tier must be named by SOME variant, recomputed
-    # here rather than trusted.
+    # THE RULE THIS GUARD ENCODED WAS THE BUG. It required a mechanism's
+    # keyword to match the SPELLING of a variant, which is how the tier itself
+    # decided -- and that is a spelling accident, not a capability. `oncolytic`
+    # is right-bounded so it cannot match inside `OncolyticVirus`; `adc` cannot
+    # match `AntibodyDrugConjugate`; `cart` cannot match `AdoptiveCell`; `hifu`
+    # cannot match `Ablation`. Four mechanisms whose arms exist and are RUN by
+    # `sim-modality-panel` were reported as modifiers, and this guard agreed
+    # with the detector because it reimplemented it.
+    #
+    # No regex can express the mapping: the enum is named after what an arm
+    # DOES and the taxonomy after what the literature CALLS it. So the mapping
+    # is explicit, and what is checked is that it stays HONEST in both
+    # directions -- every mapped variant must exist, and every variant must be
+    # accounted for.
     for mech in modelled:
-        terms = MC.ENGINE_TERMS[mech]
-        assert any(
-            re.search(MC.term_pattern(t.replace(" ", "")), v.lower())
-            for v in variants for t in terms), (
-            f"{mech} scores as a treatment and no `Treatment` variant names "
-            "it; the tier rule is matching something else")
+        named = set(MC.VARIANT_FOR.get(mech, ()))
+        assert named, (
+            f"{mech} scores as a treatment with no entry in VARIANT_FOR; the "
+            "tier rule is matching something else again")
+        missing = named - set(variants)
+        assert not missing, (
+            f"{mech} is mapped to {sorted(missing)}, which the `Treatment` "
+            "enum does not carry")
+    for mech, named in MC.VARIANT_FOR.items():
+        if set(named) & set(variants):
+            assert tiers.get(mech) == "treatment", (
+                f"{mech} is mapped to {named}, which the enum carries, yet it "
+                f"scores {tiers.get(mech)!r}")
+    accounted = {v for vs in MC.VARIANT_FOR.values() for v in vs} | set(MC.UNMAPPED_VARIANTS)
+    unaccounted = sorted(set(variants) - accounted)
+    assert not unaccounted, (
+        f"{unaccounted} are treatment arms that no mechanism claims and that "
+        "are not listed in UNMAPPED_VARIANTS with a reason. Decide which "
+        "mechanism each makes selectable, or record why none does -- an arm "
+        "nobody maps silently reads as a modifier")
     # And the report must describe each arm rather than asserting a shared
     # property of all of them, which is what broke when Radiation landed.
     for v in variants:

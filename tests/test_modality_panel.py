@@ -90,15 +90,32 @@ def test_the_refusal_is_stated_in_every_place_it_can_be_read(d, md):
 
 def test_the_structural_claim_is_counted_not_asserted(d, md):
     """'Most arms no longer go through the ferroptosis engine' is the answer
-    to the criticism this campaign began from, so it is a count."""
-    ferro = [a for a in d["arms"] if "ferroptosis engine" in a["route"]]
+    to the criticism this campaign began from, so it is a count.
+
+    Counted over the TREATMENT arms. The untreated baseline ran inside the
+    ferroptosis loop and inherited its route string, so it was being counted
+    as a route to death while killing nothing -- one free point on the side of
+    the claim this project is least entitled to flatter.
+    """
+    treatments = [a for a in d["arms"] if a["arm"] != "Control"]
+    assert d["n_treatment_arms"] == len(treatments) == d["n_arms"] - 1
+    ferro = [a for a in treatments if "ferroptosis engine" in a["route"]]
     assert d["n_ferroptosis_routed"] == len(ferro)
-    assert d["n_other_routes"] == d["n_arms"] - len(ferro)
+    assert d["n_other_routes"] == d["n_treatment_arms"] - len(ferro)
     assert d["n_other_routes"] > d["n_ferroptosis_routed"], (
-        f"only {d['n_other_routes']} of {d['n_arms']} arms route outside the "
-        "ferroptosis engine; the report's structural claim is no longer true")
+        f"only {d['n_other_routes']} of {d['n_treatment_arms']} arms route "
+        "outside the ferroptosis engine; the report's structural claim is no "
+        "longer true")
+    control = next(a for a in d["arms"] if a["arm"] == "Control")
+    assert "ferroptosis engine" not in control["route"], (
+        "the untreated baseline is being reported as routing through the "
+        "ferroptosis engine again")
+    assert control["route"] not in {a["route"] for a in treatments}, (
+        "the baseline shares a route string with a treatment arm, which is "
+        "how it was counted as one")
     assert len(d["distinct_routes"]) >= 5, d["distinct_routes"]
-    assert f"{d['n_arms']} arms, {len(d['distinct_routes'])} distinct routes" in md
+    assert (f"{d['n_treatment_arms']} treatment arms plus an untreated "
+            f"baseline, {len(d['distinct_routes'])} distinct routes") in md
 
 
 def test_the_delivery_finding_is_real_and_the_payloads_match(d, md):

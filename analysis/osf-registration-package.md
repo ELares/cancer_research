@@ -7,7 +7,7 @@
 > `PREREGISTRATION.md` "Registration status" and `analysis/contribution-plan-2026.md`.
 >
 > **What this registers.** A set of *directional* predictions of an
-> open ferroptosis simulation engine, plus the wet-lab experiments that would
+> open multi-modality cancer-therapy simulation engine (ferroptosis is its deepest arm), plus the wet-lab experiments that would
 > falsify them. It is registered before any wet-lab data exists, and independently
 > of the model-side calibration legs (#330/#502/#500/#333/#334/#335/#482) — none of
 > which is used to set any prediction here, and four of which predate the
@@ -20,7 +20,7 @@
 ---
 
 ## 1. Title
-Pre-registered falsifiable predictions of an open ferroptosis tumor-simulation engine, with falsification thresholds and wet-lab test designs.
+Pre-registered falsifiable predictions of an open multi-modality tumor-simulation engine (ferroptosis, PDT/SDT, radiation, checkpoint blockade, adoptive cell therapy, oncolytic virus, ablation and antibody-drug conjugates), with falsification thresholds and wet-lab test designs.
 
 ## 2. Authors
 Ezequiel Lares (and any co-author recruited per `analysis/collaborator-brief.md`).

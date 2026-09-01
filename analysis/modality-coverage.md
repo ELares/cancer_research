@@ -9,27 +9,27 @@ The engine expresses **9 treatments** (`RSL3` — ferroptosis; `SDT`, `PDT` — 
 | epigenetic | 41,278 | 1,307 | 3.2% | 0.91× | modifier | `biochem`, `cell`, `oncolytic` |
 | nanoparticle | 36,788 | 182 | 0.5% | 2.49× | modifier | — |
 | immunotherapy | 31,890 | 1,430 | 4.5% | 11.62× | **treatment** | `adoptive`, `clonal`, `ifngamma`, `oncolytic`, `oxygen`, `ph`, `radiation`, `slab`, `stromal` |
-| car-t | 15,358 | 1,020 | 6.6% | 6.95× | modifier | `adc`, `adoptive`, `cell` |
+| car-t | 15,358 | 1,020 | 6.6% | 6.95× | **treatment** | `adc`, `adoptive`, `cell` |
 | metabolic-targeting | 8,809 | 45 | 0.5% | 2.16× | modifier | `cell`, `params`, `ph`, `stromal` |
-| antibody-drug-conjugate | 6,019 | 580 | 9.6% | 3.1× | modifier | `adoptive`, `biochem`, `cell`, `physics` |
+| antibody-drug-conjugate | 6,019 | 580 | 9.6% | 3.1× | **treatment** | `adoptive`, `biochem`, `cell`, `physics` |
 | synthetic-lethality | 5,437 | 342 | 6.3% | 4.16× | modifier | — |
-| oncolytic-virus | 5,006 | 201 | 4.0% | 1.18× | modifier | `cell`, `oncolytic` |
+| oncolytic-virus | 5,006 | 201 | 4.0% | 1.18× | **treatment** | `cell`, `oncolytic` |
 | crispr | 3,674 | 6 | 0.2% | 8.13× | modifier | — |
-| bispecific-antibody | 3,462 | 326 | 9.4% | 5.52× | modifier | `cell` |
-| electrochemical-therapy | 2,515 | 142 | 5.7% | 0.81× | modifier | `cell` |
+| bispecific-antibody | 3,462 | 326 | 9.4% | 5.52× | **treatment** | `cell` |
+| electrochemical-therapy | 2,515 | 142 | 5.7% | 0.81× | **treatment** | `cell` |
 | sonodynamic | 2,513 | 114 | 4.5% | 5.28× | **treatment** | `ablation`, `adc`, `dose_schedule`, `grid`, `immune`, `immune_spatial`, `io`, `oxygen`, `persister`, `radiation` |
-| hifu | 1,352 | 96 | 7.1% | 1.16× | modifier | `cell`, `oxygen` |
+| hifu | 1,352 | 96 | 7.1% | 1.16× | **treatment** | `cell`, `oxygen` |
 | phagocytosis-checkpoint | 918 | 13 | 1.4% | 4.06× | modifier | — |
 | microbiome | 380 | 12 | 3.2% | — | modifier | — |
 | mrna-vaccine | 301 | 2 | 0.7% | — | modifier | — |
 
 **Every one of the 16 mechanisms now has some engine representation.** That was not true when this document was written — it opened at thirteen absent, carrying 90,019 census articles — and the column that mattered then is now empty.
 
-**Which makes the remaining distinction the whole content, and it is a harder one.** Presence is not applicability. 2 of 16 can be APPLIED as a treatment — a `Treatment` variant a run can select — and the other 14 are MODIFIERS: real code, reachable, and only ever a coefficient on something else. An engine where every mechanism is present and one is applicable answers a narrower set of questions than the first count suggests, and this table's job is now to say so rather than to count absences.
+**Which makes the remaining distinction the whole content, and it is a harder one.** Presence is not applicability. 8 of 16 can be APPLIED as a treatment — a `Treatment` variant a run can select — and the other 8 are MODIFIERS: real code, reachable, and only ever a coefficient on something else. An engine where every mechanism is present and one is applicable answers a narrower set of questions than the first count suggests, and this table's job is now to say so rather than to count absences.
 
 **And presence says nothing about calibration.** `simulations/calibration/CALIBRATION_STATUS.md` carries a row per layer with its named target and its used-in-any-reported-number status; most of these arms are `N`. A mechanism the engine can name, cannot apply, and has not fitted is a long way from one it can answer a question with.
 
-**`epigenetic`, `nanoparticle`, `car-t`, `metabolic-targeting`, `antibody-drug-conjugate`, `synthetic-lethality`, `oncolytic-virus`, `crispr`, `bispecific-antibody`, `electrochemical-therapy`, `hifu`, `phagocytosis-checkpoint`, `microbiome`, `mrna-vaccine` are MODIFIERS, not treatments** — the distinction this table exists to draw. A modifier changes how an existing treatment lands and cannot be the thing under test.
+**`epigenetic`, `nanoparticle`, `metabolic-targeting`, `synthetic-lethality`, `crispr`, `phagocytosis-checkpoint`, `microbiome`, `mrna-vaccine` are MODIFIERS, not treatments** — the distinction this table exists to draw. A modifier changes how an existing treatment lands and cannot be the thing under test.
 
 Immunotherapy was the sharpest case in this table, and it is the one that moved. It is now **applicable as a treatment** — `Treatment::Immunotherapy` — where for most of this document's life it was a MODIFIER, and the reason it was one is worth keeping rather than deleting, because it is the clearest example of what that tier means. The engine has **2 immune kill paths** — `immune_spatial::immune_kill_probability` (spatial DAMP field), called from `sim-tme`, `sim-tme-3d`; `immune::immune_cascade` (well-mixed cascade), called from `sim-combo`, `sim-icd`, `sim-modality-panel`.
 
@@ -43,7 +43,7 @@ That is why this row read MODIFIER for so long. The tier is about whether a run 
 
 That limit is stated rather than papered over, because three successive attempts to cover it with a source scan were each defeated by an ordinary Rust idiom that put the mutation and the field name on different lines — a helper function, an `iter_mut().for_each`, a plain `for` loop. A guard that records a property its scan cannot DECIDE is worse than no guard, so that scan was removed rather than widened a fourth time.
 
-Modelled as a treatment: `immunotherapy`, `sonodynamic`. `PDT` and `RSL3` have no row because photodynamic therapy and GPX4 inhibitors are not among the mechanisms this taxonomy names — a limit of the table, not of the engine.
+Modelled as a treatment: `immunotherapy`, `car-t`, `antibody-drug-conjugate`, `oncolytic-virus`, `bispecific-antibody`, `electrochemical-therapy`, `sonodynamic`, `hifu`. `PDT` and `RSL3` have no row because photodynamic therapy and GPX4 inhibitors are not among the mechanisms this taxonomy names — a limit of the table, not of the engine.
 
 ## What this does not say
 

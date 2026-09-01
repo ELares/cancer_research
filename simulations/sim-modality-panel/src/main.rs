@@ -136,16 +136,30 @@ fn main() {
                 sim_cell(&cell, tx, &params, &mut rng).0
             })
             .count();
+        // Control is in this loop because it runs the same code path with no
+        // treatment, NOT because it is a ferroptosis arm. Letting it inherit
+        // this block's route and limit published an untreated baseline as
+        // "limited by energy delivery to depth", which is a property of the
+        // arm beside it and not of doing nothing.
+        let untreated = name == "Control";
         arms.push(ArmResult {
             name,
             kill_fraction: dead as f64 / n as f64,
-            route: "ferroptosis engine (lipid peroxidation)",
-            limited_by: if name == "RSL3" {
-                "endogenous ROS supply and antioxidant defence"
+            route: if untreated {
+                "none -- untreated baseline"
             } else {
-                "energy delivery to depth"
+                "ferroptosis engine (lipid peroxidation)"
             },
-            calibration: "uncalibrated (direction-only)",
+            limited_by: match name {
+                "Control" => "nothing: this is what the other arms are read against",
+                "RSL3" => "endogenous ROS supply and antioxidant defence",
+                _ => "energy delivery to depth",
+            },
+            calibration: if untreated {
+                "not applicable (untreated baseline)"
+            } else {
+                "uncalibrated (direction-only)"
+            },
         });
     }
 
@@ -206,7 +220,6 @@ fn main() {
         let raw = adoptive_transfer_kills(arrived, n, &immune, 0.0, false);
         (raw, barrier_limited_kills(raw, n as f64, b))
     };
-    let effectors = infused;
     let (_, cart) = cart_kills(&leukaemia);
     let (cart_solid_raw, cart_solid) = cart_kills(&solid);
     arms.push(ArmResult {
@@ -322,7 +335,13 @@ fn main() {
         kill_fraction: (direct + bystander).clamp(0.0, 1.0),
         route: "ferroptosis payload, delivered on an antibody (+ bystander)",
         limited_by: "the binding-site barrier (~7 um penetration)",
-        calibration: "transport anchored; payload pharmacology is RSL3's",
+        // NOT RSL3's pharmacology, which this row claimed for as long as it
+        // existed. `biochem::exo_ros` applies the GPX4-inhibition branch ONLY
+        // to `Treatment::RSL3`; this arm never touches it. What it carries is
+        // the SDT exogenous-ROS constant scaled by the transport factor, which
+        // is exactly why it is comparable to SDT and NOT to the free drug.
+        calibration: "transport anchored; payload is the SDT exo-ROS constant, \
+                      not RSL3 pharmacology",
     });
 
     std::fs::create_dir_all(&a.output_dir).expect("create output dir");
@@ -700,10 +719,6 @@ fn norm_peak(rng: &mut StdRng, mean: f64) -> f64 {
     ferroptosis_core::cell::norm(rng, mean, mean * 0.2).max(0.0)
 }
 
-fn run_to_death(cell: &ferroptosis_core::cell::Cell, tx: Treatment, p: &Params, peak: f64) -> bool {
-    run_to_death_lp(cell, tx, p, peak).0
-}
-
 /// Death, AND the lipid peroxidation the cell carried when it died.
 ///
 /// The second value is what the immune-coupling axis needs, and it is the
@@ -786,13 +801,6 @@ fn damp_per_death(lps: &[f64], immune: &ImmuneParams) -> f64 {
         return 0.0;
     }
     ferroptosis_core::immune::calculate_damp_release(lps, immune).1
-}
-
-fn kill_fraction<F>(n: usize, seed: u64, mut f: F) -> f64
-where
-    F: FnMut(&ferroptosis_core::cell::Cell, &mut StdRng) -> bool,
-{
-    kill_fraction_pheno(n, seed, Phenotype::Glycolytic, &mut f)
 }
 
 fn kill_fraction_pheno<F>(n: usize, seed: u64, pheno: Phenotype, mut f: F) -> f64

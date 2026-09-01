@@ -78,7 +78,7 @@ literature and describing a search.
   [`simulations/ferroptosis-core/README.md`](simulations/ferroptosis-core/README.md)
 - **Calibration infrastructure** linking simulation parameters to published experimental data
 - **[Model card](MODEL_CARD.md)** with the simulation suite's intended use, out-of-scope cases, assumptions/scope checklist, and per-layer calibration/validation status (the honest "broad but mostly uncalibrated" accounting, consolidated from [`CALIBRATION_STATUS.md`](simulations/calibration/CALIBRATION_STATUS.md))
-- **Book-format manuscript (~115 pp)** with 12 chapters, 3 appendices, and 31 figures (~61,400 words), cross-referenced against all analysis outputs and indexed in [`FIGURES.yaml`](FIGURES.yaml)
+- **Book-format manuscript (~115 pp)** with 12 chapters, 3 appendices, and 31 figures (~61,700 words), cross-referenced against all analysis outputs and indexed in [`FIGURES.yaml`](FIGURES.yaml)
 
 ## What the work is actually about
 
@@ -102,8 +102,8 @@ the count moving for the right reason. And the `1` is
 a filename marker rather than a subject measurement: the therapy bucket matches
 on filenames only while the ferroptosis bucket also reads body text, so the
 count moves on a rename. Applying the ferroptosis rule's body route to a
-therapy vocabulary admits 37 -- but 7 of those sit in this table's own
-ferroptosis column, so 37 is not a bound either. Neither rule measures subject. See
+therapy vocabulary admits 50 -- but 10 of those sit in this table's own
+ferroptosis column, so 50 is not a bound either. Neither rule measures subject. See
 [`analysis/scope-audit.md`](analysis/scope-audit.md).
 
 8 of 13 preregistered predictions, and 32 of 37 modules of the simulation engine, concern ferroptosis or the physical-ROS modalities (PDT and
@@ -124,9 +124,13 @@ about ferroptosis or physical ROS — which is why the predictions row reads
 8 of 13 rather than the 8 of 8 it read for most of this project's life. None of
 that makes the work broad yet: the modality arms are roughly 11 to 13 times
 smaller than the ferroptosis engine by line count, every one of them is
-recorded as feeding no number this manuscript reports, and 4 of the 7 arms with
-a published calibration target merely reproduce it — 1 is UNCONSTRAINED, 1
-INADMISSIBLE, and 1 has no target to fit at all. The gap is narrower and it is
+recorded in `CALIBRATION_STATUS.md` as feeding no number in the manuscript's
+QUANTITATIVE chapters — which is narrower than "no number this manuscript
+reports", the phrasing used here until Chapter 6 began reporting these arms'
+own figures and made it false. Of the 6 arms that have a
+published calibration target at all, 4 reproduce it — 1 of those 4 is genuinely
+PINNED by its observable and the other 3 merely round-trip — while 1 is
+UNCONSTRAINED and 1 INADMISSIBLE. The remaining arm has no target to fit at all. The gap is narrower and it is
 now measured rather than argued.
 
 Two consequences worth carrying into anything you read here:
@@ -148,9 +152,15 @@ Two consequences worth carrying into anything you read here:
   coverage table. Of the 16 mechanisms this project's taxonomy can measure at
   census scale, **0 now have no engine representation at all**, against 13 when
   that count was first taken. What replaces the absence question is a harder
-  one the coverage page now leads with — presence is not applicability, and
-  most of those 16 are still MODIFIERS that change how another treatment lands
-  rather than treatments a run can select. See
+  one the coverage page now leads with — presence is not applicability. 8 of
+  the 16 can be APPLIED as a treatment a run selects; the other 8 are MODIFIERS
+  that only change how another treatment lands. That split read 2 and 14
+  until the tier rule was checked: it decided by matching a mechanism's
+  keyword against the SPELLING of a Rust enum variant, and `oncolytic` cannot
+  match inside `OncolyticVirus` — so four arms this README lists above were
+  reported as unselectable while `sim-modality-panel` was selecting them.
+  And "representation" is a low bar in the other direction: for several
+  mechanisms it is a function with no production caller at all. See
   [`analysis/modality-coverage.md`](analysis/modality-coverage.md).
 
 Counts derived by [`scripts/scope_audit.py`](scripts/scope_audit.py); the
@@ -174,11 +184,11 @@ On top of that landscape, the simulations act as a **claim-testing engine**: we 
 
 3. **In-vitro-to-in-vivo penetration gap (applies to any systemic drug).** Tissue-specific delivery drops a RSL3-like drug from 40% (2D culture) to 12.1% (well-vascularized) to 2.6% (poorly-vascularized) to 1.8% (CNS/BBB), even at the blood vessel wall. The **ordering** is what is parameter-robust — it held in 300 of 300 draws — not these magnitudes, whose intervals span nearly the whole range at every tissue (well-vascularized median 23%, ~[0%, 93%]; CNS/BBB median 4%, ~[0%, 77%]).
 
-4. **Delivery, not pharmacology, separates two arms carrying the same payload.** Run every applicable arm against the identical tumour from the identical seed and an antibody-drug conjugate kills **1.8%** where sonodynamic therapy kills **87.2%** — with the *same* ferroptosis payload and the same rate constants. What differs is that a ~150 kDa antibody diffuses an order of magnitude more slowly and is consumed by the first antigen it meets. The panel is **not a ranking**: every arm prints its own calibration tier, and what it shows is structural — which arms need ferroptotic death and which do not, which are dose-responses and which are thresholds. See [`analysis/modality-panel.md`](analysis/modality-panel.md).
+4. **What transport costs, priced on one tumour.** Run every applicable arm against the identical tumour from the identical seed and an antibody-drug conjugate kills **1.8%** where sonodynamic therapy kills **87.2%**, both driven by the same exogenous-ROS constant through the same engine. **Read that as arithmetic more than as a discovery:** the two arms differ in the transport factor and in nothing else, so the ratio prices this model's transport layer rather than measuring an antibody in tissue. Two things keep it honest. The ADC arm does NOT run RSL3's pharmacology — the GPX4-inhibition branch fires only for `Treatment::RSL3` — and the panel said otherwise until it was checked against the code. And the free drug carrying the actual RSL3 payload kills **0.00%** in the same table, LESS than the antibody-delivered arm, because the glycolytic state is where a GPX4 inhibitor has almost nothing to act on. The panel is **not a ranking**: every arm prints its own calibration tier, and what it shows is structural — which arms need ferroptotic death and which do not, which are dose-responses and which are thresholds. See [`analysis/modality-panel.md`](analysis/modality-panel.md).
 
 5. **The same CAR-T construct collapses 633-fold between two diseases, and no single step looks catastrophic.** Three barriers the literature names in one sentence — trafficking to, infiltration into, and activation within the tumour — multiply to 6% delivery; exhaustion removes most of what is left; the antigen ceiling contributes nothing here because the kill is already far below it. That decomposition is the point: a model fitting one efficacy scalar would reproduce the same endpoint and lose the reason, which is what tells you which step to attack. Every barrier value is an uncalibrated placeholder and the direction is the result.
 
-6. **A registered prediction that contradicts this project's own prior belief.** The ADC module was built expecting a cleavable linker's advantage to *grow* as antigen is lost — the mechanism that would answer antigen escape — and shipped a guard asserting it. The guard was vacuous: the ratio is exactly constant, because bystander kill is proportional to the dying antigen-positive population, so both arms scale together. What the model actually says is that the bystander effect is **starved by the escape it answers** — the share of the antigen-negative pool it reaches falls from 77% to 2.6% as antigen is lost. That is registered as **P10** with the corrected sign, alongside four other falsifiable predictions for the new arms ([`PREREGISTRATION.md`](PREREGISTRATION.md)).
+6. **A registered prediction that contradicts this project's own prior belief.** The ADC module was built expecting a cleavable linker's advantage to *grow* as antigen is lost — the mechanism that would answer antigen escape — and shipped a guard asserting it. The guard was vacuous: the ratio is exactly constant, because bystander kill is proportional to the dying antigen-positive population, so both arms scale together. What the model actually says is that the bystander effect is **starved by the escape it answers** — the share of the antigen-negative pool it reaches falls from 77.1% to 2.6% as antigen is lost. That is registered as **P10** with the corrected sign, alongside four other falsifiable predictions for the new arms ([`PREREGISTRATION.md`](PREREGISTRATION.md)).
 
 These are computational predictions with documented assumptions and caveats, not clinical claims. All parameters are documented with literature sources and confidence ratings. See the [manuscript](article/drafts/v1.md) for full context.
 
@@ -186,14 +196,14 @@ These are computational predictions with documented assumptions and caveats, not
 
 | Directory | What you'll find |
 |-----------|-----------------|
-| `analysis/` | 106 analysis outputs. Frozen-corpus work (evidence tiers, tissue-of-origin, diagnostic-therapy matching, combination audits, gap analysis) plus 34 census-scale ones, including the drug-by-variant map, the co-treatment layer, retraction exposure, entity-ambiguity impact, and the manuscript-vs-census re-test |
+| `analysis/` | 144 analysis outputs. Frozen-corpus work (evidence tiers, tissue-of-origin, diagnostic-therapy matching, combination audits, gap analysis) plus 34 census-scale ones, including the drug-by-variant map, the co-treatment layer, retraction exposure, entity-ambiguity impact, and the manuscript-vs-census re-test |
 | `article/drafts/` | Manuscript (v1.md + v1.tex) with 31 figures; [`FIGURES.yaml`](FIGURES.yaml) indexes 36 entries, the extra 4 being supplementary and 1 orphan |
 | `scripts/` | Python pipeline: tagging, indexing, analysis, figure generation, LaTeX generation, news authentication. 38 of them are census-scale (33 `atlas_*.py` + 5 `comention_*.py`); `scripts/atlas_pipeline.sh` documents the dependency order, which is load-bearing and fails silently if run wrong |
-| `simulations/` | [12 Rust binaries](simulations/README.md) (each with its own README) + [ferroptosis-core library](simulations/ferroptosis-core/) + [Python bindings](simulations/ferroptosis-python/) + [calibration](simulations/calibration/) |
+| `simulations/` | [13 Rust binaries](simulations/README.md) (most with their own README; `sim-modality-panel`, `sim-scale` do not yet) + [ferroptosis-core library](simulations/ferroptosis-core/) + [Python bindings](simulations/ferroptosis-python/) + [calibration](simulations/calibration/) |
 | `corpus/` | Frozen full text by PubMed ID + INDEX.jsonl; `corpus/atlas/` holds the census (bulk gitignored, committed artifacts in `analysis/`); `corpus/living/` documents the frozen-versus-living split (the monthly deltas themselves are uploaded as workflow artifacts, never committed) |
 | `tags/` | Precomputed tag indexes (mechanism, cancer type, tissue, evidence level, diagnostic-therapy) |
 | `news/` | News source scaffolding: fetched articles, extracted claims, verification results, credibility scores |
-| `tests/` | 1796 Python tests (pipeline smoke + figure traceability + calibration-status ref guard + manuscript-inventory drift guard + depth-kill physics-constant guard + flagship-figure data guard + quantitative-figure drift guards (Figs 21/22/23) + invariant/integration + calibrate-extractor + MeSH evidence-fallback + gold-set precision-floor regression (#346) + Bliss/sim-tme/penetration prior-predictive intervals + ABC posterior (#332) + non-circular mechanism-recall (#412) + CTRPv2 calibration target + in-vitro kill-switch fit (#330) + System Xc-/erastin fit (#502) + joint multi-inducer posterior (#500) + spheroid structure validation (#333) + embedding evidence leg (#411) + RD-vs-BioFVM cross-check (#408) + dashboard data layer (#354) + tumor-PK measured-data anchor (#334) + Krogh penetration validation (#335) + spheroid size-aware zone thresholds (#333) + spheroid kill-vs-size direction (#333) + gene-symbol ambiguity/FSP1 sense disambiguation (#ATLAS-AMBIG) + rare-event Poisson intervals + tail-resolution classification + ferroptosis-python bindings) |
+| `tests/` | 1798 Python tests (pipeline smoke + figure traceability + calibration-status ref guard + manuscript-inventory drift guard + depth-kill physics-constant guard + flagship-figure data guard + quantitative-figure drift guards (Figs 21/22/23) + invariant/integration + calibrate-extractor + MeSH evidence-fallback + gold-set precision-floor regression (#346) + Bliss/sim-tme/penetration prior-predictive intervals + ABC posterior (#332) + non-circular mechanism-recall (#412) + CTRPv2 calibration target + in-vitro kill-switch fit (#330) + System Xc-/erastin fit (#502) + joint multi-inducer posterior (#500) + spheroid structure validation (#333) + embedding evidence leg (#411) + RD-vs-BioFVM cross-check (#408) + dashboard data layer (#354) + tumor-PK measured-data anchor (#334) + Krogh penetration validation (#335) + spheroid size-aware zone thresholds (#333) + spheroid kill-vs-size direction (#333) + gene-symbol ambiguity/FSP1 sense disambiguation (#ATLAS-AMBIG) + rare-event Poisson intervals + tail-resolution classification + ferroptosis-python bindings) |
 
 Start with the files in `analysis/` if you want to see what we've concluded so far—and where we're still uncertain.
 

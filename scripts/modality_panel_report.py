@@ -50,15 +50,25 @@ def scan() -> dict:
     return json.loads(PANEL.read_text())
 
 
+CONTROL = "Control"
+
+
 def assemble(raw: dict) -> dict:
     arms = sorted(raw["arms"], key=lambda a: -a["kill_fraction"])
-    ferro = [a for a in arms if "ferroptosis engine" in a["route"]]
-    non_ferro = [a for a in arms if "ferroptosis engine" not in a["route"]]
+    # The untreated baseline is a ROW, not a route to death, and counting it as
+    # one inflated the ferroptosis-routed column by exactly itself: Control ran
+    # in the ferroptosis loop and inherited that loop's route string, so a
+    # table about which arms need ferroptotic death counted an arm that kills
+    # nothing at all.
+    treatments = [a for a in arms if a["arm"] != CONTROL]
+    ferro = [a for a in treatments if "ferroptosis engine" in a["route"]]
+    non_ferro = [a for a in treatments if "ferroptosis engine" not in a["route"]]
     return dict(raw, arms=arms,
                 n_arms=len(arms),
+                n_treatment_arms=len(treatments),
                 n_ferroptosis_routed=len(ferro),
                 n_other_routes=len(non_ferro),
-                distinct_routes=sorted({a["route"] for a in arms}))
+                distinct_routes=sorted({a["route"] for a in treatments}))
 
 
 def render(d: dict) -> str:
@@ -77,11 +87,14 @@ def render(d: dict) -> str:
         L.append(f"| {a['arm']} | {a['kill_fraction'] * 100:.2f}% | "
                  f"{a['route']} | {a['limited_by']} | {a['calibration']} |")
     L += ["",
-          f"**{d['n_arms']} arms, {len(d['distinct_routes'])} distinct routes "
-          f"to death**, and only {d['n_ferroptosis_routed']} of them go through "
-          "the ferroptosis engine. That is the number this whole campaign was "
+          f"**{d['n_treatment_arms']} treatment arms plus an untreated "
+          f"baseline, {len(d['distinct_routes'])} distinct routes to death**, "
+          f"and only {d['n_ferroptosis_routed']} of the arms go through the "
+          "ferroptosis engine. That is the number this whole campaign was "
           "about: a reader who opened this repository a month ago would have "
-          "found one route and four arms.", ""]
+          "found one route and three arms. The baseline is excluded from the "
+          "route counts -- it inherited the ferroptosis loop's route string "
+          "and was counted as a route to death while killing nothing.", ""]
 
     adc, sdt = by.get("AntibodyDrugConjugate"), by.get("SDT")
     if adc and sdt:
@@ -89,11 +102,16 @@ def render(d: dict) -> str:
         L += ["## The sharpest row is the one about delivery", "",
               f"`AntibodyDrugConjugate` kills {adc['kill_fraction'] * 100:.2f}% "
               f"against `SDT`'s {sdt['kill_fraction'] * 100:.2f}% — a factor of "
-              f"{ratio:.0f} — **and they share the payload's pharmacology "
-              "exactly**. The ADC arm runs the same ferroptosis engine with the "
-              "same parameters; what differs is that the payload arrives on a "
-              "~150 kDa antibody, and the binding-site barrier holds its "
-              "penetration to about 7 µm.", "",
+              f"{ratio:.0f} — **and the same exogenous-ROS constant drives "
+              "both**. It is NOT that they share RSL3's pharmacology: the "
+              "GPX4-inhibition branch fires only for `Treatment::RSL3`, and "
+              "this report said otherwise until it was checked against the "
+              "code. What the two rows share is the payload constant "
+              "(`params.sdt_ros`) and the engine; what differs is that the "
+              "payload arrives on a ~150 kDa antibody, and the binding-site "
+              "barrier holds its penetration to about 7 µm. So the ratio "
+              "prices THIS MODEL'S transport layer, which is arithmetic more "
+              "than it is a discovery.", "",
               "This project has argued since Chapter 6 that delivery dominates "
               "the in-vitro-to-in-vivo gap. This is the first row in the "
               "repository where the SAME pharmacology is run through two "
@@ -217,7 +235,7 @@ def main() -> int:
     OUT_MD.write_text(render(d))
     print(f"wrote {OUT_MD}")
     print(f"wrote {OUT_JSON}")
-    print(f"  {d['n_arms']} arms, {len(d['distinct_routes'])} distinct routes, "
+    print(f"  {d['n_treatment_arms']} arms, {len(d['distinct_routes'])} distinct routes, "
           f"{d['n_ferroptosis_routed']} through the ferroptosis engine")
     return 0
 
