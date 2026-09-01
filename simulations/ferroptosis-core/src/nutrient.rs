@@ -88,6 +88,55 @@ impl NutrientConfig {
 /// negative outside ⇒ clamped to 0): `exp(-depth / λ) ∈ (0, 1]`. Shares the O2
 /// field's form. Non-finite/`λ ≤ 0` is a caller bug (`debug_assert`); release
 /// returns a clamped value.
+/// PHARMACOLOGICAL metabolic targeting, as opposed to the positional
+/// starvation the rest of this module models (`metabolic-targeting`: 8,809
+/// census articles).
+///
+/// The distinction is the point, and conflating the two is the error this
+/// function exists to avoid. Everything above models a cell that is starved
+/// BECAUSE OF WHERE IT IS — deep in a spheroid, past the diffusion limit. A
+/// glycolysis inhibitor starves the cell BECAUSE OF A DRUG, everywhere at
+/// once, and the two compose rather than substituting for one another: a rim
+/// cell under 2-deoxyglucose is nutrient-replete and metabolically blocked.
+///
+/// The mechanism is the one this module already documents, which is why it
+/// belongs here rather than in a new file: glucose flux feeds the
+/// pentose-phosphate pathway, which supplies the NADPH that regenerates
+/// reduced glutathione for GPX4. Blocking glycolysis therefore lowers
+/// antioxidant capacity on exactly the axis
+/// [`nutrient_availability`] already scales.
+///
+/// Returns a MULTIPLIER on availability, so a consumer composes it with the
+/// positional term by multiplication and neither has to know about the other.
+///
+/// ## The direction caveat above applies with equal force
+///
+/// This module's own header records that energy stress also activates AMPK,
+/// which can INHIBIT ferroptosis by cutting PUFA synthesis, and that
+/// glutaminolysis is REQUIRED for some ferroptosis. A glycolysis inhibitor
+/// pulls all of those levers at once, so the NET effect is genuinely
+/// context-dependent and this models one documented direction. The magnitude
+/// is a placeholder; the direction is the claim.
+///
+/// `inhibition = 0.0` (the default a consumer should carry) returns exactly
+/// `1.0`, so an unconfigured run is bit-identical.
+#[must_use = "the multiplier is the function's only output"]
+pub fn glycolysis_inhibition_factor(inhibition: f64) -> f64 {
+    1.0 - inhibition.clamp(0.0, 1.0)
+}
+
+/// Availability under BOTH positional starvation and a metabolic drug.
+///
+/// `nutrient_availability(depth, lambda) · glycolysis_inhibition_factor(x)`.
+/// Written out as a named function rather than left to the caller because the
+/// composition is the modelling claim — a drug and a diffusion limit are
+/// independent causes of the same shortage — and a caller multiplying them by
+/// hand could silently use one alone.
+#[must_use = "the availability is the function's only output"]
+pub fn availability_with_metabolic_drug(depth_um: f64, lambda_um: f64, inhibition: f64) -> f64 {
+    nutrient_availability(depth_um, lambda_um) * glycolysis_inhibition_factor(inhibition)
+}
+
 pub fn nutrient_availability(depth_um: f64, lambda_um: f64) -> f64 {
     debug_assert!(
         lambda_um.is_finite() && lambda_um > 0.0,
@@ -122,6 +171,62 @@ pub fn apply_nutrient_stress_3d(grid: &mut TumorGrid3D, cfg: &NutrientConfig) {
 
 #[cfg(test)]
 mod tests {
+
+    /// A metabolic DRUG and a diffusion limit are independent causes of the
+    /// same shortage, and the model has to keep them separable.
+    #[test]
+    fn the_metabolic_drug_composes_with_position_rather_than_replacing_it() {
+        let lambda = 200.0;
+        // Identity: no drug leaves the positional term untouched, bit-exact.
+        for &d in &[0.0_f64, 100.0, 500.0] {
+            assert_eq!(
+                availability_with_metabolic_drug(d, lambda, 0.0).to_bits(),
+                nutrient_availability(d, lambda).to_bits(),
+                "the drug moved availability at inhibition 0, depth {d}"
+            );
+        }
+        assert_eq!(
+            glycolysis_inhibition_factor(0.0).to_bits(),
+            1.0_f64.to_bits()
+        );
+
+        // A RIM cell is nutrient-replete and can still be metabolically
+        // blocked -- which is the whole distinction from positional
+        // starvation, and unreachable if the drug only scaled the gradient.
+        let rim_free = nutrient_availability(0.0, lambda);
+        let rim_drugged = availability_with_metabolic_drug(0.0, lambda, 0.8);
+        assert!(rim_free > 0.9, "the rim is not replete: {rim_free}");
+        assert!(
+            rim_drugged < rim_free * 0.3,
+            "the drug barely touched a replete rim cell ({rim_drugged} vs \
+             {rim_free}); positional and pharmacological starvation are not \
+             separable"
+        );
+
+        // They COMPOSE: drugged core is worse than either alone.
+        let core_free = nutrient_availability(600.0, lambda);
+        let core_drugged = availability_with_metabolic_drug(600.0, lambda, 0.8);
+        assert!(core_drugged < core_free);
+        assert!(core_drugged < rim_drugged);
+
+        // Monotone and bounded in the drug.
+        let mut prev = f64::INFINITY;
+        for &x in &[0.0_f64, 0.25, 0.5, 0.75, 1.0] {
+            let v = availability_with_metabolic_drug(300.0, lambda, x);
+            assert!(v <= prev && v >= 0.0, "not monotone at {x}: {v}");
+            prev = v;
+        }
+        assert_eq!(availability_with_metabolic_drug(300.0, lambda, 1.0), 0.0);
+        // Out-of-range clamps rather than inverting the sign.
+        assert_eq!(
+            glycolysis_inhibition_factor(5.0).to_bits(),
+            0.0_f64.to_bits()
+        );
+        assert_eq!(
+            glycolysis_inhibition_factor(-5.0).to_bits(),
+            1.0_f64.to_bits()
+        );
+    }
     use super::*;
 
     fn grid() -> TumorGrid3D {

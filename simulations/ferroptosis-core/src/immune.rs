@@ -47,7 +47,61 @@ pub fn calculate_damp_release(dead_cell_lps: &[f64], params: &ImmuneParams) -> (
     (total, per_cell)
 }
 
-/// Published complete-remission band for CD19 CAR-T in B-ALL.
+/// Published durable-response rates for the oncolytic virus T-VEC, treated
+/// and control (`oncolytic-virus`: 5,006 census articles, 201 trials).
+///
+/// 16% against 2% (PMID 27298410, `corpus/by-pmid/27298410.md`): "With
+/// talimogene laherparepvec, the primary end point of durable response rate
+/// (DRR; continuous response lasting >= 6 months) was significantly higher
+/// (16% v 2%...)".
+///
+/// **The CONTROL arm is stored with it deliberately.** A 16% durable response
+/// quoted alone reads as a modest result; quoted against 2% it is an eightfold
+/// ratio. Neither number means much without the other, and a constant holding
+/// only the treated arm invites the reader to supply the wrong baseline.
+pub const TVEC_DURABLE_RESPONSE: (f64, f64) = (0.16, 0.02);
+
+/// Oncolytic-virus lysis and the immunogenic death it produces.
+///
+/// The modality is TWO effects and the second is the one that matters
+/// clinically: the virus replicates in and lyses tumour cells, and that lysis
+/// is IMMUNOGENIC, converting a local infection into a systemic anti-tumour
+/// response. T-VEC's own trial reports responses at UNINJECTED lesions, which
+/// direct lysis cannot explain.
+///
+/// So this returns both, and a consumer feeds `lysed` into
+/// [`immune_cascade`]'s `dead_cell_lps` exactly as it would feed ferroptotic
+/// deaths — the ICD chain is shared because the biology is shared. That is
+/// also why this belongs in `immune.rs`: an oncolytic virus is an
+/// immunotherapy that arrives as an infection.
+///
+/// `infected_fraction = 0.0` returns `(0.0, 0.0)`, so an unconfigured run is
+/// unmoved.
+///
+/// ## What is NOT modelled, and it is most of the virology
+///
+/// Replication kinetics, antiviral immunity clearing the virus before it
+/// spreads, and the interferon response that makes some tumours permissive and
+/// others resistant — all absent. `infected_fraction` is an input, not a
+/// result, which means this cannot answer "will the virus spread?", only "if
+/// it spreads this far, what follows?".
+#[must_use = "both outputs carry the modality's two effects"]
+pub fn oncolytic_lysis(
+    total_tumor_cells: usize,
+    infected_fraction: f64,
+    lysis_efficiency: f64,
+    immunogenicity: f64,
+) -> (f64, f64) {
+    let infected = infected_fraction.clamp(0.0, 1.0) * total_tumor_cells as f64;
+    let lysed = infected * lysis_efficiency.clamp(0.0, 1.0);
+    // The per-cell "quality of death" the ICD chain reads, on the same scale
+    // as `lp_at_grace_end`: viral lysis is highly immunogenic, so this is a
+    // fraction of the maximum rather than a small perturbation of it.
+    let damp_per_cell = immunogenicity.clamp(0.0, 1.0);
+    (lysed, if lysed > 0.0 { damp_per_cell } else { 0.0 })
+}
+
+/// Published complete-remission band for CD19 CAR-T in B-ALL./// Published complete-remission band for CD19 CAR-T in B-ALL.
 ///
 /// 70–94% (PMID 32607912, `corpus/by-pmid/32607912.md`): "Targeting of the
 /// CD19 antigen using CD19-specific CAR-T cells ... with complete remission
@@ -673,6 +727,70 @@ mod tests {
         assert_eq!(
             adoptive_transfer_kills(250.0, 10_000, &p, 0.1, false).to_bits(),
             k.to_bits()
+        );
+    }
+
+    /// Oncolytic lysis feeds the SAME ICD chain ferroptotic death does, and
+    /// that sharing is the modelling claim.
+    #[test]
+    fn oncolytic_lysis_drives_the_shared_icd_chain() {
+        const N: usize = 10_000;
+        let p = ImmuneParams::default();
+
+        // Unconfigured is bit-zero on both outputs.
+        let (l0, d0) = oncolytic_lysis(N, 0.0, 0.9, 0.8);
+        assert_eq!(l0.to_bits(), 0.0_f64.to_bits());
+        assert_eq!(d0.to_bits(), 0.0_f64.to_bits());
+
+        // Lysis is monotone in infection and bounded by the population.
+        let mut prev = 0.0;
+        for &f in &[0.01_f64, 0.1, 0.5, 1.0] {
+            let (l, _) = oncolytic_lysis(N, f, 0.9, 0.8);
+            assert!(l > prev, "lysis not monotone at infected fraction {f}");
+            assert!(l <= N as f64);
+            prev = l;
+        }
+
+        // THE POINT: lysed cells drive the immune cascade exactly as
+        // ferroptotic deaths do, so an oncolytic run produces immune kills
+        // through the shared chain rather than through a parallel one.
+        let (lysed, quality) = oncolytic_lysis(N, 0.2, 0.9, 0.8);
+        let lps: Vec<f64> = vec![quality * 10.0; lysed as usize];
+        let immune = immune_cascade(&lps, N, &p, false);
+        assert!(
+            immune.immune_kills > 0.0,
+            "viral lysis produced no immune kills, so the modality's systemic \
+             effect -- responses at UNINJECTED lesions -- is unreachable"
+        );
+        // And blockade raises it, since the chain is the same one.
+        let with_drug = immune_cascade(&lps, N, &p, true);
+        assert!(with_drug.immune_kills >= immune.immune_kills);
+
+        // Immunogenicity must MOVE the quality signal, or the second effect
+        // is decorative.
+        let (_, low) = oncolytic_lysis(N, 0.2, 0.9, 0.1);
+        let (_, high) = oncolytic_lysis(N, 0.2, 0.9, 0.9);
+        assert!(
+            high > low,
+            "immunogenicity does not change the death quality"
+        );
+    }
+
+    /// The T-VEC constant carries its CONTROL arm, because 16% alone reads as
+    /// a modest result and 16% against 2% is an eightfold ratio.
+    #[test]
+    fn the_oncolytic_band_keeps_its_control_arm() {
+        let (treated, control) = TVEC_DURABLE_RESPONSE;
+        assert!(treated > control, "{treated} vs {control}");
+        assert!(
+            treated / control > 5.0,
+            "the treated/control ratio is {:.1}, which is not the published \
+             effect",
+            treated / control
+        );
+        assert!(
+            treated < 0.5,
+            "a durable response rate of {treated} is not T-VEC's"
         );
     }
 

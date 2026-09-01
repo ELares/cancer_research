@@ -186,10 +186,11 @@
    "trials": 45,
    "trial_share": 0.51,
    "growth": 2.16,
-   "code_modules": [],
+   "code_modules": [
+    "nutrient"
+   ],
    "prose_only_modules": [
     "cell",
-    "nutrient",
     "params",
     "ph",
     "stromal"
@@ -224,7 +225,9 @@
    "trials": 201,
    "trial_share": 4.02,
    "growth": 1.18,
-   "code_modules": [],
+   "code_modules": [
+    "immune"
+   ],
    "prose_only_modules": []
   },
   {
@@ -390,15 +393,16 @@
    "trials": 45,
    "trial_share": 0.51,
    "growth": 2.16,
-   "code_modules": [],
+   "code_modules": [
+    "nutrient"
+   ],
    "prose_only_modules": [
     "cell",
-    "nutrient",
     "params",
     "ph",
     "stromal"
    ],
-   "engine_tier": "absent"
+   "engine_tier": "modifier"
   },
   {
    "mechanism": "antibody-drug-conjugate",
@@ -431,9 +435,11 @@
    "trials": 201,
    "trial_share": 4.02,
    "growth": 1.18,
-   "code_modules": [],
+   "code_modules": [
+    "immune"
+   ],
    "prose_only_modules": [],
-   "engine_tier": "absent"
+   "engine_tier": "modifier"
   },
   {
    "mechanism": "crispr",
@@ -542,8 +548,8 @@
   "PDT",
   "Radiation"
  ],
- "absent_count": 7,
- "absent_census": 22037,
- "absent_trials": 504,
+ "absent_count": 5,
+ "absent_census": 8222,
+ "absent_trials": 258,
  "total_census": 165700
 }
