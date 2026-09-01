@@ -278,13 +278,142 @@ def _oncolytic_arm() -> dict:
     }
 
 
+def _ablation_arm() -> dict:
+    """Two published numbers that must reconcile, which is a stronger check
+    than either alone.
+
+    The CEM43 threshold for coagulation is conventionally 240 cumulative
+    equivalent minutes. Separately, PMID 22180520 states that "increase in
+    tissue temperature beyond 57-60 C leads to denaturation of cell proteins
+    sufficient to cause coagulative necrosis" -- a TEMPERATURE, with no time
+    attached, which reads as effectively immediate.
+
+    Those are different kinds of statement about the same event, so the model
+    has to make them agree: the exposure its threshold implies at 57 C must be
+    SHORT. If it came out at hours the two numbers would be describing
+    different phenomena and one of them would be wrong for this model.
+    """
+    rs = (CORE / "ablation.rs").read_text()
+    ref = _rust_const(CORE / "ablation.rs", "CEM43_REFERENCE_C")
+    m = re.search(r"fn default_cem43_threshold\(\) -> f64 \{\s*([0-9.]+)", rs)
+    if not m:
+        raise SystemExit("the CEM43 threshold default is gone from ablation.rs")
+    default_threshold = float(m.group(1))
+    necrosis_c = 57.0  # the low end of the published band
+
+    def exposure_seconds(threshold):
+        # cem43 = t * 0.5^(43 - T)  =>  t = threshold / 0.5^(43 - T)
+        return threshold / (0.5 ** (ref - necrosis_c)) * 60.0
+
+    # ADMISSIBLE if the implied exposure at the published necrosis temperature
+    # is between a tenth of a second and a minute -- short enough to read as
+    # "beyond 57 C causes necrosis" and long enough not to be instantaneous.
+    fit = _fit(exposure_seconds, 0.1, 60.0, 1.0, 2000.0)
+    return {
+        "arm": "Ablation (thermal)",
+        "parameter": "AblationConfig::cem43_threshold",
+        "target": f"exposure at {necrosis_c:.0f} C must be seconds, not hours",
+        "source": "PMID 22180520 (57-60 C -> coagulative necrosis) against the "
+                  "CEM43 = 240 convention",
+        "target_kind": "consistency between TWO published numbers of different "
+                       "kinds -- a temperature with no time, and a thermal dose "
+                       "with no temperature",
+        "range_scanned": [1.0, 2000.0],
+        "fit": fit,
+        "default_threshold": default_threshold,
+        "implied_exposure_s": exposure_seconds(default_threshold),
+        "mapping": None,
+    }
+
+
+def _cart_arm() -> dict:
+    """Published B-ALL complete-remission band -> effector supply.
+
+    A CLINICAL target, and the source carries its own caveat which is quoted
+    beside the constant in `immune.rs` and repeated here.
+    """
+    params = (CORE / "params.rs").read_text()
+    immune_rs = (CORE / "immune.rs").read_text()
+    lo, hi = _rust_tuple(CORE / "immune.rs", "CART_B_ALL_CR_BAND")
+
+    def cfg(field):
+        m = re.search(rf"\b{field}: ([0-9.]+),", params)
+        return float(m.group(1)) if m else None
+
+    brake, anti = cfg("pd1_brake"), cfg("anti_pd1_efficacy")
+    kill = 0.02
+    n = 20_000
+    eff_brake = brake * (1.0 - anti)
+
+    def predict(effectors):
+        # `adoptive_transfer_kills` with no suppression -- the leukaemia
+        # setting, which is what the band is measured in.
+        return min(effectors * kill * (1.0 - eff_brake), float(n)) / n
+
+    fit = _fit(predict, lo, hi, 0.0, 5_000_000.0, steps=20_000)
+    return {
+        "arm": "CAR-T (adoptive transfer)",
+        "parameter": "adoptive_transfer_kills effector count",
+        "target": f"B-ALL complete remission {lo:.0%}-{hi:.0%}",
+        "source": "PMID 32607912 (CD19 CAR-T)",
+        "target_kind": "clinical -- DIRECTION-ANCHORED only",
+        "range_scanned": [0.0, 5_000_000.0],
+        "fit": fit,
+        "mapping": "A complete remission is mapped onto a KILL FRACTION. The "
+                   "same source says the result has NOT transferred to solid "
+                   "tumours and that 30-50% of responses were not durable, so "
+                   "a fit to the headline band describes the indication these "
+                   "therapies were approved for and not the setting this "
+                   "engine simulates. The fit is to the leukaemia case with "
+                   "suppression at zero, which is the only setting the band "
+                   "is measured in.",
+    }
+
+
+def _adc_arm() -> dict:
+    """No fittable published endpoint in this corpus, reported as such.
+
+    This is the fourth outcome and the one a calibration page is most tempted
+    to hide. The ADC module's mechanism is corpus-anchored on BOTH arms of its
+    own comparison, which is why the layer landed -- but an anchor for a
+    MECHANISM is not a target for a PARAMETER, and nothing in the frozen
+    corpus gives a number `payload_escape_fraction` or `neighbours_in_reach`
+    could be fitted to.
+    """
+    return {
+        "arm": "ADC bystander effect",
+        "parameter": "AdcConfig::payload_escape_fraction",
+        "target": None,
+        "source": "PMID 31930187 anchors the MECHANISM, not a rate",
+        "target_kind": "no fittable endpoint in this corpus",
+        "range_scanned": None,
+        "fit": None,
+        "mapping": None,
+        "no_target_reason": (
+            "The corpus establishes that a cleavable linker causes bystander "
+            "killing and a non-cleavable one does not -- a qualitative "
+            "contrast with both arms named, which is what let the layer land "
+            "under the layer-freeze policy. It gives no escape fraction, no "
+            "diffusion radius and no bystander kill rate. Reporting a fit "
+            "here would mean inventing a target, and an invented target that "
+            "a flexible form then satisfies is worse than no target at all: "
+            "it looks like calibration and constrains nothing."),
+    }
+
+
 def scan() -> dict:
     return {"arms": [_radiation_arm(), _parp_arm(), _immunotherapy_arm(),
-                     _oncolytic_arm()],
+                     _oncolytic_arm(), _ablation_arm(), _cart_arm(),
+                     _adc_arm()],
             "unconstrained_width": UNCONSTRAINED_WIDTH}
 
 
 def _verdict(a: dict, cap: float) -> str:
+    # A row with no TARGET is a different outcome from one whose target no
+    # value satisfies, and collapsing them would hide the more interesting
+    # admission: that this project has no number to fit.
+    if a.get("target") is None:
+        return "NO TARGET"
     f = a["fit"]
     if f is None:
         return "INADMISSIBLE"
@@ -297,7 +426,8 @@ def assemble(raw: dict) -> dict:
     cap = raw["unconstrained_width"]
     arms = [dict(a, verdict=_verdict(a, cap)) for a in raw["arms"]]
     counts = {v: sum(1 for a in arms if a["verdict"] == v)
-              for v in ("ADMISSIBLE", "UNCONSTRAINED", "INADMISSIBLE")}
+              for v in ("ADMISSIBLE", "UNCONSTRAINED", "INADMISSIBLE",
+                        "NO TARGET")}
     return dict(raw, arms=arms, verdict_counts=counts,
                 n_clinical=sum(1 for a in arms if a["mapping"]))
 
@@ -319,18 +449,20 @@ def render(d: dict) -> str:
     for a in arms:
         f = a["fit"]
         rng = (f"{f['lo']:.4g} – {f['hi']:.4g}" if f else "—")
+        tgt = a["target"] or "*none in this corpus*"
         wid = (f"{f['width_fraction'] * 100:.0f}%" if f else "—")
-        L.append(f"| {a['arm']} | `{a['parameter']}` | {a['target']} | "
+        L.append(f"| {a['arm']} | `{a['parameter']}` | {tgt} | "
                  f"**{a['verdict']}** | {rng} | {wid} |")
     L += ["",
           f"**{c['ADMISSIBLE']} admissible, {c['UNCONSTRAINED']} "
-          f"unconstrained, {c['INADMISSIBLE']} inadmissible.** The width "
+          f"unconstrained, {c['INADMISSIBLE']} inadmissible, "
+          f"{c['NO TARGET']} with no target at all.** The width "
           "column is the point: a fit that admits most of the search range "
           "has been given a target that cannot discriminate, and reporting it "
           "as \"calibrated\" would be the same error as reporting a "
           "p-value without an effect size.", ""]
 
-    L += ["## Three outcomes, and they are not the same result", "",
+    L += ["## Four outcomes, and they are not the same result", "",
           "**ADMISSIBLE** — a value reproduces the target and the range that "
           "does is narrow. The data has said something.", "",
           "**UNCONSTRAINED** — a value exists and so does most of the search "
@@ -339,10 +471,32 @@ def render(d: dict) -> str:
           "excludes nothing has not calibrated anything.", "",
           "**INADMISSIBLE** — nothing in the range reproduces it, which "
           "falsifies the FORM. **This is the outcome worth wanting**, because "
-          "it is the only one that can teach the model something. None of "
-          "these arms produced it, which is itself worth knowing: these forms "
-          "are all flexible enough to hit their targets, so hitting them is "
-          "weak evidence.", ""]
+          "it is the only one that can teach the model something.", "",
+          "**NO TARGET** — the corpus anchors the MECHANISM and gives no "
+          "number the parameter could be fitted to. This is the outcome a "
+          "calibration page is most tempted to hide, and the temptation is "
+          "specific: inventing a target that a flexible form then satisfies "
+          "looks exactly like calibration and constrains nothing. A row that "
+          "says it has no number is more use than a row that has made one "
+          "up.", ""]
+
+    none = [a for a in arms if a["verdict"] == "NO TARGET"]
+    if none:
+        L += ["## The rows with nothing to fit to", ""]
+        for a in none:
+            L += [f"**{a['arm']}** — {a.get('no_target_reason', 'no reason recorded')}",
+                  ""]
+
+    unc = [a for a in arms if a["verdict"] == "UNCONSTRAINED"]
+    if unc:
+        L += ["## The rows whose target excludes almost nothing", ""]
+        for a in unc:
+            f = a["fit"]
+            L += [f"**{a['arm']}** — {f['width_fraction'] * 100:.0f}% of the "
+                  "searched range satisfies the target, so the target is "
+                  "consistent with the model and constrains it barely at all. "
+                  "That is a fact about the target and it is reported rather "
+                  "than counted as a fit.", ""]
 
     bad = [a for a in arms if a["verdict"] == "INADMISSIBLE"]
     if bad:
