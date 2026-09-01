@@ -255,11 +255,12 @@ Recorded rather than quietly deleted, because the failure is reusable.
 An earlier draft said the manuscript "states no per-step duration", making
 issue #727's ~16 min/step an attribution to text that did not exist. Section
 8.4 states the 0-48 hour immune window in the bullet IMMEDIATELY above the
-180-step sentence
-that draft quoted as evidence of silence, and says it again at two other
-points. The claim was false, and the guard protecting it grepped for the
-literal string "16 min/step" -- a quotient no document would ever write -- so
-it could not have failed.
+180-step sentence that draft quoted as evidence of silence, and the manuscript
+states it again in Chapter 9 and Chapter 12 -- NOT at two further points
+inside 8.4, which is what the earlier wording said on its grammatical reading.
+The claim was false, and the guard protecting it grepped for the literal
+string "16 min/step" -- a quotient no document would ever write -- so it could
+not have failed.
 
 The measurement behind the draft had the same shape: `engine_time_audit.py`
 scanned `ferroptosis-core/src` only, so "exactly one binding anywhere in the
