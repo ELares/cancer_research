@@ -22,16 +22,78 @@ The CI pipeline (`.github/workflows/release-pdf.yml`) runs this automatically on
 ## Heading Convention
 
 ```
-# Part N: Title          →  \part{Title}
-## Chapter N: Title       →  \chapter{Title}
+# Part N: Title           →  a part opener page (number spelled, standfirst)
+## Chapter N: Title       →  a chapter opener (number, title, standfirst, drop cap)
+## Appendix X: Title      →  a lettered appendix chapter
 ### N.N Title             →  \section{Title}
+### X.N Title             →  \section{Title}   (inside an appendix)
 #### N.N.N Title          →  \subsection{Title}
 ```
 
 - Parts use Roman numerals (I, II, III, IV, V)
-- Chapters use Arabic numerals (1-11) globally, not per-Part
-- Sections use chapter-relative numbering (6.1, 6.2, ...)
+- Chapters use Arabic numerals (1-12) globally, not per-Part
+- Sections use chapter-relative numbering (6.1, 6.2, ...); appendix sections use
+  their letter (A.1, B.3)
 - The document class is `report` (not `book`) — chapters do not force recto page starts
+
+## The Book's Own Conventions
+
+The manuscript is set as a trade book, not as a report: 6×9 inches, Palatino,
+citations gathered in the Notes at the back. **Every visual decision lives in
+`article/drafts/bookdesign.sty`** and nothing about layout lives in
+`scripts/generate_latex.py`, which emits meaning only. That split is what makes
+the design adaptable — a chapter added next month is set exactly like the twelve
+that exist, and the whole book can be redrawn by editing one file.
+`tests/test_book_design.py` enforces it.
+
+Four constructs are available in the markdown, and they are the vocabulary to
+reach for when adding content.
+
+**A standfirst** — the sentence under a part or chapter title that tells a
+reader what they are about to spend twenty minutes on. Write it as a blockquote
+directly under the heading:
+
+```
+## Chapter 7: Drug Combinations and Penetration
+
+> Two questions a single-cell model cannot answer on its own.
+```
+
+A blockquote anywhere ELSE becomes a pull quote, set large in the accent
+colour. Use it for a sentence that carries a section, and rarely — two on a page
+cancel each other out.
+
+**Callouts.** Three, and no more:
+
+```
+::: finding
+A result, stated so it can be found again without re-reading the section.
+:::
+
+::: refusal
+What the finding above does NOT establish. Not a disclaimer: in this book the
+limit is half the result, and it is set with the same weight.
+:::
+
+::: numbers
+The quantities a passage rests on, collected so the arithmetic can be checked.
+:::
+```
+
+A fence may carry its own label — `::: finding Delivery, not chemistry` — and an
+unknown fence name is a hard build error rather than three colons printed into
+the running text.
+
+**Lists and terminal blocks.** Numbered and bulleted paragraphs become real
+lists; ` ``` ` fences become terminal blocks set verbatim. A verbatim line
+cannot wrap, so **keep fenced lines under 78 characters** — a longer one runs
+off the page, which is a defect no test used to catch and one now does.
+
+**A scene break.** A `---` alone on a line becomes a typographic break, for a
+shift of subject inside a section.
+
+**Inline literals.** Backticked `identifiers` become small monospace. They used
+to reach the page as mismatched quote marks, in 205 places.
 
 ## File Structure
 
@@ -70,7 +132,7 @@ These rules prevent the expansion from inflating confidence beyond what the evid
 
 ## Citation Standards
 
-All citations use **Markdown footnote syntax** for a natural reading experience. The generate_latex.py script converts `[^label]` to LaTeX `\footnote{text}`, producing superscript numbers with full references at the bottom of each page.
+All citations use **Markdown footnote syntax** for a natural reading experience. The generate_latex.py script converts `[^label]` to an endnote, producing a superscript number in the text and the full reference in the **Notes** section at the back of the book, grouped under the chapter that made the claim. (The book design can put them back at the foot of the page — `\usepackage[notes=foot]{bookdesign}` — but the default is endnotes: the citation blocks were taking a third of many pages, and a reader who wants a source can still find it in one place.)
 
 - **Format in v1.md:** Place `[^label]` inline where the citation goes. Define `[^label]: Full reference text.` at the end of the section.
 - **Label conventions:** Use `[^pmidXXXXX]` for PubMed articles, `[^newsN]` for news sources, `[^authorYear]` for non-PubMed literature, `[^textbook_ref]` for textbooks.

@@ -135,7 +135,11 @@ def test_every_includegraphics_in_the_tex_resolves():
 
     tex_path = REPO / "article/drafts/v1.tex"
     tex = tex_path.read_text()
-    paths = re.findall(r"\\includegraphics\[[^\]]*\]\{([^}]+)\}", tex)
+    # The book design wraps the image in \bookgraphic so a figure can run
+    # wider than the measure; \includegraphics is still accepted so this
+    # guard survives a design that stops wrapping.
+    paths = (re.findall(r"\\bookgraphic\{([^}]+)\}", tex)
+             + re.findall(r"\\includegraphics\[[^\]]*\]\{([^}]+)\}", tex))
     assert paths, "v1.tex contains no figures, which means it did not generate"
     missing = [p for p in paths
                if not (tex_path.parent / p).resolve().exists()]

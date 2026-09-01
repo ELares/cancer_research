@@ -1,9 +1,29 @@
 #!/usr/bin/env python3
-"""Convert v1.md to v1.tex with proper LaTeX formatting.
+r"""Convert v1.md into the book's LaTeX source.
 
-Supports book-style structure with Parts, Chapters, Sections, and Subsections.
-Document class: report (not book — avoids forced recto chapter starts).
-See article/AUTHORING.md for heading conventions.
+THIS FILE EMITS MEANING, NOT LAYOUT. Every visual decision -- trim size,
+typefaces, palette, measure, how a chapter opens, what a callout looks like --
+lives in `article/drafts/bookdesign.sty`, and `tests/test_book_design.py` fails
+if a layout primitive (\geometry, \fontsize, \vspace, a colour, a font
+family) appears here. The split is what makes the design adaptable: a chapter
+written next month is set exactly like the twelve that exist, and the book can
+be redrawn by editing one style file without touching this pipeline.
+
+What the markdown may contain, and what each construct becomes:
+
+    # Part I: Title          \part      (opener page, standfirst below it)
+    ## Chapter 3: Title      \chapter   (opener page, standfirst, drop cap)
+    > standfirst text        \standfirst / \partstandfirst when it directly
+                             follows a Part/Chapter heading; \pullquote anywhere
+                             else
+    ::: finding ... :::      a callout box (finding / refusal / numbers)
+    1. item / - item         enumerate / itemize
+    ```  ...  ```            a terminal block, set verbatim
+    `identifier`             \bookcode
+    ---  (alone on a line)   a scene break
+    [FIGURE n: ...]          the figure, with its caption and pinned number
+
+See article/AUTHORING.md for the authoring rules these mirror.
 """
 import re
 from pathlib import Path
@@ -13,7 +33,38 @@ MD = ROOT / "article" / "drafts" / "v1.md"
 TEX = ROOT / "article" / "drafts" / "v1.tex"
 
 md = MD.read_text()
-title = re.search(r'^# (.+)$', md, re.MULTILINE).group(1).strip()
+full_title = re.search(r'^# (.+)$', md, re.MULTILINE).group(1).strip()
+# The book's title and subtitle are the two halves of the manuscript's own
+# title line, split rather than retyped so the title page cannot drift from the
+# source. A title with no colon simply has no subtitle.
+if ':' in full_title:
+    title, subtitle = (p.strip() for p in full_title.split(':', 1))
+else:
+    title, subtitle = full_title, ''
+
+# Fenced code blocks are pulled OUT before any conversion runs and put back
+# after, because every step in between escapes LaTeX specials and a shell
+# command is not prose. Placeholders are unlikely-to-collide sentinels rather
+# than markers made of markdown, which the converters would rewrite.
+code_blocks = []
+
+
+def stash_code_blocks(text):
+    def take(m):
+        code_blocks.append(m.group(1).rstrip('\n'))
+        return f'@@CODEBLOCK{len(code_blocks) - 1}@@'
+    return re.sub(r'```[a-z]*\n(.*?)```', take, text, flags=re.DOTALL)
+
+
+def restore_code_blocks(text):
+    def put(m):
+        body = code_blocks[int(m.group(1))]
+        return ('\\begin{bookterminal}\n\\begin{verbatim}\n'
+                + body + '\n\\end{verbatim}\n\\end{bookterminal}')
+    return re.sub(r'@@CODEBLOCK(\d+)@@', put, text)
+
+
+md = stash_code_blocks(md)
 
 # Build footnote definition map from Markdown [^label]: text patterns
 footnote_defs = {}
@@ -23,6 +74,12 @@ for m in re.finditer(r'^\[\^(\w+)\]:\s*(.+)$', md, re.MULTILINE):
 # Extract sections
 abstract = re.search(r'## Abstract\n\n(.*?)(?=\n\*\*Keywords)', md, re.DOTALL).group(1).strip()
 keywords = re.search(r'\*\*Keywords:\*\*\s*(.+)', md).group(1).strip()
+
+# Front matter written as prose in the manuscript. Optional: absent until the
+# section is written, and the book simply omits the page rather than failing.
+_note = re.search(r'^## A Note On This Edition\n\n(.*?)(?=\n# Part )', md,
+                  re.DOTALL | re.MULTILINE)
+howto = _note.group(1).strip() if _note else ''
 
 # Body: everything from the first Part header to just before References.
 body_start = re.search(r'^# Part [IVX]+: ', md, re.MULTILINE)
@@ -64,9 +121,28 @@ def map_greek(t):
 
 # Markdown → LaTeX
 def cvt(t):
+    # Inline literals FIRST, before the escapers touch them: a backticked
+    # `identifier` was reaching pdflatex as a backtick, which sets an opening
+    # quote, so 205 file names and enum variants printed as mismatched quote
+    # marks. Nothing warned; the PDF simply had a typographic error in it 205
+    # times.
+    t = re.sub(r'`([^`\n]+)`', r'\\bookcode{\1}', t)
     # Book-structure headings (report document class)
     t = re.sub(r'^# Part [IVX]+: (.+)$', r'\\part{\1}', t, flags=re.MULTILINE)
-    t = re.sub(r'^## Chapter \d+: (.+)$', r'\\chapter{\1}', t, flags=re.MULTILINE)
+    t = re.sub(r'^## Chapter (\d+): (.+)$',
+               r'\\booknotesheading{Chapter \1}\n\\chapter{\2}', t,
+               flags=re.MULTILINE)
+    # Appendices. `## Appendix A: Title` matched NO rule, so all three reached
+    # the page as the literal text "## Appendix A: ..." -- a heading printed as
+    # its own markup, in the compiled book, for as long as the appendices have
+    # existed. \appendix switches the chapter counter to letters, so the
+    # lettered section numbers the prose already uses (A.1, B.3) are produced
+    # rather than typed twice.
+    t = re.sub(r'^## Appendix A: (.+)$', r'\\appendix\n\\chapter{\1}', t,
+               flags=re.MULTILINE)
+    t = re.sub(r'^## Appendix [B-Z]: (.+)$', r'\\chapter{\1}', t,
+               flags=re.MULTILINE)
+    t = re.sub(r'^### [A-Z]\.\d+ (.+)$', r'\\section{\1}', t, flags=re.MULTILINE)
     t = re.sub(r'^### \d+\.\d+ (.+)$', r'\\section{\1}', t, flags=re.MULTILINE)
     t = re.sub(r'^### (.+)$', r'\\section{\1}', t, flags=re.MULTILINE)  # unnumbered fallback
     t = re.sub(r'^#### \d+\.\d+\.\d+ (.+)$', r'\\subsection{\1}', t, flags=re.MULTILINE)
@@ -96,6 +172,12 @@ def cvt(t):
     t = t.replace('↓', '$\\downarrow$')
     t = t.replace('↑', '$\\uparrow$')
     t = t.replace('—', '---')
+    # Straight quotation marks set as two apostrophes on both sides, which is
+    # the oldest giveaway that a document was typed rather than typeset. Paired
+    # left-to-right so an odd one out is left alone rather than guessed at.
+    def _curly(m):
+        return "``" + m.group(1) + "''"
+    t = re.sub(r'"([^"]{1,400})"', _curly, t, flags=re.DOTALL)
     t = t.replace('≥', '$\\geq$')
     t = t.replace('≤', '$\\leq$')
     t = t.replace('≳', '$\\gtrsim$')
@@ -133,6 +215,8 @@ def repl_footnote(m):
     text = text.replace('×', '$\\times$')
     text = text.replace('\u2009', ' ')  # thin space → regular space
     text = text.replace('—', '---').replace('–', '--')
+    text = re.sub(r'"([^"]{1,400})"', lambda m: '``' + m.group(1) + "''",
+                  text, flags=re.DOTALL)
     text = text.replace('→', '$\\rightarrow$')
     text = text.replace('µ', '$\\mu$').replace('μ', '$\\mu$')
     text = map_greek(text)  # Greek in citation titles/authors (same hard-error class as the body)
@@ -140,16 +224,176 @@ def repl_footnote(m):
     return f'\\footnote{{{text}}}'
 
 body_tex = re.sub(r'\[\^(\w+)\]', repl_footnote, body_tex)
+# A note mark belongs against the word it annotates. The markdown writes a
+# space before `[^ref]`, which reached the page as a gap between the word and
+# its superscript -- small, and on every one of several hundred marks.
+body_tex = re.sub(r'[ \t]+(\\footnote\{)', r'\1', body_tex)
 # Remove any leftover footnote definition lines that survived the earlier cleanup
 body_tex = re.sub(r'^\[\^\w+\]:\s*.+$', '', body_tex, flags=re.MULTILINE)
 
-# Remove markdown horizontal rules, which are invalid in LaTeX body text.
-body_tex = re.sub(r'^\s*---\s*$', '', body_tex, flags=re.MULTILINE)
+# A rule alone on a line is a scene break -- a shift of subject inside a
+# section. It used to be deleted, which silently joined two passages that the
+# author had separated.
+body_tex = re.sub(r'^\s*---\s*$', r'\\dinkus', body_tex, flags=re.MULTILINE)
 
 # Collapse the runs of blank lines left behind when footnote-definition lines
 # and horizontal rules are stripped above (cosmetic; LaTeX already treats any
 # blank-line run as a single paragraph break, so this changes no output).
 body_tex = re.sub(r'\n{3,}', '\n\n', body_tex)
+
+# ── Structure: standfirsts, callouts, lists, drop caps ──────────────────
+# Everything below turns a markdown convention into a SEMANTIC command that
+# bookdesign.sty draws. None of it decides how the result looks.
+
+# Fence name -> environment. The label and its colour belong to the
+# environment, which lives in the style file; a fence may pass a custom label
+# as an optional argument and nothing here decides how it is set.
+CALLOUTS = {
+    'finding': 'finding',
+    'refusal': 'refusal',
+    'numbers': 'numbers',
+}
+
+
+def convert_callouts(t):
+    """`::: finding [label] ... :::` -> a callout environment.
+
+    An unknown fence name is a hard error rather than a passthrough: a
+    misspelled `::: findng` would otherwise print three colons and its label
+    into the running text, where it reads as a typesetting accident rather
+    than as the author's mistake.
+    """
+    pattern = re.compile(r'^::: *(\S+) *(.*?)\n(.*?)\n::: *$',
+                         re.DOTALL | re.MULTILINE)
+
+    def one(m):
+        name, custom, inner = m.group(1), m.group(2).strip(), m.group(3).strip()
+        if name not in CALLOUTS:
+            raise SystemExit(
+                f"ERROR: unknown callout ':::  {name}' in v1.md. "
+                f"Known: {', '.join(sorted(CALLOUTS))}. Add it to CALLOUTS "
+                "here AND define the environment in bookdesign.sty.")
+        env = CALLOUTS[name]
+        opt = f'[{custom}]' if custom else ''
+        return f'\\begin{{{env}}}{opt}\n{inner}\n\\end{{{env}}}'
+
+    t = pattern.sub(one, t)
+    leftover = re.findall(r'^:::.*$', t, flags=re.MULTILINE)
+    if leftover:
+        raise SystemExit(
+            "ERROR: unclosed callout fence in v1.md: " + leftover[0][:70])
+    return t
+
+
+def convert_blockquotes(t):
+    """A blockquote is a standfirst when it opens a Part or Chapter, and a
+    pull quote anywhere else.
+
+    The position carries the meaning, which is why the two cases are not
+    distinguished by two markdown syntaxes: an author writing the sentence
+    that goes under a chapter title should not have to remember a second
+    spelling for it."""
+    lines = t.split('\n')
+    out, i = [], 0
+    while i < len(lines):
+        line = lines[i]
+        if line.startswith('> '):
+            block, j = [], i
+            while j < len(lines) and lines[j].startswith('> '):
+                block.append(lines[j][2:].strip())
+                j += 1
+            text = ' '.join(block).strip()
+            prev = next((x for x in reversed(out) if x.strip()), '')
+            if prev.startswith('\\part{'):
+                # Fold the two into one command: a part page ends with a
+                # \newpage, so a standfirst emitted after it opens the next
+                # leaf instead of finishing the opener.
+                title = prev[len('\\part{'):].rstrip()[:-1]
+                for k in range(len(out) - 1, -1, -1):
+                    if out[k].strip() == prev.strip():
+                        out[k] = f'\\bookpart{{{title}}}{{{text}}}'
+                        break
+            elif prev.startswith('\\chapter{'):
+                out.append(f'\\standfirst{{{text}}}')
+            else:
+                out.append(f'\\pullquote{{{text}}}')
+            i = j
+            continue
+        out.append(line)
+        i += 1
+    return '\n'.join(out)
+
+
+def convert_lists(t):
+    """Consecutive numbered or bulleted PARAGRAPHS become one list.
+
+    Items in this manuscript are blank-line separated, so a naive line-based
+    grouper sees each as its own list. They were not converted at all before:
+    135 numbered items reached the page as ordinary paragraphs beginning with
+    a digit and a full stop."""
+    blocks = t.split('\n\n')
+    out, i = [], 0
+    while i < len(blocks):
+        b = blocks[i].strip()
+        num = re.match(r'^\d+\.\s+(.*)$', b, re.DOTALL)
+        bul = re.match(r'^[-*]\s+(.*)$', b, re.DOTALL)
+        if num or bul:
+            env = 'enumerate' if num else 'itemize'
+            items, j = [], i
+            while j < len(blocks):
+                nb = blocks[j].strip()
+                m = (re.match(r'^\d+\.\s+(.*)$', nb, re.DOTALL) if num
+                     else re.match(r'^[-*]\s+(.*)$', nb, re.DOTALL))
+                if not m:
+                    break
+                items.append(m.group(1).strip())
+                j += 1
+            body = '\n'.join(f'\\item {it}' for it in items)
+            out.append(f'\\begin{{{env}}}\n{body}\n\\end{{{env}}}')
+            i = j
+            continue
+        out.append(blocks[i])
+        i += 1
+    return '\n\n'.join(out)
+
+
+def add_drop_caps(t):
+    """Open each chapter's first paragraph with a drop cap.
+
+    Skipped -- deliberately, and silently -- when the paragraph opens with
+    anything but a plain capital letter: a bold lead-in, a quantity, a
+    quotation. A drop cap on `\\textbf{` would set a backslash three lines
+    high, and the alternative (unwrapping the markup to reach the letter)
+    would put layout logic in this file."""
+    blocks = t.split('\n\n')
+    for i, b in enumerate(blocks):
+        # The chapter command shares its block with the notes heading emitted
+        # just above it, so this looks INSIDE the block rather than at its
+        # first characters.
+        if not re.match(r'(\\booknotesheading\{[^}]*\}\s*)?\\chapter\{', b.lstrip()):
+            continue
+        for j in range(i + 1, min(i + 6, len(blocks))):
+            nxt = blocks[j].strip()
+            # A chapter here always opens with a numbered section, so the
+            # first PARAGRAPH is two or three blocks down; the search skips
+            # the furniture rather than giving up at the first thing that is
+            # not prose.
+            if (not nxt or nxt.startswith('\\standfirst{')
+                    or nxt.startswith('\\section{')
+                    or nxt.startswith('\\booknotesheading{')):
+                continue
+            m = re.match(r'^([A-Z])([a-z]+)(.*)$', nxt, re.DOTALL)
+            if m and len(m.group(2)) >= 2:
+                blocks[j] = (f'\\bookopen{{{m.group(1)}}}{{{m.group(2)}}}'
+                             f'{{{m.group(3)}}}')
+            break
+    return '\n\n'.join(blocks)
+
+
+body_tex = convert_callouts(body_tex)
+body_tex = convert_blockquotes(body_tex)
+body_tex = convert_lists(body_tex)
+body_tex = add_drop_caps(body_tex)
 
 # Replace markdown tables with LaTeX tables
 # Find pipe-delimited tables and replace
@@ -163,8 +407,7 @@ def replace_table(text, marker, caption, label, headers, rows):
     r = ' \\\\\n'.join(' & '.join(cells) for cells in rows)
     cols = 'l' + 'c' * (len(headers)-1)
 
-    table = f"""\\begin{{table}}[ht]
-\\centering
+    table = f"""\\begin{{table}}[tbp]
 \\caption{{{caption}}}
 \\label{{{label}}}
 \\begin{{tabular}}{{{cols}}}
@@ -255,11 +498,10 @@ def repl_figure(match):
         # float shifted every later figure's number. `setcounter` to N-1 makes
         # the environment's own increment land on N, so `\\ref` and the literal
         # prose agree.
-        return f"""\\begin{{figure}}[ht]
-\\centering
+        return f"""\\begin{{figure}}[tbp]
 \\setcounter{{figure}}{{{int(num) - 1}}}
-\\includegraphics[width=\\textwidth]{{../figures/{fn}.pdf}}
-\\caption{{{cap}}}
+\\bookgraphic{{../figures/{fn}.pdf}}
+\\caption{{\\figlabel{{{num}}}{cap}}}
 \\label{{fig:{fn}}}
 \\end{{figure}}"""
     else:
@@ -296,52 +538,100 @@ def escape_prose_underscores(t):
     t = re.sub(r'\\label\{[^}]+\}', unescape_braces, t)
     t = re.sub(r'\\ref\{[^}]+\}', unescape_braces, t)
     t = re.sub(r'\\includegraphics\[[^\]]*\]\{[^}]+\}', unescape_braces, t)
+    # \bookgraphic wraps the image now, and it takes the same kind of argument:
+    # a PATH, where an escaped underscore is not an underscore. It compiled
+    # anyway, which is worse than failing -- the escape survived into a
+    # filename and only graphicx's own expansion rescued it.
+    t = re.sub(r'\\bookgraphic\{[^}]+\}', unescape_braces, t)
     return t
 
 body_tex = escape_prose_underscores(body_tex)
 abstract_tex = escape_prose_underscores(abstract_tex)
 
-latex = f"""\\documentclass[12pt,a4paper]{{report}}
-\\usepackage[utf8]{{inputenc}}
-\\usepackage[T1]{{fontenc}}
-\\usepackage{{amsmath,amssymb}}
-\\usepackage{{graphicx}}
+# The tables the manuscript sets are data, not prose: smaller, and in the
+# book's table face. The command is defined in the style file.
+body_tex = body_tex.replace('\\begin{tabular}', '\\booktablesize\\begin{tabular}')
+
+howto_tex = escape_prose_underscores(cvt(howto)) if howto else ''
+# Front matter sits inside an unnumbered chapter, so its own headings are
+# unnumbered too -- numbered they would read 0.1, 0.2, which is what a section
+# counter does before the first chapter starts.
+howto_tex = howto_tex.replace('\\section{', '\\section*{')
+howto_tex = convert_callouts(howto_tex)
+howto_tex = convert_blockquotes(howto_tex)
+howto_tex = convert_lists(howto_tex)
+howto_tex = re.sub(r'\[\^(\w+)\]', repl_footnote, howto_tex)
+
+# Front matter is arranged by the style file and WORDED here, from the
+# manuscript. The colophon is the one place the pipeline describes itself,
+# because a reader holding a generated book should be told it is generated.
+colophon = (
+    'This edition was set from \\bookcode{article/drafts/v1.md} by '
+    '\\bookcode{scripts/generate\\_latex.py} and the book design in '
+    '\\bookcode{article/drafts/bookdesign.sty}. Every figure in it is drawn by '
+    'a committed script from committed data; every number it reports can be '
+    'recomputed from the repository it comes with.\n\n'
+    'The work is open. Source, data, simulation code and the issue history are '
+    'at \\bookcode{github.com/ELares/cancer\\_research}.\n\n'
+    'This is a research document. It reports simulations and literature '
+    'measurements, not clinical evidence, and nothing in it is medical '
+    'advice.\n\n'
+    '\\textit{Keywords:} ' + cvt(keywords)
+)
+
+latex = f"""\\documentclass[11pt,twoside,openright]{{report}}
+% The design, and the ONLY package this document loads: everything about how
+% the book looks -- including which packages that requires -- is in that one
+% file, and this document declares structure and lets the style draw it.
+\\usepackage[notes=end]{{bookdesign}}
 % FLAT, PINNED FIGURE NUMBERS. `report.cls` sets \\thefigure to
 % \\thechapter.\\arabic{{figure}}, so the per-float \\setcounter produced 6.25
 % where the prose said 25, and NOT ONE of the 29 citations resolved -- the
 % deliverable was true of the markdown and false of the compiled PDF.
 \\renewcommand{{\\thefigure}}{{\\arabic{{figure}}}}
-\\usepackage{{hyperref}}
-% Citations use inline footnotes — no natbib/bibtex needed
-\\usepackage{{booktabs}}
-\\usepackage{{geometry}}
-\\usepackage{{setspace}}
 
-\\geometry{{margin=1in}}
-\\onehalfspacing
-
-\\title{{{title}}}
-\\author{{Ezequiel Lares \\\\ Independent Researcher}}
-\\date{{}}
+\\hypersetup{{pdftitle={{{full_title}}}, pdfauthor={{Ezequiel Lares}}}}
 
 \\begin{{document}}
 
-\\maketitle
+\\frontmatter@bookish
+\\bookhalftitle{{{title}}}
+\\booktitlepage{{{title}}}{{{subtitle}}}{{Ezequiel Lares}}{{Independent researcher}}
+\\bookcolophon{{{colophon}}}
 
-\\begin{{abstract}}
+\\pagenumbering{{roman}}
+
+\\chapter*{{In Brief}}
+\\markboth{{In Brief}}{{In Brief}}
+\\addcontentsline{{toc}}{{chapter}}{{In Brief}}
 {abstract_tex}
-\\end{{abstract}}
 
-\\noindent\\textbf{{Keywords:}} {keywords}
-
+\\cleardoublepage
 \\tableofcontents
+
+{('\\chapter*{A Note On This Edition}' + chr(10) +
+  '\\markboth{A Note On This Edition}{A Note On This Edition}' + chr(10) +
+  '\\addcontentsline{toc}{chapter}{A Note On This Edition}' + chr(10) +
+  howto_tex) if howto_tex else ''}
+
+\\cleardoublepage
+\\pagenumbering{{arabic}}
 
 {body_tex}
 
-% Reference list kept as appendix in v1.md; citations are inline footnotes.
+\\printbooknotes
+
+% Reference list kept as appendix in v1.md; citations are inline notes.
 
 \\end{{document}}
 """
+
+# `\frontmatter` belongs to book.cls and this document is a report; the marker
+# above is removed rather than left to fail, so the intent stays readable in
+# the source of this generator without emitting a command that does not exist.
+latex = latex.replace('\\frontmatter@bookish\n', '')
+
+latex = restore_code_blocks(latex)
 
 TEX.write_text(latex)
 print(f'Written {TEX}: {len(latex)} chars, {latex.count(chr(92)+"cite{")} citations')
