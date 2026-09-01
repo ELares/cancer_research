@@ -874,7 +874,17 @@ def fig32_modality_tme():
         for i in range(M.shape[0]):
             for j in range(M.shape[1]):
                 v = M[i, j]
+                # A cell is left blank ONLY at exactly zero. The threshold was
+                # 0.005, which blanked three cells carrying a real effect --
+                # and one arm-axis pair was blank in one panel and drawn as
+                # -10 in the other, so the same pair was simultaneously called
+                # inert and shown acting. A sub-1% effect is printed as <1
+                # rather than hidden.
+                if v == 0.0:
+                    continue
                 if abs(v) < 0.005:
+                    ax.text(j, i, "<1" if v > 0 else ">-1", ha="center",
+                            va="center", fontsize=6.4, color="#666")
                     continue
                 ax.text(j, i, f"{v * 100:+.0f}", ha="center", va="center",
                         fontsize=7.0,
@@ -884,19 +894,30 @@ def fig32_modality_tme():
         ax.grid(which="minor", color="white", linewidth=1.1)
         ax.tick_params(which="minor", length=0)
 
-    cb = fig.colorbar(im, ax=axs, fraction=0.026, pad=0.02)
-    cb.set_label("change in kill fraction (%)  -  negative is resistance",
-                 fontsize=8.5)
+    # LAYOUT BEFORE COLORBAR. `subplots_adjust` after `colorbar(ax=axs)` undoes
+    # the space the colorbar reserved, and it drew over the rightmost column of
+    # the persister panel -- the clonal-heterogeneity column carrying +124 and
+    # +116, which is the figure's stated finding.
+    fig.subplots_adjust(bottom=0.30, top=0.88, left=0.115, right=0.86)
+    cax = fig.add_axes([0.885, 0.30, 0.016, 0.58])
+    cb = fig.colorbar(im, cax=cax)
+    # ONE unit. The cells print percent and the bar was ticked in fractions,
+    # which is two notations for one quantity in one image -- the defect the
+    # sibling function's own comment congratulates itself on avoiding.
+    cb.set_ticks(np.linspace(-vmax, vmax, 5))
+    cb.set_ticklabels([f"{v * 100:+.0f}" for v in np.linspace(-vmax, vmax, 5)])
+    cb.set_label("change in kill fraction (percentage points)  -  "
+                 "negative is resistance", fontsize=8.2)
     fig.suptitle("What the microenvironment does to every arm, by cell state",
                  fontsize=12.5, fontweight="bold", y=0.985)
-    # The caption sat on top of the rotated tick labels in the first draft.
-    fig.subplots_adjust(bottom=0.30, top=0.88, left=0.115, right=0.90)
     fig.text(0.5, 0.02,
              "NOT a ranking. Signed deliberately: red is a loss, blue a GAIN, "
              "and the gains are real - clonal heterogeneity supplies a "
              "low-defence tail that dies while the average cell resists. A "
-             "blank cell is an axis that cannot act on that arm, which is a "
-             "property of the run rather than of the biology. Every arm but "
+             "blank cell is EXACTLY zero for that arm - a cell the axis "
+             "cannot move at all in this run, which is a property of the run "
+             "rather than of the biology; a real effect under one percentage "
+             "point prints as <1 rather than vanishing. Every arm but "
              "radiation's DNA channel is parameterised with placeholders.",
              ha="center", fontsize=7.2, color="#555", wrap=True)
     save(fig, "fig32_modality_tme")
@@ -937,9 +958,15 @@ def fig33_adoptive_barriers():
          * ab["persistence_at_run_end_solid"], "#8B0000"),
         ("after the\nantigen ceiling", solid, "#4B0000"),
     ]
-    # The drawing must not be able to disagree with the page beside it.
-    assert abs(steps[-2][1] / solid - 1.0) < 0.05 or ab["antigen_ceiling_binds"], (
-        "the ceiling changes the kill but the binary says it does not bind")
+    # The drawing must not be able to disagree with the binary, IN EITHER
+    # DIRECTION. The first version was `... < 0.05 or binds`, which the `or`
+    # made vacuous exactly when the ceiling binds -- the case its own message
+    # described. Both directions are checked now.
+    moved = abs(steps[-2][1] / solid - 1.0) > 1e-9
+    assert moved == bool(ab["antigen_ceiling_binds"]), (
+        f"the binary says the antigen ceiling binds="
+        f"{ab['antigen_ceiling_binds']} while the drawn steps "
+        f"{'move' if moved else 'do not move'} across it")
 
     fig, ax = plt.subplots(figsize=(8.4, 4.8))
     xs = np.arange(len(steps))
@@ -970,7 +997,8 @@ def fig33_adoptive_barriers():
                 if vals[i] / vals[i + 1] < 1.01)
     ax.set_title(
         f"The same CAR-T construct, twice: a {leuk / solid:,.0f}x collapse "
-        f"across three barriers, {inert} of which does nothing here",
+        f"across delivery, persistence and the antigen ceiling - "
+        f"{inert} of the three doing nothing here",
         fontsize=11.0, fontweight="bold", pad=14)
     fig.text(0.5, 0.005,
              "NOT a clinical comparison. Every barrier value is an "

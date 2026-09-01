@@ -40,12 +40,16 @@ ones known and deliberate:
   `type: simulation`. FOUR of them are different in kind:
   `fig30_modality_landscape`, `fig31_modality_panel`, `fig32_modality_tme` and
   `fig33_adoptive_barriers` read COMMITTED
-  artifacts (`analysis/modality-coverage.json`,
+  artifacts (`analysis/modality-tme.json`, `analysis/modality-coverage.json`,
   `analysis/modality-panel.json`), so unlike the rest of the backlog they
   regenerate offline and every number on them is pinned by
-  `tests/test_modality_landscape_figure.py` and `tests/test_modality_panel.py`
-  -- including a parse of each generator that rejects any typed integer above
-  a thousand -- even though the PDFs themselves are not byte-gated here. Eight of the 13 are drawn by `generate_figures.py` from
+  `tests/test_modality_landscape_figure.py`, `tests/test_modality_panel.py`
+  and `tests/test_chapter6_figures.py` -- the last of which reads the numbers
+  back out of the rendered PDF and compares them to the artifact, which is the
+  only check here that would catch a figure drawing the wrong value. That
+  sentence was FALSE when written: it claimed all four were pinned while no
+  test named fig32 or fig33 at all, and multiplying every drawn cell in fig32
+  by a thousand left the suite green. The PDFs are still not byte-gated here. Eight of the 13 are drawn by `generate_figures.py` from
   `simulations/output/`, which is gitignored, so CI cannot regenerate them at
   all until #788's tracking decision is made; they were regenerated in the #790
   pass and no longer embed a creation date, which is necessary for a freshness
@@ -55,8 +59,13 @@ ones known and deliberate:
   through a deterministic generator, so regenerating it once -- which it
   needs anyway, being one of the seven below -- would bring it under a
   gate; `fig31_modality_panel` reads the TRACKED `analysis/modality-panel.json` and
-  is the only `type: simulation` figure whose every number is already pinned
-  by a test; and `fig7_monte_carlo_simulation` reads the TRACKED
+  is one of four `type: simulation` figures whose every number is pinned by a
+  test (this bullet said "the only" while the bullet above it said four,
+  contradicting itself in one docstring); and `fig32_modality_tme` and `fig33_adoptive_barriers` read the TRACKED
+  `analysis/modality-tme.json` and `analysis/modality-panel.json` through the
+  same offline generator, and `tests/test_chapter6_figures.py` reads their
+  numbers back out of the rendered PDFs; and `fig7_monte_carlo_simulation`
+  reads the TRACKED
   `simulations/simulation_results.json`, but has no committed generator at all
   -- it is a matplotlib figure whose producing code is not in this repository.
   (It is skipped below by the non-Python-generator branch, not by the orphan
