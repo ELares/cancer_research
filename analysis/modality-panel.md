@@ -23,7 +23,7 @@
 
 `AntibodyDrugConjugate` kills 1.84% against `SDT`'s 87.24% — a factor of 48 — **and the same exogenous-ROS constant drives both**. It is NOT that they share RSL3's pharmacology: the GPX4-inhibition branch fires only for `Treatment::RSL3`, and this report said otherwise until it was checked against the code. What the two rows share is the payload constant (`params.sdt_ros`) and the engine; what differs is that the payload arrives on a ~150 kDa antibody, and the binding-site barrier holds its penetration to about 7 µm. So the ratio prices THIS MODEL'S transport layer, which is arithmetic more than it is a discovery.
 
-This project has argued since Chapter 6 that delivery dominates the in-vitro-to-in-vivo gap. This is the first row in the repository where the SAME pharmacology is run through two delivery routes and the gap is the only difference between them.
+This project has argued since Chapter 6 that delivery dominates the in-vitro-to-in-vivo gap. This is the first row in the repository where ONE PAYLOAD CONSTANT runs through two delivery routes. Not the only difference between the rows -- the ADC carries a bystander term SDT has no analogue for -- but the transport factor is what the gap is made of, and saying 'the same pharmacology' is what let this report claim the ADC ran RSL3's for as long as it did.
 
 ## Two rows are identical, and that is a property of the panel
 
