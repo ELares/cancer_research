@@ -17,7 +17,7 @@ query at all — the two topics the project's own simulation half is built on.
 
 So every statement of the form "research is concentrated here" or "this is a
 gap" has been, in truth, a statement about a retrieval design. That is the
-honest reading of the last two years of work, and it is the reason for a new
+honest reading of the work so far, and it is the reason for a new
 mission rather than more of the old one.
 
 ## The new mission

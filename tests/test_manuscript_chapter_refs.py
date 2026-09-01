@@ -134,7 +134,14 @@ def test_the_new_chapter_is_where_the_criticism_is_answered():
         assert frag in body, f"Chapter 6 no longer says: {frag}"
     # And it must keep its refusals, which are what stop it being a feature
     # list. Each names a limit that would change a claim if lifted.
+    # The middle refusal used to be the literal claim that the arms are "one
+    # function and a configuration struct each". That became false as modules
+    # landed, so the chapter now quotes it as a RETRACTION beside a measured
+    # replacement -- and what must survive is the measured refusal, not the
+    # retracted wording. `tests/test_modality_module_depth.py` checks the
+    # retraction is quoted rather than standing.
     for refusal in ("is not a ranking of therapies",
-                    "are one function and a configuration struct",
+                    "feeding no reported number at all",
+                    "smaller than the engine they sit beside",
                     "The taxonomy bounds everything above"):
         assert refusal in body, f"Chapter 6 dropped the refusal: {refusal}"

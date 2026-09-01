@@ -51,6 +51,7 @@ corpus scan, no simulation run.
 from __future__ import annotations
 
 import argparse
+import importlib.util
 import json
 import math
 import re
@@ -326,6 +327,52 @@ def _ablation_arm() -> dict:
     }
 
 
+def _strip_rust_comments(src: str) -> str:
+    """Reuse `modality_coverage`'s scanner rather than writing a second one.
+
+    A regex here would be a second implementation of a thing this repository
+    already got wrong once (nested block comments, `//` inside a string), and
+    two scanners that drift is its own defect class.
+    """
+    spec = importlib.util.spec_from_file_location(
+        "modality_coverage", REPO / "scripts" / "modality_coverage.py")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod.strip_rust_comments(src)
+
+
+def _rust_default_barriers() -> dict:
+    """`AdoptiveBarriers::default()`, parsed from the crate.
+
+    A drift guard of the same shape `validate_spheroid_structure.py` and
+    `validate_trigger_wave.py` already use: the Python fit and the Rust module
+    must not be able to disagree about the setting the published band was
+    measured in.
+    """
+    # Comments are STRIPPED first, using the same scanner the coverage
+    # generators use. Without it the field regex reads values out of prose: two
+    # explanatory comment lines inside the `Default` impl mentioning
+    # `activation: 0.5` and `antigen_positive_fraction: 0.8` -- rustfmt-stable,
+    # `cargo test` green -- made this return the solid-tumour values and flipped
+    # the published CAR-T verdict from ADMISSIBLE to UNCONSTRAINED. The dict
+    # comprehension below is last-wins, so a comment AFTER the real field silently
+    # replaced it. Every other rustfmt-legal reformatting (struct-update syntax,
+    # a const, `1.0f64`, `1e0`, delegation) already failed loudly; this one did not.
+    src = _strip_rust_comments((CORE / "adoptive.rs").read_text())
+    body = re.search(r"impl Default for AdoptiveBarriers \{.*?\n    \}",
+                     src, re.S)
+    if body is None:
+        raise SystemExit("adoptive.rs: no Default impl to read barriers from")
+    out = {k: float(v) for k, v in
+           re.findall(r"(\w+): ([0-9.]+),", body.group(0))}
+    need = {"trafficking", "infiltration", "activation",
+            "exhaustion_rate", "antigen_positive_fraction"}
+    missing = need - set(out)
+    if missing:
+        raise SystemExit(f"adoptive.rs Default is missing {sorted(missing)}")
+    return out
+
+
 def _cart_arm() -> dict:
     """Published B-ALL complete-remission band -> effector supply.
 
@@ -345,10 +392,25 @@ def _cart_arm() -> dict:
     n = 20_000
     eff_brake = brake * (1.0 - anti)
 
+    # The barriers this fit runs at, READ FROM `adoptive.rs::Default` rather
+    # than assumed. For one review round the module documented this default as
+    # load-bearing for this fit while the fit reimplemented the kill in Python
+    # and never opened the file -- a claim about one artifact written in
+    # another, which is this repository's most-repeated defect and was found
+    # here by a reviewer tracing callers instead of grepping for the type.
+    # Now a solid-tumour default would move the fitted band, and
+    # `test_modality_calibration.py` fails if these stop being all-open.
+    barriers = _rust_default_barriers()
+    delivery = (barriers["trafficking"] * barriers["infiltration"]
+                * barriers["activation"])
+    ceiling = barriers["antigen_positive_fraction"]
+
     def predict(effectors):
-        # `adoptive_transfer_kills` with no suppression -- the leukaemia
-        # setting, which is what the band is measured in.
-        return min(effectors * kill * (1.0 - eff_brake), float(n)) / n
+        # `adoptive_transfer_kills` composed with `adoptive::` -- the leukaemia
+        # setting (no suppression, every barrier open), which is what the band
+        # is measured in. `barrier_limited_kills` is the antigen cap.
+        raw = effectors * delivery * kill * (1.0 - eff_brake)
+        return min(raw, float(n) * ceiling) / n
 
     fit = _fit(predict, lo, hi, 0.0, 5_000_000.0, steps=20_000)
     return {

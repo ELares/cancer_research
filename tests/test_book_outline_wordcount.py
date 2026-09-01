@@ -283,3 +283,87 @@ def test_no_reader_facing_file_quotes_a_stale_word_count():
     assert not bad, (
         "files quoting a stale manuscript length:\n  " + "\n  ".join(bad)
         + "\nRun scripts/update_word_budget.py, which updates every site.")
+
+
+def test_the_outline_numbers_the_same_chapters_the_manuscript_does():
+    """The outline is the manuscript's contract; it had silently gone off by one.
+
+    Chapter 6 was inserted into `v1.md` and never into the outline, so from
+    that point on every outline heading named the chapter after it, its
+    per-part rows described the wrong chapter ranges, and its Total said
+    eleven chapters against a manuscript with twelve. The word-budget
+    arithmetic was right under the stale numbering, which is why the existing
+    guard (rows must sum) stayed green through all of it -- a sum cannot see a
+    label.
+    """
+    outline = (REPO_ROOT / "article/book-outline.md").read_text()
+    manuscript = (REPO_ROOT / "article/drafts/v1.md").read_text()
+
+    def chapters(text):
+        return [(int(m.group(1)), m.group(2).strip())
+                for m in re.finditer(r"^## Chapter (\d+): ([^(\n]+)", text, re.M)]
+
+    out = chapters(outline)
+    ms = chapters(manuscript)
+    assert [n for n, _ in out] == list(range(1, len(out) + 1)), (
+        f"the outline's chapter numbers are not consecutive: {[n for n, _ in out]}")
+    assert len(out) == len(ms), (
+        f"the outline describes {len(out)} chapters, the manuscript has "
+        f"{len(ms)}: {[t for _, t in out]} vs {[t for _, t in ms]}")
+    for (a, ta), (b, tb) in zip(out, ms):
+        assert a == b and ta.lower() == tb.lower(), (
+            f"outline Chapter {a} '{ta}' does not match manuscript "
+            f"Chapter {b} '{tb}'")
+    total = re.search(r"\| \*\*Total\*\* \| \*\*(\d+) \+ 3 apps\*\*", outline)
+    assert total, "the outline's Total row no longer states a chapter count"
+    assert int(total.group(1)) == len(ms), (
+        f"the outline's Total says {total.group(1)} chapters; the manuscript "
+        f"has {len(ms)}")
+
+
+def test_each_part_target_equals_its_chapters_budgets():
+    """The TARGET column was reconciled by nothing.
+
+    Inserting Chapter 6 with a 5,000-word budget left Part III's target at
+    16,500 while its chapters summed to 21,500, and the Total short by the same
+    5,000 -- with the existing guard green throughout, because it reconciles
+    the measured *Current words* column and never the planned one. A budget
+    nothing adds up is not a budget.
+    """
+    text = (REPO_ROOT / "article/book-outline.md").read_text()
+    budgets = {int(m.group(1)): int(m.group(2).replace(",", ""))
+               for m in re.finditer(
+                   r"^## Chapter (\d+): [^(]+\(~([\d,]+) words\)", text, re.M)}
+    assert budgets, "no chapter budgets found in the outline"
+    rows = re.findall(
+        r"^\| (?!\*\*Total)([^|]+?) \| (\d+)-(\d+) \| ~[\d,]+ \| ([\d,]+) \|",
+        text, re.M)
+    assert rows, "no per-part rows with a chapter range found"
+    covered = set()
+    for name, lo, hi, target in rows:
+        chapters = range(int(lo), int(hi) + 1)
+        missing = [c for c in chapters if c not in budgets]
+        assert not missing, f"{name.strip()} names chapters with no budget: {missing}"
+        got = sum(budgets[c] for c in chapters)
+        assert got == int(target.replace(",", "")), (
+            f"{name.strip()} targets {target} but chapters {lo}-{hi} budget "
+            f"{got:,}")
+        covered.update(chapters)
+    assert covered == set(budgets), (
+        f"chapters in no part row: {sorted(set(budgets) - covered)}")
+
+
+def test_the_issue_mapping_uses_the_live_chapter_numbers():
+    """The mapping kept the pre-insertion numbering when the part table above
+    it was updated, so it pointed at the wrong chapters and had no row at all
+    for the last one."""
+    text = (REPO_ROOT / "article/book-outline.md").read_text()
+    n = len(re.findall(r"^## Chapter \d+: ", text, re.M))
+    section = text.split("## Chapter → Issue Mapping", 1)
+    assert len(section) == 2, "the issue-mapping section is gone"
+    covered = set()
+    for lo, hi in re.findall(r"^\| (\d+)(?:-(\d+))? \|", section[1], re.M):
+        covered.update(range(int(lo), int(hi or lo) + 1))
+    assert covered == set(range(1, n + 1)), (
+        f"the issue mapping covers {sorted(covered)} against {n} chapters; "
+        f"missing {sorted(set(range(1, n + 1)) - covered)}")

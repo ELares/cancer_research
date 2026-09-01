@@ -60,6 +60,11 @@ GENERATORS = [
     # sentence outliving the measurement beside it has no business
     # hand-writing its own figures
     REPO_ROOT / "scripts" / "atlas_descriptor_recall.py",
+    # enrolled after it shipped "four arms reach through `immune.rs`" beside
+    # its own table row naming six consumers -- a hand-written count of a
+    # countable noun, in the one page whose entire subject is a hand-written
+    # count outliving the thing it counted
+    REPO_ROOT / "scripts" / "modality_module_depth.py",
 ]
 
 

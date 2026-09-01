@@ -9,10 +9,10 @@
 | SDT | 87.24% | ferroptosis engine (lipid peroxidation) | energy delivery to depth | uncalibrated (direction-only) |
 | PDT | 87.24% | ferroptosis engine (lipid peroxidation) | energy delivery to depth | uncalibrated (direction-only) |
 | Ablation | 85.00% | threshold destruction (not a dose-response) | margin geometry -- coverage, and nothing else | thresholds published; applicator field not modelled |
+| OncolyticVirus | 58.14% | direct lysis + the SHARED ICD chain | infection spread, which this engine takes as an input | uncalibrated; T-VEC durable-response band not fitted |
 | Radiation | 45.18% | linear-quadratic DNA damage (not CellState) | dose, and oxygen through the OER | form checked against a published parameterisation |
-| OncolyticVirus | 13.58% | direct lysis + the SHARED ICD chain | infection spread, which this engine takes as an input | uncalibrated; T-VEC durable-response band not fitted |
-| AntibodyDrugConjugate | 1.71% | ferroptosis payload, delivered on an antibody | the binding-site barrier (~7 um penetration) | transport anchored; payload pharmacology is RSL3's |
-| AdoptiveCell | 0.12% | redirected effectors (bypasses DC priming) | effector persistence and TME suppression | uncalibrated; B-ALL remission band not fitted |
+| AntibodyDrugConjugate | 1.84% | ferroptosis payload, delivered on an antibody (+ bystander) | the binding-site barrier (~7 um penetration) | transport anchored; payload pharmacology is RSL3's |
+| AdoptiveCell | 0.12% | redirected effectors (bypasses DC priming) | per-effector kill rate and the PD-1 brake (barriers open here; the solid-tumour case is reported separately) | uncalibrated; B-ALL remission band not fitted |
 | Immunotherapy | 0.04% | immune cascade (no ferroptotic death required) | antigen availability and the checkpoint brake | uncalibrated; published ORR band not fitted |
 | Control | 0.00% | ferroptosis engine (lipid peroxidation) | energy delivery to depth | uncalibrated (direction-only) |
 | RSL3 | 0.00% | ferroptosis engine (lipid peroxidation) | endogenous ROS supply and antioxidant defence | uncalibrated (direction-only) |
@@ -21,7 +21,7 @@
 
 ## The sharpest row is the one about delivery
 
-`AntibodyDrugConjugate` kills 1.71% against `SDT`'s 87.24% — a factor of 51 — **and they share the payload's pharmacology exactly**. The ADC arm runs the same ferroptosis engine with the same parameters; what differs is that the payload arrives on a ~150 kDa antibody, and the binding-site barrier holds its penetration to about 7 µm.
+`AntibodyDrugConjugate` kills 1.84% against `SDT`'s 87.24% — a factor of 48 — **and they share the payload's pharmacology exactly**. The ADC arm runs the same ferroptosis engine with the same parameters; what differs is that the payload arrives on a ~150 kDa antibody, and the binding-site barrier holds its penetration to about 7 µm.
 
 This project has argued since Chapter 6 that delivery dominates the in-vitro-to-in-vivo gap. This is the first row in the repository where the SAME pharmacology is run through two delivery routes and the gap is the only difference between them.
 
@@ -30,6 +30,27 @@ This project has argued since Chapter 6 that delivery dominates the in-vitro-to-
 `SDT` and `PDT` report the same figure to the last digit. They are not the same modality — the entire physical-modality argument of this manuscript turns on light dying in millimetres while ultrasound reaches centimetres — but this panel is DEPTH-FREE, and their exogenous-ROS parameters are equal by default. Strip the depth away and the two arms are the same arm.
 
 That is worth stating rather than hiding, because it says exactly what this table can and cannot see: it compares MECHANISMS, and the thing that separates SDT from PDT is not a mechanism but a geometry. `analysis/depth-reach-comparison.md` is where that difference lives.
+
+## One construct, two diseases
+
+The adoptive row above is the LEUKAEMIA setting, and on its own it describes the indication these therapies were approved for rather than the setting this engine simulates. Run the identical infusion through the three barriers PMID 31848460 names — trafficking to, infiltration into and activation within the tumour — and then through the antigen ceiling:
+
+| | kill fraction |
+|---|--:|
+| leukaemia (every barrier open) | 0.1155% |
+| solid tumour | 0.000183% |
+
+**A 633-fold collapse from the same construct.** Each factor below is read from the barrier it names, and their product is 633x — which is the collapse, so the decomposition is complete.
+
+| step | factor |
+|---|--:|
+| delivery (the three barriers) | 16.7x |
+| persistence over the run | 38.0x |
+| antigen ceiling | 1.0x |
+
+**The antigen ceiling does not bind here** — it contributes exactly 1x, because delivery and persistence have already taken the kill far below it. That is derived from the numbers above rather than stated: if the cap were reached, the third row would exceed 1 and this sentence would say so. It is a wall rather than a coefficient either way, so a larger infusion cannot climb it — which is the asymmetry with the ADC, whose cleavable payload kills antigen-negative neighbours and passes it.
+
+**Every barrier value is an uncalibrated placeholder and the figures above inherit that.** What the corpus establishes is that the barriers are real and GENERAL rather than antigen-specific; it does not establish which dominates, so the decomposition is a property of the preset and not a finding. The direction — that the same construct can fail without any single step looking catastrophic — is what survives.
 
 ## What this does not say
 

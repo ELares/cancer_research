@@ -121,7 +121,14 @@ CASES = {
     "guide rna": ("guide rna pool", "guide rnax"),
     "sgrna*": ("sgrnas designed", "asgrna"),
     "bispecific*": ("bispecific antibody", "abispecific"),
-    "bite": ("bite construct", "bitex"),
+    # `bite` (the BiTE acronym) is GONE, and a case table is exactly why it
+    # could not stay: the entry below used to read ("bite construct", "bitex")
+    # and both directions passed while the term was crediting `adoptive.rs`
+    # for the sentence "it must actually bite over a run". A must-not-match
+    # table cannot express "this string means something else here", because
+    # the string genuinely appears -- the same limit `glycolytic` hit as a
+    # Phenotype variant. A named drug cannot collide with English.
+    "blinatumomab": ("blinatumomab therapy", "ablinatumomab"),
     "t-cell engager*": ("t-cell engagers", "at-cell engager"),
     "electroporation": ("irreversible electroporation", "aelectroporation"),
     "electrochemical": ("electrochemical therapy", "aelectrochemical"),
@@ -350,7 +357,7 @@ def test_the_crate_root_is_not_a_module(d):
     for r in d["rows"]:
         assert "lib" not in r["code_modules"], r["mechanism"]
     live = len([p for p in CORE.glob("*.rs") if p.stem != "lib"])
-    assert d["module_count"] == live == 36, (
+    assert d["module_count"] == live == 37, (
         f"module count {d['module_count']} against {live} on disk")
 
 
@@ -862,3 +869,35 @@ def test_the_rows_match_the_census_profile(d):
     for r in d["rows"]:
         for k in ("census", "trials", "trial_share"):
             assert r[k] == src[r["mechanism"]][k], f"{r['mechanism']}.{k} drifted"
+
+
+def test_the_shared_denominator_sentence_is_derived_and_true():
+    """The page tells a reader the companion audit counts the SAME crate.
+
+    That sentence is the whole reason a reader is allowed to compare two
+    documents reporting different numbers over the same modules. It carried a
+    hardcoded ``32`` while both artifacts had moved to 37 -- a derived number
+    beside handwritten prose, which is this repository's most-repeated defect
+    and the exact shape the sentence was written to prevent someone falling
+    into. Two things are checked, because deriving it is not enough: the .md
+    must quote THIS document's denominator, and the claim it makes about the
+    OTHER document must actually hold. If the two audits ever stop sharing a
+    denominator, the sentence becomes false and this fails rather than the
+    reader finding out.
+    """
+    cov = json.loads(JSON_.read_text())
+    scope = json.loads((REPO / "analysis/scope-audit.json").read_text())
+    n = cov["module_count"]
+    assert n == scope["engine_modules"]["modules"], (
+        "the two audits no longer count the same modules, so the .md's "
+        f"'same N modules' sentence is false: {n} vs "
+        f"{scope['engine_modules']['modules']}"
+    )
+    md = MD.read_text()
+    assert f"Same {n} modules" in md, (
+        "the shared-denominator sentence does not quote the live denominator"
+    )
+    # And it must be the LIVE count, not a constant that happens to match: a
+    # denominator no module file backs would satisfy the equality above.
+    live = sum(1 for f in CORE.glob("*.rs") if f.stem not in MC.NOT_A_MODULE)
+    assert n == live, f"denominator {n} does not match {live} module files"

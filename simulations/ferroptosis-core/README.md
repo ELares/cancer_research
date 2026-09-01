@@ -27,10 +27,15 @@ Run the included example: `cargo run -p ferroptosis-core --example basic_usage`
 
 | Module | Purpose |
 |--------|---------|
+| `ablation` | Threshold destruction: CEM43 thermal dose, HIFU, irreversible electroporation, and the margin-coverage survival fraction. Not a dose-response |
+| `adc` | Antibody-drug conjugate: direct kill, the cleavable-linker bystander effect that reaches antigen-negative neighbours, and the antigen-limited ceiling |
+| `adoptive` | Adoptive cell therapy: the three multiplied barriers between an infusion and a kill (trafficking, infiltration, activation), persistence, and the antigen ceiling a larger dose cannot climb |
 | `cell` | Cell types, phenotypes (Glycolytic, OXPHOS, Persister, PersisterNrf2, Stromal), treatments, stochastic cell generation |
+| `oncolytic` | Oncolytic virus spread as a race between replication and clearance, with the threshold ratio below which an infection cannot establish |
 | `photosensitizer_pk` | Photosensitizer plasma PK and drug-light-interval scaling for PDT |
 | `params` | All rate constants: `Params` (biochemistry), `SpatialParams` (physics), `ImmuneParams` (immune cascade), `RecoveryRates` |
 | `biochem` | Core simulation engine: `sim_cell` (full 180-step loop), `sim_cell_step` (single timestep for spatial interleaving) |
+| `radiation` | Ionizing radiation on two independent channels: the linear-quadratic DNA-damage survival, a separate ferroptosis channel, and the PARP synthetic-lethality arm |
 | `stats` | Wilson confidence intervals, parallel Monte Carlo execution via rayon |
 | `physics` | Depth-dependent energy deposition: Beer-Lambert (PDT), acoustic attenuation (SDT), uniform (RSL3). 2D row-based (`local_ros_multiplier`) and 3D radial-depth (`local_ros_multiplier_3d`) dispatchers share the same per-treatment depth functions (#186). |
 | `grid` | 2D `TumorGrid` (8-Moore, circular) and 3D `TumorGrid3D` (26-Moore, spherical) with heterogeneous architecture, neighbor iteration, iron diffusion. `TumorGrid3D::radial_depth_um` provides per-cell signed depth from the spheroid surface for energy physics (#185, #186), hoisted via `RadialDepthGeom` for per-cell field sweeps (#289). The consuming binary is `sim-tme-3d` (#195; the standalone sim-spatial-3d #194 was closed as superseded). |

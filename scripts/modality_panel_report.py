@@ -116,6 +116,77 @@ def render(d: dict) -> str:
               "mechanism but a geometry. `analysis/depth-reach-comparison.md` "
               "is where that difference lives.", ""]
 
+    ab = d.get("adoptive_barriers")
+    if ab:
+        # Every factor below is DERIVED and the three must multiply to the
+        # collapse, because a reviewer set the antigen fraction to 1e-9 and the
+        # page went on saying the ceiling "does not bind" while the headline
+        # moved by three orders of magnitude and the decomposition beside it
+        # did not move at all. Prose about a computed quantity has to be
+        # computed, and the reconciliation is asserted here rather than trusted.
+        collapse = ab["leukaemia_kill_fraction"] / ab["solid_tumour_kill_fraction"]
+        delivery_x = 1.0 / ab["delivery_efficiency_solid"]
+        persist_x = 1.0 / ab["persistence_at_run_end_solid"]
+        # `ceiling_x` was computed as `collapse / (delivery * persistence)`,
+        # which is a RESIDUAL: it absorbed whatever the other two did not
+        # explain and then labelled it "antigen ceiling", so "the factors
+        # multiply to the collapse" was true by construction and unfalsifiable.
+        # `antigen_ceiling_solid` was sitting in the JSON unread. A reviewer
+        # pushed the leukaemia arm into its kill cap and the page printed an
+        # antigen ceiling of 0.4x -- a ceiling that multiplies kills UP -- one
+        # line above prose asserting it was exactly 1x.
+        # The ceiling is a CAP: it contributes only if it FIRES. Dividing by
+        # the antigen fraction unconditionally reported 1.2x for a cap that
+        # never bound and left the product 1.25x away from the collapse it
+        # claimed to decompose. Both quantities come from the binary now.
+        ceiling_x = (ab["solid_tumour_kill_fraction_before_ceiling"]
+                     / ab["solid_tumour_kill_fraction"])
+        product = delivery_x * persist_x * ceiling_x
+        residual = product / collapse
+        binds = ceiling_x > 1.01
+        L += ["## One construct, two diseases", "",
+              "The adoptive row above is the LEUKAEMIA setting, and on its own "
+              "it describes the indication these therapies were approved for "
+              "rather than the setting this engine simulates. Run the "
+              "identical infusion through the three barriers PMID 31848460 "
+              "names — trafficking to, infiltration into and activation "
+              "within the tumour — and then through the antigen ceiling:", "",
+              "| | kill fraction |", "|---|--:|",
+              f"| leukaemia (every barrier open) | {ab['leukaemia_kill_fraction']:.4%} |",
+              f"| solid tumour | {ab['solid_tumour_kill_fraction']:.6%} |", "",
+              f"**A {collapse:,.0f}-fold collapse from the same construct.** "
+              "Each factor below is read from the barrier it names, and their "
+              f"product is {product:,.0f}x — "
+              + (f"which is the collapse, so the decomposition is complete."
+                 if abs(residual - 1.0) < 0.01 else
+                 f"**{residual:.2f}x away from the collapse, so something "
+                 "outside these three barriers is acting and this "
+                 "decomposition is INCOMPLETE.** The gap is reported rather "
+                 "than absorbed into one of the factors, which is what an "
+                 "earlier version did.") + "", "",
+              "| step | factor |", "|---|--:|",
+              f"| delivery (the three barriers) | {delivery_x:.1f}x |",
+              f"| persistence over the run | {persist_x:.1f}x |",
+              f"| antigen ceiling | {ceiling_x:.1f}x |", "",
+              ("**The antigen ceiling binds here** and is part of the collapse."
+               if binds else
+               "**The antigen ceiling does not bind here** — it contributes "
+               "exactly 1x, because delivery and persistence have already "
+               "taken the kill far below it. That is derived from the numbers "
+               "above rather than stated: if the cap were reached, the third "
+               "row would exceed 1 and this sentence would say so.") +
+              " It is a wall rather than a coefficient either way, so a larger "
+              "infusion cannot climb it — which is the asymmetry with the ADC, "
+              "whose cleavable payload kills antigen-negative neighbours and "
+              "passes it.", "",
+              "**Every barrier value is an uncalibrated placeholder and the "
+              "figures above inherit that.** What the corpus establishes is "
+              "that the barriers are real and GENERAL rather than "
+              "antigen-specific; it does not establish which dominates, so "
+              "the decomposition is a property of the preset and not a "
+              "finding. The direction — that the same construct can fail "
+              "without any single step looking catastrophic — is what "
+              "survives.", ""]
     L += ["## What this does not say", "",
           "**It is not a ranking of therapies.** Every kill fraction is a "
           "function of the parameters the arm was given, and for every arm "

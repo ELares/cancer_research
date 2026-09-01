@@ -48,6 +48,8 @@ use clap::Parser;
 use rand::{rngs::StdRng, Rng, SeedableRng};
 
 use ferroptosis_core::ablation::{margin_survival_fraction, AblationConfig};
+use ferroptosis_core::adc::{bystander_kill_fraction, AdcConfig, Linker};
+use ferroptosis_core::adoptive::{barrier_limited_kills, effective_effectors, AdoptiveBarriers};
 use ferroptosis_core::biochem::{sim_cell, CellState};
 use ferroptosis_core::cell::{gen_cell, Phenotype, Treatment};
 use ferroptosis_core::drug_transport::{
@@ -57,6 +59,7 @@ use ferroptosis_core::immune::{
     adoptive_transfer_kills, immune_cascade, oncolytic_lysis, EffectorSource,
 };
 use ferroptosis_core::io::write_json;
+use ferroptosis_core::oncolytic::{simulate_spread, OncolyticConfig};
 use ferroptosis_core::params::{ImmuneParams, Params, RadiationConfig, SpatialParams};
 use ferroptosis_core::physics::{pdt_intensity_at_depth, sdt_intensity_at_depth};
 use ferroptosis_core::radiation;
@@ -182,17 +185,66 @@ fn main() {
         calibration: "uncalibrated; published ORR band not fitted",
     });
 
-    let effectors = EffectorSource::CarT.effectors_after(200.0, 30, 0.15, 5_000.0);
-    let cart = adoptive_transfer_kills(effectors, n, &immune, 0.0, false);
+    // The barriers are what make this arm different from every other one: the
+    // SAME construct cures a blood cancer and does very little in a solid
+    // tumour, so the arm is run twice and the pair is the result. The panel
+    // row keeps the leukaemia setting (`Default`, every barrier open), which
+    // is exactly what it computed before this module existed -- the arm's
+    // number is unmoved and the counterfactual is new.
+    let infused = EffectorSource::CarT.effectors_after(200.0, 30, 0.15, 5_000.0);
+    let leukaemia = AdoptiveBarriers::default();
+    let solid = AdoptiveBarriers::solid_tumour();
+    // Returns (uncapped kills, kills after the antigen ceiling). Both, because
+    // the ceiling is a CAP and not a coefficient: it contributes nothing at all
+    // unless it FIRES, so a report that multiplies by `1/antigen_fraction`
+    // overstates the collapse whenever the kill was already below the cap. The
+    // pair lets a reader see which happened instead of being told.
+    let cart_kills = |b: &AdoptiveBarriers| {
+        let arrived = effective_effectors(infused, b, STEPS as u32);
+        let raw = adoptive_transfer_kills(arrived, n, &immune, 0.0, false);
+        (raw, barrier_limited_kills(raw, n as f64, b))
+    };
+    let effectors = infused;
+    let (_, cart) = cart_kills(&leukaemia);
+    let (cart_solid_raw, cart_solid) = cart_kills(&solid);
     arms.push(ArmResult {
         name: "AdoptiveCell",
         kill_fraction: cart / n as f64,
         route: "redirected effectors (bypasses DC priming)",
-        limited_by: "effector persistence and TME suppression",
+        // NOT persistence and not suppression, both of which are exactly
+        // inert in this row: the panel passes suppression 0.0 and the default
+        // barriers make `persistence_factor` bit-identical to 1.0. Naming
+        // them made the row contradict the paragraph below it, which says
+        // this is the every-barrier-open case. What actually bounds it is the
+        // per-cell kill rate and the PD-1 brake; the barriers that DO bite
+        // are in the solid-tumour counterfactual beside it.
+        limited_by: "per-effector kill rate and the PD-1 brake (barriers open here; \
+        the solid-tumour case is reported separately)",
         calibration: "uncalibrated; B-ALL remission band not fitted",
     });
 
-    let (lysed, quality) = oncolytic_lysis(n, 0.15, 0.9, 0.8);
+    // The infected fraction was the literal 0.15 and `oncolytic.rs` -- the
+    // module that exists to say infection is a RACE between replication and
+    // clearance -- had no caller at all. It supplies the fraction now, so the
+    // arm's number comes from the mechanism the module models rather than from
+    // a constant that happened to sit beside it.
+    // A PERMISSIVE tumour, and it has to be said which: effective replication
+    // must exceed clearance PLUS lysis or the infection extinguishes, and
+    // `spread_threshold_ratio` compares it against clearance alone, so a
+    // config above that ratio can still die out. The first draft of this
+    // wiring sat below the real threshold and reported an arm at 0.01%.
+    let onc = OncolyticConfig {
+        initial_infected: 0.01,
+        replication_rate: 0.9,
+        clearance_rate: 0.2,
+        interferon_competence: 0.3,
+        lysis_rate: 0.15,
+    };
+    // The CUMULATIVE LYSED fraction is what `oncolytic_lysis` takes -- the
+    // first draft passed the still-infected fraction, which is the population
+    // that has NOT died yet.
+    let (_infected, lysed_frac) = simulate_spread(&onc, STEPS as u32);
+    let (lysed, quality) = oncolytic_lysis(n, lysed_frac, 0.9, 0.8);
     let lps = vec![quality * 10.0; lysed as usize];
     let viral_immune = immune_cascade(&lps, n, &immune, false).immune_kills;
     arms.push(ArmResult {
@@ -249,10 +301,24 @@ fn main() {
             state.dead
         })
         .count();
+    // `adc.rs` had no caller either, and it holds the mechanism that makes the
+    // modality work at all: a cleavable linker releases a permeable payload
+    // that kills antigen-negative NEIGHBOURS, which is how an agent with ~7 um
+    // of penetration treats a tumour. The direct term above is what the
+    // transport model delivers; this is what escapes the cells it kills.
+    let direct = dead as f64 / n as f64;
+    let adc_cfg = AdcConfig {
+        antigen_positive_fraction: 0.7,
+        direct_kill_probability: direct,
+        linker: Linker::Cleavable,
+        payload_escape_fraction: 0.5,
+        neighbours_in_reach: 0.2,
+    };
+    let bystander = bystander_kill_fraction(&adc_cfg);
     arms.push(ArmResult {
         name: "AntibodyDrugConjugate",
-        kill_fraction: dead as f64 / n as f64,
-        route: "ferroptosis payload, delivered on an antibody",
+        kill_fraction: (direct + bystander).clamp(0.0, 1.0),
+        route: "ferroptosis payload, delivered on an antibody (+ bystander)",
         limited_by: "the binding-site barrier (~7 um penetration)",
         calibration: "transport anchored; payload pharmacology is RSL3's",
     });
@@ -282,6 +348,24 @@ fn main() {
         "not_a_ranking": "Each arm carries its own calibration status; most are \
     uncalibrated placeholders. These are comparisons between MECHANISMS under one \
     model, not claims about clinical efficacy. See CALIBRATION_STATUS.md.",
+        "adoptive_barriers": {
+            "why": "The same infusion, run through the three barriers PMID 31848460 \
+    names and then through the antigen ceiling. The panel row above is the leukaemia \
+    setting; this is what the identical construct does against a solid tumour. Every \
+    barrier VALUE is an uncalibrated placeholder -- the corpus establishes that the \
+    barriers are general rather than antigen-specific, not which of them dominates. Whether \
+    the antigen ceiling BINDS is not stated here and must be derived: divide the collapse \
+    by delivery x persistence, and a residue above 1 is the ceiling's contribution. At the \
+    shipped preset it is exactly 1, but that is a property of these values, not of the model.",
+            "leukaemia_kill_fraction": cart / n as f64,
+            "solid_tumour_kill_fraction": cart_solid / n as f64,
+            "delivery_efficiency_solid": ferroptosis_core::adoptive::delivery_efficiency(&solid),
+            "persistence_at_run_end_solid":
+                ferroptosis_core::adoptive::persistence_factor(&solid, STEPS as u32),
+            "antigen_ceiling_solid": ferroptosis_core::adoptive::antigen_ceiling(&solid),
+            "solid_tumour_kill_fraction_before_ceiling": cart_solid_raw / n as f64,
+            "antigen_ceiling_binds": cart_solid_raw > ferroptosis_core::adoptive::max_killable(n as f64, &solid),
+        },
         "arms": arms.iter().map(|r| serde_json::json!({
             "arm": r.name,
             "kill_fraction": r.kill_fraction,
@@ -526,12 +610,21 @@ fn run_tme_sweep(a: &Args, params: &Params, immune: &ImmuneParams, rad: &Radiati
                                 - (-(rad.alpha_per_gy * dose + rad.beta_per_gy2 * dose * dose))
                                     .exp();
 
-                            let imm = adoptive_transfer_kills(
+                            // The barrier layer covered the panel row and NOT
+                            // this path, so setting a default barrier moved the
+                            // panel and left every sweep row bit-identical --
+                            // and the sweep is what `modality-tme.md` and the
+                            // manuscript report. One helper, both callers.
+                            let b = AdoptiveBarriers::default();
+                            let arrived = effective_effectors(
                                 EffectorSource::CarT.effectors_after(200.0, 30, 0.15, 5_000.0),
-                                n,
-                                immune,
-                                suppression,
-                                false,
+                                &b,
+                                STEPS as u32,
+                            );
+                            let imm = barrier_limited_kills(
+                                adoptive_transfer_kills(arrived, n, immune, suppression, false),
+                                n as f64,
+                                &b,
                             ) / n as f64;
 
                             // Ablation: a threshold. Nothing here touches it, and that is
