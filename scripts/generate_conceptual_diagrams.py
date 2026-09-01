@@ -1122,7 +1122,7 @@ def fig35_calibration_verdicts():
     """The calibration outcome per arm, INCLUDING the ones that failed.
 
     A figure of what is fitted would be marketing. The interesting cells are
-    the two that are not: one arm is INADMISSIBLE because its published band
+    the three that are not: one arm is INADMISSIBLE because its published band
     constrains a PRODUCT of two unidentifiable factors, and one has NO TARGET
     at all. Drawing those beside the successes is the whole reason the panel
     is worth a figure.

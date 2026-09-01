@@ -331,6 +331,17 @@ def test_the_drawn_numbers_are_the_artifact_numbers():
     ys = {t: y for x, y, t in spans if t in arms}
     axis_order = list(tme["effects_by_phenotype"]["glycolytic"].keys())
     panel_split = (min(x for x, _, _ in spans) + max(x for x, _, _ in spans)) / 2
+    # THE COLUMN LABELS THEMSELVES. The row-order check compares the NUMBERS
+    # against `axis_order`, so swapping the hypoxia and depth tick labels left
+    # every number in place and passed -- while inverting the tissue-access
+    # claim the manuscript makes citing this figure.
+    for lo, hi, panel in ((0, panel_split, "glycolytic"),
+                          (panel_split, 1e9, "persister")):
+        drawn = [t for x, _, t in sorted(spans)
+                 if lo <= x < hi and t in axis_order]
+        assert drawn == axis_order, (
+            f"fig32's {panel} panel labels its columns {drawn} left to right; "
+            f"the artifact stores them as {axis_order}")
     assert len(ys) == len(arms), (
         f"fig32 does not label every arm row: missing {sorted(set(arms) - set(ys))}")
     missing = []
@@ -508,20 +519,39 @@ def test_the_depth_figure_draws_its_control_rather_than_dropping_it():
         widths.setdefault(round(d["rect"].width, 1), []).append(d["rect"])
     panel_a_w = min((wd for wd in widths if 20.0 < wd < 32.0), default=None)
     assert panel_a_w, f"fig34 draws no grouped bars; widths seen {sorted(widths)}"
-    # THE LEFTMOST PAIR, not the tallest. Sorting by height let a rescaled
-    # depth series promote two SURFACE bars into the top two, whose ratio
-    # happened to sit inside tolerance. The arms are drawn sorted by kill at
-    # depth, so the first two bars are the leading arm's surface and depth.
-    lefts = sorted(widths[panel_a_w], key=lambda r: r.x0)[:2]
-    assert len(lefts) == 2, "fig34 panel (a) draws fewer than two bars"
-    surf_h, deep_h = lefts[0].height, lefts[1].height
-    top = order[0]
-    want = top["deep_kill_pct"] / top["surface_kill_pct"]
-    got = deep_h / surf_h if surf_h > 0 else 0.0
-    assert abs(got - want) < 0.03, (
-        f"fig34 draws {top['treatment']} with a depth/surface bar ratio of "
-        f"{got:.3f}; the data gives {want:.3f}, so a series has been rescaled "
-        "or swapped")
+    # EVERY ARM, not just the leading one. The round-2 fix checked `order[0]`
+    # alone beneath a comment saying "a series has been rescaled or swapped",
+    # so scaling PDT's depth bar a hundredfold -- drawing PDT as retaining 70%
+    # of its kill at 9.4 mm, which inverts the tissue-access argument this
+    # figure exists to make -- passed all sixteen guards.
+    #
+    # Bars are matched to arms by x order. An arm whose bars are too short to
+    # draw is skipped rather than mis-paired.
+    panel_a = sorted(widths[panel_a_w], key=lambda r: r.x0)
+    assert len(panel_a) % 2 == 0 and panel_a, (
+        f"panel (a) draws {len(panel_a)} bars, which cannot pair")
+    scale = None
+    checked = 0
+    for i in range(len(panel_a) // 2):
+        surf, deep = panel_a[2 * i], panel_a[2 * i + 1]
+        # Identify the arm by matching the surface bar height to the data,
+        # using the scale set by the first (tallest) pair.
+        if scale is None:
+            scale = surf.height / order[0]["surface_kill_pct"]
+        want_surf = surf.height / scale
+        arm = min(rows, key=lambda r: abs(r["surface_kill_pct"] - want_surf))
+        assert abs(arm["surface_kill_pct"] - want_surf) < 1.5, (
+            f"a drawn surface bar implies {want_surf:.2f}% kill, which matches "
+            f"no arm; nearest is {arm['treatment']} at "
+            f"{arm['surface_kill_pct']:.2f}%")
+        got_deep = deep.height / scale
+        assert abs(got_deep - arm["deep_kill_pct"]) < 1.5, (
+            f"fig34 draws {arm['treatment']} at {got_deep:.2f}% kill at depth; "
+            f"the data gives {arm['deep_kill_pct']:.2f}%")
+        checked += 1
+    assert checked >= 4, (
+        f"only {checked} arms have bars tall enough to check; the figure no "
+        "longer shows the spread it exists to show")
     # the axis must span the retention values, so the control's magnitude shows
     top = max(r["kill_retained_pct"] for r in rows)
     assert any(int(t) >= int(top * 0.9) for t in labels if t.isdigit()), (
@@ -551,8 +581,11 @@ def test_the_depth_figure_draws_its_control_rather_than_dropping_it():
 def test_the_calibration_figure_draws_the_arms_that_failed():
     """A chart of what is fitted would be marketing.
 
-    The two non-green rows carry the content: one arm's target constrains a
-    product of unidentifiable factors, and one has nothing published to fit.
+    The THREE non-green rows carry the content: one arm's target admits almost
+    the whole scanned range, one constrains a product of unidentifiable
+    factors, and one has nothing published to fit. This docstring said two --
+    omitting the widest failure on the page -- for as long as the figure it
+    describes drew three.
     """
     fitz = pytest.importorskip("fitz")
     arms = json.loads(

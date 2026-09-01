@@ -356,8 +356,15 @@ mod tests {
     /// numbers `PREREGISTRATION.md` publishes, and its first version
     /// accumulated `lysed` from the POST-update infected count where this
     /// function uses the pre-update one -- so every published figure was wrong
-    /// against the model it claimed to describe. The Python guard checks the
-    /// same PROPERTY this test asserts, so the two cannot silently part.
+    /// against the model it claimed to describe.
+    ///
+    /// WHAT THIS TEST DOES AND DOES NOT ESTABLISH. It asserts the PROPERTY the
+    /// prediction registers, and the Python side asserts the same property, so
+    /// a change that breaks titre-independence fails on both sides. It does
+    /// NOT compare the two implementations' NUMBERS -- nothing in the Python
+    /// suite invokes cargo -- so a change that shifts both by the same amount
+    /// is invisible here. An earlier version of this comment claimed the two
+    /// "cannot silently part", which overstated it.
     #[test]
     fn establishment_is_titre_independent_across_five_orders() {
         let cfg = OncolyticConfig {

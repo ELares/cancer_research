@@ -327,8 +327,10 @@ mod tests {
     /// ADC, i.e. antigen-positive ones, and antigen escape removes exactly
     /// that population. So the bystander effect does not answer escape better
     /// as escape worsens -- it is starved by it. The share of the
-    /// antigen-NEGATIVE pool a cleavable linker reaches falls from about 90%
-    /// at 0.9 positive to about 1% at 0.1 positive.
+    /// antigen-NEGATIVE pool a cleavable linker reaches falls from 77.1% at
+    /// 0.9 positive to 2.6% at 0.1 positive. (This docstring said 90% and 1%,
+    /// which were the values the RETRACTED formula produced -- the retraction
+    /// reached the code and not the paragraph performing it.)
     #[test]
     fn the_bystander_effect_is_starved_by_the_escape_it_answers() {
         // THE QUANTITY IS THE ANTIGEN-NEGATIVE SHARE, and getting that wrong

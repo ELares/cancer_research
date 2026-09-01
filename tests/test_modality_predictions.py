@@ -75,6 +75,33 @@ def test_every_constant_is_read_from_the_crate_not_from_this_script():
         f"P11 uses {d['P11']['trafficking_barrier']} for trafficking; "
         f"adoptive.rs says {t.group(1)}")
 
+    # P12's four constants must come from the Rust test fixture, not from
+    # Python. Changing the crate's config left the preregistration publishing
+    # the old verdict; changing the literals left it publishing numbers the
+    # crate never produces. Both passed.
+    onc = (core / "oncolytic.rs").read_text()
+    m = re.search(r"fn establishment_is_titre_independent_across_five_orders"
+                  r"\(\) \{(.*?)\n    \}", onc, re.S)
+    assert m, "oncolytic.rs no longer defines the P12 fixture test"
+    fx = {k: float(v) for k, v in
+          re.findall(r"\b(\w+_rate|interferon_competence):\s*([0-9.]+)", m.group(1))}
+    eff = fx["replication_rate"] * (1.0 - fx["interferon_competence"])
+    assert abs(eff - d["P12"]["effective_replication"]) < 1e-9, (
+        f"P12 publishes effective replication {d['P12']['effective_replication']}; "
+        f"the crate's fixture gives {eff}")
+    assert abs(fx["clearance_rate"] + fx["lysis_rate"]
+               - d["P12"]["removal_rate"]) < 1e-9, (
+        "P12's removal rate is not the crate fixture's clearance plus lysis")
+    # and the crate's own test must still assert the property P12 registers
+    assert "spread < 0.01" in m.group(1), (
+        "the Rust fixture no longer bounds the spread, so P12's claim is "
+        "asserted only in Python")
+    assert str(d["P12"]["orders_of_magnitude"]) in (
+        "5",), "P12's titre span changed; the Rust test name says five orders"
+    assert m.group(1).count("1e-") >= 4, (
+        "the Rust fixture no longer sweeps a wide titre range, so the test "
+        "named `..._across_five_orders` does not do that")
+
     # P13 must be READ, not a literal True.
     abl = (core / "ablation.rs").read_text()
     body = re.search(r"pub fn margin_survival_fraction\(.*?\n\}", abl, re.S)
@@ -123,33 +150,71 @@ def test_every_new_prediction_is_registered_with_a_threshold():
 
 
 def test_the_registered_numbers_are_the_derived_ones(d):
-    """P9 is the one quantitative prediction, so its figures must be live."""
+    """EVERY registered figure, in its OWN entry.
+
+    This pinned P9 only, and P10-P13's numbers were free prose. A reviewer set
+    them to arbitrary values -- including REVERSING P10's registered direction,
+    the claim the whole prediction exists to make -- without a single test
+    failing. That hole is what shipped the retracted P12 span: the
+    preregistration published 0.0078, the value the bug produced, while the
+    JSON beside it said 0.0084.
+
+    The preregistration is the one artifact here whose entire value is that it
+    cannot drift, and it was the least guarded document in the change.
+    """
     text = PREREG.read_text()
+
+    def block(p):
+        m = re.search(rf"^\*\*{p}\. (.+?)\*\*\n(.*?)(?=^\*\*P|^### )",
+                      text, re.M | re.S)
+        assert m, f"{p} is not registered"
+        return m.group(2)
+
     p9 = d["P9"]
     lo_r, hi_r = p9["low_over_high_dose_ratio"]
-    # INSIDE P9's OWN BLOCK. Checking the document as a whole let a reviewer
-    # gut P9's model output and satisfy every fragment from an unrelated
-    # appendix sentence about a thermostat and a coffee machine.
-    m = re.search(r"^\*\*P9\. (.+?)\*\*\n(.*?)(?=^\*\*P|^### )",
-                  text, re.M | re.S)
-    assert m, "P9 is not registered"
-    block = m.group(2)
+    b9 = block("P9")
     for frag in (f"{p9['published_band'][0]} to {p9['published_band'][1]} band",
                  f"{p9['boost_window'][0]} to {p9['boost_window'][1]}",
                  f"{lo_r} to {hi_r}",
                  f"{p9['dose_range_gy'][0]} to {p9['dose_range_gy'][1]} Gy"):
-        assert frag in block, (
-            f"P9's own entry does not quote {frag!r}; it reads: {block[:200]}")
-    # and the falsifier must score the BAND, not only the ratio: a measurement
-    # violating the band at every dose can satisfy a ratio-only threshold.
-    thr = block.split("*Falsification threshold:*", 1)[1]
+        assert frag in b9, (
+            f"P9's own entry does not quote {frag!r}; it reads: {b9[:200]}")
+    thr = b9.split("*Falsification threshold:*", 1)[1]
     assert "outside" in thr and f"{p9['published_band'][0]}" in thr, (
         "P9's threshold scores only the ratio, so the arm's whole calibration "
         "could be refuted while the prediction stands")
-    # and the direction it rests on must actually hold in the derived data
-    assert lo_r > 1.0 and hi_r > 1.0, (
-        "the model no longer predicts a larger SER at low dose; P9 must be "
-        "rewritten rather than left standing")
+
+    p10, b10 = d["P10"], block("P10")
+    reach = p10["reach_of_negative_pool"]
+    hi_k = max(reach, key=float); lo_k = min(reach, key=float)
+    for frag in (f"{float(reach[hi_k]):.1%} at {hi_k} antigen-positive",
+                 f"{float(reach[lo_k]):.1%} at {lo_k}",
+                 f"flat at {p10['relative_advantage']}x"):
+        assert frag in b10, f"P10 does not quote {frag!r}"
+
+    p11, b11 = d["P11"], block("P11")
+    for frag in (str(p11["delivery_efficiency"]),
+                 str(p11["trafficking_barrier"]),
+                 f"{p11['predicted_gain_from_opening_trafficking_only']}x gain",
+                 f"{p11['total_collapse']}x that separates"):
+        assert frag in b11, f"P11 does not quote {frag!r}"
+
+    p12, b12 = d["P12"], block("P12")
+    for frag in (f"{p12['orders_of_magnitude']} orders of magnitude",
+                 f"spans only {p12['lysed_spread_across_titres']:.4f}",
+                 f"replication is {p12['effective_replication']}",
+                 f"removal rate of {p12['removal_rate']}",
+                 f"({p12['crate_threshold_ratio']})"):
+        assert frag in b12, (
+            f"P12 does not quote {frag!r} -- this is where the RETRACTED span "
+            "0.0078 survived while the artifact said 0.0084")
+    assert "four orders" not in b12, (
+        "P12's threshold still scores over four orders of magnitude while the "
+        f"model output states {p12['orders_of_magnitude']}")
+
+    p13, b13 = d["P13"], block("P13")
+    assert "does not vary" in b13, "P13 no longer states what it registers"
+    assert p13["return_value_varies_with_energy"] is False
 
 
 def test_p10_is_registered_in_the_corrected_direction(d):

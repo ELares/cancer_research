@@ -74,6 +74,18 @@ def _rust_test_fixture(stem: str, fn_name: str, field: str) -> float:
     return _rust_struct_field(stem, fn_name, field)
 
 
+def _rust_struct_field_in_test(stem: str, fn_name: str, field: str) -> float:
+    """A field from a struct literal inside a named `#[test]` fn."""
+    src = (CORE / f"{stem}.rs").read_text()
+    m = re.search(rf"fn {fn_name}\(\) \{{(.*?)\n    \}}", src, re.S)
+    if m is None:
+        raise SystemExit(f"{stem}.rs: no test fn {fn_name}")
+    f = re.search(rf"\b{field}:\s*([0-9.]+)", m.group(1))
+    if f is None:
+        raise SystemExit(f"{stem}.rs::{fn_name}: no field {field}")
+    return float(f.group(1))
+
+
 def _rust_tuple(stem: str, name: str) -> tuple[float, float]:
     src = (CORE / f"{stem}.rs").read_text()
     m = re.search(rf"{name}: \(f64, f64\) = \(([0-9.]+), ([0-9.]+)\)", src)
@@ -127,9 +139,11 @@ def scan() -> dict:
         "dose_range_gy": [round(min(_dose_at(sf, alpha) for sf in SF_POINTS), 2),
                           round(max(_dose_at(sf, alpha) for sf in SF_POINTS), 2)],
         "boost_window": [round(min(window), 3), round(max(window), 3)],
-        # Reported as an INTERVAL, and the share is kept only WITH its ceiling,
-        # because the same window is 36% of a 0-1 scan and 3.6% of a 0-10 one:
-        # a bare "18%" measures the author's choice of ceiling.
+        # Reported as an INTERVAL, and the share is kept only WITH its
+        # ceiling: the same window is 40% of a 0-1 scan and 4.0% of a 0-10 one,
+        # so a bare "20%" measures the author's choice of ceiling. Those three
+        # figures were 36/3.6/18 here -- the shares of the WITHDRAWN window --
+        # inside the comment explaining that a share must carry its ceiling.
         "scan_ceiling": (STEPS - 1) / 1000.0,
         "window_share_of_scan": round(len(window) / float(STEPS), 3),
         "ser_by_dose": {
@@ -181,8 +195,24 @@ def scan() -> dict:
     # the crate's: `oncolytic::spread_threshold_ratio` compares replication
     # against CLEARANCE alone, while lysis also removes infected cells, so a
     # config above that ratio can still die out.
-    onc = {"replication": 0.9, "interferon": 0.3, "clearance": 0.2,
-           "lysis": 0.15}
+    # READ FROM THE RUST TEST FIXTURE, not typed. These four were Python
+    # literals, so changing the crate's own config left the preregistration
+    # publishing the old verdict -- and changing the literals left it
+    # publishing numbers the crate never produces. Both survived a green suite.
+    onc = {
+        "replication": _rust_struct_field_in_test(
+            "oncolytic", "establishment_is_titre_independent_across_five_orders",
+            "replication_rate"),
+        "interferon": _rust_struct_field_in_test(
+            "oncolytic", "establishment_is_titre_independent_across_five_orders",
+            "interferon_competence"),
+        "clearance": _rust_struct_field_in_test(
+            "oncolytic", "establishment_is_titre_independent_across_five_orders",
+            "clearance_rate"),
+        "lysis": _rust_struct_field_in_test(
+            "oncolytic", "establishment_is_titre_independent_across_five_orders",
+            "lysis_rate"),
+    }
     eff_r = onc["replication"] * (1.0 - onc["interferon"])
 
     def _spread(initial, steps=180):

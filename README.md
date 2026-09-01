@@ -84,9 +84,8 @@ therapy vocabulary admits 37 -- but 7 of those sit in this table's own
 ferroptosis column, so 37 is not a bound either. Neither rule measures subject. See
 [`analysis/scope-audit.md`](analysis/scope-audit.md).
 
-Every falsifiable commitment this project makes, and most modules of its
-simulation engine, concerns ferroptosis or the physical-ROS modalities (PDT and
-SDT). One committed analysis is FILED as taking another therapy as its subject, and that filing is a filename match rather than a measurement -- see the scope audit for what the rules do and do not establish.
+8 of 13 preregistered predictions, and 32 of 37 modules of the simulation engine, concern ferroptosis or the physical-ROS modalities (PDT and
+SDT). That first count read "every falsifiable commitment this project makes" until P9 to P13 registered predictions for the modality arms, and it sat sixteen lines below a table this same change had already updated to 8 of 13 -- the file contradicted itself. One committed analysis is FILED as taking another therapy as its subject, and that filing is a filename match rather than a measurement -- see the scope audit for what the rules do and do not establish.
 
 A narrow thesis on a broad corpus is how most good science works, and the census
 above is genuinely broad. But a reader arriving at a front door that opens with
