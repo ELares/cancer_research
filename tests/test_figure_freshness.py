@@ -33,10 +33,10 @@ ones known and deliberate:
 - **No PNG content, at all.** The eight census PNGs are checked for existence
   and nothing else. Replacing one with an unrelated image passes. PNG bytes are
   not portable, and no portable comparison is implemented.
-- **Most non-census PDFs.** 38 committed figures come from other
+- **Most non-census PDFs.** 39 committed figures come from other
   generators. Five of them -- the corpus-derived ones, whose inputs are tracked
   -- are regenerated and gated by `tests/test_figure_caption_statistics.py`;
-  the other 33 are not, and 25 of those 33 `FIGURES.yaml` marks
+  the other 34 are not, and 26 of those 34 `FIGURES.yaml` marks
   `type: simulation`. SIX of them are different in kind:
   `fig30_modality_landscape`, `fig31_modality_panel`, `fig32_modality_tme` and
   `fig33_adoptive_barriers`, `fig34_depth_reach`, `fig35_calibration_verdicts`,
@@ -44,7 +44,7 @@ ones known and deliberate:
   `fig39_adoptive_escalation`, `fig40_oncolytic_bind`,
   `fig41_adc_loading`, `fig42_ablation_sleeve`,
   `fig43_sonodynamic_frequency`, `fig44_pdt_fluence_rate` and
-  `fig45_radiation_oer` read COMMITTED
+  `fig45_radiation_oer` and `fig46_oncolytic_percolation` read COMMITTED
   artifacts (`analysis/modality-tme.json`, `analysis/modality-coverage.json`,
   `analysis/depth-reach-comparison.json`, `analysis/modality-calibration.json`,
   `analysis/modality-panel.json`), so unlike the rest of the backlog they
@@ -66,15 +66,15 @@ ones known and deliberate:
   every property a figure has. That
   sentence was FALSE when written: it claimed all four were pinned while no
   test named fig32 or fig33 at all, and multiplying every drawn cell in fig32
-  by a thousand left the suite green. The PDFs are still not byte-gated here. Eight of the 25 are drawn by `generate_figures.py` from
+  by a thousand left the suite green. The PDFs are still not byte-gated here. Eight of the 26 are drawn by `generate_figures.py` from
   `simulations/output/`, which is gitignored, so CI cannot regenerate them at
   all until #788's tracking decision is made; they were regenerated in the #790
   pass and no longer embed a creation date, which is necessary for a freshness
-  check and not sufficient for one. The other 17 are not blocked that way, and the first
+  check and not sufficient for one. The other 18 are not blocked that way, and the first
   version of this bullet wrongly said they were:
   `fig29_rare_event_resolution` reads the TRACKED `analysis/rare-event-sweep.jsonl`
   through a deterministic generator, so regenerating it once -- which it
-  needs anyway, being one of the 17 below -- would bring it under a
+  needs anyway, being one of the 18 below -- would bring it under a
   gate; `fig31_modality_panel` reads the TRACKED `analysis/modality-panel.json` and
   is one of five `type: simulation` figures (fig30_modality_landscape is `type: conceptual`) whose every number is pinned by a
   test (this bullet said "the only" while the bullet above it said four,
