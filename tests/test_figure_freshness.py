@@ -33,10 +33,10 @@ ones known and deliberate:
 - **No PNG content, at all.** The eight census PNGs are checked for existence
   and nothing else. Replacing one with an unrelated image passes. PNG bytes are
   not portable, and no portable comparison is implemented.
-- **Most non-census PDFs.** 43 committed figures come from other
+- **Most non-census PDFs.** 44 committed figures come from other
   generators. Five of them -- the corpus-derived ones, whose inputs are tracked
   -- are regenerated and gated by `tests/test_figure_caption_statistics.py`;
-  the other 38 are not, and 30 of those 38 `FIGURES.yaml` marks
+  the other 39 are not, and 31 of those 39 `FIGURES.yaml` marks
   `type: simulation`. SIX of them are different in kind:
   `fig30_modality_landscape`, `fig31_modality_panel`, `fig32_modality_tme` and
   `fig33_adoptive_barriers`, `fig34_depth_reach`, `fig35_calibration_verdicts`,
@@ -45,7 +45,7 @@ ones known and deliberate:
   `fig41_adc_loading`, `fig42_ablation_sleeve`,
   `fig43_sonodynamic_frequency`, `fig44_pdt_fluence_rate` and
   `fig45_radiation_oer` `fig46_oncolytic_percolation` and
-  `fig47_adc_bystander_reach` and `fig48_chemo_decomposition` and `fig49_cart_independence` and `fig50_checkpoint_priming` read COMMITTED
+  `fig47_adc_bystander_reach` and `fig48_chemo_decomposition` and `fig49_cart_independence` and `fig50_checkpoint_priming` and `fig51_ablation_superposition` read COMMITTED
   artifacts (`analysis/modality-tme.json`, `analysis/modality-coverage.json`,
   `analysis/depth-reach-comparison.json`, `analysis/modality-calibration.json`,
   `analysis/modality-panel.json`), so unlike the rest of the backlog they
@@ -67,15 +67,15 @@ ones known and deliberate:
   every property a figure has. That
   sentence was FALSE when written: it claimed all four were pinned while no
   test named fig32 or fig33 at all, and multiplying every drawn cell in fig32
-  by a thousand left the suite green. The PDFs are still not byte-gated here. Eight of the 30 are drawn by `generate_figures.py` from
+  by a thousand left the suite green. The PDFs are still not byte-gated here. Eight of the 31 are drawn by `generate_figures.py` from
   `simulations/output/`, which is gitignored, so CI cannot regenerate them at
   all until #788's tracking decision is made; they were regenerated in the #790
   pass and no longer embed a creation date, which is necessary for a freshness
-  check and not sufficient for one. The other 22 are not blocked that way, and the first
+  check and not sufficient for one. The other 23 are not blocked that way, and the first
   version of this bullet wrongly said they were:
   `fig29_rare_event_resolution` reads the TRACKED `analysis/rare-event-sweep.jsonl`
   through a deterministic generator, so regenerating it once -- which it
-  needs anyway, being one of the 22 below -- would bring it under a
+  needs anyway, being one of the 23 below -- would bring it under a
   gate; `fig31_modality_panel` reads the TRACKED `analysis/modality-panel.json` and
   is one of five `type: simulation` figures (fig30_modality_landscape is `type: conceptual`) whose every number is pinned by a
   test (this bullet said "the only" while the bullet above it said four,
