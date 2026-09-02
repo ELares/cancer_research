@@ -47,10 +47,10 @@
   },
   {
    "module": "oncolytic",
-   "pub_fns": 3,
+   "pub_fns": 11,
    "pub_types": 1,
-   "pub_consts": 0,
-   "code_lines": 61,
+   "pub_consts": 1,
+   "code_lines": 165,
    "serves": "Oncolytic virus spread",
    "reach": 1
   },
@@ -145,16 +145,16 @@
  "engine_pub_fns": 186,
  "engine_code_lines": 3992,
  "dedicated_modules": 7,
- "dedicated_pub_fns": 76,
- "dedicated_code_lines": 1040,
+ "dedicated_pub_fns": 84,
+ "dedicated_code_lines": 1144,
  "shared_modules": 5,
  "shared_pub_fns": 58,
  "shared_code_lines": 818,
  "engine_modules_with_shared": 32,
  "engine_pub_fns_with_shared": 244,
  "engine_code_lines_with_shared": 4810,
- "line_ratio_narrow": 3.8,
- "line_ratio_wide": 4.6,
- "fn_ratio_narrow": 2.4,
- "fn_ratio_wide": 3.2
+ "line_ratio_narrow": 3.5,
+ "line_ratio_wide": 4.2,
+ "fn_ratio_narrow": 2.2,
+ "fn_ratio_wide": 2.9
 }

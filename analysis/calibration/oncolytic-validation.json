@@ -1,0 +1,430 @@
+{
+ "constants": {
+  "ENTRY_RECEPTOR_THRESHOLD": 100.0
+ },
+ "config": {
+  "initial_infected": 0.01,
+  "replication_rate": 0.9,
+  "clearance_rate": 0.2,
+  "interferon_competence": 0.3,
+  "lysis_rate": 0.15
+ },
+ "steps": 60,
+ "clearance_sensitivity": 0.5,
+ "interior_tolerance_fraction": 0.05,
+ "max_competence": 16.0,
+ "crossover_priming_efficiency": 2.6,
+ "optimum_by_efficiency": [
+  {
+   "priming_efficiency": 0.2,
+   "optimal_competence": 0.0,
+   "outcome": 0.6404,
+   "interior": false,
+   "saturated": false
+  },
+  {
+   "priming_efficiency": 0.4,
+   "optimal_competence": 0.0,
+   "outcome": 0.6404,
+   "interior": false,
+   "saturated": false
+  },
+  {
+   "priming_efficiency": 0.6,
+   "optimal_competence": 0.0,
+   "outcome": 0.6404,
+   "interior": false,
+   "saturated": false
+  },
+  {
+   "priming_efficiency": 0.8,
+   "optimal_competence": 0.0,
+   "outcome": 0.6404,
+   "interior": false,
+   "saturated": false
+  },
+  {
+   "priming_efficiency": 1.0,
+   "optimal_competence": 0.0,
+   "outcome": 0.6404,
+   "interior": false,
+   "saturated": false
+  },
+  {
+   "priming_efficiency": 1.2,
+   "optimal_competence": 0.0,
+   "outcome": 0.6404,
+   "interior": false,
+   "saturated": false
+  },
+  {
+   "priming_efficiency": 1.4,
+   "optimal_competence": 0.0,
+   "outcome": 0.6404,
+   "interior": false,
+   "saturated": false
+  },
+  {
+   "priming_efficiency": 1.6,
+   "optimal_competence": 0.32,
+   "outcome": 0.648,
+   "interior": false,
+   "saturated": false
+  },
+  {
+   "priming_efficiency": 1.8,
+   "optimal_competence": 0.48,
+   "outcome": 0.6623,
+   "interior": false,
+   "saturated": false
+  },
+  {
+   "priming_efficiency": 2.0,
+   "optimal_competence": 0.64,
+   "outcome": 0.6801,
+   "interior": false,
+   "saturated": false
+  },
+  {
+   "priming_efficiency": 2.2,
+   "optimal_competence": 0.72,
+   "outcome": 0.7003,
+   "interior": false,
+   "saturated": false
+  },
+  {
+   "priming_efficiency": 2.4,
+   "optimal_competence": 0.8,
+   "outcome": 0.7222,
+   "interior": false,
+   "saturated": false
+  },
+  {
+   "priming_efficiency": 2.6,
+   "optimal_competence": 0.96,
+   "outcome": 0.7453,
+   "interior": true,
+   "saturated": false
+  },
+  {
+   "priming_efficiency": 2.8,
+   "optimal_competence": 0.96,
+   "outcome": 0.7694,
+   "interior": true,
+   "saturated": false
+  },
+  {
+   "priming_efficiency": 3.0,
+   "optimal_competence": 1.04,
+   "outcome": 0.7942,
+   "interior": true,
+   "saturated": false
+  },
+  {
+   "priming_efficiency": 3.2,
+   "optimal_competence": 1.12,
+   "outcome": 0.8196,
+   "interior": true,
+   "saturated": false
+  },
+  {
+   "priming_efficiency": 3.4,
+   "optimal_competence": 1.2,
+   "outcome": 0.8454,
+   "interior": true,
+   "saturated": false
+  },
+  {
+   "priming_efficiency": 3.6,
+   "optimal_competence": 1.2,
+   "outcome": 0.8716,
+   "interior": true,
+   "saturated": false
+  },
+  {
+   "priming_efficiency": 3.8,
+   "optimal_competence": 1.28,
+   "outcome": 0.8982,
+   "interior": true,
+   "saturated": false
+  },
+  {
+   "priming_efficiency": 4.0,
+   "optimal_competence": 1.28,
+   "outcome": 0.925,
+   "interior": true,
+   "saturated": false
+  },
+  {
+   "priming_efficiency": 4.2,
+   "optimal_competence": 1.36,
+   "outcome": 0.9521,
+   "interior": true,
+   "saturated": false
+  },
+  {
+   "priming_efficiency": 4.4,
+   "optimal_competence": 1.36,
+   "outcome": 0.9793,
+   "interior": true,
+   "saturated": false
+  },
+  {
+   "priming_efficiency": 4.6,
+   "optimal_competence": 1.2,
+   "outcome": 1.0,
+   "interior": false,
+   "saturated": true
+  },
+  {
+   "priming_efficiency": 4.8,
+   "optimal_competence": 0.96,
+   "outcome": 1.0,
+   "interior": false,
+   "saturated": true
+  },
+  {
+   "priming_efficiency": 5.0,
+   "optimal_competence": 0.8,
+   "outcome": 1.0,
+   "interior": false,
+   "saturated": true
+  },
+  {
+   "priming_efficiency": 5.2,
+   "optimal_competence": 0.72,
+   "outcome": 1.0,
+   "interior": false,
+   "saturated": true
+  },
+  {
+   "priming_efficiency": 5.4,
+   "optimal_competence": 0.64,
+   "outcome": 1.0,
+   "interior": false,
+   "saturated": true
+  },
+  {
+   "priming_efficiency": 5.6,
+   "optimal_competence": 0.56,
+   "outcome": 1.0,
+   "interior": false,
+   "saturated": true
+  },
+  {
+   "priming_efficiency": 5.8,
+   "optimal_competence": 0.56,
+   "outcome": 1.0,
+   "interior": false,
+   "saturated": true
+  },
+  {
+   "priming_efficiency": 6.0,
+   "optimal_competence": 0.48,
+   "outcome": 1.0,
+   "interior": false,
+   "saturated": true
+  },
+  {
+   "priming_efficiency": 6.2,
+   "optimal_competence": 0.48,
+   "outcome": 1.0,
+   "interior": false,
+   "saturated": true
+  },
+  {
+   "priming_efficiency": 6.4,
+   "optimal_competence": 0.48,
+   "outcome": 1.0,
+   "interior": false,
+   "saturated": true
+  },
+  {
+   "priming_efficiency": 6.6,
+   "optimal_competence": 0.4,
+   "outcome": 1.0,
+   "interior": false,
+   "saturated": true
+  },
+  {
+   "priming_efficiency": 6.8,
+   "optimal_competence": 0.4,
+   "outcome": 1.0,
+   "interior": false,
+   "saturated": true
+  },
+  {
+   "priming_efficiency": 7.0,
+   "optimal_competence": 0.4,
+   "outcome": 1.0,
+   "interior": false,
+   "saturated": true
+  },
+  {
+   "priming_efficiency": 7.2,
+   "optimal_competence": 0.4,
+   "outcome": 1.0,
+   "interior": false,
+   "saturated": true
+  },
+  {
+   "priming_efficiency": 7.4,
+   "optimal_competence": 0.4,
+   "outcome": 1.0,
+   "interior": false,
+   "saturated": true
+  },
+  {
+   "priming_efficiency": 7.6,
+   "optimal_competence": 0.32,
+   "outcome": 1.0,
+   "interior": false,
+   "saturated": true
+  },
+  {
+   "priming_efficiency": 7.8,
+   "optimal_competence": 0.32,
+   "outcome": 1.0,
+   "interior": false,
+   "saturated": true
+  },
+  {
+   "priming_efficiency": 8.0,
+   "optimal_competence": 0.32,
+   "outcome": 1.0,
+   "interior": false,
+   "saturated": true
+  },
+  {
+   "priming_efficiency": 8.2,
+   "optimal_competence": 0.32,
+   "outcome": 1.0,
+   "interior": false,
+   "saturated": true
+  },
+  {
+   "priming_efficiency": 8.4,
+   "optimal_competence": 0.32,
+   "outcome": 1.0,
+   "interior": false,
+   "saturated": true
+  },
+  {
+   "priming_efficiency": 8.6,
+   "optimal_competence": 0.32,
+   "outcome": 1.0,
+   "interior": false,
+   "saturated": true
+  },
+  {
+   "priming_efficiency": 8.8,
+   "optimal_competence": 0.32,
+   "outcome": 1.0,
+   "interior": false,
+   "saturated": true
+  },
+  {
+   "priming_efficiency": 9.0,
+   "optimal_competence": 0.32,
+   "outcome": 1.0,
+   "interior": false,
+   "saturated": true
+  },
+  {
+   "priming_efficiency": 9.2,
+   "optimal_competence": 0.24,
+   "outcome": 1.0,
+   "interior": false,
+   "saturated": true
+  },
+  {
+   "priming_efficiency": 9.4,
+   "optimal_competence": 0.24,
+   "outcome": 1.0,
+   "interior": false,
+   "saturated": true
+  },
+  {
+   "priming_efficiency": 9.6,
+   "optimal_competence": 0.24,
+   "outcome": 1.0,
+   "interior": false,
+   "saturated": true
+  },
+  {
+   "priming_efficiency": 9.8,
+   "optimal_competence": 0.24,
+   "outcome": 1.0,
+   "interior": false,
+   "saturated": true
+  },
+  {
+   "priming_efficiency": 10.0,
+   "optimal_competence": 0.24,
+   "outcome": 1.0,
+   "interior": false,
+   "saturated": true
+  }
+ ],
+ "outcome_curves": [
+  {
+   "competence": 0.0,
+   "weak_priming": 0.6404,
+   "strong_priming": 0.6404
+  },
+  {
+   "competence": 0.25,
+   "weak_priming": 0.5938,
+   "strong_priming": 0.7654
+  },
+  {
+   "competence": 0.5,
+   "weak_priming": 0.554,
+   "strong_priming": 0.8455
+  },
+  {
+   "competence": 1.0,
+   "weak_priming": 0.4881,
+   "strong_priming": 0.9163
+  },
+  {
+   "competence": 2.0,
+   "weak_priming": 0.3928,
+   "strong_priming": 0.9007
+  },
+  {
+   "competence": 4.0,
+   "weak_priming": 0.2806,
+   "strong_priming": 0.7508
+  },
+  {
+   "competence": 8.0,
+   "weak_priming": 0.1777,
+   "strong_priming": 0.5252
+  },
+  {
+   "competence": 12.0,
+   "weak_priming": 0.1298,
+   "strong_priming": 0.3984
+  },
+  {
+   "competence": 16.0,
+   "weak_priming": 0.1023,
+   "strong_priming": 0.32
+  }
+ ],
+ "trial": {
+  "trial": "OPTiM",
+  "pmid": "26014293",
+  "agent": "talimogene laherparepvec",
+  "durable_response_pct": 16.3,
+  "comparator": "GM-CSF",
+  "comparator_pct": 2.1
+ },
+ "n_saturated": 28,
+ "verdict": {
+  "interior_optimum_is_conditional": "YES",
+  "crossover": 2.6,
+  "trial_anchor": "DIRECTION only -- two agents, so no mapping cancels"
+ }
+}
