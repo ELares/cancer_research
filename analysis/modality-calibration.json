@@ -132,6 +132,49 @@
    "mapping": null,
    "no_target_reason": "The corpus establishes that a cleavable linker causes bystander killing and a non-cleavable one does not -- a qualitative contrast with both arms named, which is what let the layer land under the layer-freeze policy. It gives no escape fraction, no diffusion radius and no bystander kill rate. Reporting a fit here would mean inventing a target, and an invented target that a flexible form then satisfies is worse than no target at all: it looks like calibration and constrains nothing.",
    "verdict": "NO TARGET"
+  },
+  {
+   "arm": "Sonodynamic frequency",
+   "parameter": "sonodynamic::optimal_frequency_mhz",
+   "target": "cavitation is induced at LOW frequency and high pressure amplitude, while thermal effects take over at higher frequency -- so the model's index must fall with frequency once attenuation is accounted for, and its optimum must sit BELOW a thermal one",
+   "source": "PMID 35158903 (therapeutic focused ultrasound review, in the frozen corpus: 'at low frequencies and high-pressure amplitudes, mechanical effects (specifically acoustic cavitation) can be readily induced, whereas for higher frequencies and longer pulses thermal effects predominate')",
+   "comparator_source": "Ellens & Hynynen 2015, Med Phys 42(8):4896, PMID 26233216 -- OUTSIDE the frozen corpus, which was retrieved from ferroptosis and photo/sonodynamic queries and structurally holds no acoustics-physics literature. Named in full so it can be located, and kept out of the corpus-checked field rather than smuggled into it",
+   "target_kind": "three DIRECTIONS, scored apart -- no numeric agreement is claimed, because the comparator's observable and attenuation convention both differ from this model's",
+   "range_scanned": null,
+   "fit": null,
+   "directional": {
+    "confirmed": 2,
+    "refuted": 1,
+    "detail": {
+     "claim_interior_optimum": "CONFIRMED",
+     "claim_falls_with_attenuation": "CONFIRMED",
+     "claim_depth_scaling": "REFUTED"
+    }
+   },
+   "mapping": null,
+   "verdict": "PARTLY REFUTED"
+  },
+  {
+   "arm": "PDT fluence rate",
+   "parameter": "photosensitizer_pk::optimal_fluence_rate",
+   "target": "the fluence-rate effect: high fluence rates deplete tumour oxygen and can make a treatment inefficient, so the delivered dose must FALL with rate at fixed total fluence",
+   "source": "PMID 31991650 (oncologic PDT immune-response review, in the frozen corpus: 'high fluence rates deplete oxygen levels at the tumor site ... resulting in a possibly inefficient treatment', and its reviewed regimens use low fluence rates)",
+   "comparator_source": "Henderson & Busch 2006, Lasers Surg Med, PMID 16615136 (O2 depletion within seconds at 75 mW/cm2) -- OUTSIDE the frozen corpus, named in full and kept out of the corpus-checked field",
+   "target_kind": "a DIRECTION only. The optimum's position scales as phi_crit^0.43, and phi_crit is measured nowhere here",
+   "range_scanned": [
+    5.0,
+    400.0
+   ],
+   "fit": null,
+   "directional": {
+    "confirmed": 2,
+    "refuted": 0,
+    "detail": {
+     "phi_crit_exponent": 0.4327183926821681
+    }
+   },
+   "mapping": null,
+   "verdict": "DIRECTIONAL"
   }
  ],
  "unconstrained_width": 0.5,
@@ -139,7 +182,9 @@
   "ADMISSIBLE": 4,
   "UNCONSTRAINED": 1,
   "INADMISSIBLE": 1,
-  "NO TARGET": 2
+  "NO TARGET": 2,
+  "DIRECTIONAL": 1,
+  "PARTLY REFUTED": 1
  },
  "n_clinical": 3
 }

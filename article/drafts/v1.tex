@@ -1261,11 +1261,108 @@ The broader point is about what the calibration ledger is for. This arm will kee
 \label{fig:fig42_ablation_sleeve}
 \end{figure}
 
+\section{Photodynamic and Sonodynamic Therapy, the Two the Project Started With}
+
+This chapter has worked outward from ferroptosis through seven modalities the project adopted later. It ends by turning back to the two it was built on, and they were the last to be modelled -- which needs an explanation, because it looks like neglect and is not.
+
+\textbf{What is known.} Photodynamic therapy is the mature one. It has been approved and in clinical use for decades, its photosensitizers are characterised drugs with published pharmacokinetics, and its limitation is famous: light does not go far into tissue. Sonodynamic therapy is the young one. It substitutes ultrasound for light on the argument that sound penetrates centimetres where red light manages millimetres, and its literature is thin -- roughly thirty papers intersecting ferroptosis in the whole indexed cancer literature, against about a hundred and fifty for photodynamic therapy. This project's own thesis leans on the younger of the two.
+
+\textbf{What the engine had, and why that was deliberate.} It had one death switch for both, and identical parameters feeding it. Sonodynamic and photodynamic runs in this engine were bit-identical across every phenotype, which one of the repository's own audits reported as a defect: a contrast between them compares a modality with itself.
+
+The audit is right about the fact and wrong about the cause. The identity is a validated design decision. Zhu and colleagues measured the reacted-singlet-oxygen dose that necroses tissue in vivo for three chemically unrelated photosensitizers and found it approximately source-independent -- around half a millimolar, within a factor of 1.8 across all three. The dose-to-kill is a property of the target, not of whatever made the reactive oxygen. Building two death thresholds would have contradicted a measurement.
+
+\begin{finding}
+That is the observation this section is built on, and it is sharper than the audit that provoked it. \textbf{If the kill threshold is genuinely source-independent, then every difference between these two arms must live upstream of the cell.} Not in what the oxygen does on arrival -- in how much of it arrives. The engine already carried one such difference, in depth attenuation. Everything else was missing, and the identity in the panel was the symptom.
+
+So the last two arms in the chapter are the only ones where the work was not ``build a mechanism'' but ``find out where the difference had to be, and go there''.
+\end{finding}
+
+\textbf{What was simulated, on the sonodynamic side.} Ultrasound does not deliver energy the way light does. Halve the photons and you halve the singlet oxygen; halve the acoustic pressure and, below a point, you get nothing at all, because the dominant sonochemical route is inertial cavitation and a bubble either collapses violently or it does not. The likelihood is governed by peak rarefactional pressure over the square root of frequency -- the mechanical index every clinical scanner displays.
+
+That puts sonodynamic therapy in the small set of arms in this chapter whose limit is a threshold rather than a multiplier, alongside the CAR-T antigen density, the conjugate's receptor and the oncolytic entry receptor. It is why its depth limit is a hard edge where the photodynamic one is an exponential fade.
+
+Three frequency dependences then act at once, and two of them oppose. A diffraction-limited focus shrinks with wavelength, so at fixed acoustic power a higher frequency concentrates the beam and raises focal pressure. Attenuation rises with frequency, so a higher one loses more on the way in, and the loss compounds with depth. And the index itself divides by the square root of frequency, penalising high frequency a third time. The product has an interior maximum, and it has a closed form: the best frequency falls as one over the attenuation coefficient and one over the depth.
+
+\begin{numbers}
+At the engine's own attenuation of 0.7 dB/cm/MHz, the model puts the optimum at 1,241 kHz for a five-centimetre focus, 620 kHz at ten, and 414 kHz at fifteen.
+\end{numbers}
+
+The threshold then buys a statement a coverage fraction cannot make, and it is the sonodynamic counterpart of the ablation section's perivascular sleeve: \textbf{a depth beyond which no setting helps.} Not a fading efficacy -- a hard edge, past which raising the exposure time, the pressure or the frequency changes nothing, because the bubble either collapses or it does not.
+
+\begin{numbers}
+Deepest focus still clearing the cavitation threshold, at each of three applicator strengths and three device frequency caps:
+
+
+
+
+
+
+
+
+Two of those cells are not measurements and are marked rather than printed as numbers. An applicator that cannot cavitate at the surface fails \textit{everywhere}, and rendering its zero as a shallow limit is the degenerate row the oncolytic and ablation sections each shipped once. A limit equal to the scan's own bound never found a limit at all, and thirty centimetres would read as an extraordinarily deep applicator when it measures how far the scan went. The first version of this table shipped the second one.
+\end{numbers}
+
+\begin{refusal}
+Neither the threshold height nor the applicator strengths are measured. Published in-vivo inertial-cavitation thresholds move by more than an order of magnitude with nucleation, and this layer represents no nucleation at all, so the shape of the table is the result and no row is a recommendation.
+
+The frequency cap is different, and it is the one input here that is a real property rather than a placeholder. Without it this model is \textit{unbounded} at shallow depth: nothing has attenuated yet, and the focusing term rewards frequency without limit. An early version of the figure hid that divergence by starting its axis at half a centimetre, which is hiding a model's artifact in a picture rather than fixing it in the model.
+\end{refusal}
+
+\textbf{And here the chapter gets its first refutation.} Ellens and Hynynen asked the same question by a route with nothing in common with this one -- full-wave acoustic propagation into a bioheat solve, over simulated transducer arrays of up to seventy thousand elements -- and named the same three mechanisms in almost the same words. Two of the model's claims survive the comparison. An interior optimum exists; their whole study presumes one and finds one. It moves down as attenuation rises; they report 750 kHz falling to 500 when their attenuation coefficient doubles, and the model predicts an exact halving.
+
+The third does not. This model says the optimum should fall roughly threefold between fifty and a hundred and fifty millimetres. They report the same 750 kHz at all three depths.
+
+\begin{refusal}
+That is a disagreement, not a tuning gap: no value of the attenuation coefficient makes a one-over-depth law flat. And the missing term is one they name themselves -- near-field heat accumulation, which their conclusion calls the rate-limiting factor for large-volume ablation. This model evaluates a single point and has no representation of the tissue in front of the focus at all. Lowering the frequency to chase the focal optimum also lengthens the heated path, and a model that cannot see that path is free to slide its optimum in a way a real applicator is not.
+
+Two further mismatches are why no numerical agreement is claimed in either direction. Their observable is thermal ablation efficiency and this model's is cavitation likelihood, and absorption enters those two with opposite sign -- it helps heating and hurts cavitation -- so the two optima should not coincide even for a perfect model of both. And their attenuation is quoted on the pressure amplitude in nepers per metre while this engine's is a decibel figure applied to intensity, a conversion carrying a factor of two that is the easiest unit error in acoustics to make. A match obtained after picking one of two defensible conversions would be a statement about the choice.
+\end{refusal}
+
+\textbf{What was simulated, on the photodynamic side.} Photodynamic therapy is prescribed as a total light dose in joules per square centimetre, and for most of this engine's life the \textit{rate} at which that light arrives did not exist as a quantity: the photosensitizer was sampled once, at the moment illumination began. That treats a ten-minute and a two-hour delivery of the same joules as the same treatment.
+
+They are not, and this is the one arm where the field says so loudly. A Type II photosensitizer works by handing energy to ground-state oxygen, so the illumination consumes its own substrate at the site it is treating; Henderson and Busch report depletion within \textit{seconds} at seventy-five milliwatts per square centimetre in murine tumours. The practical consequence -- the same total light delivered more slowly producing a greater response -- is the fluence-rate effect, and an oxygen-blind model has no way to express it.
+
+\begin{numbers}
+The layer added here is two terms and no new machinery. Tissue oxygen at the illuminated site falls as one over one plus the rate over a critical rate, the point at which photochemical consumption matches perfusive resupply. The per-photon yield then follows the Alper-Howard-Flanders hyperbola -- the same oxygen curve the radiation arm uses, deliberately, so the engine's two oxygen-dependent modalities cannot drift apart for no better reason than which module was written first.
+
+Against that sits the module's own pharmacokinetics, integrated across the illumination window instead of sampled at its start. Sampling once is exactly the approximation that makes a long treatment look free.
+\end{numbers}
+
+\begin{finding}
+Two monotonic effects in opposition give another interior optimum of exactly the shape this chapter keeps finding -- the same one as fractionation, dose density, oncolytic spread and conjugate loading, and as the sonodynamic frequency two pages back. Faster depletes the oxygen; slower runs further into the drug's own clearance.
+
+\textbf{The result is a statement about drugs rather than doses.} The optimal fluence rate falls monotonically as the sensitizer clears more slowly: about 315 milliwatts per square centimetre for a fifteen-minute half-life, 66 at four hours, 18 at forty-eight. A fast-clearing sensitizer should be illuminated fast and a slow-clearing one slowly, and the two differ by more than an order of magnitude. Nothing in this repository tests that, and it is registered as a prediction rather than reported as a result.
+\end{finding}
+
+\begin{refusal}
+The \textit{position} of that optimum is not a finding. It rides on the critical fluence rate, which nothing here measures, and the section says how hard rather than merely conceding it: a twentyfold span in the parameter moves the optimum 3.66-fold, an exponent of 0.43. The optimum sits on roughly the square root of an unmeasured quantity, so the milliwatt figures above are a restatement of an assumption and the \textit{ordering} is not.
+
+The oxygen model is also quasi-steady and site-local, where real photochemical depletion is transient and coupled to a vasculature this layer does not see. And the clinic bounds the slow end while the model does not: a two-hour illumination is a scheduling fact as much as a physical one, so wherever the model's optimum falls below what a treatment room tolerates, the binding constraint is not in the model at all.
+\end{refusal}
+
+\textbf{What it means for the thesis.} The two founding modalities now differ in the engine, and they differ in a way that says something. Photodynamic therapy's limitation is a \textit{rate} -- something a clinician can lower, at the cost of time. Sonodynamic therapy's is a \textit{threshold} -- something no exposure time crosses. That distinction is the honest version of the depth argument the project was founded on: sound really does reach further than light, and reaching further is not the same as delivering enough once you are there.
+
+It also leaves this chapter with something none of the other eight sections produced: a prediction an independent study contradicts, with a named missing term. That is a better outcome than another confirmation. Eight arms agreeing with their comparators would say more about how the comparisons were chosen than about the engine.
+
+\begin{figure}[tbp]
+\setcounter{figure}{38}
+\bookgraphic{../figures/fig43_sonodynamic_frequency.pdf}
+\caption{\figlabel{39}An optimum the model finds, and a scaling an independent study contradicts. (a) Three frequency dependences act at once and two oppose: focusing favours going high, while attenuation and the mechanical index's own inverse square root both favour going low, so the product peaks in between. (b) The disagreement --- this model's optimum falls threefold across 50 to 150 mm, crossing the near-flat 750\,kHz an independent full-wave study reports at all three depths. No attenuation coefficient makes a one-over-depth law flat, so it is a refutation rather than a tuning gap. (c) Why this arm is structurally unlike the dose-response arms: inertial cavitation is a THRESHOLD, so below the line no exposure time produces anything. The threshold height is a parameter, not a measurement.}
+\label{fig:fig43_sonodynamic_frequency}
+\end{figure}
+
+\begin{figure}[tbp]
+\setcounter{figure}{39}
+\bookgraphic{../figures/fig44_pdt_fluence_rate.pdf}
+\caption{\figlabel{40}Photodynamic therapy consumes the oxygen it needs, so the same light delivered faster does less. (a) The two opposing monotonic effects separately: oxygen depletion punishes speed, sensitizer clearance punishes slowness. (b) Their product, an interior optimum whose position moves with the drug's half-life --- a statement about drugs rather than doses, which is why it is the registered prediction. (c) The refusal: that position scales as roughly the square root of the critical fluence rate, measured nowhere in this project, so the ordering is the result and the milliwatt figures restate an assumption.}
+\label{fig:fig44_pdt_fluence_rate}
+\end{figure}
+
 \section{What This Chapter Does Not Claim}
 
 \textbf{Breadth is not depth, and this project's own guidance says so.} The engine can now express every mechanism its taxonomy can count, and 8 of the sixteen can be applied as a treatment. Neither of those is a claim that any of them is modelled well. \bookcode{simulations/calibration/CALIBRATION\_STATUS.md} carries a row per layer with its named target and its used-in-any-reported-number status, and for every arm in this chapter that status is N: none of them feeds a number this manuscript reports.
 
-\textbf{The arms are smaller than the engine they sit beside, and the gap is a range rather than a number.} \bookcode{analysis/modality-module-depth.md} counts it: 7 modules a modality owns outright, 95 public functions and 1250 lines of production code. What it is counted AGAINST is a judgement, because five modules are machinery several arms reach through and subtracting them from the engine as well as from the arms would shrink the comparator in the direction that flatters this chapter. Counting them as neither side gives 27 modules, 186 functions and 3,992 lines; counting them as engine gives 32, 244 and 4,810. So the arms are between 3.2 and 3.8 times smaller by line count and 2.0 to 2.6 times smaller by public function, and the honest figure is the interval. Those figures were 10.9 to 13.1 and 6.0 to 7.9 before Sections 6.6 and 6.7 -- seven arms built rather than reworded have cut the gap by roughly three quarters. What that does NOT buy is stated in the same breath: radiation is at a fifteenth of the ferroptosis engine and chemotherapy at a fourteenth, and the arms with no section of their own have not moved at all. The disparity in calibration is larger still and needs no interval: the ferroptosis work carries legs fitted against independent published data and supplies numbers this manuscript reports, while every arm in this chapter is recorded as feeding no reported number at all. That clause said ``years of fitting'' until a reviewer checked it against the repository's first commit, which is months rather than years ago --- an unmeasured superlative bolted onto a paragraph whose entire design is to replace assertions with a measured interval, and sitting in the one clause the paragraph had declared exempt. An earlier version of this paragraph said the arms were ``one function and a configuration struct each'', which was true when written and stopped being true without anyone noticing; a later version replaced it with a single ratio, which hid the judgement that produced it. The measurement exists so the sentence cannot flatter itself as modules land, and equally cannot claim a parity it has not reached. What the arms change is which questions can be asked at all: before this work a reader could not ask this engine what radiation does, and the honest reason was that the engine could not answer.
+\textbf{The arms are smaller than the engine they sit beside, and the gap is a range rather than a number.} \bookcode{analysis/modality-module-depth.md} counts it: 9 modules a modality owns outright, 112 public functions and 1562 lines of production code. What it is counted AGAINST is a judgement, because five modules are machinery several arms reach through and subtracting them from the engine as well as from the arms would shrink the comparator in the direction that flatters this chapter. Counting them as neither side gives 26 modules, 182 functions and 3,805 lines; counting them as engine gives 31, 240 and 4,623. So the arms are between 2.4 and 3.0 times smaller by line count and 1.6 to 2.1 times smaller by public function, and the honest figure is the interval. Those figures were 10.9 to 13.1 and 6.0 to 7.9 before Section 6.6 -- nine arms built rather than reworded have cut the gap by roughly three quarters.  \textbf{Part of that last move was an error in the instrument, and separating the two matters more than the number.} Immediately before Section 6.13 the interval read 3.2 to 3.8. Adding the two modules that section describes made it read 3.3 to 3.9 -- \textit{wider} -- because \bookcode{photosensitizer\_pk} had never been listed as a modality's own file and \bookcode{sonodynamic} was new, so both were counted on the COMPARATOR'S side of a ratio measuring distance from the comparator. Photodynamic therapy's module has existed since long before any arm in this chapter, and its lines were being credited to ferroptosis and to photodynamic therapy at the same time, in two different documents. Correcting the classification is what takes the interval to 2.4 to 3.0; the two new modules on their own would have widened it. The error ran in the direction that made this chapter's case look worse, which is the direction an error of this kind is least likely to be caught in, and it went unnoticed through eight sections that all quoted the ratio it produced.  What none of that buys is stated in the same breath: radiation is at a fourteenth of the ferroptosis engine and chemotherapy at a thirteenth, sonodynamic therapy owns 63 lines against the comparator's 3,805, and the arms with no section of their own have not moved at all. The disparity in calibration is larger still and needs no interval: the ferroptosis work carries legs fitted against independent published data and supplies numbers this manuscript reports, while every arm in this chapter is recorded as feeding no reported number at all. That clause said ``years of fitting'' until a reviewer checked it against the repository's first commit, which is months rather than years ago --- an unmeasured superlative bolted onto a paragraph whose entire design is to replace assertions with a measured interval, and sitting in the one clause the paragraph had declared exempt. An earlier version of this paragraph said the arms were ``one function and a configuration struct each'', which was true when written and stopped being true without anyone noticing; a later version replaced it with a single ratio, which hid the judgement that produced it. The measurement exists so the sentence cannot flatter itself as modules land, and equally cannot claim a parity it has not reached. What the arms change is which questions can be asked at all: before this work a reader could not ask this engine what radiation does, and the honest reason was that the engine could not answer.
 
 \textbf{The taxonomy bounds everything above.} Chemotherapy, radiotherapy and surgery are not among the sixteen mechanisms because none carries a discriminative MeSH descriptor in this project's map, and Section 3.13 shows what happens to a modality the taxonomy cannot name --- its literature is absorbed into whichever neighbouring mechanism does have a tag. The coverage column emptied against the taxonomy, not against oncology.
 

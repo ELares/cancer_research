@@ -87,13 +87,18 @@ ARMS = [
      "calibration": None,
      "note": "the comparator: every module the other arms are measured against"},
     {"arm": "SDT", "label": "Sonodynamic therapy", "mechanism": "sonodynamic",
-     "modules": [], "heading": ["sonodynamic"], "topic": ["sonodynamic", "sdt"],
-     "calibration": None,
-     "note": "shares the exogenous-ROS path and the depth physics with PDT"},
+     "modules": ["sonodynamic"], "heading": ["sonodynamic"],
+     "topic": ["sonodynamic", "sdt", "cavitation", "mechanical index"],
+     "calibration": "Sonodynamic frequency",
+     "note": "shares the exogenous-ROS path and one death threshold with PDT "
+             "BY DESIGN (the kill dose is source-independent, Zhu 2015), so "
+             "the arms are separated upstream of the cell and not at it"},
     {"arm": "PDT", "label": "Photodynamic therapy", "mechanism": None,
-     "modules": ["photosensitizer_pk"], "heading": ["photodynamic"],
-     "topic": ["photodynamic", "pdt", "photosensitiser", "photosensitizer"],
-     "calibration": None,
+     "modules": ["photosensitizer_pk"],
+     "heading": ["photodynamic"],
+     "topic": ["photodynamic", "pdt", "photosensitiser", "photosensitizer",
+               "fluence rate"],
+     "calibration": "PDT fluence rate",
      "note": "the one non-ferroptosis arm with a module of its own from the start"},
     {"arm": "Radiation", "label": "Ionizing radiation", "mechanism": None,
      "modules": ["radiation"], "heading": ["radiation", "radiotherapy"],
@@ -217,20 +222,27 @@ def _sections(md: str):
     return sections, chapter_words
 
 
-def _book_words(units, needles) -> tuple[int, list[str]]:
-    """Whole chapters first, then sections in chapters not already counted."""
+def _book_words(units, needles) -> tuple[int, list[str], dict]:
+    """Whole chapters first, then sections in chapters not already counted.
+
+    Returns the per-hit word counts as well as the total, because one section
+    can legitimately name two arms -- Section 6.13 covers photodynamic and
+    sonodynamic therapy together, deliberately, since the whole point of it is
+    what the two share. Crediting its full length to each would print two
+    identical numbers that read as independent coverage, which is the same
+    class of error as the chapter-versus-section attribution bug this table
+    shipped once already. `scan` divides such a section instead.
+    """
     sections, chapter_words = units
     chapters = [c for c in chapter_words
                 if c and any(k in c.lower() for k in needles)]
-    words = sum(chapter_words[c] for c in chapters)
-    hits = list(chapters)
+    per_hit = {c: chapter_words[c] for c in chapters}
     for c, h, n in sections:
         if c in chapters:
             continue
         if any(k in h.lower() for k in needles):
-            words += n
-            hits.append(h)
-    return words, hits
+            per_hit[h] = n
+    return sum(per_hit.values()), list(per_hit), per_hit
 
 
 def _figures_for(entries, needles) -> list[str]:
@@ -256,6 +268,7 @@ def scan() -> dict:
     calib = {a["arm"]: a["verdict"] for a in _json("modality-calibration.json")["arms"]}
     profile = {r["mechanism"]: r for r in _json("census-mechanism-profile.json")["rows"]}
     per_module = {m["module"]: m for m in depth["dedicated"] + depth["shared"]}
+    per_arm_hits: list[dict] = []
     units = _sections(MANUSCRIPT.read_text())
     prereg = PREREG.read_text()
     try:
@@ -292,7 +305,8 @@ def scan() -> dict:
             modules = len(names)
             tests = sum(_rust_tests_for(m) for m in names)
 
-        words, heads = _book_words(units, spec["heading"])
+        words, heads, per_hit = _book_words(units, spec["heading"])
+        per_arm_hits.append(per_hit)
         rows.append({
             "arm": spec["arm"],
             "label": spec["label"],
@@ -313,6 +327,17 @@ def scan() -> dict:
             "predictions": _predictions_for(prereg, spec["topic"]),
         })
 
+    # A section naming more than one arm is DIVIDED between them, not
+    # credited whole to each. Dividing under-counts every arm it touches,
+    # which keeps the column a lower bound the way the rest of the table is;
+    # crediting whole would over-count, which it must never do.
+    from collections import Counter
+    claims = Counter(h for hits in per_arm_hits for h in hits)
+    shared = {h: c for h, c in claims.items() if c > 1}
+    for row, hits in zip(rows, per_arm_hits):
+        row["book_words"] = round(sum(n / claims[h] for h, n in hits.items()))
+        row["book_words_shared"] = round(
+            sum(n for h, n in hits.items() if h in shared))
     total_words = sum(n for _, _, n in units[0])
     attributed = sum(r["book_words"] for r in rows)
     return {
@@ -322,6 +347,7 @@ def scan() -> dict:
         "shared_pub_fns": depth["shared_pub_fns"],
         "manuscript_words_in_sections": total_words,
         "manuscript_words_attributed": attributed,
+        "sections_naming_more_than_one_arm": {h: c for h, c in sorted(shared.items())},
         "absent_arms": [{"arm": a, "why": w} for a, w in ABSENT_ARMS],
     }
 
@@ -423,7 +449,20 @@ def render(d: dict) -> str:
           "are attributed, and the whole multi-modality chapter sits in the "
           "remainder because its headings name no arm. A keyword rule over body "
           "text was rejected; `analysis/scope-audit.md` records what happened "
-          "the last time subject was counted by vocabulary.", ""]
+          "the last time subject was counted by vocabulary.", "",
+          "A section whose heading names MORE THAN ONE arm is DIVIDED between "
+          "them rather than credited whole to each, because two identical "
+          "numbers side by side read as independent coverage when they are "
+          "one section counted twice. "
+          + (f"{len(d['sections_naming_more_than_one_arm'])} section(s) are "
+             "split this way: "
+             + "; ".join(f"*{h}* ({c} arms)" for h, c in
+                         d["sections_naming_more_than_one_arm"].items())
+             + ". Dividing UNDER-counts each arm, which keeps this column the "
+               "lower bound the rest of the table is; crediting whole would "
+               "over-count, which it must never do."
+             if d["sections_naming_more_than_one_arm"]
+             else "No section currently names more than one arm."), ""]
     return "\n".join(L) + "\n"
 
 

@@ -381,6 +381,144 @@ impl Photosensitizer {
     }
 }
 
+/// Tissue pO₂ at the illuminated site under photochemical consumption,
+/// as a fraction of its unilluminated value.
+///
+/// PDT CONSUMES THE OXYGEN IT NEEDS. A Type II photosensitizer works by
+/// handing energy to ground-state O₂, so the illumination depletes its own
+/// substrate at the site it is treating, and perfusion has to resupply it.
+/// At quasi-steady state the two balance as `1 / (1 + phi/phi_crit)`, where
+/// `phi_crit` is the fluence rate at which consumption equals resupply.
+///
+/// The consequence is the one PDT's own literature reports and no other arm
+/// in this chapter has: delivering the SAME total light more slowly kills
+/// MORE, because a lower fluence rate holds the tissue oxygenated (Henderson
+/// & Busch, "Fluence rate as a modulator of PDT mechanisms", Lasers Surg Med
+/// 2006, PMID 16615136, which reports O₂ depletion within seconds of
+/// illumination at 75 mW/cm² in murine tumours).
+///
+/// `phi_crit <= 0` means "perfusion cannot resupply at all" and returns 0.0
+/// for any illumination; an unilluminated site returns exactly 1.0.
+pub fn oxygen_fraction_under_illumination(fluence_rate_mw_cm2: f64, phi_crit_mw_cm2: f64) -> f64 {
+    let phi = fluence_rate_mw_cm2.max(0.0);
+    if phi == 0.0 {
+        return 1.0;
+    }
+    if !(phi_crit_mw_cm2 > 0.0) {
+        return 0.0;
+    }
+    1.0 / (1.0 + phi / phi_crit_mw_cm2)
+}
+
+/// Relative singlet-oxygen yield per photon at a given fluence rate.
+///
+/// REUSES THE ENGINE'S MEASURED OXYGEN SHAPE rather than picking a second
+/// one: [`crate::oxygen::oer_relative_efficacy`] is the Alper–Howard-Flanders
+/// hyperbola #726 adopted after `oxygen_form_check.py` established the linear
+/// form disagrees with eighty years of measurement below 10 mmHg. Radiation
+/// and PDT are both oxygen-dependent modalities in this engine, and giving
+/// them two different O₂ curves would let them drift apart for no reason
+/// other than which module was written first.
+pub fn fluence_rate_yield_factor(fluence_rate_mw_cm2: f64, phi_crit_mw_cm2: f64) -> f64 {
+    let o2 = oxygen_fraction_under_illumination(fluence_rate_mw_cm2, phi_crit_mw_cm2);
+    crate::oxygen::oer_relative_efficacy(o2, crate::oxygen::OER_REFERENCE_PO2_MMHG)
+}
+
+/// Reacted singlet oxygen delivered by one illumination, in arbitrary units.
+///
+/// Holds the TOTAL light fixed and varies only the rate at which it is
+/// delivered, which is the comparison a clinician actually faces: the same
+/// `total_fluence_j_cm2` over `total/rate` seconds. Two effects oppose across
+/// that choice, and this is the fourth interior optimum in the chapter built
+/// the same way:
+///
+///   * going FASTER depletes oxygen at the site, cutting the per-photon yield
+///   * going SLOWER runs the illumination further into the sensitizer's own
+///     pharmacokinetics, and drug that has cleared cannot be excited
+///
+/// The second term is not an assumption added for this function — it is
+/// [`Photosensitizer::yield_at`], the module's existing PK, integrated over
+/// the illumination window instead of sampled once at its start. Sampling
+/// once is what the engine did before, and it is exactly the approximation
+/// that makes a long illumination look free.
+pub fn delivered_singlet_oxygen(
+    ps: &Photosensitizer,
+    dli_h: f64,
+    total_fluence_j_cm2: f64,
+    fluence_rate_mw_cm2: f64,
+    phi_crit_mw_cm2: f64,
+    steps: usize,
+) -> f64 {
+    let rate = fluence_rate_mw_cm2;
+    if !(rate > 0.0) || !(total_fluence_j_cm2 > 0.0) || steps == 0 {
+        return 0.0;
+    }
+    // J/cm2 divided by mW/cm2 is 1000 s; expressed in hours to match the PK.
+    let duration_h = total_fluence_j_cm2 * 1000.0 / rate / 3600.0;
+    let g = fluence_rate_yield_factor(rate, phi_crit_mw_cm2);
+    // Midpoint rule over the illumination window. The integrand is the drug
+    // present at each moment; the fluence rate is constant, so it factors out
+    // and what is integrated is drug-hours.
+    let dt = duration_h / steps as f64;
+    let mut drug_hours = 0.0;
+    for i in 0..steps {
+        let t = dli_h + (i as f64 + 0.5) * dt;
+        drug_hours += ps.yield_at(t) * dt;
+    }
+    // rate * drug_hours has units of (mW/cm2)*h; the constant 3600/1000
+    // returns it to J/cm2 so the result is comparable across rates.
+    g * rate * drug_hours * 3.6
+}
+
+/// The fluence rate maximising [`delivered_singlet_oxygen`], scanned.
+///
+/// Returns `(rate, delivered)`. NO CLOSED FORM IS OFFERED, because the drug
+/// term is whatever [`Photosensitizer::yield_at`] is and a closed form would
+/// silently assume the single-exponential variant.
+///
+/// A SCAN THAT RETURNS ITS OWN LOWER BOUND IS NOT AN OPTIMUM, and this
+/// function does not hide that: when the sensitizer clears slowly compared
+/// with the illumination, the answer is genuinely "as slow as you can go" and
+/// the scan floor is returned. [`fluence_rate_optimum_is_interior`] is the
+/// predicate a caller must consult before reporting a number, and the
+/// degenerate case is the one the ablation and oncolytic sections both
+/// shipped a wrong figure for before marking it.
+pub fn optimal_fluence_rate(
+    ps: &Photosensitizer,
+    dli_h: f64,
+    total_fluence_j_cm2: f64,
+    phi_crit_mw_cm2: f64,
+    lo_mw_cm2: f64,
+    hi_mw_cm2: f64,
+    scan_points: usize,
+) -> (f64, f64) {
+    if scan_points < 2 || !(hi_mw_cm2 > lo_mw_cm2) || !(lo_mw_cm2 > 0.0) {
+        return (0.0, 0.0);
+    }
+    let mut best = (lo_mw_cm2, f64::NEG_INFINITY);
+    for i in 0..scan_points {
+        let frac = i as f64 / (scan_points - 1) as f64;
+        // Logarithmic, because clinical fluence rates span two decades and a
+        // linear scan spends almost all its points at the top.
+        let rate = lo_mw_cm2 * (hi_mw_cm2 / lo_mw_cm2).powf(frac);
+        let d = delivered_singlet_oxygen(ps, dli_h, total_fluence_j_cm2, rate, phi_crit_mw_cm2, 64);
+        if d > best.1 {
+            best = (rate, d);
+        }
+    }
+    best
+}
+
+/// Whether the scanned optimum is genuinely interior, or sits on a scan edge.
+///
+/// An edge answer means the model is monotonic over the scanned range and the
+/// real limit is something the model does not carry — the clinic's tolerance
+/// for a two-hour illumination, at the slow end. Reporting an edge as an
+/// optimum states a scan parameter as a finding.
+pub fn fluence_rate_optimum_is_interior(rate: f64, lo_mw_cm2: f64, hi_mw_cm2: f64) -> bool {
+    rate > lo_mw_cm2 * 1.001 && rate < hi_mw_cm2 * 0.999
+}
+
 /// Validate a drug-light-interval value (hours): reject NaN, negative,
 /// and infinite inputs so they cannot reach `concentration_at` and
 /// produce silent non-physical PDT output. Pair with the `FromStr` impl
@@ -403,6 +541,139 @@ pub fn validate_dli_h(dli_h: f64) -> Result<(), String> {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
+
+    // ── The fluence-rate layer (#831) ─────────────────────────────────
+
+    #[test]
+    fn an_unilluminated_site_keeps_all_its_oxygen() {
+        assert_eq!(oxygen_fraction_under_illumination(0.0, 50.0), 1.0);
+        // And a site perfusion cannot reach loses all of it under any light.
+        assert_eq!(oxygen_fraction_under_illumination(10.0, 0.0), 0.0);
+    }
+
+    #[test]
+    fn faster_illumination_depletes_more_oxygen() {
+        // The whole premise. A mutation making the fraction rate-blind --
+        // returning 1.0 whatever the rate -- fails here, and so does one
+        // that inverts the sign.
+        let a = oxygen_fraction_under_illumination(25.0, 50.0);
+        let b = oxygen_fraction_under_illumination(200.0, 50.0);
+        assert!(b < a, "expected {b} < {a}");
+        // At the critical rate consumption exactly matches resupply, so half
+        // the oxygen remains. That is what phi_crit MEANS, and pinning it
+        // stops the parameter drifting into being an arbitrary scale.
+        assert!((oxygen_fraction_under_illumination(50.0, 50.0) - 0.5).abs() < 1e-12);
+    }
+
+    #[test]
+    fn the_yield_uses_the_engines_measured_oxygen_shape() {
+        // Not a second O2 curve. A mutation swapping in the linear
+        // `o2_dependent_exo_factor` fails, because the hyperbola and the line
+        // disagree by more than this tolerance away from the endpoints.
+        let rate = 200.0;
+        let o2 = oxygen_fraction_under_illumination(rate, 50.0);
+        let expect =
+            crate::oxygen::oer_relative_efficacy(o2, crate::oxygen::OER_REFERENCE_PO2_MMHG);
+        assert!((fluence_rate_yield_factor(rate, 50.0) - expect).abs() < 1e-12);
+        // No illumination means no depletion means no penalty, exactly.
+        assert_eq!(fluence_rate_yield_factor(0.0, 50.0), 1.0);
+    }
+
+    #[test]
+    fn the_delivered_dose_integrates_the_drug_and_does_not_sample_it_once() {
+        // The defect this layer exists to fix: sampling `yield_at` at the
+        // start of illumination makes a long treatment free. Under a
+        // decaying sensitizer the integral must be STRICTLY BELOW the
+        // start-sample, and the gap must widen as the illumination lengthens.
+        let ps = Photosensitizer::Porfimer {
+            t_half_h: 1.0,
+            t_distribution_h: 0.0,
+            phi_so2_relative: 1.0,
+        };
+        for &rate in &[20.0_f64, 200.0] {
+            let d = delivered_singlet_oxygen(&ps, 0.0, 150.0, rate, 50.0, 256);
+            let hours = 150.0 * 1000.0 / rate / 3600.0;
+            // What a start-sampling model would report: drug held at t=0.
+            let naive =
+                fluence_rate_yield_factor(rate, 50.0) * rate * ps.yield_at(0.0) * hours * 3.6;
+            assert!(
+                d < naive,
+                "rate {rate}: integral {d} not below start-sample {naive}"
+            );
+        }
+        // The gap is larger for the slower, longer illumination.
+        let slow = delivered_singlet_oxygen(&ps, 0.0, 150.0, 20.0, 50.0, 256);
+        let slow_naive = fluence_rate_yield_factor(20.0, 50.0)
+            * 20.0
+            * 1.0
+            * (150.0 * 1000.0 / 20.0 / 3600.0)
+            * 3.6;
+        let fast = delivered_singlet_oxygen(&ps, 0.0, 150.0, 200.0, 50.0, 256);
+        let fast_naive = fluence_rate_yield_factor(200.0, 50.0)
+            * 200.0
+            * 1.0
+            * (150.0 * 1000.0 / 200.0 / 3600.0)
+            * 3.6;
+        assert!(slow / slow_naive < fast / fast_naive);
+    }
+
+    #[test]
+    fn the_optimum_is_interior_and_falls_as_the_drug_clears_more_slowly() {
+        // The model's own prediction (P21), pinned so it cannot be tuned
+        // away: a slow-clearing sensitizer wants a slower illumination.
+        let (lo, hi) = (5.0, 400.0);
+        let mut prev = f64::INFINITY;
+        for &th in &[0.25_f64, 1.0, 4.0, 16.0, 48.0] {
+            let ps = Photosensitizer::Porfimer {
+                t_half_h: th,
+                t_distribution_h: 0.0,
+                phi_so2_relative: 1.0,
+            };
+            let (rate, dose) = optimal_fluence_rate(&ps, 0.0, 150.0, 50.0, lo, hi, 600);
+            assert!(dose > 0.0);
+            assert!(
+                fluence_rate_optimum_is_interior(rate, lo, hi),
+                "t_half {th}: optimum {rate} sits on a scan edge"
+            );
+            assert!(
+                rate < prev,
+                "t_half {th}: optimum {rate} did not fall below {prev}"
+            );
+            prev = rate;
+        }
+    }
+
+    #[test]
+    fn an_edge_answer_is_not_reported_as_an_optimum() {
+        // The degenerate case, refused rather than rendered. A mutation
+        // making the predicate unconditionally true fails here.
+        assert!(!fluence_rate_optimum_is_interior(5.0, 5.0, 400.0));
+        assert!(!fluence_rate_optimum_is_interior(400.0, 5.0, 400.0));
+        assert!(fluence_rate_optimum_is_interior(100.0, 5.0, 400.0));
+    }
+
+    #[test]
+    fn a_degenerate_illumination_delivers_nothing() {
+        let ps = Photosensitizer::default();
+        assert_eq!(
+            delivered_singlet_oxygen(&ps, 0.0, 150.0, 0.0, 50.0, 64),
+            0.0
+        );
+        assert_eq!(
+            delivered_singlet_oxygen(&ps, 0.0, 0.0, 100.0, 50.0, 64),
+            0.0
+        );
+        assert_eq!(
+            delivered_singlet_oxygen(&ps, 0.0, 150.0, 100.0, 50.0, 0),
+            0.0
+        );
+        assert_eq!(
+            optimal_fluence_rate(&ps, 0.0, 150.0, 50.0, 5.0, 5.0, 10),
+            (0.0, 0.0)
+        );
+    }
+
     use super::*;
 
     #[test]

@@ -55,6 +55,15 @@
    "reach": 1
   },
   {
+   "module": "photosensitizer_pk",
+   "pub_fns": 9,
+   "pub_types": 1,
+   "pub_consts": 0,
+   "code_lines": 249,
+   "serves": "Photodynamic therapy: photosensitizer PK, drug-light interval, singlet-O2 yield and fluence rate",
+   "reach": 2
+  },
+  {
    "module": "radiation",
    "pub_fns": 23,
    "pub_types": 1,
@@ -62,6 +71,15 @@
    "code_lines": 263,
    "serves": "Radiation + synthetic lethality (PARP)",
    "reach": 4
+  },
+  {
+   "module": "sonodynamic",
+   "pub_fns": 8,
+   "pub_types": 0,
+   "pub_consts": 1,
+   "code_lines": 63,
+   "serves": "Sonodynamic therapy: the mechanical index, the inertial-cavitation threshold and the frequency optimum",
+   "reach": 0
   }
  ],
  "shared": [
@@ -127,7 +145,6 @@
   "persister",
   "ph",
   "phenotype_mufa",
-  "photosensitizer_pk",
   "physics",
   "reaction_diffusion",
   "repair",
@@ -140,21 +157,21 @@
   "tumor_pk",
   "vasculature"
  ],
- "ferroptosis_engine_modules": 27,
- "total_modules": 39,
- "engine_pub_fns": 186,
- "engine_code_lines": 3992,
- "dedicated_modules": 7,
- "dedicated_pub_fns": 95,
- "dedicated_code_lines": 1250,
+ "ferroptosis_engine_modules": 26,
+ "total_modules": 40,
+ "engine_pub_fns": 182,
+ "engine_code_lines": 3805,
+ "dedicated_modules": 9,
+ "dedicated_pub_fns": 112,
+ "dedicated_code_lines": 1562,
  "shared_modules": 5,
  "shared_pub_fns": 58,
  "shared_code_lines": 818,
- "engine_modules_with_shared": 32,
- "engine_pub_fns_with_shared": 244,
- "engine_code_lines_with_shared": 4810,
- "line_ratio_narrow": 3.2,
- "line_ratio_wide": 3.8,
- "fn_ratio_narrow": 2.0,
- "fn_ratio_wide": 2.6
+ "engine_modules_with_shared": 31,
+ "engine_pub_fns_with_shared": 240,
+ "engine_code_lines_with_shared": 4623,
+ "line_ratio_narrow": 2.4,
+ "line_ratio_wide": 3.0,
+ "fn_ratio_narrow": 1.6,
+ "fn_ratio_wide": 2.1
 }

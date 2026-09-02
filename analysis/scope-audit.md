@@ -6,19 +6,19 @@
 
 | | ferroptosis / physical-ROS | other therapy | method |
 |---|--:|--:|--:|
-| committed analyses (145) | 20 | **1** | 124 |
+| committed analyses (145) | 21 | **1** | 123 |
 
-| preregistered predictions | **8 of 20** |
+| preregistered predictions | **10 of 22** |
 |---|--:|
-| engine modules mentioning it anywhere | **35 of 39** |
-| engine modules mentioning it in code | **21 of 39** |
-| engine modules mentioning it in PRODUCTION code | **15 of 39** |
+| engine modules mentioning it anywhere | **36 of 40** |
+| engine modules mentioning it in code | **21 of 40** |
+| engine modules mentioning it in PRODUCTION code | **15 of 40** |
 
 The module rows used to read `N of N` -- the same number on both sides of "of", arithmetic that cannot come out any other way, produced by counting `.rs` files without opening one. They are content measurements now, and the LAST is the one to read: a module can cite ferroptosis in a doc comment while its code is about geometry, and 6 modules pass the in-code check only via their `#[cfg(test)]` block -- a field name in a byte-identity assert, a string literal in a CSV writer, a test FUNCTION NAME. That count was typed as "four" and went stale the moment a test was renamed; it is derived now.
 
 **4 modules mention neither ferroptosis nor a physical-ROS modality anywhere in their text**: `adoptive.rs`, `reaction_diffusion.rs`, `spheroid.rs`, `vasculature.rs`. An earlier version of this page said every module of the engine concerns one or the other. It does not.
 
-8 of 20 preregistered predictions and 35 of 39 engine modules concern ferroptosis or the physical-ROS modalities.
+10 of 22 preregistered predictions and 36 of 40 engine modules concern ferroptosis or the physical-ROS modalities.
 
 ### The '1' is a filename marker, not a subject measurement
 
@@ -28,11 +28,11 @@ Applying the ferroptosis bucket's body rule to the SAME vocabulary admits **53**
 
 | already classified as | body-route matches |
 |---|--:|
-| ferroptosis-or-physical | 13 |
+| ferroptosis-or-physical | 14 |
 | therapy-subject | 1 |
-| method | 39 |
+| method | 38 |
 
-**13 of them are in this page's own FERROPTOSIS column** (`arm-parity`, `distilled-hypotheses-final`, `key-findings`, `modality-coverage`, `modality-module-depth`, `modality-panel`, `modality-tme`, `osf-registration-package`, `pathway-target-audit`, `principle-resistance-tradeoff`, `resistant-state-map`, `scientific-lead-handoff`, `timeline`), so under a mutually exclusive bucketing 53 cannot bound the therapy count. A further 39 are method analyses -- instrument work that cites a therapy as a worked example rather than studying one.
+**14 of them are in this page's own FERROPTOSIS column** (`arm-parity`, `distilled-hypotheses-final`, `key-findings`, `modality-calibration`, `modality-coverage`, `modality-module-depth`, `modality-panel`, `modality-tme`, `osf-registration-package`, `pathway-target-audit`, `principle-resistance-tradeoff`, `resistant-state-map`, `scientific-lead-handoff`, `timeline`), so under a mutually exclusive bucketing 53 cannot bound the therapy count. A further 38 are method analyses -- instrument work that cites a therapy as a worked example rather than studying one.
 
 So the body route does not measure 'other therapy' either. What it measures is how many analyses MENTION a therapy, which is a different question, and the honest reading of the table above is that the therapy figure is small and its exact value is not established by either rule. An earlier version published 'the true figure lies between 1 and 37', a range whose upper end is not a bound. That figure is quoted as a fact about a past commit and is deliberately NOT derived -- it has read 37, 38 and 37 across commits, moving TWICE on this script's 40-line head window and for opposite reasons -- once when a sibling page's head grew INTO the window past the three-hit threshold, once when this page's own therapy mention was pushed OUT of it -- rather than when any subject changed. The live figures are 1 and 53.
 
@@ -48,7 +48,7 @@ Note also that method analyses -- the largest bucket -- are about the INSTRUMENT
 
 - `radioligand-audit`
 
-**ferroptosis-or-physical** (20):
+**ferroptosis-or-physical** (21):
 
 - `arm-parity`
 - `atlas-discovery-gpx4`
@@ -58,6 +58,7 @@ Note also that method analyses -- the largest bucket -- are about the INSTRUMENT
 - `engine-selectivity`
 - `hypothesis-sdt-ferroptosis-icd`
 - `key-findings`
+- `modality-calibration`
 - `modality-coverage`
 - `modality-module-depth`
 - `modality-panel`
@@ -71,7 +72,7 @@ Note also that method analyses -- the largest bucket -- are about the INSTRUMENT
 - `sensitizer-symmetry`
 - `timeline`
 
-**method** (124): listed in `analysis/scope-audit.json`.
+**method** (123): listed in `analysis/scope-audit.json`.
 
 ## What this does not say
 

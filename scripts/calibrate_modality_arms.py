@@ -513,11 +513,106 @@ def _chemo_arm() -> dict:
     }
 
 
+
+def _read_validation(name: str) -> dict:
+    import json
+    f = (Path(__file__).resolve().parent.parent / "analysis" / "calibration" / name)
+    return json.loads(f.read_text())
+
+
+def _sonodynamic_arm() -> dict:
+    """The frequency optimum, scored on DIRECTIONS rather than on a range.
+
+    This arm cannot be fitted the way the others are, and forcing it into the
+    same machinery would be the dishonest move. Its comparator (PMID 26233216)
+    quotes attenuation in Np/m/MHz on the pressure amplitude against this
+    engine's dB/cm/MHz on intensity, and measures THERMAL ablation efficiency
+    where this model measures cavitation likelihood -- absorption enters those
+    two with opposite sign. Either mismatch alone would make a numerical
+    agreement uninterpretable, so what is scored is the sign of each
+    dependence, and one of the three signs is WRONG.
+    """
+    d = _read_validation("sonodynamic-validation.json")
+    confirmed = sum(1 for k in ("claim_interior_optimum", "claim_falls_with_attenuation")
+                    if d[k] == "CONFIRMED")
+    refuted = 1 if d["claim_depth_scaling"] == "REFUTED" else 0
+    return {
+        "arm": "Sonodynamic frequency",
+        "parameter": "sonodynamic::optimal_frequency_mhz",
+        "target": "cavitation is induced at LOW frequency and high pressure "
+                  "amplitude, while thermal effects take over at higher "
+                  "frequency -- so the model's index must fall with frequency "
+                  "once attenuation is accounted for, and its optimum must sit "
+                  "BELOW a thermal one",
+        "source": "PMID 35158903 (therapeutic focused ultrasound review, in "
+                  "the frozen corpus: 'at low frequencies and high-pressure "
+                  "amplitudes, mechanical effects (specifically acoustic "
+                  "cavitation) can be readily induced, whereas for higher "
+                  "frequencies and longer pulses thermal effects predominate')",
+        "comparator_source": "Ellens & Hynynen 2015, Med Phys 42(8):4896, "
+                             "PMID 26233216 -- OUTSIDE the frozen corpus, "
+                             "which was retrieved from ferroptosis and "
+                             "photo/sonodynamic queries and structurally holds "
+                             "no acoustics-physics literature. Named in full "
+                             "so it can be located, and kept out of the "
+                             "corpus-checked field rather than smuggled into "
+                             "it",
+        "target_kind": "three DIRECTIONS, scored apart -- no numeric agreement "
+                       "is claimed, because the comparator's observable and "
+                       "attenuation convention both differ from this model's",
+        "range_scanned": None,
+        "fit": None,
+        "directional": {"confirmed": confirmed, "refuted": refuted,
+                        "detail": {k: d[k] for k in (
+                            "claim_interior_optimum",
+                            "claim_falls_with_attenuation",
+                            "claim_depth_scaling")}},
+        "mapping": None,
+    }
+
+
+def _pdt_fluence_rate_arm() -> dict:
+    """The fluence-rate optimum, whose POSITION is an assumption restated.
+
+    The direction is anchored -- an oxygen-blind model has no reason to prefer
+    any rate and the measured fluence-rate effect says slower is better -- but
+    the optimum sits on roughly the square root of `phi_crit`, which nothing
+    in this repository measures. That exponent is computed rather than
+    caveated, which is why this row is DIRECTIONAL and not ADMISSIBLE.
+    """
+    d = _read_validation("pdt-fluence-rate-validation.json")
+    confirmed = sum(1 for k in ("all_optima_interior", "optimum_falls_with_half_life")
+                    if d[k])
+    return {
+        "arm": "PDT fluence rate",
+        "parameter": "photosensitizer_pk::optimal_fluence_rate",
+        "target": "the fluence-rate effect: high fluence rates deplete "
+                  "tumour oxygen and can make a treatment inefficient, so the "
+                  "delivered dose must FALL with rate at fixed total fluence",
+        "source": "PMID 31991650 (oncologic PDT immune-response review, in the "
+                  "frozen corpus: 'high fluence rates deplete oxygen levels at "
+                  "the tumor site ... resulting in a possibly inefficient "
+                  "treatment', and its reviewed regimens use low fluence rates)",
+        "comparator_source": "Henderson & Busch 2006, Lasers Surg Med, PMID "
+                             "16615136 (O2 depletion within seconds at 75 "
+                             "mW/cm2) -- OUTSIDE the frozen corpus, named in "
+                             "full and kept out of the corpus-checked field",
+        "target_kind": "a DIRECTION only. The optimum's position scales as "
+                       f"phi_crit^{d['optimum_scaling_exponent']:.2f}, and "
+                       "phi_crit is measured nowhere here",
+        "range_scanned": d["scan_range_mw_cm2"],
+        "fit": None,
+        "directional": {"confirmed": confirmed, "refuted": 0,
+                        "detail": {"phi_crit_exponent": d["optimum_scaling_exponent"]}},
+        "mapping": None,
+    }
+
+
 def scan() -> dict:
     return {"arms": [_radiation_arm(), _parp_arm(), _immunotherapy_arm(),
                      _chemo_arm(),
                      _oncolytic_arm(), _ablation_arm(), _cart_arm(),
-                     _adc_arm()],
+                     _adc_arm(), _sonodynamic_arm(), _pdt_fluence_rate_arm()],
             "unconstrained_width": UNCONSTRAINED_WIDTH}
 
 
@@ -527,6 +622,13 @@ def _verdict(a: dict, cap: float) -> str:
     # admission: that this project has no number to fit.
     if a.get("target") is None:
         return "NO TARGET"
+    # An arm whose target constrains a DIRECTION and not a value is a fourth
+    # outcome, and filing it as INADMISSIBLE (no fitted range) or ADMISSIBLE
+    # (a range was found) would both be false. The taxonomy already splits
+    # NO TARGET from UNCONSTRAINED for the same reason: collapsing outcome
+    # kinds hides the more interesting admission.
+    if a.get("directional") is not None:
+        return "PARTLY REFUTED" if a["directional"]["refuted"] else "DIRECTIONAL"
     f = a["fit"]
     if f is None:
         return "INADMISSIBLE"
@@ -540,7 +642,7 @@ def assemble(raw: dict) -> dict:
     arms = [dict(a, verdict=_verdict(a, cap)) for a in raw["arms"]]
     counts = {v: sum(1 for a in arms if a["verdict"] == v)
               for v in ("ADMISSIBLE", "UNCONSTRAINED", "INADMISSIBLE",
-                        "NO TARGET")}
+                        "NO TARGET", "DIRECTIONAL", "PARTLY REFUTED")}
     return dict(raw, arms=arms, verdict_counts=counts,
                 n_clinical=sum(1 for a in arms if a["mapping"]))
 

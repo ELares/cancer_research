@@ -351,13 +351,16 @@ def test_test_blocks_are_stripped_and_the_measured_case_stays_fixed():
 def test_the_crate_root_is_not_a_module(d):
     """`lib.rs`'s whole body is `pub mod <name>;`, so `pub mod immune;`
     credited it with modelling immunotherapy. `scope_audit.py` excludes it for
-    the same reason, and the two denominators must agree."""
+    the same reason, and the two denominators must agree.
+
+    The literal moves when a module lands; it is here so a module cannot
+    appear or vanish unnoticed, and `sonodynamic.rs` took it 39 -> 40."""
     assert "lib" in MC.NOT_A_MODULE
     assert "lib" not in d["ferroptosis_modules"]
     for r in d["rows"]:
         assert "lib" not in r["code_modules"], r["mechanism"]
     live = len([p for p in CORE.glob("*.rs") if p.stem != "lib"])
-    assert d["module_count"] == live == 39, (
+    assert d["module_count"] == live == 40, (
         f"module count {d['module_count']} against {live} on disk")
 
 

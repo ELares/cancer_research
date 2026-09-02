@@ -9,6 +9,7 @@
    "engine-selectivity",
    "hypothesis-sdt-ferroptosis-icd",
    "key-findings",
+   "modality-calibration",
    "modality-coverage",
    "modality-module-depth",
    "modality-panel",
@@ -118,7 +119,6 @@
    "mechanism-matrix",
    "mechanism-precision-report",
    "mechanism-recall-report",
-   "modality-calibration",
    "modality-predictions",
    "news-source-criteria",
    "news-verification-audit",
@@ -155,8 +155,8 @@
  "engine_modules": {
   "in_code": 21,
   "in_production_code": 15,
-  "mention": 35,
-  "modules": 39,
+  "mention": 36,
+  "modules": 40,
   "silent": [
    "adoptive.rs",
    "reaction_diffusion.rs",
@@ -175,8 +175,8 @@
   "top_n": 2297
  },
  "n_analyses": 145,
- "n_predictions": 20,
- "n_predictions_ferroptosis": 8,
+ "n_predictions": 22,
+ "n_predictions_ferroptosis": 10,
  "n_therapy_subject": 1,
  "predictions": {
   "P1": true,
@@ -192,6 +192,8 @@
   "P19": false,
   "P2": true,
   "P20": false,
+  "P21": true,
+  "P22": true,
   "P3": true,
   "P4": true,
   "P5": true,

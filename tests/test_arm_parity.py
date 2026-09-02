@@ -161,3 +161,30 @@ def test_the_page_states_what_it_cannot_measure():
     for phrase in ("does not measure", "lower bound", "attributed by HEADING"):
         assert phrase.lower() in md.lower(), (
             f"the page no longer states its own limit: {phrase!r}")
+
+
+def test_the_chapter_quotes_the_live_per_arm_line_counts():
+    """The sentence naming the SMALLEST arm has to move when that arm does.
+
+    Section 6.14 names sonodynamic therapy's line count against the
+    comparator's as the concrete example of what the aggregate ratio does not
+    buy. Both are per-arm figures from this artifact and neither is covered by
+    the depth-paragraph guard next door, which checks the AGGREGATE columns.
+    The number went stale within one commit of being written -- a follow-up
+    added two functions to the module -- and nothing noticed.
+    """
+    md = (REPO / "article" / "drafts" / "v1.md").read_text()
+    section = md[md.index("### 6.14"):]
+    rows = {r["arm"]: r for r in _d()["arms"]}
+    sdt, base = rows["SDT"]["code_lines"], rows["RSL3"]["code_lines"]
+    assert f"sonodynamic therapy owns {sdt} lines" in section, (
+        f"Chapter 6 does not quote sonodynamic's live line count ({sdt}); a "
+        "per-arm figure written by hand goes stale the next time that arm is "
+        "touched, which is exactly what happened to this one")
+    assert f"against the comparator's {base:,}" in section, (
+        f"the comparator's live line count ({base:,}) is not the one quoted")
+    # And the sentence must still be making its point: the example is only
+    # worth naming while that arm really is far behind.
+    assert sdt * 10 < base, (
+        "sonodynamic is no longer an order of magnitude behind the "
+        "comparator, so this sentence needs re-deriving rather than updating")
