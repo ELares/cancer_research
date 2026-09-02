@@ -1,0 +1,190 @@
+{
+  "absolute_rises_everywhere": false,
+  "by_reach": [
+    {
+      "payload_reach_cells": 1,
+      "points": [
+        {
+          "antibody_lambda_um": 20.0,
+          "bystander_kills": 3897,
+          "direct_kills": 3602,
+          "fold_advantage": 2.072459744586341,
+          "scalar_bystander_fraction": 0.0126,
+          "with_payload": 7465
+        },
+        {
+          "antibody_lambda_um": 40.0,
+          "bystander_kills": 7432,
+          "direct_kills": 6764,
+          "fold_advantage": 2.0847131874630396,
+          "scalar_bystander_fraction": 0.0126,
+          "with_payload": 14101
+        },
+        {
+          "antibody_lambda_um": 80.0,
+          "bystander_kills": 12905,
+          "direct_kills": 11603,
+          "fold_advantage": 2.1041110057743686,
+          "scalar_bystander_fraction": 0.0126,
+          "with_payload": 24414
+        },
+        {
+          "antibody_lambda_um": 160.0,
+          "bystander_kills": 18748,
+          "direct_kills": 17799,
+          "fold_advantage": 2.0589920782066407,
+          "scalar_bystander_fraction": 0.0126,
+          "with_payload": 36648
+        },
+        {
+          "antibody_lambda_um": 320.0,
+          "bystander_kills": 23149,
+          "direct_kills": 23711,
+          "fold_advantage": 1.989920290160685,
+          "scalar_bystander_fraction": 0.0126,
+          "with_payload": 47183
+        }
+      ]
+    },
+    {
+      "payload_reach_cells": 2,
+      "points": [
+        {
+          "antibody_lambda_um": 20.0,
+          "bystander_kills": 14459,
+          "direct_kills": 3672,
+          "fold_advantage": 4.921568627450981,
+          "scalar_bystander_fraction": 0.0126,
+          "with_payload": 18072
+        },
+        {
+          "antibody_lambda_um": 40.0,
+          "bystander_kills": 24441,
+          "direct_kills": 6755,
+          "fold_advantage": 4.614359733530718,
+          "scalar_bystander_fraction": 0.0126,
+          "with_payload": 31170
+        },
+        {
+          "antibody_lambda_um": 80.0,
+          "bystander_kills": 38566,
+          "direct_kills": 11534,
+          "fold_advantage": 4.335009537020982,
+          "scalar_bystander_fraction": 0.0126,
+          "with_payload": 50000
+        },
+        {
+          "antibody_lambda_um": 160.0,
+          "bystander_kills": 49764,
+          "direct_kills": 17833,
+          "fold_advantage": 3.7877530421129366,
+          "scalar_bystander_fraction": 0.0126,
+          "with_payload": 67547
+        },
+        {
+          "antibody_lambda_um": 320.0,
+          "bystander_kills": 53376,
+          "direct_kills": 23804,
+          "fold_advantage": 3.2440346160309192,
+          "scalar_bystander_fraction": 0.0126,
+          "with_payload": 77221
+        }
+      ]
+    },
+    {
+      "payload_reach_cells": 3,
+      "points": [
+        {
+          "antibody_lambda_um": 20.0,
+          "bystander_kills": 28483,
+          "direct_kills": 3576,
+          "fold_advantage": 8.954418344519016,
+          "scalar_bystander_fraction": 0.0126,
+          "with_payload": 32021
+        },
+        {
+          "antibody_lambda_um": 40.0,
+          "bystander_kills": 40957,
+          "direct_kills": 6706,
+          "fold_advantage": 7.087235311661199,
+          "scalar_bystander_fraction": 0.0126,
+          "with_payload": 47527
+        },
+        {
+          "antibody_lambda_um": 80.0,
+          "bystander_kills": 57838,
+          "direct_kills": 11466,
+          "fold_advantage": 6.067242281527996,
+          "scalar_bystander_fraction": 0.0126,
+          "with_payload": 69567
+        },
+        {
+          "antibody_lambda_um": 160.0,
+          "bystander_kills": 62866,
+          "direct_kills": 17570,
+          "fold_advantage": 4.591633466135458,
+          "scalar_bystander_fraction": 0.0126,
+          "with_payload": 80675
+        },
+        {
+          "antibody_lambda_um": 320.0,
+          "bystander_kills": 58656,
+          "direct_kills": 23929,
+          "fold_advantage": 3.4465293158928496,
+          "scalar_bystander_fraction": 0.0126,
+          "with_payload": 82472
+        }
+      ]
+    }
+  ],
+  "checks": [
+    {
+      "absolute_rises_with_penetration": true,
+      "fold_falls_with_penetration": false,
+      "fold_range": [
+        1.989920290160685,
+        2.1041110057743686
+      ],
+      "payload_reach_cells": 1,
+      "scalar_is_constant": true
+    },
+    {
+      "absolute_rises_with_penetration": true,
+      "fold_falls_with_penetration": true,
+      "fold_range": [
+        3.2440346160309192,
+        4.921568627450981
+      ],
+      "payload_reach_cells": 2,
+      "scalar_is_constant": true
+    },
+    {
+      "absolute_rises_with_penetration": false,
+      "fold_falls_with_penetration": true,
+      "fold_range": [
+        3.4465293158928496,
+        8.954418344519016
+      ],
+      "payload_reach_cells": 3,
+      "scalar_is_constant": true
+    }
+  ],
+  "flat_arm_span_ratio": 1.0573845677026907,
+  "fold_falls_everywhere": false,
+  "lambdas": [
+    20.0,
+    40.0,
+    80.0,
+    160.0,
+    320.0
+  ],
+  "reaches_where_fold_falls": [
+    2,
+    3
+  ],
+  "reaches_where_fold_is_flat": [
+    1
+  ],
+  "scalar_never_moves": true,
+  "verdict": "PARTIAL \u2014 the marginal value falls as penetration improves, but only where the payload reaches beyond one cell"
+}

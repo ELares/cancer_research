@@ -56,6 +56,7 @@ mod npy;
 mod snapshot;
 
 use ferroptosis_core::acsl4::{pufa_boost_from_status, ACSL4_NEGATIVE};
+use ferroptosis_core::adc::{self, AdcConfig, Linker};
 use ferroptosis_core::alox::AloxConfig;
 use ferroptosis_core::biochem::{exo_decay_factor, sim_cell_step, CellState};
 use ferroptosis_core::cell::{Phenotype, Treatment};
@@ -194,6 +195,8 @@ const IMMUNE_SEED_SALT: u64 = 0x111A_0E5E_0000_0539;
 const RADIATION_SEED_SALT: u64 = 0x4AD1_0A17_0000_0539;
 // A fourth stream. Same CodeQL false positive as the three above; see the note.
 const ONCOLYTIC_SEED_SALT: u64 = 0x0C01_9713_0000_0539;
+// A fifth stream. Same CodeQL false positive as the four above.
+const ADC_SEED_SALT: u64 = 0x0AD0_C047_0000_0539;
 const _: () = assert!(BIOCHEM_SEED_SALT != IMMUNE_SEED_SALT);
 // Pairwise-distinct, per the #278 layer-seed rule: two layers sharing a salt
 // draw the SAME number for the same (cell, step), so their decisions correlate
@@ -203,6 +206,10 @@ const _: () = assert!(RADIATION_SEED_SALT != IMMUNE_SEED_SALT);
 const _: () = assert!(ONCOLYTIC_SEED_SALT != BIOCHEM_SEED_SALT);
 const _: () = assert!(ONCOLYTIC_SEED_SALT != IMMUNE_SEED_SALT);
 const _: () = assert!(ONCOLYTIC_SEED_SALT != RADIATION_SEED_SALT);
+const _: () = assert!(ADC_SEED_SALT != BIOCHEM_SEED_SALT);
+const _: () = assert!(ADC_SEED_SALT != IMMUNE_SEED_SALT);
+const _: () = assert!(ADC_SEED_SALT != RADIATION_SEED_SALT);
+const _: () = assert!(ADC_SEED_SALT != ONCOLYTIC_SEED_SALT);
 
 /// SplitMix64 finalizer (Steele, Lea & Flood 2014, "Fast Splittable
 /// Pseudorandom Number Generators"): a fast, full-avalanche integer hash. Used
@@ -312,6 +319,14 @@ struct ConditionResult {
     /// nowhere", and those are different claims.
     #[serde(skip_serializing_if = "Option::is_none")]
     oncolytic_seeded: Option<bool>,
+    /// Cells killed by the conjugate itself (#844), reported apart from the
+    /// bystander term because the arm's whole question is how much of the kill
+    /// the payload contributes where the antibody could not reach.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    adc_direct_kills: Option<usize>,
+    /// Cells killed by payload released from a directly-killed neighbour.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    adc_bystander_kills: Option<usize>,
     /// Farthest the infection reached from its seed, in microns. The quantity
     /// a percolation threshold is about: below the threshold this stays near
     /// zero however long the run continues.
@@ -648,6 +663,28 @@ struct Overrides {
     oncolytic: Option<(OncolyticConfig, f64)>,
     /// The step at which the virus is seeded at the tumour centre.
     oncolytic_seed_step: u32,
+    /// Antibody-drug conjugate with a SPATIAL bystander effect (#844).
+    ///
+    /// `(config, antibody_lambda_um, payload_reach_cells)`. `None` ⇒ inert ⇒
+    /// byte-identical; the production matrix never sets it.
+    ///
+    /// `adc::bystander_kill_fraction` takes `neighbours_in_reach` as a bare
+    /// scalar -- there is no geometry in it at all, so the payload has nowhere
+    /// to go and no distance to travel. That makes the arm's whole clinical
+    /// rationale inexpressible: a bystander payload exists because the
+    /// ANTIBODY penetrates badly and the small released drug does not, so the
+    /// payload's job is to reach cells the conjugate never did. A model with
+    /// no "where" cannot say that, and cannot say where the effect is worth
+    /// most.
+    ///
+    /// The antibody field is `exp(-depth/lambda)` over the SAME radial-depth
+    /// geometry the oxygen field uses -- reused rather than restated -- with
+    /// its own, much shorter length, because antibodies penetrate far worse
+    /// than small molecules.
+    adc: Option<(AdcConfig, f64, usize)>,
+    /// The step at which the conjugate is administered. One administration,
+    /// for the same reason radiation gets one fraction.
+    adc_step: u32,
     /// ESCRT-III membrane-repair brake on death execution (#465): `Some((rate,
     /// budget))` sets `params.escrt_repair_rate`/`escrt_repair_budget` so a cell
     /// whose LP crosses the death threshold can be resealed for a finite per-cell
@@ -837,6 +874,28 @@ fn vessel_or_rd_supply(
     } else {
         vessel_supply_field(grid, vessels, lambda)
     }
+}
+
+/// The lattice offsets a released payload reaches within `reach_cells`.
+///
+/// A SPHERE, not a cube, and the difference is not cosmetic: a cube of side
+/// `2r+1` reaches `sqrt(3)*r` at its corners, 73% further than the radius it
+/// claims, so a "payload reach of 2 cells" would silently be a reach of 3.5.
+/// The mutation replacing the distance test with `false` -- turning the sphere
+/// into a cube -- survived every other guard on this arm.
+fn payload_offsets(reach_cells: usize) -> Vec<(i64, i64, i64)> {
+    let r = reach_cells as i64;
+    let mut out = Vec::new();
+    for dr in -r..=r {
+        for dc in -r..=r {
+            for dl in -r..=r {
+                if dr * dr + dc * dc + dl * dl <= r * r {
+                    out.push((dr, dc, dl));
+                }
+            }
+        }
+    }
+    out
 }
 
 fn run_one_condition_full(
@@ -1635,6 +1694,15 @@ fn run_one_condition_full(
         (Vec::new(), Vec::new())
     };
     let mut oncolytic_kills = 0usize;
+    let adc_cfg = overrides.adc.clone();
+    let mut adc_direct_kills = 0usize;
+    let mut adc_bystander_kills = 0usize;
+    // The ANTIBODY's own penetration field, on the same radial-depth geometry
+    // the oxygen field uses but with its own length. Empty when the arm is off.
+    let adc_antibody: Vec<f64> = match adc_cfg.as_ref() {
+        Some((_, lambda_um, _)) => ferroptosis_core::oxygen::radial_o2_field(&grid, *lambda_um),
+        None => Vec::new(),
+    };
     // WHETHER A SEED WAS EVER PLACED, which a front radius of zero cannot say.
     // At a very low permissive fraction there may be no enterable cell near
     // the tumour centre at all, and reporting "the front did not spread" for
@@ -2185,6 +2253,97 @@ fn run_one_condition_full(
                     }
                 }
                 radiation_kills += killed;
+            }
+        }
+
+        // --- Antibody-drug conjugate, with a SPATIAL bystander (#844) ---
+        //
+        // `adc::bystander_kill_fraction` takes `neighbours_in_reach` as a bare
+        // scalar. That is not a small simplification: it means the payload has
+        // nowhere to go, so the arm cannot express the reason bystander
+        // payloads exist. An antibody is large and penetrates a tumour badly;
+        // the payload it releases is small and does not. The payload's job is
+        // to reach cells the conjugate never did, and a model with no "where"
+        // cannot say that, nor say where the effect is worth most.
+        //
+        // Two passes, and the order matters: every direct kill is decided
+        // against the antibody field FIRST, then the payload is released from
+        // those cells. Interleaving them would let a bystander-killed cell
+        // release payload of its own, which is a chain reaction rather than a
+        // bystander effect -- the payload comes from the conjugate, and a cell
+        // that never took up conjugate has none to give.
+        if let Some((acfg, _, reach_cells)) = adc_cfg.as_ref() {
+            if step == overrides.adc_step {
+                let direct_p = adc::direct_kill_fraction(acfg);
+                let escape = acfg.payload_escape_fraction.clamp(0.0, 1.0);
+                let mut directly_killed = Vec::new();
+                for idx in 0..n_cells {
+                    if !grid.cells[idx].is_tumor || grid.cells[idx].state.dead {
+                        continue;
+                    }
+                    let mut rng = StdRng::seed_from_u64(cell_seed(
+                        cond_seed,
+                        idx,
+                        step as usize,
+                        ADC_SEED_SALT,
+                    ));
+                    if rng.gen::<f64>() < direct_p * adc_antibody[idx] {
+                        directly_killed.push(idx);
+                    }
+                }
+                for &idx in &directly_killed {
+                    grid.cells[idx].state.dead = true;
+                    grid.cells[idx].state.death_step = Some(step);
+                    adc_direct_kills += 1;
+                }
+                // The payload's reach, in CELLS, which is the whole point: it
+                // is a distance, not a fraction. `releases_permeable_payload`
+                // gates it because a non-cleavable linker has no free payload
+                // to release, which is the arm's own documented distinction.
+                if acfg.linker.releases_permeable_payload() && *reach_cells > 0 {
+                    let offsets = payload_offsets(*reach_cells);
+                    let mut hit = Vec::new();
+                    for &src in &directly_killed {
+                        let (sr, sc, sl) = grid.coords(src);
+                        {
+                            {
+                                for &(dr, dc, dl) in &offsets {
+                                    let (nr, nc, nl) =
+                                        (sr as i64 + dr, sc as i64 + dc, sl as i64 + dl);
+                                    if nr < 0
+                                        || nc < 0
+                                        || nl < 0
+                                        || nr >= grid.rows as i64
+                                        || nc >= grid.cols as i64
+                                        || nl >= grid.layers as i64
+                                    {
+                                        continue;
+                                    }
+                                    let j = grid.flat_index(nr as usize, nc as usize, nl as usize);
+                                    if !grid.cells[j].is_tumor || grid.cells[j].state.dead {
+                                        continue;
+                                    }
+                                    let mut rng = StdRng::seed_from_u64(cell_seed(
+                                        cond_seed,
+                                        src * 37 + j,
+                                        step as usize,
+                                        ADC_SEED_SALT,
+                                    ));
+                                    if rng.gen::<f64>() < escape {
+                                        hit.push(j);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    for j in hit {
+                        if !grid.cells[j].state.dead {
+                            grid.cells[j].state.dead = true;
+                            grid.cells[j].state.death_step = Some(step);
+                            adc_bystander_kills += 1;
+                        }
+                    }
+                }
             }
         }
 
@@ -2845,6 +3004,8 @@ fn run_one_condition_full(
         radiation_kills: radiation_cfg.as_ref().map(|_| radiation_kills),
         oncolytic_kills: oncolytic_cfg.as_ref().map(|_| oncolytic_kills),
         oncolytic_seeded: oncolytic_cfg.as_ref().map(|_| onc_seeded),
+        adc_direct_kills: adc_cfg.as_ref().map(|_| adc_direct_kills),
+        adc_bystander_kills: adc_cfg.as_ref().map(|_| adc_bystander_kills),
         oncolytic_front_radius_um: oncolytic_cfg.as_ref().map(|_| {
             // How far the infection actually reached from the seed, which is
             // the quantity a percolation threshold is about. Zero when the
@@ -5460,6 +5621,98 @@ fn run_spheroid_size_sweep() {
 /// replication the front also has to survive its own stochasticity.
 ///
 /// Does NOT write summary.json; the matrix is untouched and byte-identical.
+/// `--adc-bystander-sweep`: where a bystander payload is worth most (#844).
+///
+/// `adc::bystander_kill_fraction` takes `neighbours_in_reach` as a bare
+/// scalar, so in the point model the payload has nowhere to go and no distance
+/// to travel. That makes the arm's own clinical rationale inexpressible: a
+/// bystander payload exists BECAUSE the antibody penetrates a tumour badly and
+/// the small released drug does not, so its job is to reach cells the
+/// conjugate never did.
+///
+/// The prediction that follows, and which a point model cannot state: the
+/// bystander effect's MARGINAL value should be largest exactly where the
+/// antibody penetrates worst, and should fall away as penetration improves --
+/// because a conjugate that reaches everything has nothing left for the
+/// payload to add.
+///
+/// Sweeps antibody penetration length against payload reach, each condition run
+/// twice: once with a cleavable linker (payload escapes) and once with a
+/// non-cleavable one (it does not). The difference is the bystander's
+/// contribution, measured rather than parameterised.
+///
+/// Does NOT write summary.json; the matrix is untouched and byte-identical.
+fn run_adc_bystander_sweep() {
+    let grid_dim = 60usize;
+    let n_steps = bench_env_u32("BENCH_N_STEPS", 10);
+    let adc_step = 4u32;
+    // Antibody penetration lengths. The short end is where measured antibody
+    // penetration actually sits -- tens of microns from a vessel -- and the
+    // long end is a hypothetical conjugate that penetrates like a small
+    // molecule, included so the trend has somewhere to go.
+    let lambdas = [20.0f64, 40.0, 80.0, 160.0, 320.0];
+    let reaches = [1usize, 2, 3];
+    eprintln!(
+        "=== --adc-bystander-sweep: grid {grid_dim}, {n_steps} steps, dosed at \
+         step {adc_step} (#844) ==="
+    );
+    println!(
+        "ADC_BYSTANDER_META grid_dim={grid_dim} n_steps={n_steps} cell_size_um={CELL_SIZE_UM}"
+    );
+    let cfg = RunConfig { grid_dim, n_steps };
+    for &lambda in &lambdas {
+        for &reach in &reaches {
+            for cleavable in [false, true] {
+                let condition = Condition {
+                    name: format!("adc_l{lambda}_r{reach}_c{cleavable}"),
+                    treatment: Treatment::AntibodyDrugConjugate,
+                    treatment_name: "AntibodyDrugConjugate".to_string(),
+                    o2_lambda: Some(ZONE_REF_LAMBDA),
+                    immune_on: false,
+                    stromal_on: false,
+                    ph_on: false,
+                    dose_schedule: DoseSchedule::Constant,
+                };
+                // `AdcConfig::default()` is all zeros -- the inert identity
+                // that keeps the arm off -- so a sweep using it kills nobody
+                // and reports a clean table of zeros. The first run of this
+                // sweep did exactly that. These are the same illustrative
+                // values the 0-D panel uses and they are UNCALIBRATED; what is
+                // being measured is how the bystander's contribution moves
+                // with penetration, not any kill magnitude.
+                let mut acfg = AdcConfig {
+                    antigen_positive_fraction: 0.7,
+                    direct_kill_probability: 0.6,
+                    payload_escape_fraction: 0.3,
+                    neighbours_in_reach: 0.1,
+                    ..AdcConfig::default()
+                };
+                acfg.linker = if cleavable {
+                    Linker::Cleavable
+                } else {
+                    Linker::NonCleavable
+                };
+                let overrides = Overrides {
+                    adc: Some((acfg.clone(), lambda, reach)),
+                    adc_step,
+                    ..Default::default()
+                };
+                let r = run_one_condition_full(&condition, cfg, None, overrides);
+                println!(
+                    "ADC_BYSTANDER antibody_lambda_um={lambda} payload_reach_cells={reach} \
+                     cleavable={cleavable} direct_kills={} bystander_kills={} \
+                     total_dead={} total_tumor={} scalar_bystander_fraction={:.6}",
+                    r.adc_direct_kills.unwrap_or(0),
+                    r.adc_bystander_kills.unwrap_or(0),
+                    r.total_dead,
+                    r.total_tumor,
+                    adc::bystander_kill_fraction(&acfg)
+                );
+            }
+        }
+    }
+}
+
 fn run_oncolytic_percolation_sweep() {
     let grid_dim = 60usize;
     let n_steps = bench_env_u32("BENCH_N_STEPS", 60);
@@ -5711,6 +5964,10 @@ fn main() {
     // `--spheroid-size-sweep` runs RSL3 across a range of spheroid sizes, fixed vs
     // size-aware zone thresholds (#333 kill leg), emitting SPHEROID_SIZE_SWEEP lines.
     // Does NOT write summary.json; the default matrix path below is byte-identical.
+    if std::env::args().any(|a| a == "--adc-bystander-sweep") {
+        run_adc_bystander_sweep();
+        return;
+    }
     if std::env::args().any(|a| a == "--oncolytic-percolation-sweep") {
         run_oncolytic_percolation_sweep();
         return;
@@ -5780,6 +6037,194 @@ fn main() {
 
 #[cfg(test)]
 mod tests {
+    /// The bystander payload must reach cells the CONJUGATE could not.
+    ///
+    /// `adc::bystander_kill_fraction` takes `neighbours_in_reach` as a bare
+    /// scalar, so in the point model the payload has nowhere to go. These pin
+    /// the three properties that only exist once it does.
+    #[test]
+    fn the_bystander_payload_reaches_past_the_antibody() {
+        let cfg = RunConfig {
+            grid_dim: 40,
+            n_steps: 8,
+        };
+        let run = |lambda: f64, reach: usize, cleavable: bool| {
+            let cond = Condition {
+                name: format!("adc_t_{lambda}_{reach}_{cleavable}"),
+                treatment: Treatment::AntibodyDrugConjugate,
+                treatment_name: "AntibodyDrugConjugate".to_string(),
+                o2_lambda: Some(ZONE_REF_LAMBDA),
+                immune_on: false,
+                stromal_on: false,
+                ph_on: false,
+                dose_schedule: DoseSchedule::Constant,
+            };
+            let acfg = AdcConfig {
+                antigen_positive_fraction: 0.7,
+                direct_kill_probability: 0.6,
+                payload_escape_fraction: 0.3,
+                neighbours_in_reach: 0.1,
+                linker: if cleavable {
+                    Linker::Cleavable
+                } else {
+                    Linker::NonCleavable
+                },
+            };
+            run_one_condition_full(
+                &cond,
+                cfg,
+                None,
+                Overrides {
+                    adc: Some((acfg, lambda, reach)),
+                    adc_step: 3,
+                    ..Default::default()
+                },
+            )
+        };
+        // 1. A NON-CLEAVABLE linker releases nothing. If it did, the whole
+        //    measurement -- which is a DIFFERENCE between the two linkers --
+        //    would be measuring noise.
+        let plain = run(40.0, 2, false);
+        assert_eq!(plain.adc_bystander_kills.unwrap(), 0);
+        assert!(plain.adc_direct_kills.unwrap() > 0);
+
+        // 2. A cleavable one does, and kills strictly more in total.
+        let cleave = run(40.0, 2, true);
+        assert!(cleave.adc_bystander_kills.unwrap() > 0);
+        assert!(cleave.total_dead > plain.total_dead);
+
+        // 3. THE POINT OF THE ARM: a worse-penetrating antibody gets MORE
+        //    multiplication out of the same payload. The scalar the point
+        //    model returns is identical in both cases and cannot express it.
+        let fold = |lam: f64| {
+            let on = run(lam, 2, true).total_dead as f64;
+            let off = run(lam, 2, false).total_dead as f64;
+            on / off
+        };
+        let shallow = fold(20.0);
+        let deep = fold(320.0);
+        assert!(
+            shallow > deep,
+            "the bystander advantage was not larger for the worse-penetrating \
+             antibody ({:.2} at 20 um vs {:.2} at 320 um), which is the \
+             arm's whole clinical rationale",
+            shallow,
+            deep
+        );
+        let a = AdcConfig {
+            antigen_positive_fraction: 0.7,
+            direct_kill_probability: 0.6,
+            payload_escape_fraction: 0.3,
+            neighbours_in_reach: 0.1,
+            linker: Linker::Cleavable,
+        };
+        let scalar = adc::bystander_kill_fraction(&a);
+        assert!(
+            scalar > 0.0,
+            "the scalar is zero, so the contrast with it is vacuous"
+        );
+    }
+
+    /// The payload's reach is a SPHERE, and the numbers say so.
+    ///
+    /// A cube of side `2r+1` reaches `sqrt(3)*r` at its corners -- 73% further
+    /// than the radius it claims -- so a "reach of 2 cells" would silently be
+    /// a reach of 3.5. Counting the offsets is the only way to tell the two
+    /// apart from outside, and the cube mutation survived every behavioural
+    /// guard on this arm before this test existed.
+    #[test]
+    fn the_payload_reach_is_a_sphere_not_a_cube() {
+        // Exact lattice counts. r=1: the centre plus its 6 face neighbours.
+        // A cube would give 27, and 125 against the sphere's 33 at r=2.
+        assert_eq!(payload_offsets(0).len(), 1);
+        assert_eq!(payload_offsets(1).len(), 7);
+        assert_eq!(payload_offsets(2).len(), 33);
+        for r in 0..=4usize {
+            let offs = payload_offsets(r);
+            let cube = (2 * r + 1).pow(3);
+            assert!(
+                offs.len() < cube || r == 0,
+                "reach {r} returns {} offsets against a cube's {cube}, so it is \
+                 a cube",
+                offs.len()
+            );
+            // NOTHING may sit outside the stated radius. This is the property
+            // the name promises, and the one a cube breaks.
+            let rr = r as i64;
+            assert!(
+                offs.iter()
+                    .all(|&(a, b, c)| a * a + b * b + c * c <= rr * rr),
+                "reach {r} includes an offset beyond its own radius"
+            );
+            assert!(offs.contains(&(0, 0, 0)));
+        }
+    }
+
+    /// A zero payload reach is a payload that goes nowhere, and must kill
+    /// nobody -- the degenerate end of the parameter, checked so the sweep's
+    /// lowest arm is a real bound rather than an untested edge.
+    #[test]
+    fn a_payload_with_no_reach_kills_nobody() {
+        let cond = Condition {
+            name: "adc_zero_reach".to_string(),
+            treatment: Treatment::AntibodyDrugConjugate,
+            treatment_name: "AntibodyDrugConjugate".to_string(),
+            o2_lambda: Some(ZONE_REF_LAMBDA),
+            immune_on: false,
+            stromal_on: false,
+            ph_on: false,
+            dose_schedule: DoseSchedule::Constant,
+        };
+        let acfg = AdcConfig {
+            antigen_positive_fraction: 0.7,
+            direct_kill_probability: 0.6,
+            payload_escape_fraction: 0.3,
+            neighbours_in_reach: 0.1,
+            linker: Linker::Cleavable,
+        };
+        let r = run_one_condition_full(
+            &cond,
+            RunConfig {
+                grid_dim: 30,
+                n_steps: 8,
+            },
+            None,
+            Overrides {
+                adc: Some((acfg, 40.0, 0)),
+                adc_step: 3,
+                ..Default::default()
+            },
+        );
+        assert_eq!(r.adc_bystander_kills.unwrap(), 0);
+        assert!(r.adc_direct_kills.unwrap() > 0);
+    }
+
+    /// The arm is off without its override, like every other unwired one.
+    #[test]
+    fn the_adc_arm_is_inert_without_its_override() {
+        let cond = Condition {
+            name: "adc_default".to_string(),
+            treatment: Treatment::AntibodyDrugConjugate,
+            treatment_name: "AntibodyDrugConjugate".to_string(),
+            o2_lambda: Some(50.0),
+            immune_on: false,
+            stromal_on: false,
+            ph_on: false,
+            dose_schedule: DoseSchedule::Constant,
+        };
+        let r = run_one_condition_full(
+            &cond,
+            RunConfig {
+                grid_dim: 20,
+                n_steps: 20,
+            },
+            None,
+            Overrides::default(),
+        );
+        assert!(r.adc_direct_kills.is_none());
+        assert!(r.adc_bystander_kills.is_none());
+    }
+
     /// The oncolytic front is a THRESHOLD, and the closed form is not.
     ///
     /// `oncolytic::front_speed` is `2*sqrt(D*r)` and returns a positive number
@@ -6023,7 +6468,7 @@ mod tests {
     /// #844 exists to empty. Written to FAIL when an arm moves tier, so
     /// `analysis/arm-parity.md` and the epic move in the same commit.
     #[test]
-    fn the_spatial_engine_expresses_five_of_the_ten_treatment_arms() {
+    fn the_spatial_engine_expresses_six_of_the_ten_treatment_arms() {
         // A BIGGER PROBE THAN THE UNIT DEFAULT, deliberately. At 10^3/20 the
         // in-vivo-tuned RSL3 switch kills nothing at all -- a documented
         // property of that parameterisation, not of the engine's ability to
@@ -6152,6 +6597,33 @@ mod tests {
         );
         on_demand.push("OncolyticVirus".to_string());
 
+        let adc_probe = {
+            let acfg = AdcConfig {
+                antigen_positive_fraction: 0.7,
+                direct_kill_probability: 0.6,
+                payload_escape_fraction: 0.3,
+                neighbours_in_reach: 0.1,
+                linker: Linker::Cleavable,
+            };
+            run_one_condition_full(
+                &base(Treatment::AntibodyDrugConjugate),
+                cfg,
+                None,
+                Overrides {
+                    adc: Some((acfg, 80.0, 2)),
+                    adc_step: 5,
+                    ..Default::default()
+                },
+            )
+        };
+        assert!(
+            moved(&adc_probe),
+            "the ADC override is set and nothing moved"
+        );
+        assert!(adc_probe.adc_direct_kills.unwrap_or(0) > 0);
+        assert!(adc_probe.adc_bystander_kills.unwrap_or(0) > 0);
+        on_demand.push("AntibodyDrugConjugate".to_string());
+
         // THE TIER LIST MUST COVER EVERY ARM THAT HAS AN OVERRIDE, and the
         // table below is COMPLETE BY CONSTRUCTION rather than by care.
         //
@@ -6177,7 +6649,7 @@ mod tests {
             (Treatment::AdoptiveCell, None),
             (Treatment::OncolyticVirus, Some("    oncolytic: Option<")),
             (Treatment::Ablation, None),
-            (Treatment::AntibodyDrugConjugate, None),
+            (Treatment::AntibodyDrugConjugate, Some("    adc: Option<")),
             (Treatment::Chemotherapy, None),
         ];
         assert_eq!(
@@ -6223,7 +6695,11 @@ mod tests {
 
         assert_eq!(
             on_demand,
-            vec!["Radiation".to_string(), "OncolyticVirus".to_string()],
+            vec![
+                "Radiation".to_string(),
+                "OncolyticVirus".to_string(),
+                "AntibodyDrugConjugate".to_string()
+            ],
             "the ON DEMAND tier has changed. That is #844 progressing -- update \
              this literal, the test's NAME, `analysis/arm-parity.md` and the \
              epic in the same commit."

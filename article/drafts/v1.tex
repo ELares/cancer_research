@@ -1460,6 +1460,45 @@ And it is the clearest case yet for why these arms belong in the spatial engine 
 \label{fig:fig46_oncolytic_percolation}
 \end{figure}
 
+\section{Antibody-Drug Conjugates, and the Distance a Scalar Does Not Have}
+
+The bystander effect is the reason a large part of this modality exists. An antibody-drug conjugate carries a poison to a cell bearing the right antigen; a \textit{bystander} payload is one that, when the cell dies, escapes and kills its neighbours too. Conjugates are deliberately engineered with cleavable linkers to get that behaviour, and the clinical argument for it is entirely spatial: the antibody is a large molecule that penetrates a tumour badly, the payload it releases is small and does not, so the payload's job is to reach the cells the conjugate never got to.
+
+\textbf{What the engine had.} A number. \bookcode{bystander\_kill\_fraction} takes a parameter called \bookcode{neighbours\_in\_reach} -- a fraction of the tumour, supplied as an input, which the module's own documentation is careful to flag as an input rather than something derived. There is no distance in it, and no direction. The payload has nowhere to go.
+
+That is not a small simplification. It means the arm cannot state its own rationale: with no geometry, there is no such thing as ``cells the conjugate did not reach'', and therefore no way to ask the question the effect exists to answer.
+
+\begin{numbers}
+What was wired: the conjugate's own penetration field, \bookcode{exp(-depth/$\lambda$)} over the same radial geometry the oxygen field uses but with its own, much shorter length. A cell's chance of direct kill scales with the conjugate that reached it. Each directly killed cell then releases payload into a sphere of a given radius in cells.
+
+Every condition is run twice, identical in every respect including the random stream, differing only in the linker -- cleavable, so the payload escapes, or not, so it does not. The difference between those two runs \textit{is} the bystander's contribution. It is measured rather than supplied.
+\end{numbers}
+
+\begin{finding}
+\textbf{The payload multiplies the conjugate's reach most where the conjugate reaches least.} At a payload reach of 2 cells, the total kill with a cleavable linker is 4.92 times the kill without it when the antibody penetrates 20 microns -- and only 3.24 times when it penetrates 320. The advantage falls monotonically as penetration improves, which is what the clinical argument says should happen and what the point model has no way to express.
+\end{finding}
+
+\textbf{And then the sweep found the condition, which is the better half of the result.}
+
+\begin{refusal}
+At a payload reach of one cell the advantage does not fall at all. It sits at about 2.1 times across a sixteenfold range of antibody penetration -- a span of 1.06 times, which is flat.
+
+The reason is the prediction's own logic running out. A payload that reaches only its immediate neighbours lands almost entirely on cells the conjugate had already reached, so there is no penetration-dependent gap for it to fill. The effect needs the payload to travel \textit{past} the conjugate's own front to be worth anything extra, and at one cell of reach it does not.
+
+That condition was not chosen. It came out of a sweep that included it, and reporting only the reaches that agreed would have been picking the arm that agreed -- which is a thing this project has done before and had to withdraw.
+
+There is a second column pointing the other way, too. The \textit{absolute} number of bystander kills mostly rises as penetration improves, because a conjugate that reaches more cells kills more of them and so leaves more payload sources behind. Both statements are true of the same runs. The ratio is the clinically meaningful one -- it is what adding a cleavable linker buys you -- but publishing it alone would be publishing the more flattering of two answers.
+\end{refusal}
+
+\textbf{What is not claimed.} This arm's fitted verdict is NO TARGET and stays there: no published bystander dose-response exists to fit, so the kill magnitudes above are illustrative. What is measured is how the contribution \textit{moves}. The payload's reach is a parameter and nothing here measures how far a released payload actually travels before it is cleared or bound. The conjugate's distribution is the radial-depth proxy rather than a real antibody distribution, which is shaped by binding-site consumption as much as by diffusion. And a bystander-killed cell releases nothing of its own -- the payload came from the conjugate, and a cell that never took up conjugate has none to give, so letting it release would model a chain reaction rather than a bystander effect.
+
+\begin{figure}[tbp]
+\setcounter{figure}{42}
+\bookgraphic{../figures/fig47_adc_bystander_reach.pdf}
+\caption{\figlabel{43}A bystander payload multiplies a conjugate's reach most where the conjugate reaches least. Every point is a matched pair of runs differing only in the linker, so the bystander's contribution is measured rather than supplied. (a) is the prediction and the condition on it together: the advantage falls with penetration at a payload reach of two or three cells and is flat at one, because a payload reaching only its immediate neighbours lands on cells the conjugate reached anyway. (b) is the column that points the other way --- the absolute count mostly rises --- reported beside the ratio rather than instead of it. (c) is why the arm needed a distance at all: the scalar the point model returns has no term for penetration.}
+\label{fig:fig47_adc_bystander_reach}
+\end{figure}
+
 \section{What This Chapter Does Not Claim}
 
 \textbf{Breadth is not depth, and this project's own guidance says so.} The engine can now express every mechanism its taxonomy can count, and 8 of the sixteen can be applied as a treatment. Neither of those is a claim that any of them is modelled well. \bookcode{simulations/calibration/CALIBRATION\_STATUS.md} carries a row per layer with its named target and its used-in-any-reported-number status, and for every arm in this chapter that status is N: none of them feeds a number this manuscript reports.
