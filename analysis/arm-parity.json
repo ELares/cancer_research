@@ -194,10 +194,11 @@
    "pub_fns": 13,
    "rust_tests": 16,
    "calibration": "ADMISSIBLE",
-   "spatial": null,
-   "book_words": 1062,
+   "spatial": "on demand",
+   "book_words": 1870,
    "book_sections": [
-    "6.9 Adoptive Cell Therapy, and a Failure More Dose Cannot Fix"
+    "6.9 Adoptive Cell Therapy, and a Failure More Dose Cannot Fix",
+    "6.18 CAR-T, and What Multiplying Fractions Assumes"
    ],
    "figures": [
     "fig33_adoptive_barriers",
@@ -205,13 +206,14 @@
    ],
    "predictions": [
     "P11",
-    "P17"
+    "P17",
+    "P27"
    ],
    "book_words_shared": 0,
    "parity_lines": 0.044,
    "parity_fns": 0.071,
    "parity_tests": 0.061,
-   "parity_words": 0.202,
+   "parity_words": 0.356,
    "lines_short_of_parity": 3639
   },
   {
@@ -355,8 +357,8 @@
  "shared_modules": 5,
  "shared_code_lines": 818,
  "shared_pub_fns": 58,
- "manuscript_words_in_sections": 70239,
- "manuscript_words_attributed": 21514,
+ "manuscript_words_in_sections": 71047,
+ "manuscript_words_attributed": 22322,
  "sections_naming_more_than_one_arm": {
   "6.13 Photodynamic and Sonodynamic Therapy, the Two the Project Started With": 2
  },
@@ -375,6 +377,7 @@
   }
  ],
  "spatial_arms": [
+  "AdoptiveCell",
   "AntibodyDrugConjugate",
   "Chemotherapy",
   "OncolyticVirus",
@@ -389,6 +392,7 @@
   "SDT"
  ],
  "spatial_on_demand": [
+  "AdoptiveCell",
   "AntibodyDrugConjugate",
   "Chemotherapy",
   "OncolyticVirus",

@@ -2397,6 +2397,90 @@ def fig48_chemo_decomposition():
 
 
 
+def fig49_cart_independence():
+    """Whether multiplying the barrier fractions is the right answer.
+
+    The control is the whole design: at zero correlation the product must be
+    right, and it is. Everything else is measured against that.
+    """
+    import json
+    src = Path(__file__).resolve().parent.parent / "analysis" / "calibration" / \
+        "cart-independence-validation.json"
+    if not src.exists():
+        print("  fig49: cart-independence-validation.json missing - skipping")
+        return
+    d = json.loads(src.read_text())
+    pts = d["points"]
+    xs = [p["correlation"] for p in pts]
+
+    fig, axes = plt.subplots(1, 3, figsize=(15, 4.6))
+
+    # (a) measured against predicted
+    ax = axes[0]
+    ax.plot(xs, [p["measured_kill_fraction"] for p in pts], "o-",
+            color="#14505c", lw=2, ms=7, label="on the grid")
+    ax.plot(xs, [p["product_prediction"] for p in pts], "s--",
+            color="#9fb3b8", lw=2, ms=6, label="product of fractions")
+    ax.axvline(0.0, color="#c1440e", ls=":", lw=1.4)
+    ax.annotate("independent:\nthe product is right", (0.03, min(
+        p["measured_kill_fraction"] for p in pts)), fontsize=7.5, color="#c1440e")
+    ax.set_xlabel("antigen–depth correlation")
+    ax.set_ylabel("tumour fraction killed")
+    ax.set_title("(a) the same barriers, two ways of combining them", fontsize=10)
+    ax.legend(fontsize=7.5)
+    ax.grid(alpha=0.25)
+
+    # (b) the ratio, with the control marked
+    ax = axes[1]
+    ratios = [p["product_over_measured"] for p in pts]
+    ax.axhline(1.0, color="#888", ls="--", lw=1.4)
+    ax.plot(xs, ratios, "o-", color="#a2582b", lw=2, ms=7)
+    zero = next(p for p in pts if p["correlation"] == 0.0)
+    ax.plot([0.0], [zero["product_over_measured"]], "o", color="#c1440e", ms=11,
+            zorder=5)
+    ax.annotate(f"control: {zero['product_over_measured']:.3f}",
+                (0.04, zero["product_over_measured"] + 0.02), fontsize=8,
+                color="#c1440e")
+    ax.annotate("product optimistic", (-0.62, 1.16), fontsize=7.5, color="#555")
+    ax.annotate("product pessimistic", (0.12, 0.90), fontsize=7.5, color="#555")
+    ax.set_xlabel("antigen–depth correlation")
+    ax.set_ylabel("product ÷ measured")
+    ax.set_title("(b) wrong in both directions, right in the middle", fontsize=10)
+    ax.grid(alpha=0.25)
+
+    # (c) where the losses actually fall
+    ax = axes[2]
+    w = 0.055
+    ax.bar([x - w for x in xs], [p["unreached"] for p in pts], w * 1.8,
+           color="#14505c", label="unreached (antigen+)")
+    ax.bar([x + w for x in xs], [p["lost_to_both"] for p in pts], w * 1.8,
+           color="#a2582b", label="failed BOTH ways")
+    ax.set_xlabel("antigen–depth correlation")
+    ax.set_ylabel("cells")
+    ax.set_title("(c) a bucket the product has no slot for", fontsize=10)
+    ax.legend(fontsize=7.5)
+    ax.grid(alpha=0.25, axis="y")
+
+    fig.suptitle("Multiplying the barrier fractions is right only when the "
+                 "barriers are independent", fontsize=12, fontweight="bold")
+    fig.text(0.5, 0.015,
+             "`adoptive::delivery_efficiency` multiplies trafficking, infiltration and activation, and the arm "
+             "multiplies by the antigen fraction on top. That is exactly right when the terms are INDEPENDENT - "
+             "and two of them are not in a tumour, because infiltration is a property of WHERE a cell sits and "
+             "antigen of the CELL. The spatial run replaces the infiltration SCALAR with a depth field of the "
+             "same mean, so the two models differ in distribution and nothing else. (b) is the control and the "
+             "finding at once: at zero correlation they agree to 0.6%, which is what makes the rest a finding "
+             "rather than a bug - the first version of this measurement double-counted the infiltration barrier "
+             "and its control failed at every correlation. The effect stops growing at the positive extreme "
+             "because the per-cell antigen probability saturates at 1, which is marked rather than smoothed. "
+             "This is not a measurement of any real antigen-depth correlation; it shows the answer depends on "
+             "one, and by how much.",
+             ha="center", fontsize=7.2, color="#555", wrap=True)
+    fig.tight_layout(rect=[0, 0.16, 1, 0.93])
+    save(fig, "fig49_cart_independence")
+
+
+
 if __name__ == "__main__":
     print("Generating conceptual diagrams...")
     fig18_hypoxia()
@@ -2424,4 +2508,5 @@ if __name__ == "__main__":
     fig46_oncolytic_percolation()
     fig47_adc_bystander_reach()
     fig48_chemo_decomposition()
+    fig49_cart_independence()
     print("Done.")

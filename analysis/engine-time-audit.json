@@ -633,7 +633,8 @@
    "sim-modality-panel"
   ],
   "adoptive.rs": [
-   "sim-modality-panel"
+   "sim-modality-panel",
+   "sim-tme-3d"
   ],
   "biochem.rs": [
    "sim-combo",

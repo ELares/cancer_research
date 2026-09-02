@@ -10,7 +10,7 @@ Chapter 6 carried a sentence since it was written, calling each modality arm *"o
 |---|---|--:|--:|--:|--:|--:|
 | `ablation` | HIFU + irreversible electroporation | 9 | 1 | 2 | 129 | 1 |
 | `adc` | Antibody-drug conjugate bystander effect | 13 | 2 | 1 | 123 | 2 |
-| `adoptive` | CAR-T trafficking, infiltration and activation barriers | 13 | 2 | 1 | 166 | 1 |
+| `adoptive` | CAR-T trafficking, infiltration and activation barriers | 13 | 2 | 1 | 166 | 2 |
 | `checkpoint` | Checkpoint blockade: occupancy, the PD-L1 brake, mutational-burden antigenicity and the resistance modes | 7 | 2 | 2 | 122 | 1 |
 | `chemo` | Cytotoxic chemotherapy: the cell cycle, log kill and scheduling | 19 | 4 | 0 | 282 | 2 |
 | `oncolytic` | Oncolytic virus spread | 11 | 1 | 1 | 165 | 2 |

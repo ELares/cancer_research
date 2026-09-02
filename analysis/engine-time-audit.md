@@ -57,7 +57,7 @@ Scope: this is **not** a falsification of P3 as registered. P3's stated falsifie
 | module | callers |
 |---|---|
 | `ablation.rs` | `sim-modality-panel` |
-| `adoptive.rs` | `sim-modality-panel` |
+| `adoptive.rs` | `sim-modality-panel`, `sim-tme-3d` |
 | `biochem.rs` | `sim-combo`, `sim-combo-mech`, `sim-icd`, `sim-invivo`, `sim-modality-panel`, `sim-spatial`, `sim-tissue-pk`, `sim-tme`, `sim-tme-3d`, `sim-window` |
 | `cell.rs` | `sim-combo`, `sim-combo-mech`, `sim-icd`, `sim-invivo`, `sim-modality-panel`, `sim-original`, `sim-scale`, `sim-spatial`, `sim-tissue-pk`, `sim-tme`, `sim-tme-3d`, `sim-tumor-pk`, `sim-window` |
 | `chemo.rs` | `sim-combo`, `sim-modality-panel`, `sim-tme-3d` |
