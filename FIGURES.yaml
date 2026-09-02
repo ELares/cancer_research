@@ -674,3 +674,25 @@ figures:
       tumours, and choosing a representative burden moves the model's answer
       across most of the target band. A figure showing only (a) and (b) would
       be an overclaim.
+  - manuscript_figure: 35
+    filename: fig39_adoptive_escalation
+    generator:
+      script: scripts/generate_conceptual_diagrams.py
+      function: fig39_adoptive_escalation
+    inputs:
+      - analysis/calibration/adoptive-validation.json
+    type: simulation
+    status: manuscript
+    note: >-
+      The only prediction this arm makes, and it is about an EXPERIMENT rather
+      than a published number. Two tumours with identical barriers and
+      identical poor outcomes, differing only in antigen density, diverge
+      tenfold under a tenfold dose increase -- because a density failure is a
+      THRESHOLD and every other failure this module models is a multiplier.
+      Panel (a) is what makes that difference in kind rather than degree.
+      Nothing is fitted: the density threshold varies by orders of magnitude
+      with receptor affinity, costimulatory domain and target, and the
+      expansion rates are placeholders. The famous anchor available to this arm
+      -- 81% remission in ELIANA -- is deliberately NOT used, because a
+      remission is not a kill fraction and, unlike the checkpoint arm, no ratio
+      cancels the mapping across two different trials.

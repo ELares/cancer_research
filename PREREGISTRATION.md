@@ -136,7 +136,12 @@ thresholds are stated here.
 - *Structural companion, which is stronger than the numerical claim:* a tumour that has lost antigen presentation (B2M-null, PMID 27433843) has a response index of exactly zero at any mutational burden, and a ratio against it is undefined rather than infinite. That follows from the layer's structure and not from a fit.
 - *Note:* this constrains a SHAPE and identifies nothing. One ratio is one equation and the brake remains unidentified. The representative-burden choice -- which the trial does not make for us -- moves the model's answer from 1.5x to 7.3x, a spread comparable to the width of the target band. Full accounting in `analysis/calibration/checkpoint-validation.md`.
 
-### Honesty clause for P9 to P16
+**P17. A CAR-T failure caused by low antigen density cannot be rescued by escalating the dose, and one caused by poor delivery can.**
+- *Quantitative model output:* `adoptive::dose_escalation_gain` at matched barriers (`AdoptiveBarriers::solid_tumour`), 1e5 infused effectors against 2e4 tumour cells. With antigen density five times the engagement threshold the gain at a tenfold dose is 10.0x; with density one fifth of the threshold it is 1.00x. The two cases differ in ONE variable and share their barriers, their tumour and their dose.
+- *Falsification threshold:* the prediction fails if a dose-escalation series in cohorts matched for infiltration but stratified by target-antigen density shows comparable relative gains in both strata -- specifically, if the low-density stratum's gain exceeds half the high-density stratum's. It also fails if a low-density non-responder is rescued by dose escalation alone at unchanged antigen expression.
+- *Note:* the density threshold is a PLACEHOLDER and varies by orders of magnitude with receptor affinity, costimulatory domain and target; the prediction is about the SHAPE of the two responses, not the position of the threshold. The threshold is also sharper here than in a patient, where density varies cell to cell, so a real experiment should see a blend of the two modes rather than either alone. This arm is deliberately NOT fitted to the ELIANA remission rate (PMID 29385370): a remission is not a kill fraction, and unlike the checkpoint arm no ratio is available that cancels the mapping, because blood and solid CAR-T are different trials with different endpoints. Full accounting in `analysis/calibration/adoptive-validation.md`.
+
+### Honesty clause for P9 to P17
 
 **P9 to P13 are DIRECTIONAL and every barrier value behind them is an
 uncalibrated placeholder** (`CALIBRATION_STATUS.md` records each as feeding no

@@ -20,10 +20,10 @@
   },
   {
    "module": "adoptive",
-   "pub_fns": 7,
-   "pub_types": 1,
-   "pub_consts": 0,
-   "code_lines": 64,
+   "pub_fns": 13,
+   "pub_types": 2,
+   "pub_consts": 1,
+   "code_lines": 166,
    "serves": "CAR-T trafficking, infiltration and activation barriers",
    "reach": 1
   },
@@ -145,16 +145,16 @@
  "engine_pub_fns": 186,
  "engine_code_lines": 3992,
  "dedicated_modules": 7,
- "dedicated_pub_fns": 70,
- "dedicated_code_lines": 938,
+ "dedicated_pub_fns": 76,
+ "dedicated_code_lines": 1040,
  "shared_modules": 5,
  "shared_pub_fns": 58,
  "shared_code_lines": 818,
  "engine_modules_with_shared": 32,
  "engine_pub_fns_with_shared": 244,
  "engine_code_lines_with_shared": 4810,
- "line_ratio_narrow": 4.3,
- "line_ratio_wide": 5.1,
- "fn_ratio_narrow": 2.7,
- "fn_ratio_wide": 3.5
+ "line_ratio_narrow": 3.8,
+ "line_ratio_wide": 4.6,
+ "fn_ratio_narrow": 2.4,
+ "fn_ratio_wide": 3.2
 }

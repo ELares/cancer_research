@@ -1508,6 +1508,78 @@ def fig38_checkpoint():
     save(fig, "fig38_checkpoint")
 
 
+def fig39_adoptive_escalation():
+    """When escalating a CAR-T dose buys tenfold and when it buys nothing.
+
+    Both panels read the committed validation artifact. The left is the
+    threshold -- the property that makes a density failure different in KIND
+    from a delivery failure -- and the right is the consequence, which is the
+    only prediction this arm makes.
+    """
+    import json
+    src = Path(__file__).resolve().parent.parent / "analysis" / "calibration" / \
+        "adoptive-validation.json"
+    if not src.exists():
+        print("  fig39: adoptive-validation.json missing - skipping")
+        return
+    d = json.loads(src.read_text())
+    t = d["constants"]["ANTIGEN_DENSITY_THRESHOLD"]
+
+    fig, axes = plt.subplots(1, 3, figsize=(15, 4.6))
+
+    ax = axes[0]
+    xs = [row[0] for row in d["engagement_curve"]]
+    ys = [row[1] for row in d["engagement_curve"]]
+    ax.plot(xs, ys, "o-", color="#14505c", lw=2, ms=4)
+    ax.axvline(t, color="#a2582b", ls="--", lw=1.4)
+    ax.annotate("threshold", (t, 0.06), textcoords="offset points",
+                xytext=(8, 0), fontsize=8, color="#a2582b", fontweight="bold")
+    ax.set_xscale("log")
+    ax.set_xlabel("target molecules per tumour cell")
+    ax.set_ylabel("fraction of cells a CAR can engage")
+    ax.set_title("(a) a threshold, not a gradient", fontsize=10)
+    ax.grid(alpha=0.25, which="both")
+
+    ax = axes[1]
+    rows = d["discrimination"]
+    labels = [r["case"].split(" (")[0] for r in rows]
+    gains = [r["gain"] for r in rows]
+    colours = ["#14505c", "#a2582b", "#9fb3b8"]
+    ax.barh(range(len(rows)), gains, color=colours[:len(rows)])
+    for i, g in enumerate(gains):
+        ax.text(g, i, f" {g:.2f}x", va="center", fontsize=9, fontweight="bold")
+    ax.axvline(1.0, color="#888", ls="--", lw=1)
+    ax.set_yticks(range(len(labels)))
+    ax.set_yticklabels(labels, fontsize=8)
+    ax.set_xlabel("kill at ten times the dose, relative to the reference dose")
+    ax.set_title("(b) what escalating the dose buys", fontsize=10)
+    ax.grid(alpha=0.25, axis="x")
+
+    ax = axes[2]
+    ex = d["expansion_vs_drive"]
+    ax.plot([e["antigen_drive"] for e in ex], [e["peak_fold"] for e in ex],
+            "o-", color="#14505c", lw=2, ms=5)
+    ax.set_yscale("log")
+    ax.set_xlabel("antigen available to drive expansion")
+    ax.set_ylabel("peak fold expansion over 28 days")
+    ax.set_title("(c) expansion tracks the antigen it consumes", fontsize=10)
+    ax.grid(alpha=0.25, which="both")
+
+    fig.suptitle("Adoptive cell therapy: a failure more dose cannot fix",
+                 fontsize=12, fontweight="bold")
+    fig.text(0.5, 0.015,
+             "Two tumours with the SAME barriers and the same poor outcome, differing only in "
+             "antigen density, respond completely differently to the one intervention a clinician "
+             "reaches for first. That is this arm's only prediction, and it is about an experiment "
+             "rather than a published number: unlike the checkpoint arm, no ratio is available "
+             "that cancels the mapping between a remission and a kill, because blood and solid "
+             "CAR-T are different trials with different endpoints. Nothing here is fitted - the "
+             "density threshold varies by orders of magnitude with the receptor and the target.",
+             ha="center", fontsize=7.2, color="#555", wrap=True)
+    fig.tight_layout(rect=[0, 0.13, 1, 0.93])
+    save(fig, "fig39_adoptive_escalation")
+
+
 if __name__ == "__main__":
     print("Generating conceptual diagrams...")
     fig18_hypoxia()
@@ -1525,4 +1597,5 @@ if __name__ == "__main__":
     fig36_fractionation()
     fig37_chemotherapy()
     fig38_checkpoint()
+    fig39_adoptive_escalation()
     print("Done.")

@@ -214,6 +214,213 @@ pub fn barrier_limited_kills(raw_kills: f64, tumour_cells: f64, b: &AdoptiveBarr
     raw_kills.max(0.0).min(max_killable(tumour_cells, b))
 }
 
+// ── What a barrier product cannot express ────────────────────────────────
+//
+// Everything above is a MULTIPLIER. Trafficking, infiltration, activation,
+// persistence and the antigen ceiling each scale the kill down, and a product
+// of multipliers has one shape: whatever it takes away, more effectors take
+// back. That is a fair model of a delivery problem and a poor one of this
+// therapy, because the failures that matter clinically are not all delivery
+// problems.
+//
+// Three that are not, and that this section adds:
+//
+//   * A DENSITY THRESHOLD. A CAR needs a minimum number of target molecules
+//     per cell to trigger lysis at all. Below it the cell is not killed
+//     slowly -- it is not killed. No dose fixes that, which is what makes it
+//     different in KIND from every barrier above.
+//   * EXPANSION. Infused cells are not the cells that do the work: they
+//     encounter antigen, divide, and the population that matters is orders of
+//     magnitude larger than the bag. Expansion is driven by the antigen it
+//     then consumes, so it is self-limiting.
+//   * A TOXICITY CEILING. Cytokine release scales with the same expansion that
+//     produces the kill, so "give more" has a limit that is not about
+//     efficacy. Without it a model recommends a dose nobody could receive --
+//     the same defect the chemotherapy arm needed a marrow constraint to
+//     avoid.
+
+/// Target molecules per tumour cell below which a CAR does not trigger lysis.
+///
+/// A THRESHOLD, and the reason it matters is that it is not a multiplier: a
+/// tumour under it is refractory at any effector dose, while a tumour over it
+/// is killable if enough effectors arrive. Those two failures look identical
+/// in an outcome table and behave differently under dose escalation, which is
+/// the discrimination this layer exists to make.
+///
+/// The value is a PLACEHOLDER. Antigen-density thresholds are measured per
+/// construct and vary by orders of magnitude with affinity, costimulatory
+/// domain and target; nothing in this repository fits one.
+pub const ANTIGEN_DENSITY_THRESHOLD: f64 = 1000.0;
+
+/// Cellular kinetics of an infused product.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct ExpansionKinetics {
+    /// Doublings per day while antigen is abundant.
+    pub growth_per_day: f64,
+    /// Fractional loss per day once antigen is cleared.
+    pub contraction_per_day: f64,
+    /// The largest fold expansion the host will support, whatever the antigen.
+    pub max_fold: f64,
+    /// Fraction of the product that is memory-like, and therefore persists
+    /// rather than contracting away.
+    pub memory_fraction: f64,
+}
+
+impl Default for ExpansionKinetics {
+    fn default() -> Self {
+        Self {
+            growth_per_day: 0.9,
+            contraction_per_day: 0.15,
+            max_fold: 1000.0,
+            memory_fraction: 0.05,
+        }
+    }
+}
+
+/// Whether a CAR can engage a tumour at all, given its antigen density.
+///
+/// Returns 0 below the threshold and rises to 1 above it. The transition is
+/// SHARP rather than instantaneous -- a step function would make every result
+/// a property of one comparison -- but it is steep enough that the layer
+/// behaves as a threshold, which is the point.
+#[must_use]
+pub fn density_engagement(antigen_per_cell: f64, threshold: f64, steepness: f64) -> f64 {
+    let a = antigen_per_cell.max(0.0);
+    let t = threshold.max(f64::MIN_POSITIVE);
+    let k = steepness.max(f64::MIN_POSITIVE);
+    let x = (a / t).powf(k);
+    (x / (1.0 + x)).clamp(0.0, 1.0)
+}
+
+/// Effector population after `days`, expanding while antigen lasts and
+/// contracting when it does not.
+///
+/// The expansion is antigen-driven and therefore self-limiting: a product that
+/// clears its target stops expanding, which is why peak expansion tracks
+/// tumour burden and why a small tumour does not produce a large product.
+#[must_use]
+pub fn expanded_effectors(
+    infused: f64,
+    antigen_available: f64,
+    days: f64,
+    k: &ExpansionKinetics,
+) -> f64 {
+    if infused <= 0.0 || days <= 0.0 {
+        return infused.max(0.0);
+    }
+    let drive = antigen_available.clamp(0.0, 1.0);
+    let growth = k.growth_per_day * drive;
+    let decay = k.contraction_per_day * (1.0 - drive);
+    let net = growth - decay;
+    let scaled = infused * (net * days).exp();
+    let ceiling = infused * k.max_fold.max(1.0);
+    // The memory compartment does not contract away, which is what makes
+    // persistence a property of the PRODUCT rather than of the schedule.
+    let floor = infused * k.memory_fraction.clamp(0.0, 1.0);
+    scaled.clamp(floor, ceiling)
+}
+
+/// Peak fold expansion over a course, by scanning the days.
+///
+/// Reported rather than derived analytically because the antigen drive is a
+/// caller-supplied trajectory in general; this is the constant-drive case,
+/// which is the one the tests pin.
+#[must_use]
+pub fn peak_fold_expansion(antigen_available: f64, days: f64, k: &ExpansionKinetics) -> f64 {
+    let mut best: f64 = 1.0;
+    let mut d = 0.0;
+    while d <= days {
+        best = best.max(expanded_effectors(1.0, antigen_available, d, k));
+        d += 0.5;
+    }
+    best
+}
+
+/// Cytokine-release burden, as a fraction of a severe-toxicity ceiling.
+///
+/// Scales with the PRODUCT of expansion and tumour burden, which is the
+/// clinical observation: the patients who expand most against the most disease
+/// are the ones who get the worst syndrome, and they are also the ones most
+/// likely to respond. A model without this recommends escalating a dose that
+/// is already at its limit.
+#[must_use]
+pub fn cytokine_burden(fold_expansion: f64, tumour_burden_fraction: f64, scale: f64) -> f64 {
+    let e = fold_expansion.max(0.0);
+    let b = tumour_burden_fraction.clamp(0.0, 1.0);
+    (scale.max(0.0) * e * b).clamp(0.0, 1.0)
+}
+
+/// The largest infused dose whose predicted cytokine burden stays under a
+/// tolerance.
+///
+/// `None` when even the smallest dose scanned exceeds it, which is the case a
+/// bridging or debulking strategy exists to change -- and reporting `None`
+/// rather than a number is the difference between a model that says "not at
+/// this burden" and one that invents a safe dose.
+#[must_use]
+pub fn max_tolerable_dose(
+    tumour_burden_fraction: f64,
+    antigen_available: f64,
+    days: f64,
+    k: &ExpansionKinetics,
+    scale: f64,
+    tolerance: f64,
+    max_dose: f64,
+) -> Option<f64> {
+    let fold = peak_fold_expansion(antigen_available, days, k);
+    let mut d = max_dose;
+    while d > 0.0 {
+        if cytokine_burden(fold * d, tumour_burden_fraction, scale) <= tolerance {
+            return Some(d);
+        }
+        d -= max_dose / 100.0;
+    }
+    None
+}
+
+/// Whether escalating the dose can rescue a failure.
+///
+/// **The layer's discriminating prediction.** A delivery-limited failure --
+/// too few effectors arriving through the barriers -- improves when more are
+/// infused. A density-limited failure does not improve at all, because the
+/// cells that arrive cannot engage what they find. Two failures that look the
+/// same in an outcome table respond differently to the one intervention a
+/// clinician can most easily make.
+///
+/// Returns the ratio of kills at ten times the dose to kills at the reference
+/// dose. Near 1 means escalation buys nothing.
+#[must_use]
+pub fn dose_escalation_gain(
+    infused: f64,
+    antigen_per_cell: f64,
+    threshold: f64,
+    steepness: f64,
+    b: &AdoptiveBarriers,
+    steps: u32,
+    tumour_cells: f64,
+) -> f64 {
+    // ENGAGEMENT IS A CAP, NOT A MULTIPLIER, and the first version of this
+    // function had it as a multiplier -- which made antigen density behave
+    // exactly like one more barrier and produced the OPPOSITE of the
+    // prediction it exists to make. Running it caught that: a low-density
+    // tumour came out MORE rescuable by dose than a well-presenting one,
+    // because scaling the effectors down simply left more headroom under the
+    // ceiling.
+    //
+    // A cell below the density threshold is not killed slowly. It is not
+    // killed. So the fraction above threshold bounds what any dose can reach.
+    let engage = density_engagement(antigen_per_cell, threshold, steepness);
+    let kills = |dose: f64| {
+        let arrived = effective_effectors(dose, b, steps);
+        barrier_limited_kills(arrived, tumour_cells, b).min(engage * tumour_cells)
+    };
+    let base = kills(infused);
+    if base <= 0.0 {
+        return 1.0;
+    }
+    kills(infused * 10.0) / base
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -685,5 +892,119 @@ mod tests {
         assert_eq!(persistence_factor(&dead, 0).to_bits(), 1.0f64.to_bits());
         assert_eq!(persistence_factor(&dead, 1).to_bits(), 0.0f64.to_bits());
         assert!(effective_effectors(1000.0, &dead, 3).is_finite());
+    }
+    // ── The failures a barrier product cannot express ────────────────────
+
+    #[test]
+    fn density_engagement_is_a_threshold_and_not_a_gradient() {
+        let t = ANTIGEN_DENSITY_THRESHOLD;
+        assert!(
+            (density_engagement(t, t, 3.0) - 0.5).abs() < 1e-12,
+            "engagement at the threshold should be one half"
+        );
+        assert!(
+            density_engagement(t * 0.2, t, 3.0) < 0.02,
+            "a fifth of the threshold should be essentially unengaged"
+        );
+        assert!(
+            density_engagement(t * 5.0, t, 3.0) > 0.98,
+            "five times the threshold should be essentially saturated"
+        );
+        // Steeper means MORE threshold-like, which is what distinguishes this
+        // from the multipliers above it.
+        let shallow = density_engagement(t * 0.5, t, 1.0);
+        let steep = density_engagement(t * 0.5, t, 6.0);
+        assert!(steep < shallow, "raising the steepness did not sharpen it");
+        assert!(density_engagement(0.0, t, 3.0).abs() < 1e-12);
+    }
+
+    #[test]
+    fn dose_escalation_rescues_a_delivery_failure_and_not_a_density_failure() {
+        // THE LAYER'S DISCRIMINATING PREDICTION, and the reason it is worth
+        // having: two tumours with the SAME barriers and the same poor
+        // outcome, differing only in antigen density, respond completely
+        // differently to the one intervention a clinician can most easily
+        // make.
+        //
+        // The first version of `dose_escalation_gain` multiplied the effectors
+        // by engagement, which made density behave like one more barrier and
+        // produced the OPPOSITE result. Running it is what caught that.
+        let solid = AdoptiveBarriers::solid_tumour();
+        let deliverable = dose_escalation_gain(
+            1.0e5,
+            5000.0,
+            ANTIGEN_DENSITY_THRESHOLD,
+            3.0,
+            &solid,
+            180,
+            2.0e4,
+        );
+        let sparse = dose_escalation_gain(
+            1.0e5,
+            200.0,
+            ANTIGEN_DENSITY_THRESHOLD,
+            3.0,
+            &solid,
+            180,
+            2.0e4,
+        );
+        assert!(
+            deliverable > 5.0,
+            "escalation did not rescue a delivery-limited failure: {deliverable}"
+        );
+        assert!(
+            sparse < 1.1,
+            "escalation rescued a density-limited failure: {sparse}"
+        );
+        assert!(
+            deliverable / sparse > 5.0,
+            "the two failure modes are not distinguishable by escalation"
+        );
+    }
+
+    #[test]
+    fn expansion_is_driven_by_antigen_and_bounded_by_the_host() {
+        let k = ExpansionKinetics::default();
+        let starved = peak_fold_expansion(0.02, 28.0, &k);
+        let fed = peak_fold_expansion(1.0, 28.0, &k);
+        assert!(
+            fed > 100.0 * starved,
+            "antigen did not drive expansion: {starved} {fed}"
+        );
+        assert!(
+            fed <= k.max_fold * (1.0 + 1e-9),
+            "expansion passed the host ceiling: {fed}"
+        );
+        // And a product with no antigen to meet contracts toward its memory
+        // floor rather than to zero, which is what persistence means here.
+        let long_run = expanded_effectors(1.0e6, 0.0, 365.0, &k);
+        assert!(
+            (long_run - 1.0e6 * k.memory_fraction).abs() < 1.0,
+            "the memory compartment did not persist: {long_run}"
+        );
+    }
+
+    #[test]
+    fn the_toxicity_ceiling_lowers_the_dose_as_the_burden_rises() {
+        // Without this a model recommends escalating a dose that is already at
+        // its limit -- the same defect the chemotherapy arm needed a marrow
+        // constraint to avoid.
+        let k = ExpansionKinetics::default();
+        let small = max_tolerable_dose(0.05, 1.0, 14.0, &k, 1.0e-3, 0.8, 10.0)
+            .expect("a small burden should tolerate some dose");
+        let large = max_tolerable_dose(0.9, 1.0, 14.0, &k, 1.0e-3, 0.8, 10.0)
+            .expect("a large burden should still tolerate some dose");
+        assert!(
+            large < small,
+            "a heavier burden did not lower the tolerable dose: {large} vs {small}"
+        );
+        // And a burden that tolerates nothing returns None rather than a
+        // plausible-looking number.
+        assert!(max_tolerable_dose(1.0, 1.0, 28.0, &k, 1.0, 0.01, 1.0).is_none());
+        // Cytokine burden rises with BOTH factors, which is the observation.
+        let a = cytokine_burden(100.0, 0.5, 1.0e-3);
+        assert!(cytokine_burden(200.0, 0.5, 1.0e-3) > a);
+        assert!(cytokine_burden(100.0, 0.9, 1.0e-3) > a);
+        assert!(cytokine_burden(1.0e9, 1.0, 1.0) <= 1.0, "burden passed 1");
     }
 }

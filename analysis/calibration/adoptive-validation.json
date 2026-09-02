@@ -1,0 +1,111 @@
+{
+ "constants": {
+  "ANTIGEN_DENSITY_THRESHOLD": 1000.0,
+  "growth_per_day": 0.9,
+  "contraction_per_day": 0.15,
+  "max_fold": 1000.0,
+  "memory_fraction": 0.05
+ },
+ "anchor": {
+  "trial": "ELIANA",
+  "pmid": "29385370",
+  "product": "tisagenlecleucel",
+  "setting": "relapsed/refractory B-cell ALL",
+  "remission_rate_pct": 81,
+  "window": "3 months"
+ },
+ "engagement_curve": [
+  [
+   50,
+   0.00012
+  ],
+  [
+   100,
+   0.001
+  ],
+  [
+   200,
+   0.00794
+  ],
+  [
+   400,
+   0.06015
+  ],
+  [
+   700,
+   0.2554
+  ],
+  [
+   1000,
+   0.5
+  ],
+  [
+   1500,
+   0.77143
+  ],
+  [
+   2500,
+   0.93985
+  ],
+  [
+   5000,
+   0.99206
+  ],
+  [
+   10000,
+   0.999
+  ]
+ ],
+ "discrimination": [
+  {
+   "case": "delivery-limited (sparse infiltration, antigen fine)",
+   "density": 5000,
+   "delivery_fraction": 0.002,
+   "gain": 10.0
+  },
+  {
+   "case": "density-limited (infiltration fine, antigen sparse)",
+   "density": 200,
+   "delivery_fraction": 0.002,
+   "gain": 1.0
+  },
+  {
+   "case": "neither (already at the tumour ceiling)",
+   "density": 5000,
+   "delivery_fraction": 1.0,
+   "gain": 1.0
+  }
+ ],
+ "expansion_vs_drive": [
+  {
+   "antigen_drive": 0.02,
+   "peak_fold": 1.0
+  },
+  {
+   "antigen_drive": 0.05,
+   "peak_fold": 1.0
+  },
+  {
+   "antigen_drive": 0.1,
+   "peak_fold": 1.0
+  },
+  {
+   "antigen_drive": 0.2,
+   "peak_fold": 5.4
+  },
+  {
+   "antigen_drive": 0.5,
+   "peak_fold": 1000.0
+  },
+  {
+   "antigen_drive": 1.0,
+   "peak_fold": 1000.0
+  }
+ ],
+ "verdict": {
+  "anchor_used_as_target": "NO -- a remission is not a kill fraction and no ratio cancels across two trials",
+  "discrimination_holds": "YES",
+  "delivery_gain": 10.0,
+  "density_gain": 1.0
+ }
+}

@@ -1,6 +1,7 @@
 {
  "bindings_reaching_production": 3,
  "carry_both": [
+  "adoptive.rs",
   "biochem.rs",
   "cell.rs",
   "params.rs",
@@ -41,7 +42,7 @@
    "window_hours": 48.0
   }
  ],
- "library_modules": 39,
+ "library_modules": 40,
  "modules": {
   "ablation.rs": {
    "examples": [
@@ -56,9 +57,16 @@
    "real_time_mentions": 1
   },
   "adoptive.rs": {
-   "examples": [],
+   "examples": [
+    {
+     "context": "let scaled = infused * (net * days).exp();",
+     "form": "bare-unit",
+     "line": 315,
+     "value": "(net * days)"
+    }
+   ],
    "per_step_mentions": 2,
-   "real_time_mentions": 0
+   "real_time_mentions": 1
   },
   "biochem.rs": {
    "examples": [
@@ -486,12 +494,16 @@
    "real_time_mentions": 16
   }
  },
- "modules_total": 54,
+ "modules_total": 55,
  "n_solver_timestep_conventions": 1,
  "n_solver_timestep_matches": 3,
  "n_step_bindings": 6,
  "n_wall_clock_conventions": 1,
  "orphan_timescale_fields": {
+  "adoptive.rs": {
+   "contraction_per_day": [],
+   "growth_per_day": []
+  },
   "cell.rs": {
    "fsp1_half_recovery_days": [
     "sim-window"
@@ -593,7 +605,6 @@
   "violator_days": 7.0
  },
  "per_step_only": [
-  "adoptive.rs",
   "clonal.rs",
   "copper.rs",
   "dose_schedule.rs",
@@ -619,6 +630,9 @@
  ],
  "real_time_module_callers": {
   "ablation.rs": [
+   "sim-modality-panel"
+  ],
+  "adoptive.rs": [
    "sim-modality-panel"
   ],
   "biochem.rs": [
