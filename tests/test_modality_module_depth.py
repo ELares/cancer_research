@@ -31,8 +31,8 @@ MD_ = _load()
 
 # The classification, as a decision record. A module must be added to one of
 # these deliberately; see `test_every_module_is_classified_by_a_decision`.
-DEDICATED_PIN = {"ablation", "adc", "adoptive", "chemo", "oncolytic",
-                 "radiation"}
+DEDICATED_PIN = {"ablation", "adc", "adoptive", "checkpoint", "chemo",
+                 "oncolytic", "radiation"}
 SHARED_PIN = {"cell", "drug_transport", "immune", "immune_spatial", "nutrient"}
 ENGINE_PIN = {
     "acsl4", "alox", "biochem", "clonal", "contact", "copper", "dose_schedule",

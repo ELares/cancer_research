@@ -1411,6 +1411,103 @@ def fig37_chemotherapy():
     save(fig, "fig37_chemotherapy")
 
 
+def fig38_checkpoint():
+    """What a ratio can constrain that an absolute response rate cannot.
+
+    Panel (a) is the argument: the model's antigenicity response saturates, and
+    the ratio between two burdens is what a trial can refute -- the absolute
+    height cannot, because the mapping from a model kill to a radiological
+    response is unknown. Panel (b) is the constraint that buys: the region of
+    shape parameters the measured band admits, against the whole grid scanned.
+    Panel (c) is the limit, and it is drawn at the same size as the result
+    because it is comparable in size to it.
+    """
+    import json
+    src = Path(__file__).resolve().parent.parent / "analysis" / "calibration" / \
+        "checkpoint-validation.json"
+    if not src.exists():
+        print("  fig38: checkpoint-validation.json missing - skipping")
+        return
+    d = json.loads(src.read_text())
+    floor = 0.05
+    half = d["constants"]["TMB_HALF_MAX_PER_MB"]
+
+    def antigenicity(t, h=half, f=floor):
+        return f + (1 - f) * t / (t + h)
+
+    fig, axes = plt.subplots(1, 3, figsize=(15, 4.6))
+
+    # (a) the saturating response and the two strata
+    ax = axes[0]
+    xs = [i * 0.5 for i in range(0, 121)]
+    ax.plot(xs, [antigenicity(x) for x in xs], color="#14505c", lw=2)
+    hi = d["representative_tmb"]["high"]
+    lo = d["representative_tmb"]["low"]
+    for x, lab, col in ((lo, "non-tTMB-high", "#9fb3b8"), (hi, "tTMB-high", "#a2582b")):
+        ax.plot([x], [antigenicity(x)], "o", ms=8, color=col, zorder=5)
+        ax.annotate(lab, (x, antigenicity(x)), textcoords="offset points",
+                    xytext=(8, -12), fontsize=8, color=col, fontweight="bold")
+    ax.axvline(d["constants"]["TMB_HIGH_THRESHOLD_PER_MB"], color="#888",
+               ls=":", lw=1)
+    ax.annotate("trial threshold\n10 mut/Mb",
+                (d["constants"]["TMB_HIGH_THRESHOLD_PER_MB"], 0.12),
+                textcoords="offset points", xytext=(6, 0), fontsize=7.5,
+                color="#555")
+    ax.set_xlabel("tumour mutational burden (mut/Mb)")
+    ax.set_ylabel("antigenicity (model, dimensionless)")
+    ax.set_title("(a) the shape a ratio can test", fontsize=10)
+    ax.grid(alpha=0.25)
+
+    # (b) the admitted region
+    ax = axes[1]
+    region = d["admissible_region"]
+    if region:
+        ax.scatter([r[1] for r in region], [r[0] for r in region], s=9,
+                   color="#14505c", alpha=0.55, label="admitted by the band")
+    ax.plot([half], [floor], "*", ms=16, color="#a2582b", zorder=5,
+            label="shipped constants")
+    ax.set_xlabel("half-maximal burden (mut/Mb)")
+    ax.set_ylabel("antigenicity floor")
+    ax.set_title(f"(b) {d['admissible_fraction']:.0%} of the grid survives "
+                 f"the ratio", fontsize=10)
+    ax.legend(fontsize=7.5, loc="upper right")
+    ax.grid(alpha=0.25)
+
+    # (c) the limit
+    ax = axes[2]
+    sens = d["sensitivity_to_representative_tmb"]
+    labels = [f"{s['tmb_high']:g} / {s['tmb_low']:g}" for s in sens]
+    vals = [s["ratio_at_default"] for s in sens]
+    ax.barh(range(len(vals)), vals, color="#9fb3b8")
+    ax.axvspan(d["measured_band"][0], d["measured_band"][1], color="#14505c",
+               alpha=0.12)
+    ax.axvline(d["measured_ratio"], color="#14505c", lw=2)
+    ax.annotate(f"measured {d['measured_ratio']:.1f}x",
+                (d["measured_ratio"], len(vals) - 0.4),
+                textcoords="offset points", xytext=(6, 0), fontsize=8,
+                color="#14505c", fontweight="bold")
+    ax.set_yticks(range(len(labels)))
+    ax.set_yticklabels(labels, fontsize=8)
+    ax.set_ylabel("representative burden, high / low")
+    ax.set_xlabel("model response ratio")
+    ax.set_title("(c) the choice the trial does not make for us", fontsize=10)
+    ax.grid(alpha=0.25, axis="x")
+
+    fig.suptitle("Checkpoint blockade: constraining a shape with a ratio the "
+                 "mapping cancels out of", fontsize=12, fontweight="bold")
+    fig.text(0.5, 0.015,
+             "An objective response is a 30% reduction in diameter, not a kill fraction, so no "
+             "absolute response rate can be compared with this model. A RATIO between two strata "
+             "of one trial cancels that unknown mapping exactly, and KEYNOTE-158 supplies one "
+             "stratified by mutational burden - which moves antigenicity and, to first order, not "
+             "the brake. It constrains a SHAPE and identifies nothing: one ratio is one equation, "
+             "the brake is untouched, and (c) shows the representative-burden choice moving the "
+             "model's answer by about as much as the target band is wide.",
+             ha="center", fontsize=7.2, color="#555", wrap=True)
+    fig.tight_layout(rect=[0, 0.13, 1, 0.93])
+    save(fig, "fig38_checkpoint")
+
+
 if __name__ == "__main__":
     print("Generating conceptual diagrams...")
     fig18_hypoxia()
@@ -1427,4 +1524,5 @@ if __name__ == "__main__":
     fig35_calibration_verdicts()
     fig36_fractionation()
     fig37_chemotherapy()
+    fig38_checkpoint()
     print("Done.")

@@ -52,6 +52,7 @@ use ferroptosis_core::adc::{bystander_kill_fraction, AdcConfig, Linker};
 use ferroptosis_core::adoptive::{barrier_limited_kills, effective_effectors, AdoptiveBarriers};
 use ferroptosis_core::biochem::{sim_cell, CellState};
 use ferroptosis_core::cell::{gen_cell, Phenotype, Treatment};
+use ferroptosis_core::checkpoint;
 use ferroptosis_core::chemo;
 use ferroptosis_core::drug_transport::{
     antibody_drug_conjugate, concentration_at_distance, epithelial_well_vascularized,
@@ -122,6 +123,16 @@ struct ArmResult {
 /// this row's height is a property of these two numbers and the phase
 /// distribution, and the panel's own refusal applies to it with particular
 /// force.
+/// Dose and dissociation constant for the panel's checkpoint arm.
+///
+/// A tenfold-over-Kd dose, which is the flat-dosing regime checkpoint
+/// antibodies are given in: the occupancy is above 90% and doubling it changes
+/// almost nothing, which is a property the arm could not express while its
+/// drug effect was a bare efficacy scalar.
+const CHECKPOINT_PANEL_DOSE: f64 = 1.0;
+/// See [`CHECKPOINT_PANEL_DOSE`].
+const CHECKPOINT_PANEL_KD: f64 = 0.1;
+
 const CHEMO_PANEL_DOSE: f64 = 2.0;
 /// See [`CHEMO_PANEL_DOSE`].
 const CHEMO_PANEL_POTENCY: f64 = 0.5;
@@ -207,13 +218,25 @@ fn main() {
         ..ImmuneParams::default()
     };
     let blockade = immune_cascade(&[], n, &immune, true).immune_kills;
+    // The arm's ROW still comes from the shared cascade, because that is what
+    // kills cells in this panel. What `checkpoint` adds is the structure the
+    // cascade could not express -- receptor occupancy, PD-L1 as a brake
+    // modifier separate from mutational burden as an antigenicity modifier,
+    // and the three resistance modes -- and the calibration it made possible.
+    // Reporting the module's own index as the row would be worse than useless:
+    // it is dimensionless and proportional to kill, which is precisely what
+    // makes it comparable in a RATIO and not on a bar chart.
+    let occupancy = checkpoint::receptor_occupancy(CHECKPOINT_PANEL_DOSE, CHECKPOINT_PANEL_KD);
     arms.push(ArmResult {
         name: "Immunotherapy",
         kill_fraction: blockade / n as f64,
         route: "immune cascade (no ferroptotic death required)",
-        limited_by: "antigen availability and the checkpoint brake",
-        calibration: "uncalibrated; published ORR band not fitted",
+        limited_by: "antigen availability, and a brake this dose releases \
+                     almost entirely",
+        calibration: "ratio-anchored on mutational burden; the brake is \
+                      still unidentified",
     });
+    debug_assert!(occupancy > 0.9, "the panel's dose should nearly saturate");
 
     // The barriers are what make this arm different from every other one: the
     // SAME construct cures a blood cancer and does very little in a solid

@@ -652,3 +652,25 @@ figures:
       Whether any real tumour sits inside that window is explicitly NOT
       established, so the trial that motivated the question is named as a
       motivation and not as a reproduction.
+  - manuscript_figure: 34
+    filename: fig38_checkpoint
+    generator:
+      script: scripts/generate_conceptual_diagrams.py
+      function: fig38_checkpoint
+    inputs:
+      - analysis/calibration/checkpoint-validation.json
+    type: simulation
+    status: manuscript
+    note: >-
+      The one figure in this book whose subject is a CALIBRATION ARGUMENT
+      rather than a result. An objective response is a 30% reduction in
+      diameter and a model kill is a fraction of cells, so no absolute
+      response rate can be compared with this engine -- but a RATIO between
+      two strata of one trial cancels that unknown mapping exactly, and
+      KEYNOTE-158 supplies one stratified by mutational burden. Panel (b)
+      shows what that buys: 31% of the shape grid survives, where the absolute
+      band excluded nothing. Panel (c) is drawn at the same size as the result
+      because it is comparable in size to it -- the trial reports strata, not
+      tumours, and choosing a representative burden moves the model's answer
+      across most of the target band. A figure showing only (a) and (b) would
+      be an overclaim.

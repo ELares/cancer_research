@@ -134,28 +134,32 @@
   {
    "arm": "Immunotherapy",
    "label": "Checkpoint blockade",
-   "note": "reaches only through shared immune machinery: owns no module",
+   "note": "the row in the panel still comes from the SHARED cascade; what the module adds is the structure that made a ratio-based calibration possible",
    "mechanism": "immunotherapy",
    "census": 31890,
    "trials": 1430,
-   "modules": 0,
-   "code_lines": 0,
-   "pub_fns": 0,
-   "rust_tests": 0,
+   "modules": 1,
+   "code_lines": 122,
+   "pub_fns": 7,
+   "rust_tests": 10,
    "calibration": "INADMISSIBLE",
-   "book_words": 2024,
+   "book_words": 3281,
    "book_sections": [
+    "6.8 Checkpoint Blockade, and What a Ratio Can Constrain",
     "8.2 Immune Coupling: DAMP-Mediated T Cell Activation"
    ],
    "figures": [
-    "fig35_calibration_verdicts"
+    "fig35_calibration_verdicts",
+    "fig38_checkpoint"
    ],
-   "predictions": [],
-   "parity_lines": 0.0,
-   "parity_fns": 0.0,
-   "parity_tests": 0.0,
-   "parity_words": 0.386,
-   "lines_short_of_parity": 3992
+   "predictions": [
+    "P16"
+   ],
+   "parity_lines": 0.031,
+   "parity_fns": 0.038,
+   "parity_tests": 0.032,
+   "parity_words": 0.625,
+   "lines_short_of_parity": 3870
   },
   {
    "arm": "AdoptiveCell",
@@ -293,8 +297,8 @@
  "shared_modules": 5,
  "shared_code_lines": 818,
  "shared_pub_fns": 58,
- "manuscript_words_in_sections": 58582,
- "manuscript_words_attributed": 10044,
+ "manuscript_words_in_sections": 59843,
+ "manuscript_words_attributed": 11301,
  "absent_arms": [
   {
    "arm": "Targeted small-molecule therapy",
