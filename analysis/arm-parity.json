@@ -1,0 +1,286 @@
+{
+ "arms": [
+  {
+   "arm": "RSL3",
+   "label": "Ferroptosis induction",
+   "note": "the comparator: every module the other arms are measured against",
+   "mechanism": null,
+   "census": null,
+   "trials": null,
+   "modules": 27,
+   "code_lines": 3988,
+   "pub_fns": 186,
+   "rust_tests": 315,
+   "calibration": null,
+   "book_words": 5249,
+   "book_sections": [
+    "Chapter 5: The Ferroptosis Engine"
+   ],
+   "figures": [
+    "fig1_ferroptosis_comparison",
+    "fig24_hypoxia_killcurve",
+    "fig25_bliss_synergy",
+    "fig26_vulnerability_window",
+    "fig27_resistance_asymmetry",
+    "fig31_modality_panel",
+    "fig8_simulation_by_treatment"
+   ],
+   "predictions": [
+    "P1",
+    "P2",
+    "P3",
+    "P4",
+    "P6",
+    "P7",
+    "P8"
+   ],
+   "parity_lines": 1.0,
+   "parity_fns": 1.0,
+   "parity_tests": 1.0,
+   "parity_words": 1.0,
+   "lines_short_of_parity": 0
+  },
+  {
+   "arm": "SDT",
+   "label": "Sonodynamic therapy",
+   "note": "shares the exogenous-ROS path and the depth physics with PDT",
+   "mechanism": "sonodynamic",
+   "census": 2513,
+   "trials": 114,
+   "modules": 0,
+   "code_lines": 0,
+   "pub_fns": 0,
+   "rust_tests": 0,
+   "calibration": null,
+   "book_words": 0,
+   "book_sections": [],
+   "figures": [
+    "fig24_hypoxia_killcurve",
+    "fig26_vulnerability_window",
+    "fig27_resistance_asymmetry",
+    "fig31_modality_panel",
+    "fig6_sdt_chain_evidence",
+    "fig8_simulation_by_treatment"
+   ],
+   "predictions": [
+    "P2",
+    "P4",
+    "P6"
+   ],
+   "parity_lines": 0.0,
+   "parity_fns": 0.0,
+   "parity_tests": 0.0,
+   "parity_words": 0.0,
+   "lines_short_of_parity": 3988
+  },
+  {
+   "arm": "PDT",
+   "label": "Photodynamic therapy",
+   "note": "the one non-ferroptosis arm with a module of its own from the start",
+   "mechanism": null,
+   "census": null,
+   "trials": null,
+   "modules": 1,
+   "code_lines": 187,
+   "pub_fns": 4,
+   "rust_tests": 52,
+   "calibration": null,
+   "book_words": 0,
+   "book_sections": [],
+   "figures": [
+    "fig31_modality_panel",
+    "fig34_depth_reach",
+    "fig8_simulation_by_treatment"
+   ],
+   "predictions": [
+    "P2"
+   ],
+   "parity_lines": 0.047,
+   "parity_fns": 0.022,
+   "parity_tests": 0.165,
+   "parity_words": 0.0,
+   "lines_short_of_parity": 3801
+  },
+  {
+   "arm": "Radiation",
+   "label": "Ionizing radiation",
+   "note": "no taxonomy row; the largest literature of any arm here",
+   "mechanism": null,
+   "census": null,
+   "trials": null,
+   "modules": 1,
+   "code_lines": 95,
+   "pub_fns": 10,
+   "rust_tests": 16,
+   "calibration": "ADMISSIBLE",
+   "book_words": 0,
+   "book_sections": [],
+   "figures": [
+    "fig34_depth_reach"
+   ],
+   "predictions": [
+    "P9"
+   ],
+   "parity_lines": 0.024,
+   "parity_fns": 0.054,
+   "parity_tests": 0.051,
+   "parity_words": 0.0,
+   "lines_short_of_parity": 3893
+  },
+  {
+   "arm": "Immunotherapy",
+   "label": "Checkpoint blockade",
+   "note": "reaches only through shared immune machinery: owns no module",
+   "mechanism": "immunotherapy",
+   "census": 31890,
+   "trials": 1430,
+   "modules": 0,
+   "code_lines": 0,
+   "pub_fns": 0,
+   "rust_tests": 0,
+   "calibration": "INADMISSIBLE",
+   "book_words": 2024,
+   "book_sections": [
+    "8.2 Immune Coupling: DAMP-Mediated T Cell Activation"
+   ],
+   "figures": [
+    "fig35_calibration_verdicts"
+   ],
+   "predictions": [],
+   "parity_lines": 0.0,
+   "parity_fns": 0.0,
+   "parity_tests": 0.0,
+   "parity_words": 0.386,
+   "lines_short_of_parity": 3988
+  },
+  {
+   "arm": "AdoptiveCell",
+   "label": "Adoptive cell therapy (CAR-T)",
+   "note": "",
+   "mechanism": "car-t",
+   "census": 15358,
+   "trials": 1020,
+   "modules": 1,
+   "code_lines": 64,
+   "pub_fns": 7,
+   "rust_tests": 12,
+   "calibration": "ADMISSIBLE",
+   "book_words": 0,
+   "book_sections": [],
+   "figures": [
+    "fig33_adoptive_barriers"
+   ],
+   "predictions": [
+    "P11"
+   ],
+   "parity_lines": 0.016,
+   "parity_fns": 0.038,
+   "parity_tests": 0.038,
+   "parity_words": 0.0,
+   "lines_short_of_parity": 3924
+  },
+  {
+   "arm": "OncolyticVirus",
+   "label": "Oncolytic virus",
+   "note": "",
+   "mechanism": "oncolytic-virus",
+   "census": 5006,
+   "trials": 201,
+   "modules": 1,
+   "code_lines": 61,
+   "pub_fns": 3,
+   "rust_tests": 7,
+   "calibration": "ADMISSIBLE",
+   "book_words": 0,
+   "book_sections": [],
+   "figures": [],
+   "predictions": [
+    "P12"
+   ],
+   "parity_lines": 0.015,
+   "parity_fns": 0.016,
+   "parity_tests": 0.022,
+   "parity_words": 0.0,
+   "lines_short_of_parity": 3927
+  },
+  {
+   "arm": "Ablation",
+   "label": "Thermal and electrical ablation",
+   "note": "two mechanisms in the taxonomy (hifu, electrochemical-therapy) share one arm",
+   "mechanism": "hifu",
+   "census": 1352,
+   "trials": 96,
+   "modules": 1,
+   "code_lines": 66,
+   "pub_fns": 4,
+   "rust_tests": 5,
+   "calibration": "UNCONSTRAINED",
+   "book_words": 0,
+   "book_sections": [],
+   "figures": [
+    "fig35_calibration_verdicts"
+   ],
+   "predictions": [
+    "P13"
+   ],
+   "parity_lines": 0.017,
+   "parity_fns": 0.022,
+   "parity_tests": 0.016,
+   "parity_words": 0.0,
+   "lines_short_of_parity": 3922
+  },
+  {
+   "arm": "AntibodyDrugConjugate",
+   "label": "Antibody-drug conjugate",
+   "note": "",
+   "mechanism": "antibody-drug-conjugate",
+   "census": 6019,
+   "trials": 580,
+   "modules": 1,
+   "code_lines": 80,
+   "pub_fns": 7,
+   "rust_tests": 6,
+   "calibration": "NO TARGET",
+   "book_words": 0,
+   "book_sections": [],
+   "figures": [
+    "fig31_modality_panel",
+    "fig35_calibration_verdicts"
+   ],
+   "predictions": [
+    "P10"
+   ],
+   "parity_lines": 0.02,
+   "parity_fns": 0.038,
+   "parity_tests": 0.019,
+   "parity_words": 0.0,
+   "lines_short_of_parity": 3908
+  }
+ ],
+ "shared_modules": 5,
+ "shared_code_lines": 817,
+ "shared_pub_fns": 58,
+ "manuscript_words_in_sections": 55676,
+ "manuscript_words_attributed": 7273,
+ "absent_arms": [
+  {
+   "arm": "Cytotoxic chemotherapy",
+   "why": "no Treatment variant, no module, no taxonomy row -- the modality most patients receive, and the one this engine cannot express at all"
+  },
+  {
+   "arm": "Targeted small-molecule therapy",
+   "why": "PARP synthetic lethality is inside `radiation`; there is no arm for kinase inhibition, and the taxonomy's synthetic-lethality row is served by a boost on radiation's alpha"
+  },
+  {
+   "arm": "Hormone therapy",
+   "why": "no arm and no taxonomy row, against a literature the census can measure only through its drug descriptors"
+  },
+  {
+   "arm": "Radioligand therapy",
+   "why": "a taxonomy row and a diagnostic-therapy chain, but no engine arm: the radiation module models external beam only"
+  }
+ ],
+ "comparator": "RSL3",
+ "arms_at_parity": 0,
+ "n_arms": 9
+}
