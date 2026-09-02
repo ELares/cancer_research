@@ -109,23 +109,27 @@
    "census": null,
    "trials": null,
    "modules": 1,
-   "code_lines": 95,
-   "pub_fns": 10,
-   "rust_tests": 16,
+   "code_lines": 263,
+   "pub_fns": 23,
+   "rust_tests": 33,
    "calibration": "ADMISSIBLE",
-   "book_words": 0,
-   "book_sections": [],
+   "book_words": 1378,
+   "book_sections": [
+    "6.6 Radiation, in the Form It Is Actually Given"
+   ],
    "figures": [
-    "fig34_depth_reach"
+    "fig34_depth_reach",
+    "fig36_fractionation"
    ],
    "predictions": [
-    "P9"
+    "P9",
+    "P14"
    ],
-   "parity_lines": 0.024,
-   "parity_fns": 0.054,
-   "parity_tests": 0.051,
-   "parity_words": 0.0,
-   "lines_short_of_parity": 3893
+   "parity_lines": 0.066,
+   "parity_fns": 0.124,
+   "parity_tests": 0.105,
+   "parity_words": 0.263,
+   "lines_short_of_parity": 3725
   },
   {
    "arm": "Immunotherapy",
@@ -260,8 +264,8 @@
  "shared_modules": 5,
  "shared_code_lines": 817,
  "shared_pub_fns": 58,
- "manuscript_words_in_sections": 55676,
- "manuscript_words_attributed": 7273,
+ "manuscript_words_in_sections": 57105,
+ "manuscript_words_attributed": 8651,
  "absent_arms": [
   {
    "arm": "Cytotoxic chemotherapy",

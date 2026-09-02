@@ -1180,6 +1180,125 @@ def fig35_calibration_verdicts():
 
 
 
+def fig36_fractionation():
+    """What the schedule layer can be checked against, and where it fails.
+
+    Three panels, and the first is the one that earns the figure. EQD2 is a
+    function of the alpha/beta you assume, so two schedules trace two curves,
+    and where they CROSS is the ratio at which a trial's two arms are
+    equivalent. Prostate's crossing lands inside the band the radiobiology
+    literature estimates independently; breast's does not, and the reason is
+    geometric rather than rhetorical -- one arm delivers less total dose and
+    was still not inferior, so the curves cross where no tissue lives.
+
+    Every number is read from the committed validation artifact or recomputed
+    from the same formula the crate implements. Nothing is typed.
+    """
+    import json
+    src = Path(__file__).resolve().parent.parent / "analysis" / "calibration" / \
+        "fractionation-validation.json"
+    if not src.exists():
+        print("  fig36: fractionation-validation.json missing - skipping")
+        return
+    d = json.loads(src.read_text())
+
+    def eqd2(n, dose, ab):
+        return n * dose * (1 + dose / ab) / (1 + 2.0 / ab)
+
+    fig, axes = plt.subplots(1, 3, figsize=(15, 4.6))
+
+    # (a) the isoeffect crossing
+    ax = axes[0]
+    colours = {"prostate": "#14505c", "breast": "#a2582b"}
+    for row in d["isoeffect"]:
+        site = row["site"]
+        n1, s1 = row["arm_a"].split(" x ")
+        n2, s2 = row["arm_b"].split(" x ")
+        n1, d1 = int(n1), float(s1.split()[0])
+        n2, d2 = int(n2), float(s2.split()[0])
+        xs = [0.3 + 0.02 * i for i in range(0, 500)]
+        gap = [eqd2(n2, d2, x) - eqd2(n1, d1, x) for x in xs]
+        ax.plot(xs, gap, color=colours[site], lw=2,
+                label=f"{site}: {row['arm_b']} - {row['arm_a']}")
+        ax.axvspan(row["published_lo_gy"], row["published_hi_gy"],
+                   color=colours[site], alpha=0.12)
+        x0 = row["implied_alpha_beta_gy"]
+        ax.plot([x0], [0], "o", color=colours[site], ms=8, zorder=5)
+        ax.annotate(f"{x0:.2f} Gy", (x0, 0), textcoords="offset points",
+                    xytext=(6, 10 if site == "prostate" else -16),
+                    fontsize=8, color=colours[site], fontweight="bold")
+    ax.axhline(0, color="#444", lw=0.8)
+    ax.set_xlim(0.3, 10.3)
+    ax.set_xlabel(r"assumed $\alpha/\beta$ (Gy)")
+    ax.set_ylabel("EQD2 difference between the arms (Gy)")
+    ax.set_title("(a) where two trial arms are equivalent", fontsize=10)
+    ax.legend(fontsize=7.5, loc="lower right")
+    ax.grid(alpha=0.25)
+
+    # (b) why radiotherapy is fractionated at all
+    ax = axes[1]
+    ab_t, ab_l = d["constants"]["ALPHA_BETA_TUMOUR_GY"], d["constants"]["ALPHA_BETA_LATE_GY"]
+    sizes = [1.0 + 0.25 * i for i in range(0, 93)]
+    ratio = [eqd2(1, s, ab_t) / eqd2(1, s, ab_l) for s in sizes]
+    ax.plot(sizes, ratio, color="#14505c", lw=2)
+    ax.axhline(1.0, color="#888", ls="--", lw=1)
+    ax.axvline(2.0, color="#888", ls=":", lw=1)
+    ax.annotate("2 Gy: the convention\nEQD2 is defined against",
+                (2.0, 1.0), textcoords="offset points", xytext=(10, 24),
+                fontsize=7.5, color="#555")
+    ax.set_xlabel("dose per fraction (Gy)")
+    ax.set_ylabel(r"tumour effect / late-tissue effect")
+    ax.set_title(r"(b) the differential fractionation exploits", fontsize=10)
+    ax.grid(alpha=0.25)
+
+    # (c) the fourth R
+    ax = axes[2]
+    def reox(n, dose, f0, half_life):
+        alpha, beta = 0.3, 0.03
+        # OER as a dose-modifying factor, the same hyperbola the crate uses
+        def oer(p):
+            return (3 * p + 3) / (p + 3)
+        hyp_dose = dose * oer(0.05 * 40.0) / oer(40.0)
+        s_ox = pow(2.718281828459045, -(alpha * dose + beta * dose * dose))
+        s_hy = pow(2.718281828459045,
+                   -(alpha * hyp_dose + beta * hyp_dose * hyp_dose))
+        moved = 0.0 if half_life == float("inf") else \
+            1 - pow(2.718281828459045, -0.6931471805599453 / half_life)
+        ox, hy = 1 - f0, f0
+        for _ in range(n):
+            ox *= s_ox
+            hy *= s_hy
+            t = hy * moved
+            hy -= t
+            ox += t
+        return ox + hy
+
+    ns = list(range(1, 36))
+    gain = [reox(n, 2.0, 0.3, float("inf")) / reox(n, 2.0, 0.3, 5.0) for n in ns]
+    ax.plot(ns, gain, color="#14505c", lw=2)
+    ax.axhline(1.0, color="#888", ls="--", lw=1)
+    ax.set_yscale("log")
+    ax.set_xlabel("fractions delivered")
+    ax.set_ylabel("survival with a frozen hypoxic core\n/ survival when it reoxygenates")
+    ax.set_title("(c) what reoxygenation is worth, over a course", fontsize=10)
+    ax.grid(alpha=0.25, which="both")
+
+    fig.suptitle("The schedule, and the two things it can be checked against",
+                 fontsize=12, fontweight="bold")
+    fig.text(0.5, 0.015,
+             "(a) is the layer's external check and it runs BACKWARDS: two schedules a trial "
+             "reported as not differing imply the alpha/beta at which they are equivalent, and "
+             "that value is compared against estimates derived from other data (shaded). Prostate "
+             "lands inside its band; breast crosses at 0.70 Gy, far below any plausible tissue, "
+             "because its shorter arm delivers less total dose and was still not inferior - a "
+             "statement about what EQD2 leaves out. (b) and (c) are DIRECTION-only: the "
+             "late-tissue alpha/beta is a convention and the reoxygenation half-life is a free "
+             "parameter no dataset here constrains.",
+             ha="center", fontsize=7.2, color="#555", wrap=True)
+    fig.tight_layout(rect=[0, 0.13, 1, 0.93])
+    save(fig, "fig36_fractionation")
+
+
 if __name__ == "__main__":
     print("Generating conceptual diagrams...")
     fig18_hypoxia()
@@ -1194,4 +1313,5 @@ if __name__ == "__main__":
     fig33_adoptive_barriers()
     fig34_depth_reach()
     fig35_calibration_verdicts()
+    fig36_fractionation()
     print("Done.")

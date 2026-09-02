@@ -296,8 +296,11 @@
    \setlength{\leftskip}{\bookcalloutindent}%
    \setlength{\rightskip}{0pt plus 1em}%
    \setlength{\parindent}{0pt}%
+   % Callouts are short and unindented, so a second paragraph inside one needs
+   % space to be a second paragraph at all; without this they ran together.
+   \setlength{\parskip}{6pt}%
    \small
-   \noindent{\color{#2}\booktrack{#1}}\par\vspace{4pt}}
+   \noindent{\color{#2}\booktrack{#1}}\par\vspace{-2pt}}
   {\par\endgroup\vspace{6pt}%
    \noindent{\color{bookrule}\rule{\linewidth}{0.5pt}}%
    \par\addvspace{13pt}}

@@ -38,10 +38,10 @@
   },
   {
    "module": "radiation",
-   "pub_fns": 10,
-   "pub_types": 0,
-   "pub_consts": 5,
-   "code_lines": 95,
+   "pub_fns": 23,
+   "pub_types": 1,
+   "pub_consts": 11,
+   "code_lines": 263,
    "serves": "Radiation + synthetic lethality (PARP)",
    "reach": 4
   }
@@ -127,16 +127,16 @@
  "engine_pub_fns": 186,
  "engine_code_lines": 3988,
  "dedicated_modules": 5,
- "dedicated_pub_fns": 31,
- "dedicated_code_lines": 366,
+ "dedicated_pub_fns": 44,
+ "dedicated_code_lines": 534,
  "shared_modules": 5,
  "shared_pub_fns": 58,
  "shared_code_lines": 817,
  "engine_modules_with_shared": 32,
  "engine_pub_fns_with_shared": 244,
  "engine_code_lines_with_shared": 4805,
- "line_ratio_narrow": 10.9,
- "line_ratio_wide": 13.1,
- "fn_ratio_narrow": 6.0,
- "fn_ratio_wide": 7.9
+ "line_ratio_narrow": 7.5,
+ "line_ratio_wide": 9.0,
+ "fn_ratio_narrow": 4.2,
+ "fn_ratio_wide": 5.5
 }

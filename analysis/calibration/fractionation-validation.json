@@ -1,0 +1,61 @@
+{
+ "constants": {
+  "ALPHA_BETA_TUMOUR_GY": 10.0,
+  "ALPHA_BETA_LATE_GY": 3.0,
+  "ALPHA_HEAD_NECK_PER_GY": 0.3,
+  "ALPHA_GBM_PARAMETERISATION_PER_GY": 0.25329,
+  "REPOP_DOUBLING_DAYS": 3.0,
+  "REPOP_KICKOFF_DAYS": 28.0,
+  "SUBLETHAL_REPAIR_HALF_TIME_H": 1.5,
+  "D_PROLIF_PUBLISHED_GY_PER_DAY": [
+   0.5,
+   0.9
+  ]
+ },
+ "isoeffect": [
+  {
+   "site": "prostate",
+   "trial": "CHHiP",
+   "pmid": "27339115",
+   "arm_a": "37 x 2 Gy",
+   "arm_b": "20 x 3 Gy",
+   "arm_a_total_gy": 74.0,
+   "arm_b_total_gy": 60.0,
+   "weeks_a": 7.4,
+   "weeks_b": 4.0,
+   "outcome": "non-inferior",
+   "implied_alpha_beta_gy": 2.286,
+   "published_lo_gy": 1.2,
+   "published_hi_gy": 3.0,
+   "published_source_pmid": "23972468",
+   "verdict": "REPRODUCES"
+  },
+  {
+   "site": "breast",
+   "trial": "START-B",
+   "pmid": "24055415",
+   "arm_a": "25 x 2 Gy",
+   "arm_b": "15 x 2.67 Gy",
+   "arm_a_total_gy": 50.0,
+   "arm_b_total_gy": 40.05,
+   "weeks_a": 5.0,
+   "weeks_b": 3.0,
+   "outcome": "non-inferior",
+   "implied_alpha_beta_gy": 0.697,
+   "published_lo_gy": 2.3,
+   "published_hi_gy": 4.5,
+   "published_source_pmid": "24055415",
+   "verdict": "DISAGREES"
+  }
+ ],
+ "repopulation": {
+  "d_prolif_head_and_neck_gy_per_day": 0.77,
+  "d_prolif_with_gbm_alpha_gy_per_day": 0.912,
+  "published_lo": 0.5,
+  "published_hi": 0.9,
+  "verdict": "REPRODUCES",
+  "gbm_verdict": "DISAGREES"
+ },
+ "n_reproduces": 1,
+ "n_legs": 2
+}

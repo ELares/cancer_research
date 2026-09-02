@@ -41,7 +41,7 @@
    "window_hours": 48.0
   }
  ],
- "library_modules": 35,
+ "library_modules": 38,
  "modules": {
   "ablation.rs": {
    "examples": [
@@ -54,6 +54,11 @@
    ],
    "per_step_mentions": 0,
    "real_time_mentions": 1
+  },
+  "adoptive.rs": {
+   "examples": [],
+   "per_step_mentions": 2,
+   "real_time_mentions": 0
   },
   "biochem.rs": {
    "examples": [
@@ -72,25 +77,25 @@
     {
      "context": "/// FSP1 re-expression half-time (days). Slowest \u2014 epigenetic.",
      "form": "bare-unit",
-     "line": 275,
+     "line": 279,
      "value": "(days)"
     },
     {
      "context": "/// GPX4 re-expression half-time (days). Transcriptional.",
      "form": "bare-unit",
-     "line": 277,
+     "line": 281,
      "value": "(days)"
     },
     {
      "context": "/// NRF2 re-activation half-time (days).",
      "form": "bare-unit",
-     "line": 279,
+     "line": 283,
      "value": "(days)"
     },
     {
      "context": "/// GSH resynthesis half-time (days). Fastest \u2014 metabolic.",
      "form": "bare-unit",
-     "line": 281,
+     "line": 285,
      "value": "(days)"
     }
    ],
@@ -137,6 +142,11 @@
   "immune_spatial.rs": {
    "examples": [],
    "per_step_mentions": 17,
+   "real_time_mentions": 0
+  },
+  "oncolytic.rs": {
+   "examples": [],
+   "per_step_mentions": 3,
    "real_time_mentions": 0
   },
   "oxygen.rs": {
@@ -196,6 +206,36 @@
    ],
    "per_step_mentions": 0,
    "real_time_mentions": 2
+  },
+  "radiation.rs": {
+   "examples": [
+    {
+     "context": "/// ~1.5 h is the conventional value for human tissues; published estimates",
+     "form": "magnitude",
+     "line": 364,
+     "value": "1.5 h"
+    },
+    {
+     "context": "/// span roughly 0.5 to 4 h and differ between early- and late-responding",
+     "form": "magnitude",
+     "line": 365,
+     "value": "4 h"
+    },
+    {
+     "context": "/// the 24-hour interval of a conventional schedule and a 1.5-hour half-time,",
+     "form": "magnitude",
+     "line": 473,
+     "value": "24-hour"
+    },
+    {
+     "context": "/// the 24-hour interval of a conventional schedule and a 1.5-hour half-time,",
+     "form": "magnitude",
+     "line": 473,
+     "value": "1.5-hour"
+    }
+   ],
+   "per_step_mentions": 0,
+   "real_time_mentions": 6
   },
   "repair.rs": {
    "examples": [],
@@ -428,7 +468,7 @@
    "real_time_mentions": 16
   }
  },
- "modules_total": 50,
+ "modules_total": 53,
  "n_solver_timestep_conventions": 1,
  "n_solver_timestep_matches": 3,
  "n_step_bindings": 6,
@@ -447,6 +487,10 @@
    "nrf2_half_recovery_days": [
     "sim-window"
    ]
+  },
+  "radiation.rs": {
+   "interval_hours": [],
+   "overall_days": []
   },
   "senescence.rs": {
    "tau_induction_days": [],
@@ -528,12 +572,14 @@
   "violator_days": 7.0
  },
  "per_step_only": [
+  "adoptive.rs",
   "clonal.rs",
   "copper.rs",
   "dose_schedule.rs",
   "ifngamma.rs",
   "immune.rs",
   "immune_spatial.rs",
+  "oncolytic.rs",
   "oxygen.rs",
   "persister.rs",
   "repair.rs",
@@ -604,6 +650,12 @@
   "photosensitizer_pk.rs": [
    "sim-spatial"
   ],
+  "radiation.rs": [
+   "sim-modality-panel",
+   "sim-spatial",
+   "sim-tme",
+   "sim-tme-3d"
+  ],
   "senescence.rs": [
    "sim-tme-3d"
   ],
@@ -622,6 +674,7 @@
   "ablation.rs",
   "drug_transport.rs",
   "photosensitizer_pk.rs",
+  "radiation.rs",
   "senescence.rs",
   "sim-combo/main.rs",
   "sim-spatial/main.rs",

@@ -20,7 +20,8 @@ GEN = REPO / "scripts/generate_conceptual_diagrams.py"
 FIGURES = REPO / "FIGURES.yaml"
 CHAPTER6_FIGURES = {27: "fig32_modality_tme", 28: "fig33_adoptive_barriers",
                     30: "fig34_depth_reach",
-                    31: "fig35_calibration_verdicts"}
+                    31: "fig35_calibration_verdicts",
+                    32: "fig36_fractionation"}
 
 
 @pytest.fixture(scope="module")

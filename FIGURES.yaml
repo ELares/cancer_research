@@ -607,3 +607,25 @@ figures:
       comparable is published. ADMISSIBLE means a parameter
       reproduces a band, NOT that an arm is validated -- every arm here still
       feeds no number the manuscript reports.
+  - manuscript_figure: 32
+    filename: fig36_fractionation
+    generator:
+      script: scripts/generate_conceptual_diagrams.py
+      function: fig36_fractionation
+    inputs:
+      - analysis/calibration/fractionation-validation.json
+    type: simulation
+    status: manuscript
+    note: >-
+      The radiation arm's external check, and the reason it is worth a figure
+      is panel (a)'s geometry: EQD2 is a function of the alpha/beta you assume,
+      so a trial's two arms trace two curves and the CROSSING is the ratio at
+      which they are equivalent. Prostate crosses inside the band the
+      radiobiology literature estimates independently; breast crosses at 0.70
+      Gy, below any plausible tissue, because its shorter arm delivers less
+      total dose and was still not inferior. Drawing the failing leg beside the
+      passing one is the whole point -- a calibration figure showing only what
+      fits is marketing. Panels (b) and (c) are DIRECTION-only and the caption
+      says so: the late-responding alpha/beta is a convention rather than a
+      measurement, and the reoxygenation half-life is a free parameter no
+      dataset in this repository constrains.

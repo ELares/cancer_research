@@ -120,9 +120,14 @@ thresholds are stated here.
 - *Quantitative model output:* read from `ablation.rs`, not asserted: above threshold `margin_survival_fraction` returns one minus the covered fraction, its signature takes only the config and the coverage, and while its body DOES read temperature, duration and field strength, it reads them only to test whether the threshold is crossed -- above it the return value does not vary with them. An earlier version of this entry said the body read none of them, which was false. Doubling delivered energy at fixed coverage therefore changes predicted survival by exactly zero.
 - *Falsification threshold:* recurrence correlates with delivered energy at matched coverage fraction (a dose-response above threshold), or coverage fails to predict recurrence at matched energy.
 
-### Honesty clause for P9 to P13
+**P14. A radiotherapy trial's two schedules imply the tissue's fractionation sensitivity, and the implication holds for prostate and fails for breast.**
+- *Quantitative model output:* `radiation::isoeffect_alpha_beta` inverts the linear-quadratic model over two schedules a randomised trial reported as not differing. For CHHiP (PMID 27339115), 37 x 2 Gy against 20 x 3 Gy implies alpha/beta = 2.29 Gy, which falls inside the 1.2 to 3.0 Gy band the radiobiology literature estimates for prostate from other data. For START-B (PMID 24055415), 25 x 2 Gy against 15 x 2.67 Gy implies 0.70 Gy against a published 2.3 to 4.5 Gy, and the model therefore FAILS to reproduce that equivalence.
+- *Falsification threshold:* the prediction is that the inversion recovers a published site-specific alpha/beta for a trial whose arms were designed to be isoeffective, and does not for a trial whose arms differ in total dose and elapsed time. It fails if a new isoeffective pair from a designed-equivalent trial lands outside its site's published band by more than the band's own width, or if the breast pair is shown to be reproducible under the same single-alpha/beta arithmetic.
+- *Note:* a non-inferiority result bounds a difference rather than establishing equality, so the implied ratio is an anchor and not an estimate with an interval. The full accounting, including the repopulation prediction (`ln2/(alpha*T_p)` = 0.77 Gy/day against Withers' published band, PMID 3390344) and its sensitivity to which tumour's alpha is used, is `analysis/calibration/fractionation-validation.md`.
 
-**All five are DIRECTIONAL and every barrier value behind them is an
+### Honesty clause for P9 to P14
+
+**P9 to P13 are DIRECTIONAL and every barrier value behind them is an
 uncalibrated placeholder** (`CALIBRATION_STATUS.md` records each as feeding no
 reported number). A magnitude in P10 to P13 is a property of a preset, not a
 prediction. P9 is the deliberate exception: its band is published, which is
