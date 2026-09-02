@@ -5244,6 +5244,109 @@ fn main() {
 
 #[cfg(test)]
 mod tests {
+    /// WHICH TREATMENT ARMS THIS SPATIAL ENGINE CAN ACTUALLY EXPRESS (#844).
+    ///
+    /// The crate has ten `Treatment` variants and nine of them now carry their
+    /// own engine module, their own calibration verdict and their own
+    /// manuscript section (EPIC #831). This binary -- the spatial capstone
+    /// carrying the oxygen gradient, the vessel network, the immune coupling,
+    /// the clonal and persister layers -- can express **three** of them.
+    ///
+    /// The rest fall through to `0.0` in `base_ros` and behave EXACTLY as
+    /// Control, which the dispatch says in a comment. This test converts that
+    /// comment into a measurement by RUNNING each arm rather than reading the
+    /// match, because a comment cannot go red and a text scan over a match
+    /// cannot tell a live arm from a dead one.
+    ///
+    /// It is deliberately written to FAIL when an arm is wired up. That is the
+    /// point: the numbers in `analysis/arm-parity.md` and the epic that tracks
+    /// this gap both have to move in the same commit as the wiring.
+    #[test]
+    fn the_spatial_engine_expresses_three_of_the_ten_treatment_arms() {
+        // A BIGGER PROBE THAN THE UNIT DEFAULT, deliberately. At 10^3/20 the
+        // in-vivo-tuned RSL3 switch kills nothing at all -- a documented
+        // property of that parameterisation, not of the engine's ability to
+        // express the arm -- so the small config would report RSL3 as inert
+        // alongside the seven that really are. A headline that is an artifact
+        // of its own probe is worse than no headline.
+        let cfg = RunConfig {
+            grid_dim: 24,
+            n_steps: 120,
+        };
+        let base = |tx: Treatment| Condition {
+            name: "probe".to_string(),
+            treatment: tx,
+            treatment_name: format!("{tx:?}"),
+            o2_lambda: Some(50.0),
+            immune_on: false,
+            stromal_on: false,
+            ph_on: false,
+            dose_schedule: DoseSchedule::Constant,
+        };
+        let control =
+            run_one_condition_full(&base(Treatment::Control), cfg, None, Overrides::default());
+
+        let all = [
+            Treatment::Control,
+            Treatment::RSL3,
+            Treatment::SDT,
+            Treatment::PDT,
+            Treatment::Radiation,
+            Treatment::Immunotherapy,
+            Treatment::AdoptiveCell,
+            Treatment::OncolyticVirus,
+            Treatment::Ablation,
+            Treatment::AntibodyDrugConjugate,
+            Treatment::Chemotherapy,
+        ];
+        let mut expressive = Vec::new();
+        let mut inert = Vec::new();
+        for tx in all {
+            if tx == Treatment::Control {
+                continue;
+            }
+            let r = run_one_condition_full(&base(tx), cfg, None, Overrides::default());
+            // "Expressive" means the arm changes the OUTCOME, not that it is
+            // named somewhere. Comparing the kill rate against Control is the
+            // weakest claim that still separates a live arm from a dead one.
+            if (r.overall_kill_rate - control.overall_kill_rate).abs() > 1e-12 {
+                expressive.push(format!("{tx:?}"));
+            } else {
+                inert.push(format!("{tx:?}"));
+            }
+        }
+        assert_eq!(
+            expressive,
+            vec!["RSL3".to_string(), "SDT".to_string(), "PDT".to_string()],
+            "the set of arms this spatial engine can express has changed. If an \
+             arm was WIRED, that is the point of #844 -- update this literal, \
+             `analysis/arm-parity.md` and the epic in the same commit. If an arm \
+             went dark, something regressed."
+        );
+        assert_eq!(
+            inert.len(),
+            7,
+            "seven arms are supposed to be inert here and {} are: {inert:?}",
+            inert.len()
+        );
+        // And the inert ones must be inert by behaving as CONTROL exactly --
+        // not by erroring, and not by doing something small. A near-miss would
+        // be far worse than a zero, because it would look like a wired arm.
+        for tx in [
+            Treatment::Radiation,
+            Treatment::Chemotherapy,
+            Treatment::Ablation,
+        ] {
+            let r = run_one_condition_full(&base(tx), cfg, None, Overrides::default());
+            assert_eq!(
+                r.overall_kill_rate, control.overall_kill_rate,
+                "{tx:?} is neither wired nor Control-identical, which is the \
+                 worst of the three states: it looks live and is not"
+            );
+            assert_eq!(r.total_dead, control.total_dead);
+        }
+    }
+
     use super::*;
     // Test-only: used by the clonal lipid-axis test.
     use ferroptosis_core::clonal::SubclonePerturbation;

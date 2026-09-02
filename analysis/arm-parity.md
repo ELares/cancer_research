@@ -4,18 +4,20 @@
 
 The aggregate gap is already published: the modality arms are roughly an order of magnitude smaller than the ferroptosis engine by line count. That single ratio cannot say WHICH arm or HOW FAR, which is the question a campaign to close it has to answer. This is the same measurement, per arm, on the axes the work actually has to move.
 
-| arm | engine lines | pub fns | rust tests | calibration | book words | figures | predictions |
-|---|--:|--:|--:|---|--:|--:|--:|
-| Ferroptosis induction | 3,805 | 182 | 263 | -- | 5,249 | 7 | 7 |
-| Sonodynamic therapy | 63 | 8 | 10 | PARTLY REFUTED | 1,144 | 7 | 4 |
-| Photodynamic therapy | 249 | 9 | 59 | DIRECTIONAL | 1,144 | 4 | 2 |
-| Ionizing radiation | 263 | 23 | 33 | ADMISSIBLE | 1,378 | 2 | 2 |
-| Checkpoint blockade | 122 | 7 | 10 | INADMISSIBLE | 3,281 | 3 | 1 |
-| Adoptive cell therapy (CAR-T) | 166 | 13 | 16 | ADMISSIBLE | 1,062 | 2 | 2 |
-| Oncolytic virus | 165 | 11 | 14 | ADMISSIBLE | 983 | 2 | 2 |
-| Thermal and electrical ablation | 129 | 9 | 10 | UNCONSTRAINED | 877 | 2 | 2 |
-| Cytotoxic chemotherapy | 282 | 19 | 15 | NO TARGET | 1,393 | 1 | 2 |
-| Antibody-drug conjugate | 123 | 13 | 11 | NO TARGET | 998 | 3 | 2 |
+| arm | engine lines | pub fns | rust tests | calibration | book words | figures | predictions | spatial |
+|---|--:|--:|--:|---|--:|--:|--:|---|
+| Ferroptosis induction | 3,805 | 182 | 263 | -- | 5,249 | 7 | 7 | yes |
+| Sonodynamic therapy | 63 | 8 | 10 | PARTLY REFUTED | 1,144 | 7 | 4 | yes |
+| Photodynamic therapy | 249 | 9 | 59 | DIRECTIONAL | 1,144 | 4 | 2 | yes |
+| Ionizing radiation | 263 | 23 | 33 | ADMISSIBLE | 1,378 | 2 | 2 | **no** |
+| Checkpoint blockade | 122 | 7 | 10 | INADMISSIBLE | 3,281 | 3 | 1 | **no** |
+| Adoptive cell therapy (CAR-T) | 166 | 13 | 16 | ADMISSIBLE | 1,062 | 2 | 2 | **no** |
+| Oncolytic virus | 165 | 11 | 14 | ADMISSIBLE | 983 | 2 | 2 | **no** |
+| Thermal and electrical ablation | 129 | 9 | 10 | UNCONSTRAINED | 877 | 2 | 2 | **no** |
+| Cytotoxic chemotherapy | 282 | 19 | 15 | NO TARGET | 1,393 | 1 | 2 | **no** |
+| Antibody-drug conjugate | 123 | 13 | 11 | NO TARGET | 998 | 3 | 2 | **no** |
+
+**3 of 10 arms can be expressed in the spatial engine at all.** `sim-tme-3d` carries the oxygen gradient, the vessel network, the immune coupling, the clonal and persister layers -- and for the other 7 it returns a literal zero, so a run of those arms is bit-identical to an untreated tumour. They are closed-form functions evaluated at a point beside an agent-based simulation over a 60^3 grid, and no further prose closes that. The column is MEASURED rather than read off the dispatch: a text scan over a match that names every variant would report ten, so `sim-tme-3d` runs each arm against Control and this reads the result. Tracked in #844.
 
 **3,805 lines of production code carry the ferroptosis arm.** No other arm reaches a tenth of it, and the table's own worst row is the one to read first: an arm with no module of its own has no engine column to shrink.
 

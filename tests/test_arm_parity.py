@@ -188,3 +188,38 @@ def test_the_chapter_quotes_the_live_per_arm_line_counts():
     assert sdt * 10 < base, (
         "sonodynamic is no longer an order of magnitude behind the "
         "comparator, so this sentence needs re-deriving rather than updating")
+
+
+def test_the_spatial_column_is_measured_and_not_asserted():
+    """The column has to come from the test that RUNS the arms.
+
+    `sim-tme-3d`'s `base_ros` match names every `Treatment` variant on purpose,
+    so a new one cannot be swallowed by a wildcard -- which means a text scan
+    over that match would report all ten as present when seven return a
+    literal zero. The Rust test runs each variant against Control and asserts
+    which change the outcome, and this page reads that literal.
+    """
+    d = _d()
+    spatial = set(d["spatial_arms"])
+    assert spatial, "the spatial column has no measurement behind it"
+    src = (REPO / "simulations" / "sim-tme-3d" / "src" / "main.rs").read_text()
+    assert "fn the_spatial_engine_expresses_three_of_the_ten_treatment_arms" in src, (
+        "the measurement this column reads no longer exists")
+    for r in d["arms"]:
+        assert r["spatial"] == (r["arm"] in spatial)
+    # The COMPARATOR must be spatial. It is the comparator BECAUSE it runs in
+    # the spatial engine; a table reporting otherwise is reading its own
+    # instrument wrong, which is exactly what a character class excluding
+    # digits did to `RSL3` on the first attempt -- silently, and in the
+    # direction that understated the page's own headline.
+    assert d["comparator"] in spatial, (
+        f"the comparator {d['comparator']} is reported as not expressible in "
+        "the spatial engine, which cannot be true and means the parser is "
+        "dropping a name rather than the engine dropping an arm")
+    assert any(not r["spatial"] for r in d["arms"]), (
+        "every arm is now spatial, which is #844 succeeding -- re-derive this "
+        "page's framing rather than relaxing the guard")
+    md = MD.read_text()
+    n = sum(1 for r in d["arms"] if r["spatial"])
+    assert f"**{n} of {len(d['arms'])} arms can be expressed" in md, (
+        f"the page does not state the live spatial count ({n})")

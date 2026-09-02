@@ -27,6 +27,26 @@ Six axes, each measured somewhere else and joined here:
   book        manuscript words under headings that name the arm
   figures     FIGURES.yaml entries whose generator draws the arm
   predictions registered, falsifiable predictions in PREREGISTRATION.md
+  spatial     whether `sim-tme-3d` -- the spatial capstone carrying the oxygen
+              gradient, the vessel network and the immune coupling -- can
+              express the arm at all
+
+THE SPATIAL AXIS IS THE ONE THAT DID NOT MOVE (#844)
+----------------------------------------------------
+Nine arms now carry a module, a calibration verdict and a manuscript section,
+and SEVEN of them are Control-identical inside the spatial engine: their
+`base_ros` arm returns a literal `0.0` and the dispatch says so in a comment.
+So the arms are closed-form functions evaluated at a point while the
+ferroptosis arm is an agent-based simulation over a 60^3 grid, and no amount
+of further prose closes that.
+
+The column is NOT read from that match. A text scan over a match cannot tell a
+live arm from a dead one, so `sim-tme-3d` carries a test that RUNS every
+variant against Control and names the set that changes the outcome; this reads
+that test's expected list. The measurement also has a probe-size trap worth
+knowing: at the unit-test default the in-vivo-tuned RSL3 switch kills nothing,
+so a smaller probe reports a LIVE arm as dead and the headline becomes an
+artifact of its own config.
 
 LINES OF CODE ARE THE WEAKEST AXIS AND ARE REPORTED FIRST ONLY BECAUSE THE
 CRITICISM WAS ABOUT SIZE. A module can be large and wrong; an arm can reach
@@ -72,6 +92,7 @@ SIMS = REPO / "simulations"
 ANALYSIS = REPO / "analysis"
 MANUSCRIPT = REPO / "article" / "drafts" / "v1.md"
 PREREG = REPO / "PREREGISTRATION.md"
+SIM_TME_3D = SIMS / "sim-tme-3d" / "src" / "main.rs"
 FIGURES = REPO / "FIGURES.yaml"
 OUT_MD = ANALYSIS / "arm-parity.md"
 OUT_JSON = ANALYSIS / "arm-parity.json"
@@ -245,6 +266,33 @@ def _book_words(units, needles) -> tuple[int, list[str], dict]:
     return sum(per_hit.values()), list(per_hit), per_hit
 
 
+def _spatial_arms() -> set[str]:
+    """The arms `sim-tme-3d` can express, read from the test that MEASURES it.
+
+    Not parsed from the dispatch. `base_ros`'s match names every variant --
+    that is deliberate, so a new one cannot be absorbed by a wildcard -- and
+    seven of the arms it names return `0.0`. Reading the match would therefore
+    report ten. The Rust test runs each variant against Control and asserts
+    which ones move the outcome, so its literal is a measurement, and this
+    parses that literal rather than restating it.
+    """
+    src = SIM_TME_3D.read_text()
+    m = re.search(
+        r"fn the_spatial_engine_expresses_three_of_the_ten_treatment_arms\b.*?"
+        r"assert_eq!\(\s*expressive,\s*vec!\[(.*?)\]",
+        src, re.S)
+    if not m:
+        raise SystemExit(
+            "scripts/arm_parity.py cannot find the spatial-expressiveness test "
+            "in sim-tme-3d; the spatial column has no measurement behind it")
+    # `[A-Za-z0-9]` and not `[A-Za-z]`: the first version dropped RSL3 -- the
+    # one arm whose name carries a digit, and the COMPARATOR -- so the page
+    # reported 2 of 10 where the measurement says 3, understating its own
+    # headline in the flattering direction. A character class narrower than
+    # the names it reads fails silently and only on the members it excludes.
+    return set(re.findall(r'"([A-Za-z0-9]+)"', m.group(1)))
+
+
 def _figures_for(entries, needles) -> list[str]:
     out = []
     for e in entries:
@@ -270,6 +318,7 @@ def scan() -> dict:
     per_module = {m["module"]: m for m in depth["dedicated"] + depth["shared"]}
     per_arm_hits: list[dict] = []
     units = _sections(MANUSCRIPT.read_text())
+    spatial = _spatial_arms()
     prereg = PREREG.read_text()
     try:
         import yaml
@@ -321,6 +370,7 @@ def scan() -> dict:
             "pub_fns": fns,
             "rust_tests": tests,
             "calibration": calib.get(spec["calibration"]) if spec["calibration"] else None,
+            "spatial": spec["arm"] in spatial,
             "book_words": words,
             "book_sections": heads,
             "figures": _figures_for(figure_entries, spec["topic"]),
@@ -349,6 +399,7 @@ def scan() -> dict:
         "manuscript_words_attributed": attributed,
         "sections_naming_more_than_one_arm": {h: c for h, c in sorted(shared.items())},
         "absent_arms": [{"arm": a, "why": w} for a, w in ABSENT_ARMS],
+        "spatial_arms": sorted(spatial),
     }
 
 
@@ -388,15 +439,28 @@ def render(d: dict) -> str:
          "count. That single ratio cannot say WHICH arm or HOW FAR, which is "
          "the question a campaign to close it has to answer. This is the same "
          "measurement, per arm, on the axes the work actually has to move.", "",
-         "| arm | engine lines | pub fns | rust tests | calibration | book words | figures | predictions |",
-         "|---|--:|--:|--:|---|--:|--:|--:|"]
+         "| arm | engine lines | pub fns | rust tests | calibration | book words | figures | predictions | spatial |",
+         "|---|--:|--:|--:|---|--:|--:|--:|---|"]
     for r in d["arms"]:
         L.append(
             f"| {r['label']} | {_cell(r['code_lines'])} | {_cell(r['pub_fns'])} "
             f"| {_cell(r['rust_tests'])} | {r['calibration'] or '--'} "
             f"| {_cell(r['book_words'])} | {len(r['figures'])} "
-            f"| {len(r['predictions'])} |")
+            f"| {len(r['predictions'])} | {'yes' if r['spatial'] else '**no**'} |")
+    n_spatial = sum(1 for r in d["arms"] if r["spatial"])
     L += ["",
+          f"**{n_spatial} of {len(d['arms'])} arms can be expressed in the "
+          "spatial engine at all.** `sim-tme-3d` carries the oxygen gradient, "
+          "the vessel network, the immune coupling, the clonal and persister "
+          "layers -- and for the other "
+          f"{len(d['arms']) - n_spatial} it returns a literal zero, so a run "
+          "of those arms is bit-identical to an untreated tumour. They are "
+          "closed-form functions evaluated at a point beside an agent-based "
+          "simulation over a 60^3 grid, and no further prose closes that. The "
+          "column is MEASURED rather than read off the dispatch: a text scan "
+          "over a match that names every variant would report ten, so "
+          "`sim-tme-3d` runs each arm against Control and this reads the "
+          "result. Tracked in #844.", "",
           f"**{base['code_lines']:,} lines of production code carry the "
           f"ferroptosis arm.** No other arm reaches a tenth of it, and the "
           f"table's own worst row is the one to read first: an arm with no "
