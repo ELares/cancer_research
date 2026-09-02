@@ -66,7 +66,7 @@ literature and describing a search.
   — with `sim-tme-3d` as the 3D-spheroid capstone and `sim-modality-panel`
   running every applicable arm against the identical tumour from the identical
   seed. **Read the depth honestly:** the arms a modality owns outright are
-  5 modules and 535 lines against the ferroptosis engine's 27 modules and
+  5 modules and 534 lines against the ferroptosis engine's 27 modules and
   3,988, so the newer arms are roughly 8 to 9 times smaller — measured in
   [`analysis/modality-module-depth.md`](analysis/modality-module-depth.md),
   which reports it against itself rather than leaving you to count.

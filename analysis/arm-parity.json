@@ -109,7 +109,7 @@
    "census": null,
    "trials": null,
    "modules": 1,
-   "code_lines": 264,
+   "code_lines": 263,
    "pub_fns": 23,
    "rust_tests": 33,
    "calibration": "ADMISSIBLE",
@@ -129,7 +129,7 @@
    "parity_fns": 0.124,
    "parity_tests": 0.105,
    "parity_words": 0.263,
-   "lines_short_of_parity": 3724
+   "lines_short_of_parity": 3725
   },
   {
    "arm": "Immunotherapy",

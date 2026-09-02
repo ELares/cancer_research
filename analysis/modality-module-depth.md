@@ -12,11 +12,11 @@ Chapter 6 carried a sentence since it was written, calling each modality arm *"o
 | `adc` | Antibody-drug conjugate bystander effect | 7 | 2 | 0 | 80 | 1 |
 | `adoptive` | CAR-T trafficking, infiltration and activation barriers | 7 | 1 | 0 | 64 | 1 |
 | `oncolytic` | Oncolytic virus spread | 3 | 1 | 0 | 61 | 1 |
-| `radiation` | Radiation + synthetic lethality (PARP) | 23 | 1 | 11 | 264 | 4 |
+| `radiation` | Radiation + synthetic lethality (PARP) | 23 | 1 | 11 | 263 | 4 |
 
 The last column is why it is there. **Every module here has a production caller**, which was not true when this column was added: two of them had none, and the table printed their functions with no way for a reader to tell.
 
-**5 dedicated modules, 44 public functions, 535 lines of production code.** Whatever else is true, it is not one function and a configuration struct.
+**5 dedicated modules, 44 public functions, 534 lines of production code.** Whatever else is true, it is not one function and a configuration struct.
 
 ## Machinery several arms reach through
 

@@ -9,7 +9,7 @@ The aggregate gap is already published: the modality arms are roughly an order o
 | Ferroptosis induction | 3,988 | 186 | 315 | -- | 5,249 | 7 | 7 |
 | Sonodynamic therapy | 0 | 0 | 0 | -- | 0 | 6 | 3 |
 | Photodynamic therapy | 187 | 4 | 52 | -- | 0 | 3 | 1 |
-| Ionizing radiation | 264 | 23 | 33 | ADMISSIBLE | 1,378 | 2 | 2 |
+| Ionizing radiation | 263 | 23 | 33 | ADMISSIBLE | 1,378 | 2 | 2 |
 | Checkpoint blockade | 0 | 0 | 0 | INADMISSIBLE | 2,024 | 1 | 0 |
 | Adoptive cell therapy (CAR-T) | 64 | 7 | 12 | ADMISSIBLE | 0 | 1 | 1 |
 | Oncolytic virus | 61 | 3 | 7 | ADMISSIBLE | 0 | 0 | 1 |
@@ -24,7 +24,7 @@ The aggregate gap is already published: the modality arms are roughly an order o
 |---|--:|--:|--:|
 | Sonodynamic therapy | 0 | 0.000x | 3,988 |
 | Photodynamic therapy | 187 | 0.047x | 3,801 |
-| Ionizing radiation | 264 | 0.066x | 3,724 |
+| Ionizing radiation | 263 | 0.066x | 3,725 |
 | Checkpoint blockade | 0 | 0.000x | 3,988 |
 | Adoptive cell therapy (CAR-T) | 64 | 0.016x | 3,924 |
 | Oncolytic virus | 61 | 0.015x | 3,927 |

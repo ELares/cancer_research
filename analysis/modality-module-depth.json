@@ -41,7 +41,7 @@
    "pub_fns": 23,
    "pub_types": 1,
    "pub_consts": 11,
-   "code_lines": 264,
+   "code_lines": 263,
    "serves": "Radiation + synthetic lethality (PARP)",
    "reach": 4
   }
@@ -128,7 +128,7 @@
  "engine_code_lines": 3988,
  "dedicated_modules": 5,
  "dedicated_pub_fns": 44,
- "dedicated_code_lines": 535,
+ "dedicated_code_lines": 534,
  "shared_modules": 5,
  "shared_pub_fns": 58,
  "shared_code_lines": 817,
