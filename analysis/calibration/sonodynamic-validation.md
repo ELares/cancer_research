@@ -58,6 +58,27 @@ At their lower attenuation the reported optimum does not move at all. This is a 
 
 Their conclusion states that *near-field heat accumulation tends to be the rate limiting factor in large-volume ablations*. This model has no term for the tissue in front of the focus at all — it evaluates one point. Lowering the frequency to chase the focal optimum also lengthens the heated path, and a model that cannot see that path is free to slide its optimum in a way a real applicator is not. That is a named, addressable omission, which is the most useful thing a refutation can leave behind.
 
+## What the threshold makes sayable, and a dose-response arm cannot
+
+A modality limited by a threshold has a depth beyond which **no setting helps** -- not a fading efficacy but a hard edge. That is a different kind of statement from a coverage fraction, and it is the sonodynamic analogue of the perivascular sleeve the ablation arm reports. Both inputs below are placeholders and the SHAPE is the result:
+
+| applicator strength | device cap | depth limit |
+|--:|--:|--:|
+| 0.3 | 2 MHz | *fails everywhere* |
+| 0.3 | 5 MHz | *fails everywhere* |
+| 0.3 | 20 MHz | 0.40 cm |
+| 0.6 | 2 MHz | 1.15 cm |
+| 0.6 | 5 MHz | 1.65 cm |
+| 0.6 | 20 MHz | 1.65 cm |
+| 1.5 | 2 MHz | 10.45 cm |
+| 1.5 | 5 MHz | 10.45 cm |
+| 1.5 | 20 MHz | 10.45 cm |
+| 3.0 | 2 MHz | *beyond the scan* |
+| 3.0 | 5 MHz | *beyond the scan* |
+| 3.0 | 20 MHz | *beyond the scan* |
+
+The cavitation threshold is fixed at 0.7 here and is a PARAMETER, not a measurement: published in-vivo inertial-cavitation thresholds move by more than an order of magnitude with nucleation, which this layer does not represent. The device cap is a real instrument property and is REQUIRED rather than assumed -- without it the model is unbounded at shallow depth, since nothing has attenuated and the focal-gain term rewards frequency without limit, so a limit computed through that divergence would quote an idealisation instead of an instrument. A row whose applicator cannot cavitate even at the surface fails EVERYWHERE and is marked, never rendered as a shallow limit -- the degenerate-row defect the oncolytic and ablation sections each shipped once. So is the OTHER degenerate row, which the first version of this table did ship: a scan that never finds a limit returns its own 30 cm bound, and that read as an extraordinarily deep applicator when it is a measurement of how far the scan went.
+
 ## What is NOT claimed
 
 No numerical agreement, and the refusal is deliberate. Two independent mismatches would each on its own make one uninterpretable:

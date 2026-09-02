@@ -1889,25 +1889,30 @@ def fig43_sonodynamic_frequency():
 
     # (c) what makes this arm structurally different: a threshold
     ax = axes[2]
-    # STARTS AT 0.5 cm DELIBERATELY. At zero depth nothing attenuates, the
-    # optimal frequency is unbounded, and evaluating "the index at the
-    # optimum" there diverges -- a degenerate regime, which the crate's
-    # `optimal_frequency_mhz` returns infinity for rather than inventing a
-    # limit. Plotting it would put a spike on the page that is an artifact of
-    # the axis choice and not a property of any applicator.
-    zs = [0.5 + i * 0.25 for i in range(0, 59)]
-    for surface, colour, lab in ((3.0, "#14505c", "strong applicator"),
-                                 (1.5, "#a2582b", "moderate"),
-                                 (0.6, "#9fb3b8", "weak")):
-        idx = [surface * delivered(z, 10.0 / (alpha * 2.302585092994046 * z), alpha)
-               for z in zs]
-        ax.plot(zs, idx, color=colour, lw=2, label=lab)
-    ax.axhline(0.7, color="#c1440e", ls="--", lw=1.4)
-    ax.annotate("a cavitation threshold", (0.7, 0.78), fontsize=7.5, color="#c1440e")
+    # READ FROM THE ARTIFACT, not recomputed here. The first version of this
+    # panel re-implemented `delivered_index` inline, which is two
+    # implementations of one formula in one repository and a figure free to
+    # disagree with the page beside it. It also plotted from zero depth, where
+    # the uncapped model DIVERGES -- nothing has attenuated and the focal-gain
+    # term rewards frequency without limit -- and the spike was hidden by an
+    # axis choice rather than by fixing the model. The artifact's curve is
+    # computed at the applicator's own frequency CAP, so it is finite at the
+    # surface for a stated physical reason.
+    labels = {3.0: "strong applicator", 1.5: "moderate", 0.6: "weak"}
+    colours = {3.0: "#14505c", 1.5: "#a2582b", 0.6: "#9fb3b8"}
+    for c in d["curves"]:
+        strength = c["index_at_reference"]
+        xs = [pt[0] for pt in c["points"]]
+        ys = [pt[1] for pt in c["points"]]
+        ax.plot(xs, ys, color=colours.get(strength, "#666"), lw=2,
+                label=labels.get(strength, f"{strength}"))
+    ax.axhline(d["cavitation_threshold"], color="#c1440e", ls="--", lw=1.4)
+    ax.annotate("a cavitation threshold", (4.2, d["cavitation_threshold"] * 1.12),
+                fontsize=7.5, color="#c1440e")
     ax.set_xlabel("focal depth (cm)")
     ax.set_ylabel("delivered mechanical index")
-    ax.set_ylim(0, 3.6)
-    ax.set_xlim(0.5, 15.5)
+    ax.set_yscale("log")
+    ax.set_xlim(0, 15.2)
     ax.set_title("(c) below the line, no exposure time helps", fontsize=10)
     ax.legend(fontsize=7.5)
     ax.grid(alpha=0.25)
@@ -1924,8 +1929,11 @@ def fig43_sonodynamic_frequency():
              "this model has no representation of at all. (c) is why SDT is structurally unlike "
              "the dose-response arms: inertial cavitation is a THRESHOLD, so below the line no "
              "insonation time produces sonochemical ROS and the depth limit is a hard edge rather "
-             "than a fade. The threshold height is a parameter, not a measurement: published "
-             "in-vivo values move by more than an order of magnitude with nucleation.",
+             "than a fade - where each curve crosses the line IS the depth limit tabulated in "
+             "the validation page. The threshold height is a parameter, not a measurement: "
+             "published in-vivo values move by more than an order of magnitude with nucleation, "
+             "and the curves are drawn at a 20 MHz device cap, which is what keeps them finite at "
+             "the surface: uncapped, this model diverges where nothing has yet attenuated.",
              ha="center", fontsize=7.2, color="#555", wrap=True)
     fig.tight_layout(rect=[0, 0.15, 1, 0.93])
     save(fig, "fig43_sonodynamic_frequency")

@@ -89,6 +89,36 @@ def delivered_index(depth_cm, freq_mhz, alpha_db_cm_mhz):
     return p / math.sqrt(freq_mhz)
 
 
+def usable_frequency_mhz(depth_cm, alpha, max_frequency_mhz):
+    """The crate's device cap, re-implemented.
+
+    Without it the model is UNBOUNDED at shallow depth -- nothing has
+    attenuated and the focal-gain term rewards frequency without limit -- so a
+    depth limit computed through the divergence would quote an idealisation
+    rather than an instrument.
+    """
+    if max_frequency_mhz <= 0:
+        return 0.0
+    return min(optimal_frequency_mhz(depth_cm, alpha), max_frequency_mhz)
+
+
+def cavitation_depth_limit_cm(index_at_reference, threshold, alpha,
+                              max_frequency_mhz, max_depth_cm=30.0,
+                              step_cm=0.05):
+    if step_cm <= 0 or threshold <= 0 or max_frequency_mhz <= 0:
+        return 0.0
+    deepest, z = 0.0, 0.0
+    while z <= max_depth_cm + 1e-12:
+        idx = index_at_reference * delivered_index(
+            z, usable_frequency_mhz(z, alpha, max_frequency_mhz), alpha)
+        if idx >= threshold:
+            deepest = z
+        elif z > 0.0:
+            break
+        z += step_cm
+    return deepest
+
+
 def _rust_alpha_default():
     m = re.search(r"sdt_alpha:\s*([0-9.]+)", PARAMS.read_text())
     return float(m.group(1))
@@ -150,7 +180,60 @@ def scan() -> dict:
         band.append({"depth_mm": z_mm, "model_khz": f,
                      "in_scanned_band": ELLENS_SCAN_KHZ[0] <= f <= ELLENS_SCAN_KHZ[1]})
 
+    # THE THRESHOLD'S OWN CONSEQUENCE, which is the claim a dose-response arm
+    # cannot make: a depth beyond which no setting helps. Reported across a
+    # grid of applicator strengths and device caps because BOTH are
+    # parameters -- published in-vivo inertial-cavitation thresholds move by
+    # more than an order of magnitude with nucleation, which this layer does
+    # not represent -- so the SHAPE is the result and no row is a
+    # recommendation. A row failing at the surface is marked TOTAL FAILURE and
+    # reported as 0, never as a shallow limit.
+    threshold = 0.7
+    scan_cm = 30.0
+    depth_limits = []
+    # The weakest strength is included so the TOTAL FAILURE marker has a live
+    # example: a rule nothing triggers is a rule nobody can check.
+    for strength in (0.3, 0.6, 1.5, 3.0):
+        for cap in (2.0, 5.0, 20.0):
+            surface = strength * delivered_index(
+                0.0, usable_frequency_mhz(0.0, alpha, cap), alpha)
+            d_cm = cavitation_depth_limit_cm(strength, threshold, alpha, cap,
+                                             max_depth_cm=scan_cm)
+            depth_limits.append({
+                "index_at_reference": strength,
+                "max_frequency_mhz": cap,
+                "depth_limit_cm": d_cm,
+                "total_failure": surface < threshold,
+                # AND THE OTHER DEGENERATE ROW, which the first version of
+                # this table shipped: a scan that never finds a limit returns
+                # its own upper bound, and 30.00 cm read as a measurement of
+                # an extraordinarily deep applicator when it is a measurement
+                # of how far the scan went.
+                "unbounded_in_scan": d_cm >= scan_cm - 1e-9,
+            })
+
+    # The curve behind the table, emitted so the FIGURE reads it rather than
+    # re-implementing `delivered_index` inline. Two implementations of one
+    # formula in one repository is a drift this project has had to fix before,
+    # and a figure quietly disagreeing with the page beside it is the worst
+    # place for it.
+    FIG_CAP_MHZ = 20.0
+    curves = []
+    for strength in (3.0, 1.5, 0.6):
+        pts = []
+        z = 0.0
+        while z <= 15.0 + 1e-12:
+            pts.append([round(z, 3), strength * delivered_index(
+                z, usable_frequency_mhz(z, alpha, FIG_CAP_MHZ), alpha)])
+            z += 0.1
+        curves.append({"index_at_reference": strength,
+                       "max_frequency_mhz": FIG_CAP_MHZ, "points": pts})
+
     return {
+        "cavitation_threshold": threshold,
+        "depth_scan_limit_cm": scan_cm,
+        "curves": curves,
+        "depth_limits": depth_limits,
         "alpha_db_cm_mhz_from_params_rs": alpha,
         "interior": interior,
         "attenuation": atten,
@@ -279,6 +362,43 @@ def render(d: dict) -> str:
         "that path is free to slide its optimum in a way a real applicator is "
         "not. That is a named, addressable omission, which is the most useful "
         "thing a refutation can leave behind.",
+        "",
+        "## What the threshold makes sayable, and a dose-response arm cannot",
+        "",
+        "A modality limited by a threshold has a depth beyond which **no "
+        "setting helps** -- not a fading efficacy but a hard edge. That is a "
+        "different kind of statement from a coverage fraction, and it is the "
+        "sonodynamic analogue of the perivascular sleeve the ablation arm "
+        "reports. Both inputs below are placeholders and the SHAPE is the "
+        "result:",
+        "",
+        "| applicator strength | device cap | depth limit |",
+        "|--:|--:|--:|",
+    ]
+    for r in d["depth_limits"]:
+        lim = ("*fails everywhere*" if r["total_failure"]
+               else "*beyond the scan*" if r["unbounded_in_scan"]
+               else f"{r['depth_limit_cm']:.2f} cm")
+        L.append(f"| {r['index_at_reference']:.1f} | "
+                 f"{r['max_frequency_mhz']:.0f} MHz | {lim} |")
+    L += [
+        "",
+        f"The cavitation threshold is fixed at {d['cavitation_threshold']} "
+        "here and is a PARAMETER, not a measurement: published in-vivo "
+        "inertial-cavitation thresholds move by more than an order of "
+        "magnitude with nucleation, which this layer does not represent. The "
+        "device cap is a real instrument property and is REQUIRED rather than "
+        "assumed -- without it the model is unbounded at shallow depth, since "
+        "nothing has attenuated and the focal-gain term rewards frequency "
+        "without limit, so a limit computed through that divergence would "
+        "quote an idealisation instead of an instrument. A row whose "
+        "applicator cannot cavitate even at the surface fails EVERYWHERE and "
+        "is marked, never rendered as a shallow limit -- the degenerate-row "
+        "defect the oncolytic and ablation sections each shipped once. So is "
+        "the OTHER degenerate row, which the first version of this table did "
+        f"ship: a scan that never finds a limit returns its own {d['depth_scan_limit_cm']:.0f} cm "
+        "bound, and that read as an extraordinarily deep applicator when it "
+        "is a measurement of how far the scan went.",
         "",
         "## What is NOT claimed",
         "",

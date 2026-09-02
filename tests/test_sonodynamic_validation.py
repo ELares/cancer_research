@@ -179,3 +179,96 @@ def test_the_closed_form_reproduces_by_hand():
     spec.loader.exec_module(m)
     assert abs(m.optimal_frequency_mhz(1.0, 1.0) - 10.0 / math.log(10.0)) < 1e-12
     assert math.isinf(m.optimal_frequency_mhz(0.0, 1.0))
+
+
+def test_the_depth_limit_table_marks_both_degenerate_rows():
+    """Two rows in this table are not measurements, and both were shipped as
+    measurements once before being caught.
+
+    A row whose applicator cannot cavitate at the SURFACE fails everywhere,
+    and rendering its zero as a shallow limit is the defect the oncolytic and
+    ablation sections each fixed. A row whose limit equals the SCAN BOUND
+    never found a limit at all, and 30.00 cm read as an extraordinarily deep
+    applicator when it measures how far the scan went. Each marker must have a
+    live example, because a rule nothing triggers is a rule nobody can check.
+    """
+    d = _d()
+    rows = d["depth_limits"]
+    assert rows, "the depth-limit table is empty"
+    scan = d["depth_scan_limit_cm"]
+    for r in rows:
+        assert r["depth_limit_cm"] >= 0.0
+        assert r["unbounded_in_scan"] == (r["depth_limit_cm"] >= scan - 1e-9)
+        if r["total_failure"]:
+            assert r["depth_limit_cm"] == 0.0, (
+                "an applicator that fails at the surface reports a non-zero "
+                "depth, which is the exact defect the marker exists for")
+    assert any(r["total_failure"] for r in rows), (
+        "no row exercises the TOTAL FAILURE marker")
+    assert any(r["unbounded_in_scan"] for r in rows), (
+        "no row exercises the beyond-the-scan marker")
+    assert any(not r["total_failure"] and not r["unbounded_in_scan"]
+               for r in rows), (
+        "every row is degenerate, so the table measures nothing")
+    md = MD.read_text()
+    assert "*fails everywhere*" in md and "*beyond the scan*" in md, (
+        "the page no longer distinguishes the two degenerate rows in its own "
+        "rendering, whatever the JSON says")
+
+
+def test_the_depth_limit_is_monotone_in_the_things_it_should_be():
+    """A stronger applicator cannot reach less deep, and a higher device cap
+    cannot hurt -- the cap binds only at shallow depth where the unconstrained
+    optimum is high, so raising it can add reach or do nothing."""
+    rows = {(r["index_at_reference"], r["max_frequency_mhz"]): r
+            for r in _d()["depth_limits"]}
+    strengths = sorted({k[0] for k in rows})
+    caps = sorted({k[1] for k in rows})
+    for cap in caps:
+        for a, b in zip(strengths, strengths[1:]):
+            assert rows[(b, cap)]["depth_limit_cm"] >= rows[(a, cap)]["depth_limit_cm"], (
+                f"a stronger applicator reaches less deep at cap {cap}")
+    for st in strengths:
+        for a, b in zip(caps, caps[1:]):
+            assert rows[(st, b)]["depth_limit_cm"] >= rows[(st, a)]["depth_limit_cm"], (
+                f"a higher device cap reduced reach at strength {st}")
+
+
+def test_the_device_cap_exists_because_the_model_diverges_without_it():
+    """The cap is a physical property and not a fudge, and the page has to
+    keep saying which. A reader who takes it for a tuning knob would read the
+    depth limits as tunable, when what it removes is an idealisation."""
+    src = RUST.read_text()
+    assert "pub fn usable_frequency_mhz(" in src
+    assert "THE CAP IS NOT A FUDGE AND THE MODEL IS WRONG WITHOUT IT" in src
+    md = MD.read_text()
+    assert "unbounded at shallow depth" in md
+    assert "REQUIRED rather than" in md, (
+        "the page no longer says the device cap is required rather than "
+        "assumed")
+
+
+def test_the_figure_reads_the_curve_rather_than_recomputing_it():
+    """Two implementations of one formula in one repository is a drift this
+    project has already had to fix, and a figure disagreeing with the page
+    beside it is the worst place for it."""
+    d = _d()
+    curves = d["curves"]
+    assert curves, "the artifact carries no curve for the figure to read"
+    gen = (REPO / "scripts" / "generate_conceptual_diagrams.py").read_text()
+    start = gen.index("def fig43_sonodynamic_frequency")
+    body = gen[start:gen.index("\ndef ", start + 10)]
+    assert 'd["curves"]' in body, (
+        "fig43 no longer reads the committed curve")
+    assert 'd["cavitation_threshold"]' in body, (
+        "fig43 hardcodes a threshold instead of reading the artifact's")
+    # Every curve must start at a FINITE surface value; that is what the cap
+    # buys, and an infinite one would mean the divergence is back.
+    for c in curves:
+        assert c["points"][0][0] == 0.0
+        assert 0.0 < c["points"][0][1] < 1e3, (
+            f"curve at strength {c['index_at_reference']} is not finite at "
+            "the surface; the device cap is not being applied")
+        ys = [pt[1] for pt in c["points"]]
+        assert all(b <= a + 1e-12 for a, b in zip(ys, ys[1:])), (
+            "the delivered index does not fall monotonically with depth")

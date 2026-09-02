@@ -74,10 +74,10 @@
   },
   {
    "module": "sonodynamic",
-   "pub_fns": 7,
+   "pub_fns": 8,
    "pub_types": 0,
    "pub_consts": 1,
-   "code_lines": 59,
+   "code_lines": 63,
    "serves": "Sonodynamic therapy: the mechanical index, the inertial-cavitation threshold and the frequency optimum",
    "reach": 0
   }
@@ -162,8 +162,8 @@
  "engine_pub_fns": 182,
  "engine_code_lines": 3805,
  "dedicated_modules": 9,
- "dedicated_pub_fns": 111,
- "dedicated_code_lines": 1558,
+ "dedicated_pub_fns": 112,
+ "dedicated_code_lines": 1562,
  "shared_modules": 5,
  "shared_pub_fns": 58,
  "shared_code_lines": 818,
@@ -173,5 +173,5 @@
  "line_ratio_narrow": 2.4,
  "line_ratio_wide": 3.0,
  "fn_ratio_narrow": 1.6,
- "fn_ratio_wide": 2.2
+ "fn_ratio_wide": 2.1
 }

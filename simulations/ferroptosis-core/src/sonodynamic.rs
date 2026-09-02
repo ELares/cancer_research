@@ -173,40 +173,68 @@ pub fn optimal_frequency_mhz(depth_cm: f64, alpha_db_cm_mhz: f64) -> f64 {
     10.0 / denom
 }
 
+/// The frequency an applicator would actually use: the unconstrained optimum,
+/// capped by the highest frequency it can produce.
+///
+/// THE CAP IS NOT A FUDGE AND THE MODEL IS WRONG WITHOUT IT.
+/// [`optimal_frequency_mhz`] goes as `1/z`, so at shallow depth it is
+/// unbounded and so is [`delivered_index`] evaluated there — nothing has
+/// attenuated yet, and the focal-gain term rewards frequency without limit.
+/// That divergence is an artifact of two idealisations: a perfectly
+/// diffraction-limited focus, and a transducer that can be driven at any
+/// frequency. Real applicators have a top frequency, and quoting a depth
+/// limit computed through the divergence would be quoting the idealisation.
+///
+/// A device property, therefore, and a required argument rather than a
+/// constant: a 20 MHz dermatological array and a 220 kHz transcranial one
+/// are different instruments, not different settings.
+pub fn usable_frequency_mhz(depth_cm: f64, alpha_db_cm_mhz: f64, max_frequency_mhz: f64) -> f64 {
+    if !(max_frequency_mhz > 0.0) {
+        return 0.0;
+    }
+    optimal_frequency_mhz(depth_cm, alpha_db_cm_mhz).min(max_frequency_mhz)
+}
+
 /// Deepest focus at which a given applicator still clears the cavitation
-/// threshold, scanning frequency freely at each depth.
+/// threshold, using the best frequency it can produce at each depth.
 ///
 /// This is the number the threshold makes meaningful and a fraction cannot:
 /// a coverage fraction says how much of a margin was treated, while this
-/// says there is a depth beyond which NO choice of frequency helps. Returns
-/// 0.0 when even a surface focus fails.
+/// says there is a depth beyond which NO setting helps. Returns 0.0 when even
+/// a surface focus fails — the degenerate row, which must not be rendered as
+/// a shallow limit.
 ///
-/// `max_index_at_surface` is the index the applicator delivers at 1 MHz with
-/// no attenuation, i.e. the calibration point everything else is relative to.
+/// `index_at_reference` is the index the applicator delivers at 1 MHz with no
+/// attenuation, the point everything else is relative to.
 pub fn cavitation_depth_limit_cm(
-    max_index_at_surface: f64,
+    index_at_reference: f64,
     threshold: f64,
     alpha_db_cm_mhz: f64,
+    max_frequency_mhz: f64,
     max_depth_cm: f64,
     step_cm: f64,
 ) -> f64 {
-    if !(step_cm > 0.0) || !(threshold > 0.0) {
+    if !(step_cm > 0.0) || !(threshold > 0.0) || !(max_frequency_mhz > 0.0) {
         return 0.0;
     }
     let mut deepest = 0.0;
     let mut z = 0.0;
     while z <= max_depth_cm {
-        let f = optimal_frequency_mhz(z, alpha_db_cm_mhz);
-        // At z = 0 the optimum is unbounded; the delivered index there is
-        // just the surface value, since nothing has attenuated yet.
-        let idx = if f.is_finite() {
-            max_index_at_surface * delivered_index(z, f, alpha_db_cm_mhz)
-        } else {
-            max_index_at_surface
-        };
+        let f = usable_frequency_mhz(z, alpha_db_cm_mhz, max_frequency_mhz);
+        let idx = index_at_reference * delivered_index(z, f, alpha_db_cm_mhz);
         if cavitates(idx, threshold) {
             deepest = z;
         } else if z > 0.0 {
+            // AN OPTIMISATION, NOT A CORRECTNESS GUARD, and saying so matters
+            // because it looks like one. Along the optimal-frequency envelope
+            // the exponential cancels exactly -- at `f* = C/z` the attenuation
+            // term is `10^(-alpha*(C/z)*z/20)`, constant in z -- leaving
+            // `sqrt(C/z)`, and in the capped regime it is a falling
+            // exponential at fixed frequency. Both are monotone, so nothing
+            // past the first failure could have cavitated. A change to the
+            // focal-gain term could break that, and
+            // `the_delivered_index_falls_monotonically_with_depth` is what
+            // would notice; without it this line would silently truncate.
             break;
         }
         z += step_cm;
@@ -318,19 +346,89 @@ mod tests {
     }
 
     #[test]
+    fn the_device_cap_bounds_a_divergence_the_model_would_otherwise_report() {
+        // WITHOUT THE CAP THIS MODEL IS UNBOUNDED AT SHALLOW DEPTH, because
+        // nothing has attenuated and the focal-gain term rewards frequency
+        // without limit. A depth limit computed through that divergence
+        // would be quoting an idealisation, not a device.
+        let (alpha, cap) = (0.7, 5.0);
+        assert!(
+            optimal_frequency_mhz(0.05, alpha) > 100.0,
+            "the uncapped optimum is supposed to blow up here"
+        );
+        assert_eq!(usable_frequency_mhz(0.05, alpha, cap), cap);
+        // Deep enough and the cap stops binding, so the two agree exactly --
+        // the cap must not move the answer where the physics already does.
+        let deep = 10.0;
+        assert_eq!(
+            usable_frequency_mhz(deep, alpha, cap),
+            optimal_frequency_mhz(deep, alpha)
+        );
+        // And the delivered index at the surface is now finite and equal to
+        // the capped evaluation rather than to an invented special case.
+        assert!(delivered_index(0.0, cap, alpha).is_finite());
+        // A cap that is not a frequency is not a device. `min` alone would
+        // pass a NEGATIVE cap straight through as the answer, which is why
+        // the early return is there and not redundant.
+        assert_eq!(usable_frequency_mhz(1.0, alpha, 0.0), 0.0);
+        assert_eq!(usable_frequency_mhz(1.0, alpha, -3.0), 0.0);
+        assert_eq!(usable_frequency_mhz(1.0, alpha, f64::NAN), 0.0);
+    }
+
+    #[test]
+    fn the_delivered_index_falls_monotonically_with_depth() {
+        // The property `cavitation_depth_limit_cm`'s early break RELIES on:
+        // if the delivered index could rise again past a failure, the scan
+        // would stop before a deeper reachable region and report a limit that
+        // is too shallow. It holds for a reason -- along the optimal-frequency
+        // envelope the attenuation term cancels exactly, leaving `sqrt(C/z)`
+        // -- but a change to the focal-gain term would break it silently, so
+        // it is asserted rather than assumed.
+        let (alpha, cap) = (0.7, 20.0);
+        let mut prev = f64::INFINITY;
+        let mut z = 0.0;
+        while z <= 20.0 {
+            let v = delivered_index(z, usable_frequency_mhz(z, alpha, cap), alpha);
+            assert!(
+                v <= prev + 1e-12,
+                "delivered index rose at z={z}: {v} after {prev}"
+            );
+            assert!(v.is_finite(), "delivered index is not finite at z={z}");
+            prev = v;
+            z += 0.05;
+        }
+    }
+
+    #[test]
     fn the_depth_limit_is_a_hard_edge_and_zero_when_the_surface_fails() {
         // An applicator too weak to cavitate at the surface fails
         // EVERYWHERE, and must report 0.0 rather than the scan limit --
         // the degenerate-row defect the oncolytic and ablation sections
         // both had to fix.
-        assert_eq!(cavitation_depth_limit_cm(0.1, 0.7, 0.7, 20.0, 0.1), 0.0);
+        let cap = 5.0;
+        assert_eq!(
+            cavitation_depth_limit_cm(0.1, 0.7, 0.7, cap, 20.0, 0.1),
+            0.0
+        );
         // A strong applicator reaches some finite depth and not beyond.
-        let d = cavitation_depth_limit_cm(3.0, 0.7, 0.7, 40.0, 0.1);
+        let d = cavitation_depth_limit_cm(3.0, 0.7, 0.7, cap, 40.0, 0.1);
         assert!(d > 0.0 && d < 40.0, "expected an interior limit, got {d}");
         // More attenuation cannot reach deeper.
-        let shallow = cavitation_depth_limit_cm(3.0, 0.7, 1.4, 40.0, 0.1);
-        assert!(shallow <= d);
+        assert!(cavitation_depth_limit_cm(3.0, 0.7, 1.4, cap, 40.0, 0.1) <= d);
         // A higher threshold cannot reach deeper either.
-        assert!(cavitation_depth_limit_cm(3.0, 1.4, 0.7, 40.0, 0.1) <= d);
+        assert!(cavitation_depth_limit_cm(3.0, 1.4, 0.7, cap, 40.0, 0.1) <= d);
+        // A LOWER-frequency-only applicator is not automatically worse: the
+        // cap binds at shallow depth where the optimum is high, so raising it
+        // can only help or do nothing, never hurt.
+        let low_cap = cavitation_depth_limit_cm(3.0, 0.7, 0.7, 1.0, 40.0, 0.1);
+        assert!(
+            low_cap <= d,
+            "a higher device cap reached {d}, a lower one {low_cap}"
+        );
+        // A zero cap is not a device, and must not report a depth.
+        assert_eq!(
+            cavitation_depth_limit_cm(3.0, 0.7, 0.7, 0.0, 40.0, 0.1),
+            0.0
+        );
     }
 }

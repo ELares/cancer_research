@@ -49,9 +49,9 @@
    "census": 2513,
    "trials": 114,
    "modules": 1,
-   "code_lines": 59,
-   "pub_fns": 7,
-   "rust_tests": 8,
+   "code_lines": 63,
+   "pub_fns": 8,
+   "rust_tests": 10,
    "calibration": "PARTLY REFUTED",
    "book_words": 962,
    "book_sections": [
@@ -73,11 +73,11 @@
     "P22"
    ],
    "book_words_shared": 1924,
-   "parity_lines": 0.016,
-   "parity_fns": 0.038,
-   "parity_tests": 0.03,
+   "parity_lines": 0.017,
+   "parity_fns": 0.044,
+   "parity_tests": 0.038,
    "parity_words": 0.183,
-   "lines_short_of_parity": 3746
+   "lines_short_of_parity": 3742
   },
   {
    "arm": "PDT",

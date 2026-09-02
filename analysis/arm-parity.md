@@ -7,7 +7,7 @@ The aggregate gap is already published: the modality arms are roughly an order o
 | arm | engine lines | pub fns | rust tests | calibration | book words | figures | predictions |
 |---|--:|--:|--:|---|--:|--:|--:|
 | Ferroptosis induction | 3,805 | 182 | 263 | -- | 5,249 | 7 | 7 |
-| Sonodynamic therapy | 59 | 7 | 8 | PARTLY REFUTED | 962 | 7 | 4 |
+| Sonodynamic therapy | 63 | 8 | 10 | PARTLY REFUTED | 962 | 7 | 4 |
 | Photodynamic therapy | 249 | 9 | 59 | DIRECTIONAL | 962 | 4 | 2 |
 | Ionizing radiation | 263 | 23 | 33 | ADMISSIBLE | 1,378 | 2 | 2 |
 | Checkpoint blockade | 122 | 7 | 10 | INADMISSIBLE | 3,281 | 3 | 1 |
@@ -23,7 +23,7 @@ The aggregate gap is already published: the modality arms are roughly an order o
 
 | arm | lines | share of ferroptosis | lines short of parity |
 |---|--:|--:|--:|
-| Sonodynamic therapy | 59 | 0.016x | 3,746 |
+| Sonodynamic therapy | 63 | 0.017x | 3,742 |
 | Photodynamic therapy | 249 | 0.065x | 3,556 |
 | Ionizing radiation | 263 | 0.069x | 3,542 |
 | Checkpoint blockade | 122 | 0.032x | 3,683 |
