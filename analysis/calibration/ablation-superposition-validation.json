@@ -1,0 +1,129 @@
+{
+  "control_holds": true,
+  "control_is_the_wide_end": true,
+  "control_points": [
+    1600.0,
+    1200.0,
+    800.0,
+    600.0
+  ],
+  "control_tolerance": 0.02,
+  "max_understatement": 4.55290251916758,
+  "max_understatement_at_um": 300.0,
+  "meta": {
+    "applicator_c": 60.0,
+    "cooling_length_mm": 2.0,
+    "grid_dim": 40.0,
+    "minutes": 5.0,
+    "mm_per_cell": 0.25
+  },
+  "n_live": 7,
+  "points": [
+    {
+      "inter_vessel_um": 1600.0,
+      "kills": 23821,
+      "survivors_all_vessels": 584,
+      "survivors_nearest_only": 584,
+      "total_failure": false,
+      "total_tumor": 24405,
+      "understatement": 1.0
+    },
+    {
+      "inter_vessel_um": 1200.0,
+      "kills": 23821,
+      "survivors_all_vessels": 584,
+      "survivors_nearest_only": 584,
+      "total_failure": false,
+      "total_tumor": 24405,
+      "understatement": 1.0
+    },
+    {
+      "inter_vessel_um": 800.0,
+      "kills": 23821,
+      "survivors_all_vessels": 584,
+      "survivors_nearest_only": 584,
+      "total_failure": false,
+      "total_tumor": 24405,
+      "understatement": 1.0
+    },
+    {
+      "inter_vessel_um": 600.0,
+      "kills": 23821,
+      "survivors_all_vessels": 584,
+      "survivors_nearest_only": 584,
+      "total_failure": false,
+      "total_tumor": 24405,
+      "understatement": 1.0
+    },
+    {
+      "inter_vessel_um": 400.0,
+      "kills": 18284,
+      "survivors_all_vessels": 6121,
+      "survivors_nearest_only": 1863,
+      "total_failure": false,
+      "total_tumor": 24405,
+      "understatement": 3.2855609232420826
+    },
+    {
+      "inter_vessel_um": 300.0,
+      "kills": 3621,
+      "survivors_all_vessels": 20784,
+      "survivors_nearest_only": 4565,
+      "total_failure": false,
+      "total_tumor": 24405,
+      "understatement": 4.55290251916758
+    },
+    {
+      "inter_vessel_um": 250.0,
+      "kills": 247,
+      "survivors_all_vessels": 24158,
+      "survivors_nearest_only": 6814,
+      "total_failure": false,
+      "total_tumor": 24405,
+      "understatement": 3.5453478133255065
+    },
+    {
+      "inter_vessel_um": 200.0,
+      "kills": 0,
+      "survivors_all_vessels": 24405,
+      "survivors_nearest_only": 10875,
+      "total_failure": true,
+      "total_tumor": 24405,
+      "understatement": 2.2441379310344827
+    },
+    {
+      "inter_vessel_um": 150.0,
+      "kills": 0,
+      "survivors_all_vessels": 24405,
+      "survivors_nearest_only": 18497,
+      "total_failure": true,
+      "total_tumor": 24405,
+      "understatement": 1.3194031464561822
+    },
+    {
+      "inter_vessel_um": 120.0,
+      "kills": 0,
+      "survivors_all_vessels": 24405,
+      "survivors_nearest_only": 23215,
+      "total_failure": true,
+      "total_tumor": 24405,
+      "understatement": 1.0512599612319622
+    },
+    {
+      "inter_vessel_um": 80.0,
+      "kills": 0,
+      "survivors_all_vessels": 24405,
+      "survivors_nearest_only": 24359,
+      "total_failure": true,
+      "total_tumor": 24405,
+      "understatement": 1.001888419064822
+    }
+  ],
+  "total_failure_points": [
+    200.0,
+    150.0,
+    120.0,
+    80.0
+  ],
+  "verdict": "CONFIRMED \u2014 the one-vessel model under-states the surviving volume, and agrees where it should"
+}

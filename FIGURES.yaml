@@ -915,3 +915,22 @@ figures:
       purpose - its bars encode two quantities, not two treatments: the
       treatment producing four times the danger signal has the smaller immune
       share, so ranking partners by immunogenic signal is backwards here.
+  - manuscript_figure: 47
+    filename: fig51_ablation_superposition
+    generator:
+      script: scripts/generate_conceptual_diagrams.py
+      function: fig51_ablation_superposition
+    inputs:
+      - analysis/calibration/ablation-superposition-validation.json
+    type: simulation
+    status: manuscript
+    note: >-
+      Both models in (a) run on the same cells and the same vessels, differing
+      only in whether the non-nearest vessels cool. The agreement at wide
+      spacing in (b) is a CONTROL - there the extra factors are ~1 and the
+      analytic model is simply right, which is what licenses reading the
+      divergence elsewhere as physics rather than as a bug. The shaded tail is
+      EXCLUDED rather than read as renewed agreement: there the ablation fails
+      everywhere and a ratio across a saturated arm is not a comparison. (c) is
+      the mechanism. This qualifies P20 rather than refuting it - the
+      registered radius becomes a lower bound.

@@ -2581,6 +2581,101 @@ def fig50_checkpoint_priming():
 
 
 
+def fig51_ablation_superposition():
+    """Heat sinks compound, and a one-vessel radius cannot say so.
+
+    The control is at the wide end where the analytic model is genuinely
+    right; the saturated tail is marked rather than plotted as agreement.
+    """
+    import json
+    src = Path(__file__).resolve().parent.parent / "analysis" / "calibration" / \
+        "ablation-superposition-validation.json"
+    if not src.exists():
+        print("  fig51: ablation-superposition-validation.json missing - skipping")
+        return
+    d = json.loads(src.read_text())
+    pts = d["points"]
+    live = [p for p in pts if not p["total_failure"]]
+    dead = [p for p in pts if p["total_failure"]]
+
+    fig, axes = plt.subplots(1, 3, figsize=(15, 4.6))
+
+    # (a) the two models, survivors against vessel spacing
+    ax = axes[0]
+    xs = [p["inter_vessel_um"] for p in pts]
+    ax.plot(xs, [p["survivors_all_vessels"] for p in pts], "o-",
+            color="#14505c", lw=2, ms=6, label="every vessel cools")
+    ax.plot(xs, [p["survivors_nearest_only"] for p in pts], "s--",
+            color="#a2582b", lw=2, ms=6, label="nearest vessel only (analytic)")
+    if dead:
+        ax.axvspan(min(xs), max(p["inter_vessel_um"] for p in dead) * 1.12,
+                   color="#f2e8e4", zorder=0)
+        ax.annotate("ablation fails\neverywhere", (min(xs) * 1.05,
+                    max(p["survivors_all_vessels"] for p in pts) * 0.55),
+                    fontsize=7.5, color="#9a6b5a")
+    ax.set_xscale("log")
+    ax.set_xlabel("inter-vessel spacing (µm)")
+    ax.set_ylabel("cells surviving the ablation")
+    ax.set_title("(a) two models, same cells and same vessels", fontsize=10)
+    ax.legend(fontsize=7.5)
+    ax.grid(alpha=0.25, which="both")
+
+    # (b) the ratio, with the control and the excluded tail both marked
+    ax = axes[1]
+    ax.axhline(1.0, color="#888", ls="--", lw=1.4)
+    ax.plot([p["inter_vessel_um"] for p in live],
+            [p["understatement"] for p in live], "o-", color="#14505c",
+            lw=2, ms=8)
+    for p in live:
+        if abs(p["understatement"] - 1.0) <= d["control_tolerance"]:
+            ax.plot([p["inter_vessel_um"]], [p["understatement"]], "o",
+                    color="#c1440e", ms=10, zorder=5)
+    ax.annotate("control:\nthe analytic model is right here",
+                (700, 1.06), fontsize=7.5, color="#c1440e")
+    ax.set_xscale("log")
+    ax.set_xlabel("inter-vessel spacing (µm)")
+    ax.set_ylabel("survivors, all vessels ÷ nearest only")
+    ax.set_title(f"(b) under-stated by up to {d['max_understatement']:.1f}×",
+                 fontsize=10)
+    ax.grid(alpha=0.25, which="both")
+
+    # (c) why: two sleeves that compound
+    ax = axes[2]
+    L = d["meta"]["cooling_length_mm"]
+    xs2 = [i * 0.02 for i in range(0, 301)]
+    for sep, colour, lab in ((5.0, "#a2582b", "vessels 5 mm apart"),
+                             (1.5, "#14505c", "vessels 1.5 mm apart")):
+        a = [1.0 - pow(2.718281828459045, -abs(x) / L) for x in xs2]
+        b = [1.0 - pow(2.718281828459045, -abs(x - sep) / L) for x in xs2]
+        ax.plot(xs2, [p * q for p, q in zip(a, b)], color=colour, lw=2, label=lab)
+        ax.plot(xs2, [min(p, q) for p, q in zip(a, b)], color=colour, lw=1.2,
+                ls=":", alpha=0.8)
+    ax.set_xlabel("position between two vessels (mm)")
+    ax.set_ylabel("surviving heat rise (fraction)")
+    ax.set_title("(c) solid: both cool. dotted: nearest only", fontsize=10)
+    ax.legend(fontsize=7.5)
+    ax.grid(alpha=0.25)
+
+    fig.suptitle("Heat sinks do not take turns, and a one-vessel radius "
+                 "cannot say so", fontsize=12, fontweight="bold")
+    fig.text(0.5, 0.015,
+             "`ablation::perivascular_failure_radius_mm` answers a ONE-VESSEL question and P20 registers its "
+             "answer as a claim about where recurrence sits. Tissue between two vessels is cooled by BOTH, so the "
+             "surviving heat rise is the PRODUCT of each vessel's own survival factor rather than the nearest "
+             "one's alone - (c) shows the gap that opens between those two rules as vessels approach. Both models "
+             "in (a) run on the same cells and the same vessels and differ only in whether the non-nearest "
+             "vessels cool, so the agreement at wide spacing in (b) is a CONTROL: there the extra factors are "
+             "~1, the analytic model is right, and its being right is what licenses reading the divergence "
+             "elsewhere as physics. The shaded tail is excluded rather than read as renewed agreement: there the "
+             "ablation fails everywhere, and a ratio across a saturated arm is not a comparison. This QUALIFIES "
+             "P20 rather than refuting it - the registered radius is a lower bound, and the shortfall grows with "
+             "vessel density, which is the setting where perivascular recurrence is reported.",
+             ha="center", fontsize=7.2, color="#555", wrap=True)
+    fig.tight_layout(rect=[0, 0.17, 1, 0.93])
+    save(fig, "fig51_ablation_superposition")
+
+
+
 if __name__ == "__main__":
     print("Generating conceptual diagrams...")
     fig18_hypoxia()
@@ -2610,4 +2705,5 @@ if __name__ == "__main__":
     fig48_chemo_decomposition()
     fig49_cart_independence()
     fig50_checkpoint_priming()
+    fig51_ablation_superposition()
     print("Done.")

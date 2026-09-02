@@ -243,10 +243,19 @@ def test_the_spatial_column_is_measured_and_not_asserted():
         "DEFAULT in the spatial engine, which cannot be true -- it is the "
         "comparator because it runs there -- and means the parser is dropping "
         "a name rather than the engine dropping an arm")
-    assert any(not r["spatial"] for r in d["arms"]), (
-        "every arm is now spatial, which is #844 succeeding -- re-derive this "
-        "page's framing rather than relaxing the guard")
     md = MD.read_text()
     n = sum(1 for r in d["arms"] if r["spatial"])
-    assert f"**{n} of {len(d['arms'])} arms can be expressed" in md, (
-        f"the page does not state the live spatial count ({n})")
+    if n == len(d["arms"]):
+        # #844 SUCCEEDED, and the page has to say something other than a count
+        # climbing toward a total it has reached. The guard was written to fire
+        # here and demand a re-derivation rather than be relaxed, and it did.
+        assert "Every one of the" in md and "can now be expressed" in md, (
+            "every arm is spatial and the page still reports a running count")
+        assert "What a full column does NOT mean" in md, (
+            "the page reports a full column without saying what it does not "
+            "buy, which is the reading it most invites: expressible is not "
+            "calibrated and it is not deep")
+        assert "used in any reported number" in md
+    else:
+        assert f"**{n} of {len(d['arms'])} arms can be expressed" in md, (
+            f"the page does not state the live spatial count ({n})")

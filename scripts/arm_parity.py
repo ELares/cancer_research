@@ -475,20 +475,37 @@ def render(d: dict) -> str:
             f"| {len(r['predictions'])} | {r['spatial'] or '**no**'} |")
     n_spatial = sum(1 for r in d["arms"] if r["spatial"])
     n_default = len(d["spatial_by_default"])
+    n_total = len(d["arms"])
+    full = n_spatial == n_total
     L += ["",
-          f"**{n_spatial} of {len(d['arms'])} arms can be expressed in the "
-          "spatial engine at all.** `sim-tme-3d` carries the oxygen gradient, "
-          "the vessel network, the immune coupling, the clonal and persister "
-          "layers -- and for the other "
-          f"{len(d['arms']) - n_spatial} it returns a literal zero, so a run "
-          "of those arms is bit-identical to an untreated tumour. They are "
-          "closed-form functions evaluated at a point beside an agent-based "
-          "simulation over a 60^3 grid, and no further prose closes that. The "
-          "column is MEASURED rather than read off the dispatch: a text scan "
-          "over a match that names every variant would report ten, so "
-          "`sim-tme-3d` runs each arm against Control and this reads the "
-          "result. Tracked in #844.", "",
-          f"TWO TIERS, and collapsing them would flatter the engine. "
+          (f"**Every one of the {n_total} arms can now be expressed in the "
+           "spatial engine.** That column opened at 3 of 10, and the number is "
+           "no longer the interesting one -- so the framing is re-derived here "
+           "rather than left counting up to a total it has reached. "
+           if full else
+           f"**{n_spatial} of {n_total} arms can be expressed in the spatial "
+           f"engine at all.** For the other {n_total - n_spatial} "
+           "`sim-tme-3d` returns a literal zero, so a run of those arms is "
+           "bit-identical to an untreated tumour. ")
+          + "`sim-tme-3d` carries the oxygen gradient, the vessel network, the "
+            "immune coupling, the clonal and persister layers, and an arm that "
+            "cannot reach them is a closed-form function evaluated at a point "
+            "beside an agent-based simulation over a 60^3 grid. The column is "
+            "MEASURED rather than read off the dispatch: a text scan over a "
+            "match that names every variant would report ten, so `sim-tme-3d` "
+            "runs each arm against Control and this reads the result. Tracked "
+            "in #844.", "",]
+    if full:
+        L += ["**What a full column does NOT mean.** Expressible is not "
+              "calibrated and it is not deep. The calibration column beside it "
+              "still carries two failures, two arms with no target at all, one "
+              "refuted direction and one arm constrained only in sign; every "
+              "row of `CALIBRATION_STATUS.md` for these arms still reads "
+              "`used in any reported number: N`. And the engine columns are "
+              "unchanged by any of this work -- the arms remain a fraction of "
+              "the comparator. What closed is the ability to ASK, not the gap "
+              "in what is known.", ""]
+    L += [f"TWO TIERS, and collapsing them would flatter the engine. "
           f"{n_default} arms act on selecting the `Treatment` alone; the rest "
           "of the expressive column needs its own `Overrides` field, which is "
           "how every one of the engine's ~30 ferroptosis realism layers ships "
@@ -499,8 +516,8 @@ def render(d: dict) -> str:
           "selecting its `Treatment` does nothing -- the effect reaches the "
           "run through another layer. `analysis/modality-coverage.md` already "
           "draws that line between a TREATMENT and a MODIFIER and this column "
-          "draws it too.", "",
-          f"**{base['code_lines']:,} lines of production code carry the "
+          "draws it too.", ""]
+    L += [f"**{base['code_lines']:,} lines of production code carry the "
           f"ferroptosis arm.** No other arm reaches a tenth of it, and the "
           f"table's own worst row is the one to read first: an arm with no "
           f"module of its own has no engine column to shrink.", ""]

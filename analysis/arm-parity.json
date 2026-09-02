@@ -266,14 +266,16 @@
    "pub_fns": 9,
    "rust_tests": 10,
    "calibration": "UNCONSTRAINED",
-   "spatial": null,
-   "book_words": 877,
+   "spatial": "on demand",
+   "book_words": 1984,
    "book_sections": [
-    "6.12 Ablation, and a Failure With an Address"
+    "6.12 Ablation, and a Failure With an Address",
+    "6.20 Ablation, and Heat Sinks That Do Not Take Turns"
    ],
    "figures": [
     "fig35_calibration_verdicts",
-    "fig42_ablation_sleeve"
+    "fig42_ablation_sleeve",
+    "fig51_ablation_superposition"
    ],
    "predictions": [
     "P13",
@@ -283,7 +285,7 @@
    "parity_lines": 0.034,
    "parity_fns": 0.049,
    "parity_tests": 0.038,
-   "parity_words": 0.167,
+   "parity_words": 0.378,
    "lines_short_of_parity": 3676
   },
   {
@@ -360,8 +362,8 @@
  "shared_modules": 5,
  "shared_code_lines": 818,
  "shared_pub_fns": 58,
- "manuscript_words_in_sections": 72045,
- "manuscript_words_attributed": 23320,
+ "manuscript_words_in_sections": 73152,
+ "manuscript_words_attributed": 24427,
  "sections_naming_more_than_one_arm": {
   "6.13 Photodynamic and Sonodynamic Therapy, the Two the Project Started With": 2
  },
@@ -380,6 +382,7 @@
   }
  ],
  "spatial_arms": [
+  "Ablation",
   "AdoptiveCell",
   "AntibodyDrugConjugate",
   "Chemotherapy",
@@ -396,6 +399,7 @@
   "SDT"
  ],
  "spatial_on_demand": [
+  "Ablation",
   "AdoptiveCell",
   "AntibodyDrugConjugate",
   "Chemotherapy",

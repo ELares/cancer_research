@@ -7,7 +7,7 @@
    "pub_consts": 2,
    "code_lines": 129,
    "serves": "HIFU + irreversible electroporation",
-   "reach": 1
+   "reach": 2
   },
   {
    "module": "adc",
