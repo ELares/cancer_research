@@ -151,7 +151,12 @@ thresholds are stated here.
 - *Falsification threshold:* the prediction fails if a conjugate series in which clearance is measured across at least three loadings shows delivered payload (or exposure-corrected efficacy at equal antibody dose) rising monotonically with loading. It also fails if the clearance penalty is shown NOT to accelerate -- that is, if `c(4)/c(2)` and `c(8)/c(4)` are equal within measurement error -- because the interior optimum depends entirely on that acceleration.
 - *Note:* one conjugate, one payload, one antibody. The optimum at four is a property of this study's molecule and NOT a general claim about ADCs; newer conjugates with more stable linkers are deliberately built at higher loading. Two ratios do not determine a curve, and outside DAR 2 to 8 nothing is measured. Delivered payload is not efficacy. Full accounting in `analysis/calibration/adc-validation.md`.
 
-### Honesty clause for P9 to P19
+**P20. Thermal ablation and irreversible electroporation fail in geometrically different places.**
+- *Quantitative model output:* `ablation::perivascular_failure_radius_mm` returns a surviving sleeve around a vessel of ~4.4 mm at a 50 C applicator falling to ~0.5 mm at 90 C (5 minutes, CEM43 threshold 240, cooling length 2 mm), and `ablation::electroporation_failure_radius_mm` returns exactly 0 -- structurally, because electroporation is non-thermal and a heat sink removes nothing that matters to it.
+- *Falsification threshold:* the prediction fails if local progression after thermal ablation is NOT spatially concentrated near large vessels at matched margin coverage, or if electroporation shows the same perivascular concentration as thermal ablation in a matched series. It is a claim about the GEOMETRY of recurrence, and it is testable on follow-up imaging that records where the recurrence sat rather than only whether one occurred.
+- *Note:* the sleeve's SIZE is not predicted. The cooling length is a placeholder standing in for vessel calibre and flow rate, neither of which this layer represents, and the sleeve scales with it almost proportionally. The direction is anchored on the recognised problem of perivascular local progression (PMID 35114665), which supports the effect's existence and not its magnitude. This arm's fitted calibration remains UNCONSTRAINED and this prediction does not repair it: a threshold observable cannot identify a threshold parameter, and the ledger carries both facts. Full accounting in `analysis/calibration/ablation-validation.md`.
+
+### Honesty clause for P9 to P20
 
 **P9 to P13 are DIRECTIONAL and every barrier value behind them is an
 uncalibrated placeholder** (`CALIBRATION_STATUS.md` records each as feeding no

@@ -737,3 +737,24 @@ figures:
       (c) is the in-vitro/in-vivo ordering disagreement, both halves measured
       in one experiment. Delivered payload is not efficacy and one conjugate
       is not all conjugates, which the caption says.
+  - manuscript_figure: 38
+    filename: fig42_ablation_sleeve
+    generator:
+      script: scripts/generate_conceptual_diagrams.py
+      function: fig42_ablation_sleeve
+    inputs:
+      - analysis/calibration/ablation-validation.json
+    type: simulation
+    status: manuscript
+    note: >-
+      The arm whose calibration is UNCONSTRAINED and will stay so -- a
+      threshold observable cannot identify a threshold parameter -- making a
+      checkable claim anyway, because the claim is about STRUCTURE rather than
+      magnitude. A surviving sleeve is a radius, which a clinician can look
+      for; a coverage fraction is a percentage, which is silent about where.
+      Electroporation's zero is structural rather than measured. Panel (c) is
+      why the SIZE is not a result: the cooling length stands in for vessel
+      calibre and flow and the sleeve scales with it almost proportionally.
+      The coolest applicator FAILS EVERYWHERE rather than leaving a sleeve and
+      is marked, which is the same degenerate-row defect the oncolytic figure
+      two sections earlier had to fix.
