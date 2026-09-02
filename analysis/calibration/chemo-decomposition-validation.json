@@ -1,0 +1,88 @@
+{
+  "classes": [
+    {
+      "both": {
+        "core": 0.001303,
+        "overall": 0.321162,
+        "rim": 0.549165
+      },
+      "class": "PhaseNonspecific",
+      "control_flat": 0.006881988781318355,
+      "core_retained_cycle_only": 0.7845790850777506,
+      "core_retained_delivery_only": 0.0027116651575419155,
+      "cycle_only": {
+        "core": 0.659394,
+        "overall": 0.780135,
+        "rim": 0.849546
+      },
+      "delivery_only": {
+        "core": 0.002279,
+        "overall": 0.324677,
+        "rim": 0.545175
+      },
+      "neither": {
+        "core": 0.840443,
+        "overall": 0.846981,
+        "rim": 0.846267
+      }
+    },
+    {
+      "both": {
+        "core": 0.0,
+        "overall": 0.128892,
+        "rim": 0.227321
+      },
+      "class": "SPhaseSpecific",
+      "control_flat": 0.02193537522580914,
+      "core_retained_cycle_only": 0.43170770071981246,
+      "core_retained_delivery_only": 0.0008139398433540313,
+      "cycle_only": {
+        "core": 0.172908,
+        "overall": 0.301955,
+        "rim": 0.3847
+      },
+      "delivery_only": {
+        "core": 0.000326,
+        "overall": 0.133012,
+        "rim": 0.226702
+      },
+      "neither": {
+        "core": 0.400521,
+        "overall": 0.390346,
+        "rim": 0.391924
+      }
+    },
+    {
+      "both": {
+        "core": 0.000326,
+        "overall": 0.075583,
+        "rim": 0.133531
+      },
+      "class": "MPhaseSpecific",
+      "control_flat": 0.020453963389489103,
+      "core_retained_cycle_only": 0.3924948705790595,
+      "core_retained_delivery_only": 0.004329541476298308,
+      "cycle_only": {
+        "core": 0.08857,
+        "overall": 0.176505,
+        "rim": 0.230027
+      },
+      "delivery_only": {
+        "core": 0.000977,
+        "overall": 0.077025,
+        "rim": 0.13087
+      },
+      "neither": {
+        "core": 0.225659,
+        "overall": 0.229087,
+        "rim": 0.230371
+      }
+    }
+  ],
+  "control_is_flat": true,
+  "cycle_cost_ratio": 1.817384966192575,
+  "cycle_term_is_class_dependent": true,
+  "delivery_dominates_everywhere": true,
+  "flat_tolerance": 0.1,
+  "verdict": "CONFIRMED \u2014 the two terms separate, and only one of them is class-dependent"
+}

@@ -1,0 +1,13 @@
+CHEMO_DECOMP_META grid_dim=60 n_steps=10 short_lambda_um=60 dose=1 potency=2
+CHEMO_DECOMP class=PhaseNonspecific delivery=false cycle=false overall=0.846981 normoxic=0.846267 transition=0.848410 hypoxic=0.840443 chemo_kills=69892 total_tumor=82519
+CHEMO_DECOMP class=PhaseNonspecific delivery=false cycle=true overall=0.780135 normoxic=0.849546 transition=0.706027 hypoxic=0.659394 chemo_kills=64376 total_tumor=82519
+CHEMO_DECOMP class=PhaseNonspecific delivery=true cycle=false overall=0.324677 normoxic=0.545175 transition=0.084012 hypoxic=0.002279 chemo_kills=26792 total_tumor=82519
+CHEMO_DECOMP class=PhaseNonspecific delivery=true cycle=true overall=0.321162 normoxic=0.549165 transition=0.071150 hypoxic=0.001303 chemo_kills=26502 total_tumor=82519
+CHEMO_DECOMP class=SPhaseSpecific delivery=false cycle=false overall=0.390346 normoxic=0.391924 transition=0.387556 hypoxic=0.400521 chemo_kills=32211 total_tumor=82519
+CHEMO_DECOMP class=SPhaseSpecific delivery=false cycle=true overall=0.301955 normoxic=0.384700 transition=0.212333 hypoxic=0.172908 chemo_kills=24917 total_tumor=82519
+CHEMO_DECOMP class=SPhaseSpecific delivery=true cycle=false overall=0.133012 normoxic=0.226702 transition=0.030385 hypoxic=0.000326 chemo_kills=10976 total_tumor=82519
+CHEMO_DECOMP class=SPhaseSpecific delivery=true cycle=true overall=0.128892 normoxic=0.227321 transition=0.020173 hypoxic=0.000000 chemo_kills=10636 total_tumor=82519
+CHEMO_DECOMP class=MPhaseSpecific delivery=false cycle=false overall=0.229087 normoxic=0.230371 transition=0.227818 hypoxic=0.225659 chemo_kills=18904 total_tumor=82519
+CHEMO_DECOMP class=MPhaseSpecific delivery=false cycle=true overall=0.176505 normoxic=0.230027 transition=0.118917 hypoxic=0.088570 chemo_kills=14565 total_tumor=82519
+CHEMO_DECOMP class=MPhaseSpecific delivery=true cycle=false overall=0.077025 normoxic=0.130870 transition=0.018025 hypoxic=0.000977 chemo_kills=6356 total_tumor=82519
+CHEMO_DECOMP class=MPhaseSpecific delivery=true cycle=true overall=0.075583 normoxic=0.133531 transition=0.011523 hypoxic=0.000326 chemo_kills=6237 total_tumor=82519

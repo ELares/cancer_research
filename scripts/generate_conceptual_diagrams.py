@@ -2311,6 +2311,92 @@ def fig47_adc_bystander_reach():
 
 
 
+def fig48_chemo_decomposition():
+    """Which of the two rim biases is which.
+
+    A decomposition, so the null case is the first panel: with neither term
+    active the kill is flat with depth, which is what makes the others terms
+    rather than artifacts of how the zones are drawn.
+    """
+    import json
+    src = Path(__file__).resolve().parent.parent / "analysis" / "calibration" / \
+        "chemo-decomposition-validation.json"
+    if not src.exists():
+        print("  fig48: chemo-decomposition-validation.json missing - skipping")
+        return
+    d = json.loads(src.read_text())
+    classes = d["classes"]
+    names = [c["class"] for c in classes]
+    short = {"PhaseNonspecific": "alkylator\n(phase-nonspecific)",
+             "SPhaseSpecific": "antimetabolite\n(S-phase)",
+             "MPhaseSpecific": "taxane\n(M-phase)"}
+
+    fig, axes = plt.subplots(1, 3, figsize=(15, 4.6))
+
+    # (a) the null case: flat with depth
+    ax = axes[0]
+    x = np.arange(len(classes))
+    w = 0.38
+    ax.bar(x - w / 2, [c["neither"]["rim"] for c in classes], w,
+           color="#14505c", label="oxygenated rim")
+    ax.bar(x + w / 2, [c["neither"]["core"] for c in classes], w,
+           color="#a2582b", label="hypoxic core")
+    ax.set_xticks(x)
+    ax.set_xticklabels([short[n] for n in names], fontsize=7.5)
+    ax.set_ylabel("kill fraction")
+    ax.set_title("(a) the control: neither term, no gradient", fontsize=10)
+    ax.legend(fontsize=7.5)
+    ax.grid(alpha=0.25, axis="y")
+
+    # (b) what each term alone leaves of the core kill
+    ax = axes[1]
+    ax.bar(x - w / 2, [c["core_retained_cycle_only"] for c in classes], w,
+           color="#a2582b", label="cell cycle alone")
+    ax.bar(x + w / 2, [c["core_retained_delivery_only"] for c in classes], w,
+           color="#14505c", label="delivery alone")
+    ax.set_yscale("log")
+    ax.set_xticks(x)
+    ax.set_xticklabels([short[n] for n in names], fontsize=7.5)
+    ax.set_ylabel("core kill kept (log)")
+    ax.set_title("(b) delivery dominates, on these parameters", fontsize=10)
+    ax.legend(fontsize=7.5)
+    ax.grid(alpha=0.25, axis="y", which="both")
+
+    # (c) but only one term is class-dependent
+    ax = axes[2]
+    ax.bar(x, [c["core_retained_cycle_only"] for c in classes],
+           color=["#14505c", "#a2582b", "#9fb3b8"])
+    ax.axhline(0.5, color="#888", ls=":", lw=1.2)
+    for i, c in enumerate(classes):
+        ax.annotate(f"{c['core_retained_cycle_only']:.0%}",
+                    (i, c["core_retained_cycle_only"] + 0.02), ha="center",
+                    fontsize=8.5)
+    ax.set_xticks(x)
+    ax.set_xticklabels([short[n] for n in names], fontsize=7.5)
+    ax.set_ylim(0, 1.0)
+    ax.set_ylabel("core kill kept against a quiescent core")
+    ax.set_title(f"(c) and only this one varies by class ({d['cycle_cost_ratio']:.1f}x)",
+                 fontsize=10)
+    ax.grid(alpha=0.25, axis="y")
+
+    fig.suptitle("Two effects push a chemotherapy kill to the rim, and they "
+                 "have opposite remedies", fontsize=12, fontweight="bold")
+    fig.text(0.5, 0.015,
+             "A drug has to REACH a cell, and a cycle-specific agent has to find it CYCLING - and both fail in "
+             "the same place, so an observed rim-biased kill is ambiguous between 'the drug did not get there' "
+             "and 'those cells were not dividing'. The two have opposite remedies, better delivery against "
+             "cell-cycle recruitment, so telling them apart is worth more than either number alone; the point "
+             "model has neither term. (a) is the control that makes the rest terms rather than artifacts of the "
+             "zoning. (b) says delivery dominates ON THESE PARAMETERS - the penetration length was chosen, not "
+             "measured, and a longer one shifts the balance. (c) is the part better delivery cannot fix, and the "
+             "check that the cycle arm is really the cell cycle: an alkylator damages DNA whatever the cell is "
+             "doing and keeps most of its core kill, while the phase-specific agents lose most of theirs.",
+             ha="center", fontsize=7.2, color="#555", wrap=True)
+    fig.tight_layout(rect=[0, 0.16, 1, 0.93])
+    save(fig, "fig48_chemo_decomposition")
+
+
+
 if __name__ == "__main__":
     print("Generating conceptual diagrams...")
     fig18_hypoxia()
@@ -2337,4 +2423,5 @@ if __name__ == "__main__":
     fig45_radiation_oer()
     fig46_oncolytic_percolation()
     fig47_adc_bystander_reach()
+    fig48_chemo_decomposition()
     print("Done.")

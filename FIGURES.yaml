@@ -858,3 +858,22 @@ figures:
       reported beside the ratio rather than instead of it. (c) is why the arm
       needed a distance at all: the scalar the point model returns has no term
       for penetration and cannot move with it.
+  - manuscript_figure: 44
+    filename: fig48_chemo_decomposition
+    generator:
+      script: scripts/generate_conceptual_diagrams.py
+      function: fig48_chemo_decomposition
+    inputs:
+      - analysis/calibration/chemo-decomposition-validation.json
+    type: simulation
+    status: manuscript
+    note: >-
+      A decomposition, so the control is the first panel: with neither term
+      active the kill is flat with depth, which is what makes the others terms
+      rather than artifacts of how the zones are drawn. (b) delivery dominates
+      ON THESE PARAMETERS - the penetration length was chosen, not measured.
+      (c) is the half better delivery cannot fix and the check that the cycle
+      arm is really the cell cycle: an alkylator damages DNA whatever the cell
+      is doing and keeps most of its core kill, while the phase-specific agents
+      lose most of theirs. The two terms have opposite remedies, which is why
+      separating them is worth more than either number alone.
