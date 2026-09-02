@@ -214,9 +214,19 @@ def test_the_spatial_column_is_measured_and_not_asserted():
         "arm_parity.py is matching the spatial test by its exact name again, "
         "which breaks on the next arm")
     tiers = {"by default": set(d["spatial_by_default"]),
-             "on demand": set(d["spatial_on_demand"])}
-    assert not (tiers["by default"] & tiers["on demand"]), (
-        "an arm is in both tiers, so the two are not measuring different things")
+             "on demand": set(d["spatial_on_demand"]),
+             "as modifier": set(d["spatial_as_modifier"])}
+    seen = [a for t in tiers.values() for a in t]
+    assert len(seen) == len(set(seen)), (
+        "an arm is in more than one tier, so the tiers are not measuring "
+        "different things")
+    # `as modifier` is the narrowest claim and must not be a dumping ground:
+    # an arm belongs there only when selecting its `Treatment` does NOTHING,
+    # which the Rust probe checks by running it against Control.
+    assert tiers["as modifier"] <= {"Immunotherapy"}, (
+        f"{sorted(tiers['as modifier'])} are labelled modifiers; each one "
+        "needs a probe showing its Treatment is inert, or the label is a way "
+        "of counting an unwired arm as progress")
     for r in d["arms"]:
         assert (r["spatial"] is not None) == (r["arm"] in spatial)
         if r["spatial"] is not None:

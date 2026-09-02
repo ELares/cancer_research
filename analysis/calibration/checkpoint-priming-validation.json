@@ -1,0 +1,120 @@
+{
+  "arms": [
+    {
+      "ferroptosis_kills": 2,
+      "fold_benefit": null,
+      "points": [
+        {
+          "anti_pd1": 0.0,
+          "combined_brake": 0.7,
+          "immune_kills": 0,
+          "immune_share": 0.0
+        },
+        {
+          "anti_pd1": 0.3,
+          "combined_brake": 0.49,
+          "immune_kills": 0,
+          "immune_share": 0.0
+        },
+        {
+          "anti_pd1": 0.6,
+          "combined_brake": 0.28,
+          "immune_kills": 0,
+          "immune_share": 0.0
+        },
+        {
+          "anti_pd1": 0.9,
+          "combined_brake": 0.07,
+          "immune_kills": 0,
+          "immune_share": 0.0
+        }
+      ],
+      "share_blocked": 0.0,
+      "share_unblocked": 0.0,
+      "total_damp": 22.379,
+      "treatment": "Control"
+    },
+    {
+      "ferroptosis_kills": 483,
+      "fold_benefit": 2.5,
+      "points": [
+        {
+          "anti_pd1": 0.0,
+          "combined_brake": 0.7,
+          "immune_kills": 20,
+          "immune_share": 0.039761431411530816
+        },
+        {
+          "anti_pd1": 0.3,
+          "combined_brake": 0.49,
+          "immune_kills": 31,
+          "immune_share": 0.060665362035225046
+        },
+        {
+          "anti_pd1": 0.6,
+          "combined_brake": 0.28,
+          "immune_kills": 39,
+          "immune_share": 0.0724907063197026
+        },
+        {
+          "anti_pd1": 0.9,
+          "combined_brake": 0.07,
+          "immune_kills": 50,
+          "immune_share": 0.09416195856873823
+        }
+      ],
+      "share_blocked": 0.09416195856873823,
+      "share_unblocked": 0.039761431411530816,
+      "total_damp": 3013.433,
+      "treatment": "RSL3"
+    },
+    {
+      "ferroptosis_kills": 23125,
+      "fold_benefit": 2.5,
+      "points": [
+        {
+          "anti_pd1": 0.0,
+          "combined_brake": 0.7,
+          "immune_kills": 30,
+          "immune_share": 0.0012956164975167351
+        },
+        {
+          "anti_pd1": 0.3,
+          "combined_brake": 0.49,
+          "immune_kills": 51,
+          "immune_share": 0.002200172562553926
+        },
+        {
+          "anti_pd1": 0.6,
+          "combined_brake": 0.28,
+          "immune_kills": 74,
+          "immune_share": 0.0031864961460620934
+        },
+        {
+          "anti_pd1": 0.9,
+          "combined_brake": 0.07,
+          "immune_kills": 75,
+          "immune_share": 0.003231365790607497
+        }
+      ],
+      "share_blocked": 0.003231365790607497,
+      "share_unblocked": 0.0012956164975167351,
+      "total_damp": 12226.103,
+      "treatment": "SDT"
+    }
+  ],
+  "cold_tumour_gets_nothing": true,
+  "damp_ratio": 4.0572008735551774,
+  "fold_benefits": [
+    2.5,
+    2.5
+  ],
+  "fold_is_agent_independent": true,
+  "fold_spread": 1.0,
+  "higher_damp_treatment": "SDT",
+  "monotone_in_blockade": true,
+  "more_damp_smaller_share": true,
+  "share_differs_by_an_order_of_magnitude": true,
+  "share_ratio": 30.689198144466534,
+  "verdict": "CONFIRMED \u2014 the multiplier is agent-independent and the share is not"
+}

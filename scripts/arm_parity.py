@@ -288,7 +288,8 @@ def _spatial_arms() -> dict[str, set[str]]:
             "in sim-tme-3d; the spatial column has no measurement behind it")
     body = src[head.start():]
     found = {}
-    for tier, var in (("by_default", "by_default"), ("on_demand", "on_demand")):
+    for tier, var in (("by_default", "by_default"), ("on_demand", "on_demand"),
+                      ("as_modifier", "as_modifier")):
         m = re.search(rf"assert_eq!\(\s*{var},\s*vec!\[(.*?)\]", body, re.S)
         if not m:
             raise SystemExit(
@@ -336,7 +337,8 @@ def scan() -> dict:
     per_arm_hits: list[dict] = []
     units = _sections(MANUSCRIPT.read_text())
     spatial_tiers = _spatial_arms()
-    spatial = spatial_tiers["by_default"] | spatial_tiers["on_demand"]
+    spatial = (spatial_tiers["by_default"] | spatial_tiers["on_demand"]
+               | spatial_tiers["as_modifier"])
     prereg = PREREG.read_text()
     try:
         import yaml
@@ -390,6 +392,7 @@ def scan() -> dict:
             "calibration": calib.get(spec["calibration"]) if spec["calibration"] else None,
             "spatial": ("by default" if spec["arm"] in spatial_tiers["by_default"]
                         else "on demand" if spec["arm"] in spatial_tiers["on_demand"]
+                        else "as modifier" if spec["arm"] in spatial_tiers["as_modifier"]
                         else None),
             "book_words": words,
             "book_sections": heads,
@@ -422,6 +425,7 @@ def scan() -> dict:
         "spatial_arms": sorted(spatial),
         "spatial_by_default": sorted(spatial_tiers["by_default"]),
         "spatial_on_demand": sorted(spatial_tiers["on_demand"]),
+        "spatial_as_modifier": sorted(spatial_tiers["as_modifier"]),
     }
 
 
@@ -490,7 +494,12 @@ def render(d: dict) -> str:
           "how every one of the engine's ~30 ferroptosis realism layers ships "
           "and is required here -- the production matrix carries a committed "
           "byte-identity SHA, so an arm acting by default would move it. "
-          "`on demand` is a wired arm, not a half-wired one.", "",
+          "`on demand` is a wired arm, not a half-wired one. A THIRD tier, "
+          "`as modifier`, is narrower and is not rounded up: the arm ACTS, but "
+          "selecting its `Treatment` does nothing -- the effect reaches the "
+          "run through another layer. `analysis/modality-coverage.md` already "
+          "draws that line between a TREATMENT and a MODIFIER and this column "
+          "draws it too.", "",
           f"**{base['code_lines']:,} lines of production code carry the "
           f"ferroptosis arm.** No other arm reaches a tenth of it, and the "
           f"table's own worst row is the one to read first: an arm with no "

@@ -1,0 +1,13 @@
+CHECKPOINT_PRIMING_META grid_dim=40 n_steps=150
+CHECKPOINT_PRIMING treatment=Control anti_pd1=0 immune_kills=0 ferroptosis_kills=2 total_dead=2 total_damp=22.379 total_tumor=24405 combined_brake=0.700000
+CHECKPOINT_PRIMING treatment=Control anti_pd1=0.3 immune_kills=0 ferroptosis_kills=2 total_dead=2 total_damp=22.209 total_tumor=24405 combined_brake=0.490000
+CHECKPOINT_PRIMING treatment=Control anti_pd1=0.6 immune_kills=0 ferroptosis_kills=2 total_dead=2 total_damp=21.320 total_tumor=24405 combined_brake=0.280000
+CHECKPOINT_PRIMING treatment=Control anti_pd1=0.9 immune_kills=0 ferroptosis_kills=2 total_dead=2 total_damp=20.965 total_tumor=24405 combined_brake=0.070000
+CHECKPOINT_PRIMING treatment=RSL3 anti_pd1=0 immune_kills=20 ferroptosis_kills=483 total_dead=503 total_damp=3013.433 total_tumor=24405 combined_brake=0.700000
+CHECKPOINT_PRIMING treatment=RSL3 anti_pd1=0.3 immune_kills=31 ferroptosis_kills=480 total_dead=511 total_damp=2894.270 total_tumor=24405 combined_brake=0.490000
+CHECKPOINT_PRIMING treatment=RSL3 anti_pd1=0.6 immune_kills=39 ferroptosis_kills=499 total_dead=538 total_damp=3116.844 total_tumor=24405 combined_brake=0.280000
+CHECKPOINT_PRIMING treatment=RSL3 anti_pd1=0.9 immune_kills=50 ferroptosis_kills=481 total_dead=531 total_damp=2928.874 total_tumor=24405 combined_brake=0.070000
+CHECKPOINT_PRIMING treatment=SDT anti_pd1=0 immune_kills=30 ferroptosis_kills=23125 total_dead=23155 total_damp=12226.103 total_tumor=24405 combined_brake=0.700000
+CHECKPOINT_PRIMING treatment=SDT anti_pd1=0.3 immune_kills=51 ferroptosis_kills=23129 total_dead=23180 total_damp=12179.651 total_tumor=24405 combined_brake=0.490000
+CHECKPOINT_PRIMING treatment=SDT anti_pd1=0.6 immune_kills=74 ferroptosis_kills=23149 total_dead=23223 total_damp=12204.633 total_tumor=24405 combined_brake=0.280000
+CHECKPOINT_PRIMING treatment=SDT anti_pd1=0.9 immune_kills=75 ferroptosis_kills=23135 total_dead=23210 total_damp=12225.741 total_tumor=24405 combined_brake=0.070000

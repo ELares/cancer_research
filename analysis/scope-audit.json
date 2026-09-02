@@ -175,7 +175,7 @@
   "top_n": 2297
  },
  "n_analyses": 145,
- "n_predictions": 27,
+ "n_predictions": 28,
  "n_predictions_ferroptosis": 10,
  "n_therapy_subject": 1,
  "predictions": {
@@ -199,6 +199,7 @@
   "P25": false,
   "P26": false,
   "P27": false,
+  "P28": false,
   "P3": true,
   "P4": true,
   "P5": true,

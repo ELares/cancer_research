@@ -896,3 +896,22 @@ figures:
       failed at every correlation. (c) is a bucket a product of fractions has
       no slot for: cells that failed BOTH ways, which improving trafficking
       would not rescue.
+  - manuscript_figure: 46
+    filename: fig50_checkpoint_priming
+    generator:
+      script: scripts/generate_conceptual_diagrams.py
+      function: fig50_checkpoint_priming
+    inputs:
+      - analysis/calibration/checkpoint-priming-validation.json
+    type: simulation
+    status: manuscript
+    note: >-
+      (a) and (b) are the SAME runs, which is the figure's whole argument: the
+      fold-change is identical for both active treatments because a multiplier
+      does not know what it multiplies, so the quantity the point model reports
+      is exactly the one that cannot tell the two cases apart, while the share
+      differs 31-fold. The untreated arm gains nothing at any blockade
+      strength. (c) is the warning and uses a DIFFERENT palette from (a)/(b) on
+      purpose - its bars encode two quantities, not two treatments: the
+      treatment producing four times the danger signal has the smaller immune
+      share, so ranking partners by immunogenic signal is backwards here.

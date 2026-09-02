@@ -2481,6 +2481,106 @@ def fig49_cart_independence():
 
 
 
+def fig50_checkpoint_priming():
+    """What checkpoint blockade has to work with.
+
+    The point of the figure is that (a) and (b) are the SAME runs: an identical
+    fold-change, and a share that differs by more than an order of magnitude.
+    The quantity the point model reports is the one that cannot tell them apart.
+    """
+    import json
+    src = Path(__file__).resolve().parent.parent / "analysis" / "calibration" / \
+        "checkpoint-priming-validation.json"
+    if not src.exists():
+        print("  fig50: checkpoint-priming-validation.json missing - skipping")
+        return
+    d = json.loads(src.read_text())
+    arms = d["arms"]
+    colours = {"Control": "#9fb3b8", "RSL3": "#a2582b", "SDT": "#14505c"}
+    label = {"Control": "untreated\n(cold)", "RSL3": "pharmacologic\ninducer",
+             "SDT": "physical\ninducer"}
+
+    fig, axes = plt.subplots(1, 3, figsize=(15, 4.6))
+
+    # (a) what the point model reports: a fold-change
+    ax = axes[0]
+    for a in arms:
+        xs = [p["anti_pd1"] for p in a["points"]]
+        base = a["points"][0]["immune_kills"]
+        if base == 0:
+            ax.plot(xs, [0.0 for _ in xs], "o--", color=colours[a["treatment"]],
+                    lw=2, ms=7, label=f"{a['treatment']} (nothing to amplify)")
+        else:
+            ax.plot(xs, [p["immune_kills"] / base for p in a["points"]], "o-",
+                    color=colours[a["treatment"]], lw=2, ms=7,
+                    label=a["treatment"])
+    ax.set_xlabel("anti-PD-1 efficacy")
+    ax.set_ylabel("immune kills ÷ unblocked")
+    ax.set_title("(a) the fold-change: the same for both", fontsize=10)
+    ax.legend(fontsize=7.5)
+    ax.grid(alpha=0.25)
+
+    # (b) the same runs, as a share of the kill
+    ax = axes[1]
+    for a in arms:
+        xs = [p["anti_pd1"] for p in a["points"]]
+        ax.plot(xs, [p["immune_share"] * 100 for p in a["points"]], "o-",
+                color=colours[a["treatment"]], lw=2, ms=7, label=a["treatment"])
+    ax.set_yscale("symlog", linthresh=0.01)
+    ax.set_xlabel("anti-PD-1 efficacy")
+    ax.set_ylabel("immune share of the kill (%)")
+    ax.set_title(f"(b) the same runs, as a share: {d['share_ratio']:.0f}× apart",
+                 fontsize=10)
+    ax.legend(fontsize=7.5)
+    ax.grid(alpha=0.25, which="both")
+
+    # (c) more danger signal, smaller share
+    ax = axes[2]
+    active = [a for a in arms if a["treatment"] != "Control"]
+    x = np.arange(len(active))
+    w = 0.38
+    ax2 = ax.twinx()
+    # DELIBERATELY NOT the treatment palette used in (a) and (b): these bars
+    # encode two QUANTITIES, not two treatments, and reusing the same two
+    # colours for a different meaning in the same figure is how a reader ends
+    # up thinking the teal bar is SDT.
+    ax.bar(x - w / 2, [a["total_damp"] for a in active], w, color="#4a6d3f",
+           label="danger signal (DAMP)")
+    ax2.bar(x + w / 2, [a["share_unblocked"] * 100 for a in active], w,
+            color="#c1440e", label="immune share (%)")
+    ax.set_xticks(x)
+    ax.set_xticklabels([label[a["treatment"]] for a in active], fontsize=8)
+    ax.set_ylabel("total DAMP")
+    ax2.set_ylabel("immune share of the kill (%)")
+    ax.set_ylim(0, max(a["total_damp"] for a in active) * 1.45)
+    ax2.set_ylim(0, max(a["share_unblocked"] * 100 for a in active) * 1.45)
+    ax.set_title("(c) more signal, smaller share", fontsize=10)
+    h1, l1 = ax.get_legend_handles_labels()
+    h2, l2 = ax2.get_legend_handles_labels()
+    ax.legend(h1 + h2, l1 + l2, fontsize=7.5, loc="upper left",
+              framealpha=0.95)
+    ax.grid(alpha=0.25, axis="y")
+
+    fig.suptitle("Checkpoint blockade cannot start a response, and a "
+                 "fold-change cannot say whether one matters", fontsize=12,
+                 fontweight="bold")
+    fig.text(0.5, 0.015,
+             "`checkpoint::residual_brake` returns a MULTIPLIER, and a multiplier has no denominator: 'blockade "
+             "raises immune killing 2.5-fold' is true and does not say 2.5 times WHAT. (a) and (b) are the SAME "
+             "runs. The fold-change is identical for both active treatments, because a multiplier does not know "
+             "what it multiplies - so the quantity the point model reports is exactly the one that cannot tell "
+             "the two cases apart. The share differs 31-fold. The untreated arm gets nothing at ANY blockade "
+             "strength, which is the cold-tumour problem stated where it can be checked. (c) is the warning: the "
+             "treatment producing four times the danger signal has the SMALLER immune share, because it already "
+             "killed almost everything directly - so ranking partners by immunogenic signal gets this backwards. "
+             "Absolute immune contribution in this engine is small and known to be: the manuscript records the "
+             "immune ratio collapsing about 104:1 to 4:1 in three dimensions.",
+             ha="center", fontsize=7.2, color="#555", wrap=True)
+    fig.tight_layout(rect=[0, 0.16, 1, 0.93])
+    save(fig, "fig50_checkpoint_priming")
+
+
+
 if __name__ == "__main__":
     print("Generating conceptual diagrams...")
     fig18_hypoxia()
@@ -2509,4 +2609,5 @@ if __name__ == "__main__":
     fig47_adc_bystander_reach()
     fig48_chemo_decomposition()
     fig49_cart_independence()
+    fig50_checkpoint_priming()
     print("Done.")
