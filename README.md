@@ -78,7 +78,7 @@ literature and describing a search.
   [`simulations/ferroptosis-core/README.md`](simulations/ferroptosis-core/README.md)
 - **Calibration infrastructure** linking simulation parameters to published experimental data
 - **[Model card](MODEL_CARD.md)** with the simulation suite's intended use, out-of-scope cases, assumptions/scope checklist, and per-layer calibration/validation status (the honest "broad but mostly uncalibrated" accounting, consolidated from [`CALIBRATION_STATUS.md`](simulations/calibration/CALIBRATION_STATUS.md))
-- **Book-format manuscript (~270 pp at 6x9 trim)** with 12 chapters, 3 appendices, and 41 figures (~75,100 words), cross-referenced against all analysis outputs and indexed in [`FIGURES.yaml`](FIGURES.yaml)
+- **Book-format manuscript (~270 pp at 6x9 trim)** with 12 chapters, 3 appendices, and 42 figures (~76,100 words), cross-referenced against all analysis outputs and indexed in [`FIGURES.yaml`](FIGURES.yaml)
 
 ## What the work is actually about
 
@@ -88,7 +88,7 @@ than leaving you to count files.**
 | | ferroptosis / physical-ROS | other therapy | method & tooling |
 |---|--:|--:|--:|
 | committed analyses | 21 | **1** | 123 |
-| preregistered predictions | **10 of 23** | 0 | — |
+| preregistered predictions | **10 of 24** | 0 | — |
 | engine modules mentioning it anywhere | **36 of 40** | — | — |
 | engine modules mentioning it in code | **21 of 40** | — | — |
 | engine modules mentioning it in PRODUCTION code | **15 of 40** | — | — |
@@ -201,13 +201,13 @@ These are computational predictions with documented assumptions and caveats, not
 | Directory | What you'll find |
 |-----------|-----------------|
 | `analysis/` | 144 analysis outputs. Frozen-corpus work (evidence tiers, tissue-of-origin, diagnostic-therapy matching, combination audits, gap analysis) plus 34 census-scale ones, including the drug-by-variant map, the co-treatment layer, retraction exposure, entity-ambiguity impact, and the manuscript-vs-census re-test |
-| `article/drafts/` | Manuscript (v1.md + v1.tex) with 41 figures; [`FIGURES.yaml`](FIGURES.yaml) indexes 46 entries, the extra 5 being 4 supplementary and 1 orphan |
+| `article/drafts/` | Manuscript (v1.md + v1.tex) with 42 figures; [`FIGURES.yaml`](FIGURES.yaml) indexes 47 entries, the extra 5 being 4 supplementary and 1 orphan |
 | `scripts/` | Python pipeline: tagging, indexing, analysis, figure generation, LaTeX generation, news authentication. 38 of them are census-scale (33 `atlas_*.py` + 5 `comention_*.py`); `scripts/atlas_pipeline.sh` documents the dependency order, which is load-bearing and fails silently if run wrong |
 | `simulations/` | [13 Rust binaries](simulations/README.md) (most with their own README; `sim-modality-panel`, `sim-scale` do not yet) + [ferroptosis-core library](simulations/ferroptosis-core/) + [Python bindings](simulations/ferroptosis-python/) + [calibration](simulations/calibration/) |
 | `corpus/` | Frozen full text by PubMed ID + INDEX.jsonl; `corpus/atlas/` holds the census (bulk gitignored, committed artifacts in `analysis/`); `corpus/living/` documents the frozen-versus-living split (the monthly deltas themselves are uploaded as workflow artifacts, never committed) |
 | `tags/` | Precomputed tag indexes (mechanism, cancer type, tissue, evidence level, diagnostic-therapy) |
 | `news/` | News source scaffolding: fetched articles, extracted claims, verification results, credibility scores |
-| `tests/` | 1937 Python tests (pipeline smoke + figure traceability + calibration-status ref guard + manuscript-inventory drift guard + depth-kill physics-constant guard + flagship-figure data guard + quantitative-figure drift guards (Figs 21/22/23) + invariant/integration + calibrate-extractor + MeSH evidence-fallback + gold-set precision-floor regression (#346) + Bliss/sim-tme/penetration prior-predictive intervals + ABC posterior (#332) + non-circular mechanism-recall (#412) + CTRPv2 calibration target + in-vitro kill-switch fit (#330) + System Xc-/erastin fit (#502) + joint multi-inducer posterior (#500) + spheroid structure validation (#333) + embedding evidence leg (#411) + RD-vs-BioFVM cross-check (#408) + dashboard data layer (#354) + tumor-PK measured-data anchor (#334) + Krogh penetration validation (#335) + spheroid size-aware zone thresholds (#333) + spheroid kill-vs-size direction (#333) + gene-symbol ambiguity/FSP1 sense disambiguation (#ATLAS-AMBIG) + rare-event Poisson intervals + tail-resolution classification + ferroptosis-python bindings) |
+| `tests/` | 1950 Python tests (pipeline smoke + figure traceability + calibration-status ref guard + manuscript-inventory drift guard + depth-kill physics-constant guard + flagship-figure data guard + quantitative-figure drift guards (Figs 21/22/23) + invariant/integration + calibrate-extractor + MeSH evidence-fallback + gold-set precision-floor regression (#346) + Bliss/sim-tme/penetration prior-predictive intervals + ABC posterior (#332) + non-circular mechanism-recall (#412) + CTRPv2 calibration target + in-vitro kill-switch fit (#330) + System Xc-/erastin fit (#502) + joint multi-inducer posterior (#500) + spheroid structure validation (#333) + embedding evidence leg (#411) + RD-vs-BioFVM cross-check (#408) + dashboard data layer (#354) + tumor-PK measured-data anchor (#334) + Krogh penetration validation (#335) + spheroid size-aware zone thresholds (#333) + spheroid kill-vs-size direction (#333) + gene-symbol ambiguity/FSP1 sense disambiguation (#ATLAS-AMBIG) + rare-event Poisson intervals + tail-resolution classification + ferroptosis-python bindings) |
 
 Start with the files in `analysis/` if you want to see what we've concluded so far—and where we're still uncertain.
 

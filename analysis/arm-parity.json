@@ -227,23 +227,26 @@
    "rust_tests": 14,
    "calibration": "ADMISSIBLE",
    "spatial": null,
-   "book_words": 983,
+   "book_words": 2000,
    "book_sections": [
-    "6.10 Oncolytic Virus, and a Tension That Names Its Own Condition"
+    "6.10 Oncolytic Virus, and a Tension That Names Its Own Condition",
+    "6.15 Oncolytic Virus, and a Threshold Borrowed From Another Field"
    ],
    "figures": [
     "fig40_oncolytic_bind",
-    "fig42_ablation_sleeve"
+    "fig42_ablation_sleeve",
+    "fig46_oncolytic_percolation"
    ],
    "predictions": [
     "P12",
-    "P18"
+    "P18",
+    "P24"
    ],
    "book_words_shared": 0,
    "parity_lines": 0.043,
    "parity_fns": 0.06,
    "parity_tests": 0.053,
-   "parity_words": 0.187,
+   "parity_words": 0.381,
    "lines_short_of_parity": 3640
   },
   {
@@ -346,8 +349,8 @@
  "shared_modules": 5,
  "shared_code_lines": 818,
  "shared_pub_fns": 58,
- "manuscript_words_in_sections": 67454,
- "manuscript_words_attributed": 18729,
+ "manuscript_words_in_sections": 68471,
+ "manuscript_words_attributed": 19746,
  "sections_naming_more_than_one_arm": {
   "6.13 Photodynamic and Sonodynamic Therapy, the Two the Project Started With": 2
  },

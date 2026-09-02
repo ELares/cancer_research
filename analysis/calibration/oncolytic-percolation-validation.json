@@ -1,0 +1,383 @@
+{
+  "bracket_contains_moore": true,
+  "bracket_contains_von_neumann": false,
+  "by_replication": [
+    {
+      "highest_not_crossing": 0.08,
+      "lowest_crossing": 0.1,
+      "points": [
+        {
+          "closed_form_speed": 2.0,
+          "crossed": false,
+          "front_radius_um": 0.0,
+          "permissive_fraction": 0.02,
+          "seeded": false
+        },
+        {
+          "closed_form_speed": 2.0,
+          "crossed": false,
+          "front_radius_um": 48.99,
+          "permissive_fraction": 0.04,
+          "seeded": true
+        },
+        {
+          "closed_form_speed": 2.0,
+          "crossed": false,
+          "front_radius_um": 63.246,
+          "permissive_fraction": 0.06,
+          "seeded": true
+        },
+        {
+          "closed_form_speed": 2.0,
+          "crossed": false,
+          "front_radius_um": 91.652,
+          "permissive_fraction": 0.08,
+          "seeded": true
+        },
+        {
+          "closed_form_speed": 2.0,
+          "crossed": true,
+          "front_radius_um": 538.145,
+          "permissive_fraction": 0.1,
+          "seeded": true
+        },
+        {
+          "closed_form_speed": 2.0,
+          "crossed": true,
+          "front_radius_um": 540.0,
+          "permissive_fraction": 0.12,
+          "seeded": true
+        },
+        {
+          "closed_form_speed": 2.0,
+          "crossed": true,
+          "front_radius_um": 540.0,
+          "permissive_fraction": 0.14,
+          "seeded": true
+        },
+        {
+          "closed_form_speed": 2.0,
+          "crossed": true,
+          "front_radius_um": 540.0,
+          "permissive_fraction": 0.16,
+          "seeded": true
+        },
+        {
+          "closed_form_speed": 2.0,
+          "crossed": true,
+          "front_radius_um": 540.0,
+          "permissive_fraction": 0.2,
+          "seeded": true
+        },
+        {
+          "closed_form_speed": 2.0,
+          "crossed": true,
+          "front_radius_um": 540.0,
+          "permissive_fraction": 0.25,
+          "seeded": true
+        },
+        {
+          "closed_form_speed": 2.0,
+          "crossed": true,
+          "front_radius_um": 540.0,
+          "permissive_fraction": 0.3,
+          "seeded": true
+        },
+        {
+          "closed_form_speed": 2.0,
+          "crossed": true,
+          "front_radius_um": 540.0,
+          "permissive_fraction": 0.4,
+          "seeded": true
+        },
+        {
+          "closed_form_speed": 2.0,
+          "crossed": true,
+          "front_radius_um": 540.0,
+          "permissive_fraction": 0.55,
+          "seeded": true
+        },
+        {
+          "closed_form_speed": 2.0,
+          "crossed": true,
+          "front_radius_um": 540.0,
+          "permissive_fraction": 0.7,
+          "seeded": true
+        },
+        {
+          "closed_form_speed": 2.0,
+          "crossed": true,
+          "front_radius_um": 540.0,
+          "permissive_fraction": 0.85,
+          "seeded": true
+        },
+        {
+          "closed_form_speed": 2.0,
+          "crossed": true,
+          "front_radius_um": 540.0,
+          "permissive_fraction": 1.0,
+          "seeded": true
+        }
+      ],
+      "replication": 1.0,
+      "unseeded_fractions": [
+        0.02
+      ]
+    },
+    {
+      "highest_not_crossing": 0.1,
+      "lowest_crossing": 0.12,
+      "points": [
+        {
+          "closed_form_speed": 1.549193,
+          "crossed": false,
+          "front_radius_um": 60.0,
+          "permissive_fraction": 0.02,
+          "seeded": true
+        },
+        {
+          "closed_form_speed": 1.549193,
+          "crossed": false,
+          "front_radius_um": 60.0,
+          "permissive_fraction": 0.04,
+          "seeded": true
+        },
+        {
+          "closed_form_speed": 1.549193,
+          "crossed": false,
+          "front_radius_um": 60.0,
+          "permissive_fraction": 0.06,
+          "seeded": true
+        },
+        {
+          "closed_form_speed": 1.549193,
+          "crossed": false,
+          "front_radius_um": 84.853,
+          "permissive_fraction": 0.08,
+          "seeded": true
+        },
+        {
+          "closed_form_speed": 1.549193,
+          "crossed": false,
+          "front_radius_um": 48.99,
+          "permissive_fraction": 0.1,
+          "seeded": true
+        },
+        {
+          "closed_form_speed": 1.549193,
+          "crossed": true,
+          "front_radius_um": 376.298,
+          "permissive_fraction": 0.12,
+          "seeded": true
+        },
+        {
+          "closed_form_speed": 1.549193,
+          "crossed": true,
+          "front_radius_um": 539.63,
+          "permissive_fraction": 0.14,
+          "seeded": true
+        },
+        {
+          "closed_form_speed": 1.549193,
+          "crossed": true,
+          "front_radius_um": 540.0,
+          "permissive_fraction": 0.16,
+          "seeded": true
+        },
+        {
+          "closed_form_speed": 1.549193,
+          "crossed": true,
+          "front_radius_um": 540.0,
+          "permissive_fraction": 0.2,
+          "seeded": true
+        },
+        {
+          "closed_form_speed": 1.549193,
+          "crossed": true,
+          "front_radius_um": 540.0,
+          "permissive_fraction": 0.25,
+          "seeded": true
+        },
+        {
+          "closed_form_speed": 1.549193,
+          "crossed": true,
+          "front_radius_um": 540.0,
+          "permissive_fraction": 0.3,
+          "seeded": true
+        },
+        {
+          "closed_form_speed": 1.549193,
+          "crossed": true,
+          "front_radius_um": 540.0,
+          "permissive_fraction": 0.4,
+          "seeded": true
+        },
+        {
+          "closed_form_speed": 1.549193,
+          "crossed": true,
+          "front_radius_um": 540.0,
+          "permissive_fraction": 0.55,
+          "seeded": true
+        },
+        {
+          "closed_form_speed": 1.549193,
+          "crossed": true,
+          "front_radius_um": 540.0,
+          "permissive_fraction": 0.7,
+          "seeded": true
+        },
+        {
+          "closed_form_speed": 1.549193,
+          "crossed": true,
+          "front_radius_um": 540.0,
+          "permissive_fraction": 0.85,
+          "seeded": true
+        },
+        {
+          "closed_form_speed": 1.549193,
+          "crossed": true,
+          "front_radius_um": 540.0,
+          "permissive_fraction": 1.0,
+          "seeded": true
+        }
+      ],
+      "replication": 0.6,
+      "unseeded_fractions": []
+    },
+    {
+      "highest_not_crossing": 0.25,
+      "lowest_crossing": 0.3,
+      "points": [
+        {
+          "closed_form_speed": 1.095445,
+          "crossed": false,
+          "front_radius_um": 34.641,
+          "permissive_fraction": 0.02,
+          "seeded": true
+        },
+        {
+          "closed_form_speed": 1.095445,
+          "crossed": false,
+          "front_radius_um": 48.99,
+          "permissive_fraction": 0.04,
+          "seeded": true
+        },
+        {
+          "closed_form_speed": 1.095445,
+          "crossed": false,
+          "front_radius_um": 84.853,
+          "permissive_fraction": 0.06,
+          "seeded": true
+        },
+        {
+          "closed_form_speed": 1.095445,
+          "crossed": false,
+          "front_radius_um": 116.619,
+          "permissive_fraction": 0.08,
+          "seeded": true
+        },
+        {
+          "closed_form_speed": 1.095445,
+          "crossed": false,
+          "front_radius_um": 48.99,
+          "permissive_fraction": 0.1,
+          "seeded": true
+        },
+        {
+          "closed_form_speed": 1.095445,
+          "crossed": false,
+          "front_radius_um": 48.99,
+          "permissive_fraction": 0.12,
+          "seeded": true
+        },
+        {
+          "closed_form_speed": 1.095445,
+          "crossed": false,
+          "front_radius_um": 60.0,
+          "permissive_fraction": 0.14,
+          "seeded": true
+        },
+        {
+          "closed_form_speed": 1.095445,
+          "crossed": false,
+          "front_radius_um": 82.462,
+          "permissive_fraction": 0.16,
+          "seeded": true
+        },
+        {
+          "closed_form_speed": 1.095445,
+          "crossed": false,
+          "front_radius_um": 101.98,
+          "permissive_fraction": 0.2,
+          "seeded": true
+        },
+        {
+          "closed_form_speed": 1.095445,
+          "crossed": false,
+          "front_radius_um": 101.98,
+          "permissive_fraction": 0.25,
+          "seeded": true
+        },
+        {
+          "closed_form_speed": 1.095445,
+          "crossed": true,
+          "front_radius_um": 540.0,
+          "permissive_fraction": 0.3,
+          "seeded": true
+        },
+        {
+          "closed_form_speed": 1.095445,
+          "crossed": true,
+          "front_radius_um": 540.0,
+          "permissive_fraction": 0.4,
+          "seeded": true
+        },
+        {
+          "closed_form_speed": 1.095445,
+          "crossed": true,
+          "front_radius_um": 540.0,
+          "permissive_fraction": 0.55,
+          "seeded": true
+        },
+        {
+          "closed_form_speed": 1.095445,
+          "crossed": true,
+          "front_radius_um": 540.0,
+          "permissive_fraction": 0.7,
+          "seeded": true
+        },
+        {
+          "closed_form_speed": 1.095445,
+          "crossed": true,
+          "front_radius_um": 540.0,
+          "permissive_fraction": 0.85,
+          "seeded": true
+        },
+        {
+          "closed_form_speed": 1.095445,
+          "crossed": true,
+          "front_radius_um": 540.0,
+          "permissive_fraction": 1.0,
+          "seeded": true
+        }
+      ],
+      "replication": 0.3,
+      "unseeded_fractions": []
+    }
+  ],
+  "certain_transmission_bracket": [
+    0.08,
+    0.1
+  ],
+  "closed_form_positive_everywhere": true,
+  "cross_fraction_of_radius": 0.5,
+  "cross_threshold_um": 270.0,
+  "grid_dim": 60.0,
+  "n_steps": 60.0,
+  "pc_moore_26": 0.0976,
+  "pc_von_neumann_6": 0.3116,
+  "rows_where_closed_form_is_wrong": 19,
+  "threshold_rises_as_replication_falls": true,
+  "tumour_radius_um": 540.0,
+  "verdict": "CONFIRMED \u2014 the measured threshold brackets the published lattice constant"
+}
