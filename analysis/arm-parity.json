@@ -200,21 +200,26 @@
    "census": 5006,
    "trials": 201,
    "modules": 1,
-   "code_lines": 61,
-   "pub_fns": 3,
-   "rust_tests": 7,
+   "code_lines": 165,
+   "pub_fns": 11,
+   "rust_tests": 14,
    "calibration": "ADMISSIBLE",
-   "book_words": 0,
-   "book_sections": [],
-   "figures": [],
-   "predictions": [
-    "P12"
+   "book_words": 983,
+   "book_sections": [
+    "6.10 Oncolytic Virus, and a Tension That Names Its Own Condition"
    ],
-   "parity_lines": 0.015,
-   "parity_fns": 0.016,
-   "parity_tests": 0.022,
-   "parity_words": 0.0,
-   "lines_short_of_parity": 3931
+   "figures": [
+    "fig40_oncolytic_bind"
+   ],
+   "predictions": [
+    "P12",
+    "P18"
+   ],
+   "parity_lines": 0.041,
+   "parity_fns": 0.059,
+   "parity_tests": 0.044,
+   "parity_words": 0.187,
+   "lines_short_of_parity": 3827
   },
   {
    "arm": "Ablation",
@@ -302,8 +307,8 @@
  "shared_modules": 5,
  "shared_code_lines": 818,
  "shared_pub_fns": 58,
- "manuscript_words_in_sections": 60906,
- "manuscript_words_attributed": 12363,
+ "manuscript_words_in_sections": 61888,
+ "manuscript_words_attributed": 13346,
  "absent_arms": [
   {
    "arm": "Targeted small-molecule therapy",

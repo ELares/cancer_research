@@ -1580,6 +1580,90 @@ def fig39_adoptive_escalation():
     save(fig, "fig39_adoptive_escalation")
 
 
+def fig40_oncolytic_bind():
+    """The double bind, and the condition that decides which side wins.
+
+    Panel (a) is the tension itself: one curve falls with immune competence and
+    the other rises. Panel (b) is the consequence, and the reason the figure is
+    worth drawing -- the sum has an interior maximum only when priming is
+    efficient enough, so the clinical intuition is conditionally right and the
+    condition is nameable. Panel (c) is where the condition flips, with the
+    saturating regime marked because in it the optimum's position means
+    nothing.
+    """
+    import json
+    src = Path(__file__).resolve().parent.parent / "analysis" / "calibration" / \
+        "oncolytic-validation.json"
+    if not src.exists():
+        print("  fig40: oncolytic-validation.json missing - skipping")
+        return
+    d = json.loads(src.read_text())
+
+    fig, axes = plt.subplots(1, 3, figsize=(15, 4.6))
+
+    ax = axes[0]
+    cs = [c * 0.1 for c in range(0, 161)]
+    sens = d["clearance_sensitivity"]
+    survival = [1.0 / (1.0 + sens * c) for c in cs]
+    priming = [c / (1.0 + c) for c in cs]
+    ax.plot(cs, survival, color="#14505c", lw=2, label="virus surviving to spread")
+    ax.plot(cs, priming, color="#a2582b", lw=2, label="anti-tumour priming")
+    ax.set_xlabel("immune competence")
+    ax.set_ylabel("relative magnitude")
+    ax.set_title("(a) two arms, opposite directions", fontsize=10)
+    ax.legend(fontsize=7.5, loc="center right")
+    ax.grid(alpha=0.25)
+
+    ax = axes[1]
+    curves = d["outcome_curves"]
+    xs = [r["competence"] for r in curves]
+    ax.plot(xs, [r["weak_priming"] for r in curves], "o-", color="#9fb3b8",
+            lw=2, ms=5, label="weak priming (0.5)")
+    ax.plot(xs, [r["strong_priming"] for r in curves], "o-", color="#14505c",
+            lw=2, ms=5, label="strong priming (4.0)")
+    ax.set_xlabel("immune competence")
+    ax.set_ylabel("durable outcome (model, dimensionless)")
+    ax.set_title("(b) the sum, and where its maximum sits", fontsize=10)
+    ax.legend(fontsize=7.5)
+    ax.grid(alpha=0.25)
+
+    ax = axes[2]
+    rows = d["optimum_by_efficiency"]
+    live = [r for r in rows if not r["saturated"]]
+    sat = [r for r in rows if r["saturated"]]
+    ax.plot([r["priming_efficiency"] for r in live],
+            [r["optimal_competence"] for r in live], "o-", color="#14505c",
+            lw=1.8, ms=3.5, label="optimum")
+    if sat:
+        ax.scatter([r["priming_efficiency"] for r in sat],
+                   [r["optimal_competence"] for r in sat], s=16,
+                   color="#c9ccd1", label="saturated (meaningless)")
+    x0 = d["crossover_priming_efficiency"]
+    ax.axvline(x0, color="#a2582b", ls="--", lw=1.5)
+    ax.annotate(f"crossover {x0}", (x0, ax.get_ylim()[1] * 0.75),
+                textcoords="offset points", xytext=(6, 0), fontsize=8,
+                color="#a2582b", fontweight="bold")
+    ax.set_xlabel("priming efficiency")
+    ax.set_ylabel("immune competence at the optimum")
+    ax.set_title("(c) where suppression stops being the answer", fontsize=10)
+    ax.legend(fontsize=7.5, loc="upper right")
+    ax.grid(alpha=0.25)
+
+    fig.suptitle("Oncolytic virus: the double bind, and the condition that "
+                 "decides it", fontsize=12, fontweight="bold")
+    fig.text(0.5, 0.015,
+             "Every review of this field states the tension - immunity clears the virus and "
+             "immunity is the durable mechanism. Stating it settles nothing. What the model adds "
+             "is a CONDITION: below a crossover in priming efficiency the optimum is at full "
+             "suppression and the clinical intuition is right; above it the same move throws away "
+             "the durable arm. The crossover's existence is the claim, not its position - priming "
+             "efficiency is a placeholder in units this model invented. The grey points saturate, "
+             "where the trade-off has stopped operating and the optimum's location means nothing.",
+             ha="center", fontsize=7.2, color="#555", wrap=True)
+    fig.tight_layout(rect=[0, 0.13, 1, 0.93])
+    save(fig, "fig40_oncolytic_bind")
+
+
 if __name__ == "__main__":
     print("Generating conceptual diagrams...")
     fig18_hypoxia()
@@ -1598,4 +1682,5 @@ if __name__ == "__main__":
     fig37_chemotherapy()
     fig38_checkpoint()
     fig39_adoptive_escalation()
+    fig40_oncolytic_bind()
     print("Done.")

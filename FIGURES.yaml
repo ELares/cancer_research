@@ -696,3 +696,23 @@ figures:
       -- 81% remission in ELIANA -- is deliberately NOT used, because a
       remission is not a kill fraction and, unlike the checkpoint arm, no ratio
       cancels the mapping across two different trials.
+  - manuscript_figure: 36
+    filename: fig40_oncolytic_bind
+    generator:
+      script: scripts/generate_conceptual_diagrams.py
+      function: fig40_oncolytic_bind
+    inputs:
+      - analysis/calibration/oncolytic-validation.json
+    type: simulation
+    status: manuscript
+    note: >-
+      The tension every review of this field states, and the condition it
+      never names. Panel (a) shows two individually monotonic terms pulling in
+      opposite directions; (b) shows that their SUM has an interior maximum
+      only sometimes; (c) shows where the switch happens. The finding is the
+      crossover's EXISTENCE and what it depends on, not its position --
+      priming efficiency is a placeholder in units this model invented. The
+      grey points in (c) saturate, where the outcome has hit its ceiling and
+      the scan returns the lowest competence reaching it: that reads as a
+      boundary optimum and means the opposite, and finding it was worth more
+      than the crossover.
