@@ -6,7 +6,7 @@ The aggregate gap is already published: the modality arms are roughly an order o
 
 | arm | engine lines | pub fns | rust tests | calibration | book words | figures | predictions |
 |---|--:|--:|--:|---|--:|--:|--:|
-| Ferroptosis induction | 3,988 | 186 | 315 | -- | 5,249 | 7 | 7 |
+| Ferroptosis induction | 3,992 | 186 | 315 | -- | 5,249 | 7 | 7 |
 | Sonodynamic therapy | 0 | 0 | 0 | -- | 0 | 6 | 3 |
 | Photodynamic therapy | 187 | 4 | 52 | -- | 0 | 3 | 1 |
 | Ionizing radiation | 263 | 23 | 33 | ADMISSIBLE | 1,378 | 2 | 2 |
@@ -14,24 +14,26 @@ The aggregate gap is already published: the modality arms are roughly an order o
 | Adoptive cell therapy (CAR-T) | 64 | 7 | 12 | ADMISSIBLE | 0 | 1 | 1 |
 | Oncolytic virus | 61 | 3 | 7 | ADMISSIBLE | 0 | 0 | 1 |
 | Thermal and electrical ablation | 66 | 4 | 5 | UNCONSTRAINED | 0 | 1 | 1 |
+| Cytotoxic chemotherapy | 282 | 19 | 15 | NO TARGET | 1,393 | 1 | 2 |
 | Antibody-drug conjugate | 80 | 7 | 6 | NO TARGET | 0 | 2 | 1 |
 
-**3,988 lines of production code carry the ferroptosis arm.** No other arm reaches a tenth of it, and the table's own worst row is the one to read first: an arm with no module of its own has no engine column to shrink.
+**3,992 lines of production code carry the ferroptosis arm.** No other arm reaches a tenth of it, and the table's own worst row is the one to read first: an arm with no module of its own has no engine column to shrink.
 
 ## What each arm is short, on the axis the criticism was about
 
 | arm | lines | share of ferroptosis | lines short of parity |
 |---|--:|--:|--:|
-| Sonodynamic therapy | 0 | 0.000x | 3,988 |
-| Photodynamic therapy | 187 | 0.047x | 3,801 |
-| Ionizing radiation | 263 | 0.066x | 3,725 |
-| Checkpoint blockade | 0 | 0.000x | 3,988 |
-| Adoptive cell therapy (CAR-T) | 64 | 0.016x | 3,924 |
-| Oncolytic virus | 61 | 0.015x | 3,927 |
-| Thermal and electrical ablation | 66 | 0.017x | 3,922 |
-| Antibody-drug conjugate | 80 | 0.020x | 3,908 |
+| Sonodynamic therapy | 0 | 0.000x | 3,992 |
+| Photodynamic therapy | 187 | 0.047x | 3,805 |
+| Ionizing radiation | 263 | 0.066x | 3,729 |
+| Checkpoint blockade | 0 | 0.000x | 3,992 |
+| Adoptive cell therapy (CAR-T) | 64 | 0.016x | 3,928 |
+| Oncolytic virus | 61 | 0.015x | 3,931 |
+| Thermal and electrical ablation | 66 | 0.017x | 3,926 |
+| Cytotoxic chemotherapy | 282 | 0.071x | 3,710 |
+| Antibody-drug conjugate | 80 | 0.020x | 3,912 |
 
-Shared machinery -- 5 modules, 817 lines -- is credited to NO arm, so every row above is a lower bound. It is not divided up because dividing it would be a judgement about how much of the immune model belongs to checkpoint blockade rather than to CAR-T, and no such split is measurable from the code.
+Shared machinery -- 5 modules, 818 lines -- is credited to NO arm, so every row above is a lower bound. It is not divided up because dividing it would be a judgement about how much of the immune model belongs to checkpoint blockade rather than to CAR-T, and no such split is measurable from the code.
 
 ## Where the arms are in the literature
 
@@ -47,13 +49,13 @@ Volume is context, not a parity axis, and it is not comparable across rows: it c
 | Adoptive cell therapy (CAR-T) | 15,358 | 1,020 | car-t |
 | Oncolytic virus | 5,006 | 201 | oncolytic-virus |
 | Thermal and electrical ablation | 1,352 | 96 | hifu |
+| Cytotoxic chemotherapy | no row | no row | none |
 | Antibody-drug conjugate | 6,019 | 580 | antibody-drug-conjugate |
 
 ## Arms this engine does not have at all
 
 A parity table listing only what exists measures the campaign's progress and hides its scope.
 
-- **Cytotoxic chemotherapy** -- no Treatment variant, no module, no taxonomy row -- the modality most patients receive, and the one this engine cannot express at all
 - **Targeted small-molecule therapy** -- PARP synthetic lethality is inside `radiation`; there is no arm for kinase inhibition, and the taxonomy's synthetic-lethality row is served by a boost on radiation's alpha
 - **Hormone therapy** -- no arm and no taxonomy row, against a literature the census can measure only through its drug descriptors
 - **Radioligand therapy** -- a taxonomy row and a diagnostic-therapy chain, but no engine arm: the radiation module models external beam only
@@ -62,5 +64,5 @@ A parity table listing only what exists measures the campaign's progress and hid
 
 Quality, correctness, or whether any of it is used. A module can be large and wrong, and an arm could reach every number in the first table and still be worse science than the arm it is measured against. What the table supports is the negative: an arm at a fraction of the comparator on every axis is not represented in any sense a reader would accept.
 
-The book column is attributed by HEADING -- a section counts for an arm when its own heading names it. That under-counts deliberately: 8,651 of 57,105 words in numbered sections are attributed, and the whole multi-modality chapter sits in the remainder because its headings name no arm. A keyword rule over body text was rejected; `analysis/scope-audit.md` records what happened the last time subject was counted by vocabulary.
+The book column is attributed by HEADING -- a section counts for an arm when its own heading names it. That under-counts deliberately: 10,044 of 58,582 words in numbered sections are attributed, and the whole multi-modality chapter sits in the remainder because its headings name no arm. A keyword rule over body text was rejected; `analysis/scope-audit.md` records what happened the last time subject was counted by vocabulary.
 

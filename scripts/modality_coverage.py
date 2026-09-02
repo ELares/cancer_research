@@ -201,6 +201,7 @@ TREATMENT_KIND = {
     "AdoptiveCell": "redirected effectors, bypassing DC priming",
     "OncolyticVirus": "lysis into the shared ICD chain",
     "Ablation": "threshold destruction, not a dose-response",
+    "Chemotherapy": "log kill weighted by the cell cycle, not a redox state",
     "AntibodyDrugConjugate": "ferroptosis payload, delivery-limited",
 }
 
@@ -635,6 +636,9 @@ UNMAPPED_VARIANTS = {
     "RSL3": "ferroptosis induction has no taxonomy row",
     "PDT": "photodynamic therapy has no taxonomy row",
     "Radiation": "radiotherapy has no taxonomy row",
+    "Chemotherapy": "cytotoxic chemotherapy has no taxonomy row -- the arm "
+                    "that reaches the most patients is one this project's "
+                    "mechanism vocabulary cannot name",
 }
 
 

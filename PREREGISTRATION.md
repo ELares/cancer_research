@@ -125,7 +125,12 @@ thresholds are stated here.
 - *Falsification threshold:* the prediction is that the inversion recovers a published site-specific alpha/beta for a trial whose arms were designed to be isoeffective, and does not for a trial whose arms differ in total dose and elapsed time. It fails if a new isoeffective pair from a designed-equivalent trial lands outside its site's published band by more than the band's own width, or if the breast pair is shown to be reproducible under the same single-alpha/beta arithmetic.
 - *Note:* a non-inferiority result bounds a difference rather than establishing equality, so the implied ratio is an anchor and not an estimate with an interval. The full accounting, including the repopulation prediction (`ln2/(alpha*T_p)` = 0.77 Gy/day against Withers' published band, PMID 3390344) and its sensitivity to which tumour's alpha is used, is `analysis/calibration/fractionation-validation.md`.
 
-### Honesty clause for P9 to P14
+**P15. Shortening a chemotherapy interval helps only inside a window of regrowth rates, and the window has two ends.**
+- *Quantitative model output:* `chemo::dose_density_advantage` compares six cycles at 14-day and 21-day intervals at the SAME total dose, with Gompertzian regrowth between cycles. The advantage peaks at about 5.0x near a regrowth rate of 0.0125/day and is worth at least a tenth only between roughly 0.002 and 0.1/day. At zero regrowth it is 0.99x -- below one, because the longer gap lets survivors redistribute into sensitive phases -- and at 0.4/day it is 1.00x, because both schedules' tumours return to the Gompertz plateau between cycles.
+- *Falsification threshold:* the prediction is the SHAPE, not the numbers. It fails if a dose-density benefit is demonstrated in a setting whose regrowth kinetics place it outside the window (either a tumour with no measurable regrowth between cycles, or one whose regrowth is fast relative to the interval), or if a within-model change produces a monotone rather than an interior-peaked dependence on regrowth rate.
+- *Note:* this is NOT a reproduction of CALGB 9741 (PMID 12668651), which found a shorter interval better in early breast cancer and is the reason the question is asked. Whether breast micrometastatic disease sits inside the window is not determinable from anything in this repository, and no absolute magnitude here is defensible: the potency is a placeholder because the CTRPv2 dose-response route is access-blocked. The hypothesis is Norton and Simon's (PMID 3510732). Full accounting in `analysis/calibration/chemo-validation.md`.
+
+### Honesty clause for P9 to P15
 
 **P9 to P13 are DIRECTIONAL and every barrier value behind them is an
 uncalibrated placeholder** (`CALIBRATION_STATUS.md` records each as feeding no

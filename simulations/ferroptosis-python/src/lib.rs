@@ -58,11 +58,12 @@ fn parse_treatment(s: &str) -> PyResult<Treatment> {
         "RSL3" => Ok(Treatment::RSL3),
         "SDT" => Ok(Treatment::SDT),
         "PDT" => Ok(Treatment::PDT),
-        // `Treatment::Radiation` is deliberately NOT accepted here. `sim_cell`
-        // takes no dose, no alpha/beta and no depth, so a Radiation cell built
-        // through this entry point carries zero exogenous ROS and no
-        // DNA-damage roll -- it would be bit-identical to Control at every
-        // seed while advertising a modality. That is the
+        // `Treatment::Radiation` and `Treatment::Chemotherapy` are
+        // deliberately NOT accepted here. `sim_cell` takes no dose, no
+        // alpha/beta, no depth, no drug class and no phase distribution, so a
+        // cell built through this entry point for either would be
+        // bit-identical to Control at every seed while advertising a
+        // modality. That is the
         // layer-without-a-caller shape this project keeps finding, and a
         // public surface is the worst place for it. The name is admitted once
         // the binding grows a dose argument.

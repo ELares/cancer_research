@@ -1,0 +1,240 @@
+{
+ "sensitivity_table": {
+  "MPhaseSpecific/G0": 0.01,
+  "MPhaseSpecific/G1": 0.05,
+  "MPhaseSpecific/G2M": 1.0,
+  "MPhaseSpecific/S": 0.1,
+  "PhaseNonspecific/G0": 0.4,
+  "PhaseNonspecific/_": 1.0,
+  "SPhaseSpecific/G0": 0.02,
+  "SPhaseSpecific/G1": 0.15,
+  "SPhaseSpecific/G2M": 0.1,
+  "SPhaseSpecific/S": 1.0
+ },
+ "dose_density": {
+  "regrowth_per_day": [
+   0.0,
+   0.0025,
+   0.005,
+   0.0075,
+   0.01,
+   0.0125,
+   0.015,
+   0.0175,
+   0.02,
+   0.0225,
+   0.025,
+   0.0275,
+   0.03,
+   0.0325,
+   0.035,
+   0.0375,
+   0.04,
+   0.0425,
+   0.045,
+   0.0475,
+   0.05,
+   0.075,
+   0.1,
+   0.125,
+   0.15,
+   0.175,
+   0.2,
+   0.225,
+   0.25,
+   0.275,
+   0.3,
+   0.325,
+   0.35,
+   0.375,
+   0.4,
+   0.425,
+   0.45,
+   0.475,
+   0.5
+  ],
+  "advantage": [
+   0.9925,
+   2.001,
+   3.1356,
+   4.1016,
+   4.7219,
+   4.9744,
+   4.9345,
+   4.7056,
+   4.3786,
+   4.0181,
+   3.6633,
+   3.335,
+   3.0421,
+   2.7863,
+   2.5657,
+   2.3768,
+   2.2156,
+   2.0781,
+   1.9607,
+   1.8603,
+   1.7743,
+   1.3426,
+   1.2019,
+   1.1343,
+   1.0934,
+   1.0661,
+   1.0469,
+   1.0333,
+   1.0235,
+   1.0164,
+   1.0113,
+   1.0077,
+   1.005,
+   1.0031,
+   1.0018,
+   1.0008,
+   1.0001,
+   0.9996,
+   0.9993
+  ],
+  "peak_advantage": 4.9744,
+  "peak_at_regrowth_per_day": 0.0125,
+  "window_lo": 0.0025,
+  "window_hi": 0.125,
+  "advantage_at_zero_regrowth": 0.9925,
+  "advantage_at_fast_regrowth": 0.9993
+ },
+ "residue_ratio_at_dose_8": {
+  "proliferating": {
+   "SPhaseSpecific": 16.481,
+   "MPhaseSpecific": 24.32
+  },
+  "quiescent_rich": {
+   "SPhaseSpecific": 5.634,
+   "MPhaseSpecific": 6.47
+  }
+ },
+ "dose_response": {
+  "PhaseNonspecific": [
+   [
+    0.5,
+    0.785103
+   ],
+   [
+    1,
+    0.617141
+   ],
+   [
+    2,
+    0.383001
+   ],
+   [
+    4,
+    0.151035
+   ],
+   [
+    8,
+    0.027495
+   ],
+   [
+    12,
+    0.006891
+   ],
+   [
+    16,
+    0.002357
+   ],
+   [
+    24,
+    0.000417
+   ],
+   [
+    32,
+    8.3e-05
+   ]
+  ],
+  "SPhaseSpecific": [
+   [
+    0.5,
+    0.920504
+   ],
+   [
+    1,
+    0.854078
+   ],
+   [
+    2,
+    0.750095
+   ],
+   [
+    4,
+    0.612133
+   ],
+   [
+    8,
+    0.453129
+   ],
+   [
+    12,
+    0.350901
+   ],
+   [
+    16,
+    0.275747
+   ],
+   [
+    24,
+    0.175426
+   ],
+   [
+    32,
+    0.116487
+   ]
+  ],
+  "MPhaseSpecific": [
+   [
+    0.5,
+    0.953691
+   ],
+   [
+    1,
+    0.914958
+   ],
+   [
+    2,
+    0.85407
+   ],
+   [
+    4,
+    0.771653
+   ],
+   [
+    8,
+    0.668669
+   ],
+   [
+    12,
+    0.592113
+   ],
+   [
+    16,
+    0.527214
+   ],
+   [
+    24,
+    0.421492
+   ],
+   [
+    32,
+    0.340212
+   ]
+  ]
+ },
+ "dose_response_target": {
+  "source": "CTRPv2 via the DepMap download API",
+  "status": "UNREACHABLE",
+  "why": "the catalogue endpoint returns a verification page rather than the documented CSV; recorded in analysis/calibration/calibration-feasibility.md as an access block rather than a method one"
+ },
+ "verdicts": {
+  "phase_specific_residue": "REPRODUCES the direction",
+  "dose_density_window": "TWO-SIDED as predicted",
+  "dose_response_magnitude": "NO TARGET REACHABLE"
+ }
+}

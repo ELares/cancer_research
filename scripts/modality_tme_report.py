@@ -281,13 +281,19 @@ def render(d: dict) -> str:
               "are resistant to them — only that this configuration cannot "
               "apply that pressure.", ""]
 
-    gains = {a: max((d["effects"][l][a] for l in live), key=abs, default=0.0)
-             for a in arms}
-    helped = {a: v for a, v in gains.items() if v > 0.10}
+    # EVERY gain above the threshold, not only the arms whose LARGEST effect
+    # happens to be one. The first version took the biggest effect by absolute
+    # value and reported it if it was positive -- so an arm that gains 97% to
+    # one axis and loses 100% to another was recorded as a loss and its gain
+    # vanished from the page. It vanished for real: adding an arm to the sweep
+    # made a previously inert axis live, which changed which effect was
+    # largest for a DIFFERENT arm and silently deleted this whole section. A
+    # guard caught it; the arithmetic never would have.
+    helped = {(a, l): d["effects"][l][a]
+              for a in arms for l in live if d["effects"][l][a] > 0.10}
     if helped:
         L += ["## One axis can HELP, and it helps the arm that is failing", ""]
-        for a, v in sorted(helped.items(), key=lambda kv: -kv[1]):
-            ax = max(live, key=lambda l: d["effects"][l][a])
+        for (a, ax), v in sorted(helped.items(), key=lambda kv: -kv[1]):
             L += [f"`{a}` GAINS {v * 100:.0f}% of its kill to {ax}.", ""]
         L += ["Clonal heterogeneity is the only axis here that can raise an "
               "arm's kill rather than lower it, and it raises the "

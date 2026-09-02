@@ -856,7 +856,14 @@ def fig32_modality_tme():
     axes_order = list(ebp[phenos[0]].keys())
     arms = d["arms"]
 
-    fig, axs = plt.subplots(1, len(phenos), figsize=(13.0, 5.6), sharey=True)
+    # HEIGHT SCALES WITH THE ARM COUNT. A fixed 5.6 inches fitted nine arms;
+    # the tenth compressed the rows until two of them fell inside the
+    # four-point tolerance `tests/test_chapter6_figures.py` uses to read a row,
+    # so the guard started reading a neighbour's number as this row's. The
+    # figure was wrong before the guard was: ten labelled rows in that space is
+    # cramped whatever a test thinks.
+    height = 5.6 + 0.42 * max(0, len(arms) - 9)
+    fig, axs = plt.subplots(1, len(phenos), figsize=(13.0, height), sharey=True)
     vmax = max(abs(v) for ph in phenos for ax in axes_order
                for v in ebp[ph][ax].values()) or 1.0
     for k, ph in enumerate(phenos):
@@ -917,7 +924,14 @@ def fig32_modality_tme():
     # which is two notations for one quantity in one image -- the defect the
     # sibling function's own comment congratulates itself on avoiding.
     cb.set_ticks(np.linspace(-vmax, vmax, 5))
-    cb.set_ticklabels([f"{v * 100:+.0f}" for v in np.linspace(-vmax, vmax, 5)])
+    # THE PERCENT SIGN IS LOAD-BEARING, for a reason that is not typographic.
+    # Without it a colorbar tick is the same string as a cell value, and a
+    # guard that reads the drawn numbers off a ROW cannot tell them apart when
+    # a tick happens to land within a few points of a row -- which is exactly
+    # what happened when a tenth arm shifted the rows. Ticking in percent makes
+    # the bar unambiguous to a reader and distinguishable to the guard, and it
+    # is the same unit the cells already print.
+    cb.set_ticklabels([f"{v * 100:+.0f}%" for v in np.linspace(-vmax, vmax, 5)])
     # RELATIVE change, and the unit matters: `modality_tme_report._effect`
     # returns `(got - base) / base`, so +124 is "kills 2.24x as much", NOT a
     # 124-point move in a fraction bounded by one -- which would be the same
@@ -1299,6 +1313,104 @@ def fig36_fractionation():
     save(fig, "fig36_fractionation")
 
 
+def fig37_chemotherapy():
+    """The chemotherapy arm's two structural predictions.
+
+    Both are read from the committed validation artifact, which is produced by
+    a stdlib implementation independent of the crate. Nothing here is typed.
+
+    Panel (a) is the residue a phase-specific agent leaves, and the reason it
+    is worth drawing is the SECOND pair of bars: in a population mostly out of
+    cycle the gap narrows, because the phase-nonspecific agent is struggling
+    too. Panel (b) is the dose-density window, and its shape is the finding --
+    an interior peak with the advantage vanishing at BOTH ends.
+    """
+    import json
+    src = Path(__file__).resolve().parent.parent / "analysis" / "calibration" / \
+        "chemo-validation.json"
+    if not src.exists():
+        print("  fig37: chemo-validation.json missing - skipping")
+        return
+    d = json.loads(src.read_text())
+
+    fig, axes = plt.subplots(1, 3, figsize=(15, 4.6))
+
+    # (a) dose-response by class
+    ax = axes[0]
+    colours = {"PhaseNonspecific": "#14505c", "SPhaseSpecific": "#a2582b",
+               "MPhaseSpecific": "#6b7f3a"}
+    labels = {"PhaseNonspecific": "phase-nonspecific (alkylator, platinum)",
+              "SPhaseSpecific": "S-phase specific (antimetabolite)",
+              "MPhaseSpecific": "M-phase specific (taxane, vinca)"}
+    for cls, pts in d["dose_response"].items():
+        xs = [p[0] for p in pts]
+        ys = [p[1] for p in pts]
+        ax.plot(xs, ys, "o-", ms=3.5, lw=1.8, color=colours[cls], label=labels[cls])
+    ax.set_yscale("log")
+    ax.set_xlabel("dose (arbitrary units; the potency is a placeholder)")
+    ax.set_ylabel("surviving fraction")
+    ax.set_title("(a) what the cycle does to a dose-response", fontsize=10)
+    ax.legend(fontsize=7, loc="lower left")
+    ax.grid(alpha=0.25, which="both")
+
+    # (b) the residue ratio, in two populations
+    ax = axes[1]
+    res = d["residue_ratio_at_dose_8"]
+    groups = ["SPhaseSpecific", "MPhaseSpecific"]
+    x = range(len(groups))
+    w = 0.36
+    prolif = [res["proliferating"][g] for g in groups]
+    quiet = [res["quiescent_rich"][g] for g in groups]
+    ax.bar([i - w / 2 for i in x], prolif, w, color="#14505c", label="proliferating")
+    ax.bar([i + w / 2 for i in x], quiet, w, color="#9fb3b8",
+           label="mostly out of cycle")
+    for i, (a, b) in enumerate(zip(prolif, quiet)):
+        ax.text(i - w / 2, a, f"{a:.1f}x", ha="center", va="bottom", fontsize=8)
+        ax.text(i + w / 2, b, f"{b:.1f}x", ha="center", va="bottom", fontsize=8)
+    ax.axhline(1.0, color="#888", ls="--", lw=1)
+    ax.set_xticks(list(x))
+    ax.set_xticklabels(["S-phase agent", "M-phase agent"], fontsize=9)
+    ax.set_ylabel("survivors relative to a phase-nonspecific agent")
+    ax.set_title("(b) the residue, and where it shrinks", fontsize=10)
+    ax.legend(fontsize=7.5)
+    ax.grid(alpha=0.25, axis="y")
+
+    # (c) the dose-density window
+    ax = axes[2]
+    dd = d["dose_density"]
+    ax.plot(dd["regrowth_per_day"], dd["advantage"], color="#14505c", lw=2)
+    ax.axhline(1.0, color="#888", ls="--", lw=1)
+    if dd["window_lo"] is not None:
+        ax.axvspan(dd["window_lo"], dd["window_hi"], color="#14505c", alpha=0.10)
+    ax.plot([dd["peak_at_regrowth_per_day"]], [dd["peak_advantage"]], "o",
+            color="#a2582b", ms=8, zorder=5)
+    ax.annotate(f"{dd['peak_advantage']:.1f}x at "
+                f"{dd['peak_at_regrowth_per_day']:g}/day",
+                (dd["peak_at_regrowth_per_day"], dd["peak_advantage"]),
+                textcoords="offset points", xytext=(12, -4), fontsize=8,
+                color="#a2582b", fontweight="bold")
+    ax.set_xscale("symlog", linthresh=0.005)
+    ax.set_xlabel("Gompertz regrowth rate (per day)")
+    ax.set_ylabel("burden ratio, 21-day / 14-day schedule")
+    ax.set_title("(c) when a shorter interval is worth anything", fontsize=10)
+    ax.grid(alpha=0.25)
+
+    fig.suptitle("Chemotherapy: two predictions that need no fitted potency",
+                 fontsize=12, fontweight="bold")
+    fig.text(0.5, 0.015,
+             "NO dose-response here is fitted: the repository's CTRPv2 route reached five "
+             "ferroptosis compounds and no longer reaches anything, so every absolute kill "
+             "fraction is a placeholder and only the SHAPES are results. (b)'s second pair of "
+             "bars is the finding that was not designed in - out of cycle the phase-specific "
+             "agent's disadvantage shrinks, because the flat agent is struggling too. (c) has "
+             "two ends: no advantage with nothing to outrun, and none when regrowth is fast "
+             "enough that both schedules return to the plateau. Whether any real tumour sits "
+             "inside the shaded window is NOT established here.",
+             ha="center", fontsize=7.2, color="#555", wrap=True)
+    fig.tight_layout(rect=[0, 0.13, 1, 0.93])
+    save(fig, "fig37_chemotherapy")
+
+
 if __name__ == "__main__":
     print("Generating conceptual diagrams...")
     fig18_hypoxia()
@@ -1314,4 +1426,5 @@ if __name__ == "__main__":
     fig34_depth_reach()
     fig35_calibration_verdicts()
     fig36_fractionation()
+    fig37_chemotherapy()
     print("Done.")

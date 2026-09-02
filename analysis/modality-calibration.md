@@ -9,12 +9,13 @@ Every arm this project added carries a NAMED target — a published number, cite
 | Radiation (DNA channel) | `RadiationConfig::alpha_per_gy` | SF2 = 0.5445 at alpha/beta = 10.0 | **ADMISSIBLE** | 0.2532 – 0.2534 | 0% |
 | Synthetic lethality (PARP) | `RadiationConfig::parp_alpha_boost` | sensitizer enhancement ratio 1.2-1.7 | **ADMISSIBLE** | 0.544 – 0.9485 | 20% |
 | Checkpoint blockade | `ImmuneParams::baseline_antigenicity` | anti-PD-1 monotherapy ORR 20-30% | **INADMISSIBLE** | — | — |
+| Chemotherapy (cell-cycle) | `chemo::surviving_fraction potency` | *none in this corpus* | **NO TARGET** | — | — |
 | Oncolytic virus | `oncolytic_lysis immunogenicity` | durable-response ratio 8.0x (16% treated vs 2% control) | **ADMISSIBLE** | 0.3385 – 0.525 | 19% |
 | Ablation (thermal) | `AblationConfig::cem43_threshold` | exposure at 57 C must be seconds, not hours | **UNCONSTRAINED** | 27.49 – 2000 | 99% |
 | CAR-T (adoptive transfer) | `adoptive_transfer_kills effector count` | B-ALL complete remission 70%-94% | **ADMISSIBLE** | 8.14e+05 – 1.093e+06 | 6% |
 | ADC bystander effect | `AdcConfig::payload_escape_fraction` | *none in this corpus* | **NO TARGET** | — | — |
 
-**4 admissible, 1 unconstrained, 1 inadmissible, 1 with no target at all.** The width column is the point: a fit that admits most of the search range has been given a target that cannot discriminate, and reporting it as "calibrated" would be the same error as reporting a p-value without an effect size.
+**4 admissible, 1 unconstrained, 1 inadmissible, 2 with no target at all.** The width column is the point: a fit that admits most of the search range has been given a target that cannot discriminate, and reporting it as "calibrated" would be the same error as reporting a p-value without an effect size.
 
 ## Four outcomes, and they are not the same result
 
@@ -27,6 +28,8 @@ Every arm this project added carries a NAMED target — a published number, cite
 **NO TARGET** — the corpus anchors the MECHANISM and gives no number the parameter could be fitted to. This is the outcome a calibration page is most tempted to hide, and the temptation is specific: inventing a target that a flexible form then satisfies looks exactly like calibration and constrains nothing. A row that says it has no number is more use than a row that has made one up.
 
 ## The rows with nothing to fit to
+
+**Chemotherapy (cell-cycle)** — The target is not missing from the literature -- it is missing from this machine. CTRPv2 carries dose-response for the cytotoxics, and the DepMap download catalogue that served it now answers with a verification page. The arm therefore ships with two STRUCTURAL predictions that need no fitted potency (a phase-specific agent's residue, and the two-sided window in which shortening the interval helps) and no magnitude that anyone should carry away.
 
 **ADC bystander effect** — The corpus establishes that a cleavable linker causes bystander killing and a non-cleavable one does not -- a qualitative contrast with both arms named, which is what let the layer land under the layer-freeze policy. It gives no escape fraction, no diffusion radius and no bystander kill rate. Reporting a fit here would mean inventing a target, and an invented target that a flexible form then satisfies is worse than no target at all: it looks like calibration and constrains nothing.
 
@@ -42,7 +45,7 @@ A row like this is worth more than the three that fitted. The fitted ones show t
 
 ## The mapping is the weak link, and it is stated per row
 
-3 of the 7 targets are CLINICAL, and no amount of fitting makes a clinical endpoint and a lattice kill fraction the same quantity.
+3 of the 8 targets are CLINICAL, and no amount of fitting makes a clinical endpoint and a lattice kill fraction the same quantity.
 
 **Checkpoint blockade** — An objective response in a patient is mapped onto a KILL FRACTION in a lattice. Those are different quantities and no fit makes them the same one: a partial response is a 30% diameter reduction, roughly a 66% volume reduction, and a responding patient is not a dead tumour. Even had the fit succeeded, this mapping would be the weakest link in the row.
 

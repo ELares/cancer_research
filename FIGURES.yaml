@@ -629,3 +629,26 @@ figures:
       says so: the late-responding alpha/beta is a convention rather than a
       measurement, and the reoxygenation half-life is a free parameter no
       dataset in this repository constrains.
+  - manuscript_figure: 33
+    filename: fig37_chemotherapy
+    generator:
+      script: scripts/generate_conceptual_diagrams.py
+      function: fig37_chemotherapy
+    inputs:
+      - analysis/calibration/chemo-validation.json
+    type: simulation
+    status: manuscript
+    note: >-
+      The chemotherapy arm's two structural predictions, drawn because neither
+      needs a fitted potency -- which matters here more than anywhere else in
+      the book, since this is the one arm whose dose-response target is
+      UNREACHABLE rather than merely unfitted (CTRPv2 through the DepMap
+      catalogue, now behind a verification page). Panel (b)'s second pair of
+      bars is the result that was not designed in: out of cycle the
+      phase-specific agent's disadvantage NARROWS, because the phase-
+      nonspecific agent is struggling too. Panel (c) has an interior peak and
+      vanishes at both ends -- no advantage with nothing to outrun, and none
+      when regrowth is fast enough that both schedules return to the plateau.
+      Whether any real tumour sits inside that window is explicitly NOT
+      established, so the trial that motivated the question is named as a
+      motivation and not as a reproduction.

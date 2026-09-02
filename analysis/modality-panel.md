@@ -9,6 +9,7 @@
 | SDT | 87.24% | ferroptosis engine (lipid peroxidation) | energy delivery to depth | uncalibrated (direction-only) |
 | PDT | 87.24% | ferroptosis engine (lipid peroxidation) | energy delivery to depth | uncalibrated (direction-only) |
 | Ablation | 85.00% | threshold destruction (not a dose-response) | margin geometry -- coverage, and nothing else | thresholds published; applicator field not modelled |
+| Chemotherapy | 61.70% | log kill, weighted by the cell cycle (not CellState) | the growth fraction, and marrow recovery between cycles | NO REACHABLE TARGET: the CTRPv2 route is access-blocked |
 | OncolyticVirus | 58.14% | direct lysis + the SHARED ICD chain | infection spread, which this engine takes as an input | uncalibrated; T-VEC durable-response band not fitted |
 | Radiation | 45.18% | linear-quadratic DNA damage (not CellState) | dose, and oxygen through the OER | form checked against a published parameterisation |
 | AntibodyDrugConjugate | 1.84% | ferroptosis payload, delivered on an antibody (+ bystander) | the binding-site barrier (~7 um penetration) | transport anchored; payload is the SDT exo-ROS constant, not RSL3 pharmacology |
@@ -17,7 +18,7 @@
 | Control | 0.00% | none -- untreated baseline | nothing: this is what the other arms are read against | not applicable (untreated baseline) |
 | RSL3 | 0.00% | ferroptosis engine (lipid peroxidation) | endogenous ROS supply and antioxidant defence | uncalibrated (direction-only) |
 
-**9 treatment arms plus an untreated baseline, 7 distinct routes to death**, and only 3 of the arms go through the ferroptosis engine. That is the number this whole campaign was about: a reader who opened this repository a month ago would have found one route and three arms. The baseline is excluded from the route counts -- it inherited the ferroptosis loop's route string and was counted as a route to death while killing nothing.
+**10 treatment arms plus an untreated baseline, 8 distinct routes to death**, and only 3 of the arms go through the ferroptosis engine. That is the number this whole campaign was about: a reader who opened this repository a month ago would have found one route and three arms. The baseline is excluded from the route counts -- it inherited the ferroptosis loop's route string and was counted as a route to death while killing nothing.
 
 ## The sharpest row is the one about delivery
 

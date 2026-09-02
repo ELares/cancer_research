@@ -107,10 +107,11 @@ def test_the_advertised_treatments_are_exactly_the_accepted_ones():
         assert name in msg, f"the error message omits {name}: {msg}"
 
     # And nothing outside the list parses, so the message is not merely a
-    # superset of what works. `Radiation` is deliberately here: the engine has
-    # the arm, but `sim_cell` takes no dose, so a binding that accepted the
-    # name would return Control at every seed while advertising a modality.
-    for bogus in ("Radiation", "radiation", "SDT ", ""):
+    # superset of what works. `Radiation` and `Chemotherapy` are deliberately
+    # here: the engine has both arms, but `sim_cell` takes no dose, no drug
+    # class and no phase distribution, so a binding that accepted either name
+    # would return Control at every seed while advertising a modality.
+    for bogus in ("Radiation", "radiation", "Chemotherapy", "SDT ", ""):
         raised = False
         try:
             fc.sim_cell("Glycolytic", bogus, seed=1)

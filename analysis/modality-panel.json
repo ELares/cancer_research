@@ -32,6 +32,13 @@
    "route": "threshold destruction (not a dose-response)"
   },
   {
+   "arm": "Chemotherapy",
+   "calibration": "NO REACHABLE TARGET: the CTRPv2 route is access-blocked",
+   "kill_fraction": 0.6169985285853479,
+   "limited_by": "the growth fraction, and marrow recovery between cycles",
+   "route": "log kill, weighted by the cell cycle (not CellState)"
+  },
+  {
    "arm": "OncolyticVirus",
    "calibration": "uncalibrated; T-VEC durable-response band not fitted",
    "kill_fraction": 0.5813840538668145,
@@ -88,16 +95,17 @@
  "n_cells": 20000,
  "not_a_ranking": "Each arm carries its own calibration status; most are uncalibrated placeholders. These are comparisons between MECHANISMS under one model, not claims about clinical efficacy. See CALIBRATION_STATUS.md.",
  "seed": 42,
- "n_arms": 10,
- "n_treatment_arms": 9,
+ "n_arms": 11,
+ "n_treatment_arms": 10,
  "n_ferroptosis_routed": 3,
- "n_other_routes": 6,
+ "n_other_routes": 7,
  "distinct_routes": [
   "direct lysis + the SHARED ICD chain",
   "ferroptosis engine (lipid peroxidation)",
   "ferroptosis payload, delivered on an antibody (+ bystander)",
   "immune cascade (no ferroptotic death required)",
   "linear-quadratic DNA damage (not CellState)",
+  "log kill, weighted by the cell cycle (not CellState)",
   "redirected effectors (bypasses DC priming)",
   "threshold destruction (not a dose-response)"
  ]

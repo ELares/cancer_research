@@ -65,6 +65,7 @@ OUT_JSON = REPO / "analysis" / "modality-module-depth.json"
 # A modality's OWN file. Everything else is either shared machinery or the
 # ferroptosis engine proper.
 DEDICATED = {
+    "chemo": "Cytotoxic chemotherapy: the cell cycle, log kill and scheduling",
     "radiation": "Radiation + synthetic lethality (PARP)",
     "ablation": "HIFU + irreversible electroporation",
     "oncolytic": "Oncolytic virus spread",

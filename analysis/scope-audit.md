@@ -8,33 +8,33 @@
 |---|--:|--:|--:|
 | committed analyses (145) | 20 | **1** | 124 |
 
-| preregistered predictions | **8 of 14** |
+| preregistered predictions | **8 of 15** |
 |---|--:|
-| engine modules mentioning it anywhere | **32 of 37** |
-| engine modules mentioning it in code | **21 of 37** |
-| engine modules mentioning it in PRODUCTION code | **15 of 37** |
+| engine modules mentioning it anywhere | **33 of 38** |
+| engine modules mentioning it in code | **21 of 38** |
+| engine modules mentioning it in PRODUCTION code | **15 of 38** |
 
 The module rows used to read `N of N` -- the same number on both sides of "of", arithmetic that cannot come out any other way, produced by counting `.rs` files without opening one. They are content measurements now, and the LAST is the one to read: a module can cite ferroptosis in a doc comment while its code is about geometry, and 6 modules pass the in-code check only via their `#[cfg(test)]` block -- a field name in a byte-identity assert, a string literal in a CSV writer, a test FUNCTION NAME. That count was typed as "four" and went stale the moment a test was renamed; it is derived now.
 
 **5 modules mention neither ferroptosis nor a physical-ROS modality anywhere in their text**: `adoptive.rs`, `oncolytic.rs`, `reaction_diffusion.rs`, `spheroid.rs`, `vasculature.rs`. An earlier version of this page said every module of the engine concerns one or the other. It does not.
 
-8 of 14 preregistered predictions and 32 of 37 engine modules concern ferroptosis or the physical-ROS modalities.
+8 of 15 preregistered predictions and 33 of 38 engine modules concern ferroptosis or the physical-ROS modalities.
 
 ### The '1' is a filename marker, not a subject measurement
 
 The two buckets do not use the same admission rule. Therapy is matched on the FILENAME only; ferroptosis is matched on the filename OR the first 40 lines of body text. So the therapy count moves on a rename with contents unchanged, and an empty file with a therapy word in its name is filed as a therapy analysis.
 
-Applying the ferroptosis bucket's body rule to the SAME vocabulary admits **52** analyses. That is not an upper bound on 'other therapy', and an earlier version of this page published it as one. Where those 52 already sit in the table above:
+Applying the ferroptosis bucket's body rule to the SAME vocabulary admits **53** analyses. That is not an upper bound on 'other therapy', and an earlier version of this page published it as one. Where those 53 already sit in the table above:
 
 | already classified as | body-route matches |
 |---|--:|
-| ferroptosis-or-physical | 12 |
+| ferroptosis-or-physical | 13 |
 | therapy-subject | 1 |
 | method | 39 |
 
-**12 of them are in this page's own FERROPTOSIS column** (`arm-parity`, `distilled-hypotheses-final`, `key-findings`, `modality-coverage`, `modality-module-depth`, `modality-panel`, `osf-registration-package`, `pathway-target-audit`, `principle-resistance-tradeoff`, `resistant-state-map`, `scientific-lead-handoff`, `timeline`), so under a mutually exclusive bucketing 52 cannot bound the therapy count. A further 39 are method analyses -- instrument work that cites a therapy as a worked example rather than studying one.
+**13 of them are in this page's own FERROPTOSIS column** (`arm-parity`, `distilled-hypotheses-final`, `key-findings`, `modality-coverage`, `modality-module-depth`, `modality-panel`, `modality-tme`, `osf-registration-package`, `pathway-target-audit`, `principle-resistance-tradeoff`, `resistant-state-map`, `scientific-lead-handoff`, `timeline`), so under a mutually exclusive bucketing 53 cannot bound the therapy count. A further 39 are method analyses -- instrument work that cites a therapy as a worked example rather than studying one.
 
-So the body route does not measure 'other therapy' either. What it measures is how many analyses MENTION a therapy, which is a different question, and the honest reading of the table above is that the therapy figure is small and its exact value is not established by either rule. An earlier version published 'the true figure lies between 1 and 37', a range whose upper end is not a bound. That figure is quoted as a fact about a past commit and is deliberately NOT derived -- it has read 37, 38 and 37 across commits, moving TWICE on this script's 40-line head window and for opposite reasons -- once when a sibling page's head grew INTO the window past the three-hit threshold, once when this page's own therapy mention was pushed OUT of it -- rather than when any subject changed. The live figures are 1 and 52.
+So the body route does not measure 'other therapy' either. What it measures is how many analyses MENTION a therapy, which is a different question, and the honest reading of the table above is that the therapy figure is small and its exact value is not established by either rule. An earlier version published 'the true figure lies between 1 and 37', a range whose upper end is not a bound. That figure is quoted as a fact about a past commit and is deliberately NOT derived -- it has read 37, 38 and 37 across commits, moving TWICE on this script's 40-line head window and for opposite reasons -- once when a sibling page's head grew INTO the window past the three-hit threshold, once when this page's own therapy mention was pushed OUT of it -- rather than when any subject changed. The live figures are 1 and 53.
 
 ## Why this is worth stating rather than hiding
 

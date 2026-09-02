@@ -129,12 +129,17 @@ def test_an_arm_without_a_taxonomy_row_is_not_reported_as_zero():
 def test_the_arms_the_engine_lacks_are_named_and_still_lacking():
     """A parity page listing only what exists measures progress and hides
     scope. Each absent arm is checked to be genuinely absent, so the list
-    cannot outlive the gap it describes."""
+    cannot outlive the gap it describes.
+
+    Chemotherapy was the sharpest entry here and has LEFT the list, which is
+    what this guard is for: it fired when the arm was built and the page still
+    called it absent. An arm with a module and a variant is measured in the
+    table above; whether it is calibrated is a separate column and a separate
+    claim.
+    """
     d = _d()
     names = {a["arm"] for a in d["absent_arms"]}
-    assert "Cytotoxic chemotherapy" in names, (
-        "chemotherapy has dropped off the absent list; it is the modality most "
-        "patients receive and the sharpest thing this engine cannot express")
+    assert names, "the absent list is empty, which would be a claim in itself"
     body = re.search(r"pub enum Treatment\s*\{(.*?)\n\}", CELL_RS.read_text(),
                      re.S).group(1).lower()
     for token, arm in (("chemo", "Cytotoxic chemotherapy"),
@@ -144,6 +149,11 @@ def test_the_arms_the_engine_lacks_are_named_and_still_lacking():
             assert arm not in names, (
                 f"the engine now has a {token} variant but the page still "
                 f"lists {arm} as absent -- move it into ARMS and measure it")
+        else:
+            assert arm in names, (
+                f"the engine has no {token} variant and the page no longer "
+                f"lists {arm} as absent; an arm that is missing has to stay "
+                "visible")
 
 
 def test_the_page_states_what_it_cannot_measure():

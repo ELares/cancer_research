@@ -54,6 +54,18 @@
    "verdict": "INADMISSIBLE"
   },
   {
+   "arm": "Chemotherapy (cell-cycle)",
+   "parameter": "chemo::surviving_fraction potency",
+   "target": null,
+   "source": "CTRPv2 cytotoxic dose-response, currently unreachable",
+   "target_kind": "published and public, but access-blocked",
+   "range_scanned": null,
+   "fit": null,
+   "mapping": null,
+   "no_target_reason": "The target is not missing from the literature -- it is missing from this machine. CTRPv2 carries dose-response for the cytotoxics, and the DepMap download catalogue that served it now answers with a verification page. The arm therefore ships with two STRUCTURAL predictions that need no fitted potency (a phase-specific agent's residue, and the two-sided window in which shortening the interval helps) and no magnitude that anyone should carry away.",
+   "verdict": "NO TARGET"
+  },
+  {
    "arm": "Oncolytic virus",
    "parameter": "oncolytic_lysis immunogenicity",
    "target": "durable-response ratio 8.0x (16% treated vs 2% control)",
@@ -127,7 +139,7 @@
   "ADMISSIBLE": 4,
   "UNCONSTRAINED": 1,
   "INADMISSIBLE": 1,
-  "NO TARGET": 1
+  "NO TARGET": 2
  },
  "n_clinical": 3
 }

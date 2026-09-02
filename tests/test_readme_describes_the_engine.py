@@ -48,6 +48,7 @@ ARM_PROSE = {
     "PDT": "photodynamic",
     "SDT": "sonodynamic",
     "Radiation": "ionizing radiation",
+    "Chemotherapy": "cytotoxic chemotherapy",
     "Immunotherapy": "checkpoint",
     "AdoptiveCell": "adoptive cell therapy",
     "OncolyticVirus": "oncolytic virus",

@@ -122,6 +122,23 @@ pub enum Treatment {
     /// [`crate::ablation`].
     Ablation,
 
+    /// Cytotoxic chemotherapy: the modality most patients actually receive,
+    /// and the one this engine could not express at all until [`crate::chemo`]
+    /// was written.
+    ///
+    /// Like [`Treatment::Ablation`] and [`Treatment::AdoptiveCell`], it does
+    /// NOT route through [`crate::biochem::CellState`]: the kill is a function
+    /// of dose, potency and where the population is in the cell cycle, which
+    /// is a different quantity from a lipid-peroxide burden. A consumer
+    /// computes it through `chemo::surviving_fraction` and the variant names
+    /// the arm.
+    ///
+    /// It is deliberately NOT accepted by the Python binding, for the reason
+    /// [`Treatment::Radiation`] is not: `sim_cell` takes no dose, no class and
+    /// no phase distribution, so a chemotherapy cell built there would be
+    /// bit-identical to an untreated one while advertising a modality.
+    Chemotherapy,
+
     /// Antibody-drug conjugate: a payload delivered on an antibody.
     ///
     /// The payload drives the ferroptosis engine, so this DOES route
