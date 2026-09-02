@@ -272,3 +272,38 @@ def test_the_figure_reads_the_curve_rather_than_recomputing_it():
         ys = [pt[1] for pt in c["points"]]
         assert all(b <= a + 1e-12 for a, b in zip(ys, ys[1:])), (
             "the delivered index does not fall monotonically with depth")
+
+
+def test_the_chapter_table_is_the_artifact_table():
+    """Section 6.13 reprints the depth-limit grid by hand.
+
+    A claim in one artifact about the contents of another is this
+    repository's recurring defect class, and the same PR had a per-arm line
+    count go stale within one commit. Every cell is checked, including the two
+    that are MARKERS rather than numbers -- those are the ones a hand-edit
+    would most plausibly "tidy" into a value, which is precisely the reading
+    the markers exist to prevent.
+    """
+    md = (REPO / "article" / "drafts" / "v1.md").read_text()
+    i = md.index("### 6.13 Photodynamic")
+    section = md[i:md.index("### 6.14")]
+    assert "Deepest focus still clearing the cavitation threshold" in section, (
+        "the chapter no longer reprints the depth-limit table")
+    for r in _d()["depth_limits"]:
+        if r["total_failure"]:
+            expected = "fails everywhere"
+        elif r["unbounded_in_scan"]:
+            expected = "beyond the 30 cm scan"
+        else:
+            expected = f"{r['depth_limit_cm']:.2f} cm"
+        assert expected in section, (
+            f"the chapter's table is missing {expected!r} for applicator "
+            f"{r['index_at_reference']} at a {r['max_frequency_mhz']} MHz cap")
+    # Every row of the artifact must appear, so a row cannot be dropped
+    # silently -- one was, in the first draft of this table.
+    body = section[section.index("| applicator |"):]
+    body = body[:body.index("\n\n")]
+    assert len(body.strip().splitlines()) == 2 + len(
+        {r["index_at_reference"] for r in _d()["depth_limits"]}), (
+        "the chapter's table has a different number of rows from the "
+        "artifact's applicator strengths")
