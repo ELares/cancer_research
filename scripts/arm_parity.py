@@ -266,7 +266,7 @@ def _book_words(units, needles) -> tuple[int, list[str], dict]:
     return sum(per_hit.values()), list(per_hit), per_hit
 
 
-def _spatial_arms() -> set[str]:
+def _spatial_arms() -> dict[str, set[str]]:
     """The arms `sim-tme-3d` can express, read from the test that MEASURES it.
 
     Not parsed from the dispatch. `base_ros`'s match names every variant --
@@ -277,20 +277,37 @@ def _spatial_arms() -> set[str]:
     parses that literal rather than restating it.
     """
     src = SIM_TME_3D.read_text()
-    m = re.search(
-        r"fn the_spatial_engine_expresses_three_of_the_ten_treatment_arms\b.*?"
-        r"assert_eq!\(\s*expressive,\s*vec!\[(.*?)\]",
-        src, re.S)
-    if not m:
+    # The test's NAME carries its own count and therefore changes whenever an
+    # arm lands, so the pattern must not depend on it -- matching the literal
+    # name is how this parser broke the first time an arm was wired.
+    head = re.search(
+        r"fn the_spatial_engine_expresses_\w+_treatment_arms\b", src)
+    if not head:
         raise SystemExit(
             "scripts/arm_parity.py cannot find the spatial-expressiveness test "
             "in sim-tme-3d; the spatial column has no measurement behind it")
+    body = src[head.start():]
+    found = {}
+    for tier, var in (("by_default", "by_default"), ("on_demand", "on_demand")):
+        m = re.search(rf"assert_eq!\(\s*{var},\s*vec!\[(.*?)\]", body, re.S)
+        if not m:
+            raise SystemExit(
+                f"scripts/arm_parity.py cannot find the {tier} arm list in the "
+                "spatial-expressiveness test")
+        # `[A-Za-z0-9]` and not `[A-Za-z]`: the first version dropped RSL3 --
+        # the one arm whose name carries a digit, and the COMPARATOR -- so the
+        # page reported 2 of 10 where the measurement says 3, understating its
+        # own headline in the flattering direction. A character class narrower
+        # than the names it reads fails silently and only on the members it
+        # excludes.
+        found[tier] = set(re.findall(r'"([A-Za-z0-9]+)"', m.group(1)))
+    return found
     # `[A-Za-z0-9]` and not `[A-Za-z]`: the first version dropped RSL3 -- the
     # one arm whose name carries a digit, and the COMPARATOR -- so the page
     # reported 2 of 10 where the measurement says 3, understating its own
     # headline in the flattering direction. A character class narrower than
     # the names it reads fails silently and only on the members it excludes.
-    return set(re.findall(r'"([A-Za-z0-9]+)"', m.group(1)))
+
 
 
 def _figures_for(entries, needles) -> list[str]:
@@ -318,7 +335,8 @@ def scan() -> dict:
     per_module = {m["module"]: m for m in depth["dedicated"] + depth["shared"]}
     per_arm_hits: list[dict] = []
     units = _sections(MANUSCRIPT.read_text())
-    spatial = _spatial_arms()
+    spatial_tiers = _spatial_arms()
+    spatial = spatial_tiers["by_default"] | spatial_tiers["on_demand"]
     prereg = PREREG.read_text()
     try:
         import yaml
@@ -370,7 +388,9 @@ def scan() -> dict:
             "pub_fns": fns,
             "rust_tests": tests,
             "calibration": calib.get(spec["calibration"]) if spec["calibration"] else None,
-            "spatial": spec["arm"] in spatial,
+            "spatial": ("by default" if spec["arm"] in spatial_tiers["by_default"]
+                        else "on demand" if spec["arm"] in spatial_tiers["on_demand"]
+                        else None),
             "book_words": words,
             "book_sections": heads,
             "figures": _figures_for(figure_entries, spec["topic"]),
@@ -400,6 +420,8 @@ def scan() -> dict:
         "sections_naming_more_than_one_arm": {h: c for h, c in sorted(shared.items())},
         "absent_arms": [{"arm": a, "why": w} for a, w in ABSENT_ARMS],
         "spatial_arms": sorted(spatial),
+        "spatial_by_default": sorted(spatial_tiers["by_default"]),
+        "spatial_on_demand": sorted(spatial_tiers["on_demand"]),
     }
 
 
@@ -446,8 +468,9 @@ def render(d: dict) -> str:
             f"| {r['label']} | {_cell(r['code_lines'])} | {_cell(r['pub_fns'])} "
             f"| {_cell(r['rust_tests'])} | {r['calibration'] or '--'} "
             f"| {_cell(r['book_words'])} | {len(r['figures'])} "
-            f"| {len(r['predictions'])} | {'yes' if r['spatial'] else '**no**'} |")
+            f"| {len(r['predictions'])} | {r['spatial'] or '**no**'} |")
     n_spatial = sum(1 for r in d["arms"] if r["spatial"])
+    n_default = len(d["spatial_by_default"])
     L += ["",
           f"**{n_spatial} of {len(d['arms'])} arms can be expressed in the "
           "spatial engine at all.** `sim-tme-3d` carries the oxygen gradient, "
@@ -461,6 +484,13 @@ def render(d: dict) -> str:
           "over a match that names every variant would report ten, so "
           "`sim-tme-3d` runs each arm against Control and this reads the "
           "result. Tracked in #844.", "",
+          f"TWO TIERS, and collapsing them would flatter the engine. "
+          f"{n_default} arms act on selecting the `Treatment` alone; the rest "
+          "of the expressive column needs its own `Overrides` field, which is "
+          "how every one of the engine's ~30 ferroptosis realism layers ships "
+          "and is required here -- the production matrix carries a committed "
+          "byte-identity SHA, so an arm acting by default would move it. "
+          "`on demand` is a wired arm, not a half-wired one.", "",
           f"**{base['code_lines']:,} lines of production code carry the "
           f"ferroptosis arm.** No other arm reaches a tenth of it, and the "
           f"table's own worst row is the one to read first: an arm with no "

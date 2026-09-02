@@ -2039,6 +2039,94 @@ def fig44_pdt_fluence_rate():
 
 
 
+def fig45_radiation_oer():
+    """The oxygen enhancement ratio a spatial run exhibits, against the formula.
+
+    The chapter's arms have all been closed-form functions evaluated at a
+    point. This is the first one measured from a population on a grid, and the
+    answer is not the formula: it moves with the oxygen gradient, which the
+    formula has no term for, and it peaks in the middle.
+    """
+    import json
+    src = Path(__file__).resolve().parent.parent / "analysis" / "calibration" / \
+        "radiation-oer-validation.json"
+    if not src.exists():
+        print("  fig45: radiation-oer-validation.json missing - skipping")
+        return
+    d = json.loads(src.read_text())
+    rows = [r for r in d["by_lambda"] if r["dmf_mean"] is not None]
+    lo, hi = d["published_oer_band"]
+
+    fig, axes = plt.subplots(1, 3, figsize=(15, 4.6))
+
+    # (a) the dose-response by zone, at the best gradient
+    ax = axes[0]
+    best = max(rows, key=lambda r: r["dmf_mean"])
+    for zone, key, colour in (("oxygenated rim", "dose_rim_gy", "#14505c"),
+                              ("hypoxic core", "dose_core_gy", "#a2582b")):
+        xs = [f["kill_level"] for f in best["factors"] if f[key] is not None]
+        ys = [f[key] for f in best["factors"] if f[key] is not None]
+        ax.plot(ys, xs, "o-", color=colour, lw=2, ms=6, label=zone)
+    ax.set_xlabel("single-fraction dose (Gy)")
+    ax.set_ylabel("fraction of the zone killed")
+    ax.set_title(f"(a) the same dose, two oxygenations (λ={best['lambda_um']:.0f} µm)",
+                 fontsize=10)
+    ax.legend(fontsize=7.5)
+    ax.grid(alpha=0.25)
+
+    # (b) the factor against the gradient -- the interior optimum
+    ax = axes[1]
+    lams = [r["lambda_um"] for r in rows]
+    dmfs = [r["dmf_mean"] for r in rows]
+    ax.axhspan(lo, hi, color="#dfe8ea", zorder=0)
+    ax.annotate("published 2.5–3.0", (lams[-1] - 46, lo + 0.05), fontsize=7.5,
+                color="#5b7078")
+    ax.axhline(d["restated_single_cell_dmf"], color="#9fb3b8", ls=":", lw=1.6)
+    ax.annotate(f"the formula restated ({d['restated_single_cell_dmf']})",
+                (lams[0] + 3, d["restated_single_cell_dmf"] + 0.05),
+                fontsize=7.5, color="#7d8e94")
+    ax.plot(lams, dmfs, "o-", color="#14505c", lw=2, ms=7)
+    ax.plot([best["lambda_um"]], [best["dmf_mean"]], "o", color="#c1440e", ms=10,
+            zorder=5)
+    ax.set_xlabel("O$_2$ gradient λ (µm)")
+    ax.set_ylabel("dose-modifying factor")
+    ax.set_title("(b) it moves with a term the formula lacks", fontsize=10)
+    ax.grid(alpha=0.25)
+
+    # (c) why: one lambda sets both zones
+    ax = axes[2]
+    ax.plot(lams, [r["rim_po2_mmhg"] for r in rows], "s-", color="#14505c",
+            lw=2, ms=6, label="oxygenated rim")
+    ax.plot(lams, [max(r["core_po2_mmhg"], 1e-3) for r in rows], "^-",
+            color="#a2582b", lw=2, ms=6, label="hypoxic core")
+    ax.set_yscale("log")
+    ax.set_xlabel("O$_2$ gradient λ (µm)")
+    ax.set_ylabel("mean zone pO$_2$ (mmHg)")
+    ax.set_title("(c) one λ sets both, so neither is ever ideal", fontsize=10)
+    ax.legend(fontsize=7.5)
+    ax.grid(alpha=0.25, which="both")
+
+    fig.suptitle("Radiation in the spatial engine: an oxygen effect measured "
+                 "from a population, not restated from a formula",
+                 fontsize=12, fontweight="bold")
+    fig.text(0.5, 0.015,
+             "The engine already contained the Alper-Howard-Flanders hyperbola, and "
+             "`dna_channel_dose_modifying_factor` returns 2.86 from it - a number the crate "
+             "documents and tests as a RESTATEMENT, so scoring it against the published band would "
+             "be a guard computing its own expectation. What (b) shows is a different quantity: "
+             "the dose ratio for equal kill between an oxygenated rim and a hypoxic core, read off "
+             "a 60^3 population, which moves from 1.24 to 2.55 with the oxygen gradient - a "
+             "parameter the formula does not contain. It reaches the published band at ONE gradient "
+             "and falls below it at the engine's own zone reference. (c) is why, and why every "
+             "value is a LOWER bound: one lambda sets the rim and the core together, so a gradient "
+             "steep enough to make the core anoxic leaves the rim hypoxic too, and the model can "
+             "never present the fully-oxic-versus-anoxic pair the published band was measured on.",
+             ha="center", fontsize=7.2, color="#555", wrap=True)
+    fig.tight_layout(rect=[0, 0.15, 1, 0.93])
+    save(fig, "fig45_radiation_oer")
+
+
+
 if __name__ == "__main__":
     print("Generating conceptual diagrams...")
     fig18_hypoxia()
@@ -2062,4 +2150,5 @@ if __name__ == "__main__":
     fig42_ablation_sleeve()
     fig43_sonodynamic_frequency()
     fig44_pdt_fluence_rate()
+    fig45_radiation_oer()
     print("Done.")
