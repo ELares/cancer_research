@@ -60,6 +60,7 @@ use ferroptosis_core::adc::{self, AdcConfig, Linker};
 use ferroptosis_core::alox::AloxConfig;
 use ferroptosis_core::biochem::{exo_decay_factor, sim_cell_step, CellState};
 use ferroptosis_core::cell::{Phenotype, Treatment};
+use ferroptosis_core::chemo::{self, ChemoClass, PhaseDistribution};
 use ferroptosis_core::clonal::{assign_subclones_3d, repopulate_dead_sites_3d, ClonalConfig};
 use ferroptosis_core::contact::{
     apply_contact_resistance_3d, apply_contact_resistance_at_3d, ContactConfig,
@@ -197,6 +198,8 @@ const RADIATION_SEED_SALT: u64 = 0x4AD1_0A17_0000_0539;
 const ONCOLYTIC_SEED_SALT: u64 = 0x0C01_9713_0000_0539;
 // A fifth stream. Same CodeQL false positive as the four above.
 const ADC_SEED_SALT: u64 = 0x0AD0_C047_0000_0539;
+// A sixth stream. Same CodeQL false positive as the five above.
+const CHEMO_SEED_SALT: u64 = 0x0CE0_3E70_0000_0539;
 const _: () = assert!(BIOCHEM_SEED_SALT != IMMUNE_SEED_SALT);
 // Pairwise-distinct, per the #278 layer-seed rule: two layers sharing a salt
 // draw the SAME number for the same (cell, step), so their decisions correlate
@@ -210,6 +213,11 @@ const _: () = assert!(ADC_SEED_SALT != BIOCHEM_SEED_SALT);
 const _: () = assert!(ADC_SEED_SALT != IMMUNE_SEED_SALT);
 const _: () = assert!(ADC_SEED_SALT != RADIATION_SEED_SALT);
 const _: () = assert!(ADC_SEED_SALT != ONCOLYTIC_SEED_SALT);
+const _: () = assert!(CHEMO_SEED_SALT != BIOCHEM_SEED_SALT);
+const _: () = assert!(CHEMO_SEED_SALT != IMMUNE_SEED_SALT);
+const _: () = assert!(CHEMO_SEED_SALT != RADIATION_SEED_SALT);
+const _: () = assert!(CHEMO_SEED_SALT != ONCOLYTIC_SEED_SALT);
+const _: () = assert!(CHEMO_SEED_SALT != ADC_SEED_SALT);
 
 /// SplitMix64 finalizer (Steele, Lea & Flood 2014, "Fast Splittable
 /// Pseudorandom Number Generators"): a fast, full-avalanche integer hash. Used
@@ -327,6 +335,10 @@ struct ConditionResult {
     /// Cells killed by payload released from a directly-killed neighbour.
     #[serde(skip_serializing_if = "Option::is_none")]
     adc_bystander_kills: Option<usize>,
+    /// Cells killed by the chemotherapy arm (#844), apart from every other
+    /// route so the decomposition below is about this arm alone.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    chemo_kills: Option<usize>,
     /// Farthest the infection reached from its seed, in microns. The quantity
     /// a percolation threshold is about: below the threshold this stays near
     /// zero however long the run continues.
@@ -685,6 +697,26 @@ struct Overrides {
     /// The step at which the conjugate is administered. One administration,
     /// for the same reason radiation gets one fraction.
     adc_step: u32,
+    /// Cytotoxic chemotherapy, with the cell cycle read from POSITION (#844).
+    ///
+    /// `(class, dose, potency, drug_lambda_um, cycle_coupled)`. `None` ⇒ inert
+    /// ⇒ byte-identical; the production matrix never sets it.
+    ///
+    /// TWO EFFECTS BIAS CHEMOTHERAPY TOWARD THE RIM AND THE POINT MODEL HAS
+    /// NEITHER. A drug has to reach a cell, and a cycle-specific agent has to
+    /// find it cycling -- and in a real tumour both fail in the same place, so
+    /// an observed rim-biased kill is ambiguous between "the drug did not get
+    /// there" and "those cells were not dividing". The two have opposite
+    /// remedies (better delivery against cell-cycle recruitment), so telling
+    /// them apart is worth more than either number alone.
+    ///
+    /// `drug_lambda_um = None`-equivalent is expressed by a very large lambda,
+    /// and `cycle_coupled = false` gives every cell the proliferating
+    /// distribution regardless of where it sits. Running the four combinations
+    /// is the decomposition.
+    chemo: Option<(ChemoClass, f64, f64, f64, bool)>,
+    /// The step at which the dose is given. One administration.
+    chemo_step: u32,
     /// ESCRT-III membrane-repair brake on death execution (#465): `Some((rate,
     /// budget))` sets `params.escrt_repair_rate`/`escrt_repair_budget` so a cell
     /// whose LP crosses the death threshold can be resealed for a finite per-cell
@@ -1695,6 +1727,16 @@ fn run_one_condition_full(
     };
     let mut oncolytic_kills = 0usize;
     let adc_cfg = overrides.adc.clone();
+    let chemo_cfg = overrides.chemo;
+    let mut chemo_kills = 0usize;
+    // The drug's own penetration field, on the same radial geometry, with its
+    // own length. Empty when the arm is off.
+    let chemo_drug: Vec<f64> = match chemo_cfg.as_ref() {
+        Some((_, _, _, lambda_um, _)) => {
+            ferroptosis_core::oxygen::radial_o2_field(&grid, *lambda_um)
+        }
+        None => Vec::new(),
+    };
     let mut adc_direct_kills = 0usize;
     let mut adc_bystander_kills = 0usize;
     // The ANTIBODY's own penetration field, on the same radial-depth geometry
@@ -2253,6 +2295,55 @@ fn run_one_condition_full(
                     }
                 }
                 radiation_kills += killed;
+            }
+        }
+
+        // --- Cytotoxic chemotherapy, cycle read from POSITION (#844) ---
+        //
+        // Two effects push a chemotherapy kill toward the rim and the point
+        // model carries neither: the drug has to REACH a cell, and a
+        // cycle-specific agent has to find it CYCLING. Both fail in the same
+        // place, so an observed rim-biased kill is ambiguous between "the drug
+        // did not get there" and "those cells were not dividing" -- and the
+        // two have opposite remedies. Separating them needs a geometry.
+        //
+        // The cycle is read from the cell's PHENOTYPE, which the spheroid
+        // layer already assigns by radial position: a proliferating rim, a
+        // quiescent-rich core. `cycle_coupled = false` gives every cell the
+        // proliferating distribution regardless of where it sits, which is
+        // the control that isolates the delivery term.
+        if let Some((class, dose, potency, _, cycle_coupled)) = chemo_cfg {
+            if step == overrides.chemo_step {
+                let mut killed = 0usize;
+                for idx in 0..n_cells {
+                    if !grid.cells[idx].is_tumor || grid.cells[idx].state.dead {
+                        continue;
+                    }
+                    let dist = if cycle_coupled {
+                        match grid.cells[idx].phenotype {
+                            Phenotype::Persister | Phenotype::PersisterNrf2 => {
+                                PhaseDistribution::quiescent_rich()
+                            }
+                            _ => PhaseDistribution::proliferating(),
+                        }
+                    } else {
+                        PhaseDistribution::proliferating()
+                    };
+                    let delivered = dose * chemo_drug[idx];
+                    let sf = chemo::surviving_fraction(delivered, potency, class, &dist);
+                    let mut rng = StdRng::seed_from_u64(cell_seed(
+                        cond_seed,
+                        idx,
+                        step as usize,
+                        CHEMO_SEED_SALT,
+                    ));
+                    if rng.gen::<f64>() >= sf {
+                        grid.cells[idx].state.dead = true;
+                        grid.cells[idx].state.death_step = Some(step);
+                        killed += 1;
+                    }
+                }
+                chemo_kills += killed;
             }
         }
 
@@ -3006,6 +3097,7 @@ fn run_one_condition_full(
         oncolytic_seeded: oncolytic_cfg.as_ref().map(|_| onc_seeded),
         adc_direct_kills: adc_cfg.as_ref().map(|_| adc_direct_kills),
         adc_bystander_kills: adc_cfg.as_ref().map(|_| adc_bystander_kills),
+        chemo_kills: chemo_cfg.as_ref().map(|_| chemo_kills),
         oncolytic_front_radius_um: oncolytic_cfg.as_ref().map(|_| {
             // How far the infection actually reached from the seed, which is
             // the quantity a percolation threshold is about. Zero when the
@@ -5642,6 +5734,97 @@ fn run_spheroid_size_sweep() {
 /// contribution, measured rather than parameterised.
 ///
 /// Does NOT write summary.json; the matrix is untouched and byte-identical.
+/// `--chemo-decomposition-sweep`: which of the two rim biases is which (#844)?
+///
+/// A chemotherapy kill is biased toward the tumour rim for two reasons that
+/// the point model carries NEITHER of: the drug has to reach a cell, and a
+/// cycle-specific agent has to find it cycling. Both fail in the same place.
+/// An observed rim-biased kill is therefore ambiguous between "the drug did
+/// not get there" and "those cells were not dividing" -- and the two have
+/// OPPOSITE remedies, better delivery against cell-cycle recruitment, so
+/// telling them apart is worth more than either number alone.
+///
+/// Four runs per agent class, the 2x2 of delivery and cycle coupling. With
+/// both off the kill must be flat with depth; with each on alone its own
+/// contribution is isolated; with both on the confounded picture a real
+/// experiment sees.
+///
+/// The classes are the discriminator: a phase-NONSPECIFIC alkylator should
+/// show a depth gradient from delivery alone, while a phase-specific agent
+/// should show one even when delivery is uniform, because the core is
+/// quiescent. If the two classes behaved the same the decomposition would be
+/// measuring the drug field twice.
+///
+/// Does NOT write summary.json; the matrix is untouched and byte-identical.
+fn run_chemo_decomposition_sweep() {
+    let grid_dim = 60usize;
+    let n_steps = bench_env_u32("BENCH_N_STEPS", 10);
+    let chemo_step = 4u32;
+    // A short penetration length (real small-molecule penetration is tens of
+    // microns from a vessel) against one long enough to be effectively
+    // uniform, which is how "delivery off" is expressed.
+    let short_lambda = 60.0f64;
+    let uniform_lambda = 1.0e6f64;
+    let dose = 1.0f64;
+    let potency = 2.0f64;
+    eprintln!(
+        "=== --chemo-decomposition-sweep: grid {grid_dim}, {n_steps} steps, dosed \
+         at step {chemo_step} (#844) ==="
+    );
+    println!(
+        "CHEMO_DECOMP_META grid_dim={grid_dim} n_steps={n_steps} \
+         short_lambda_um={short_lambda} dose={dose} potency={potency}"
+    );
+    let cfg = RunConfig { grid_dim, n_steps };
+    for (class, cname) in [
+        (ChemoClass::PhaseNonspecific, "PhaseNonspecific"),
+        (ChemoClass::SPhaseSpecific, "SPhaseSpecific"),
+        (ChemoClass::MPhaseSpecific, "MPhaseSpecific"),
+    ] {
+        for delivery in [false, true] {
+            for cycle in [false, true] {
+                let lambda = if delivery {
+                    short_lambda
+                } else {
+                    uniform_lambda
+                };
+                let condition = Condition {
+                    name: format!("chemo_{cname}_d{delivery}_c{cycle}"),
+                    treatment: Treatment::Chemotherapy,
+                    treatment_name: "Chemotherapy".to_string(),
+                    o2_lambda: Some(ZONE_REF_LAMBDA),
+                    immune_on: false,
+                    stromal_on: false,
+                    ph_on: false,
+                    dose_schedule: DoseSchedule::Constant,
+                };
+                // The spheroid layer is what puts a quiescent core there at
+                // all. Without it every cell carries the same phenotype and
+                // the cycle arm has nothing to read -- which would make the
+                // decomposition report zero for a term that is simply absent.
+                let overrides = Overrides {
+                    spheroid: Some(SpheroidConfig::literature()),
+                    chemo: Some((class, dose, potency, lambda, cycle)),
+                    chemo_step,
+                    ..Default::default()
+                };
+                let r = run_one_condition_full(&condition, cfg, None, overrides);
+                println!(
+                    "CHEMO_DECOMP class={cname} delivery={delivery} cycle={cycle} \
+                     overall={:.6} normoxic={:.6} transition={:.6} hypoxic={:.6} \
+                     chemo_kills={} total_tumor={}",
+                    r.overall_kill_rate,
+                    r.normoxic_kill_rate,
+                    r.transition_kill_rate,
+                    r.hypoxic_kill_rate,
+                    r.chemo_kills.unwrap_or(0),
+                    r.total_tumor
+                );
+            }
+        }
+    }
+}
+
 fn run_adc_bystander_sweep() {
     let grid_dim = 60usize;
     let n_steps = bench_env_u32("BENCH_N_STEPS", 10);
@@ -5964,6 +6147,10 @@ fn main() {
     // `--spheroid-size-sweep` runs RSL3 across a range of spheroid sizes, fixed vs
     // size-aware zone thresholds (#333 kill leg), emitting SPHEROID_SIZE_SWEEP lines.
     // Does NOT write summary.json; the default matrix path below is byte-identical.
+    if std::env::args().any(|a| a == "--chemo-decomposition-sweep") {
+        run_chemo_decomposition_sweep();
+        return;
+    }
     if std::env::args().any(|a| a == "--adc-bystander-sweep") {
         run_adc_bystander_sweep();
         return;
@@ -6037,6 +6224,135 @@ fn main() {
 
 #[cfg(test)]
 mod tests {
+    /// The two rim biases are SEPARABLE, and only one is class-dependent.
+    ///
+    /// A chemotherapy kill is biased toward the rim because the drug has to
+    /// reach a cell AND because a cycle-specific agent has to find it cycling.
+    /// Both fail in the same place, so the point model -- which has neither
+    /// term -- cannot tell them apart. These pin the properties that make the
+    /// decomposition real rather than a relabelling.
+    #[test]
+    fn the_delivery_and_cycle_terms_separate() {
+        // GRID 60, AND THE DENOMINATOR CHECKED FIRST. At grid 40 the deep
+        // zone holds too few cells for its kill RATE to be stable, and this
+        // test's own control fired: it reported an 18% depth gradient with
+        // BOTH terms off, which is sampling noise in a sparse zone rather than
+        // an unnamed term. The same trap caught the radiation arm.
+        let cfg = RunConfig {
+            grid_dim: 60,
+            n_steps: 8,
+        };
+        {
+            let g =
+                TumorGrid3D::generate(cfg.grid_dim, cfg.grid_dim, cfg.grid_dim, CELL_SIZE_UM, SEED);
+            let deep = (0..g.cells.len())
+                .filter(|&i| g.cells[i].is_tumor)
+                .filter(|&i| {
+                    let (r, c, l) = g.coords(i);
+                    g.radial_depth_um(r, c, l) >= ZONE_REF_LAMBDA * 3.0
+                })
+                .count();
+            assert!(
+                deep > 500,
+                "the deep zone holds {deep} cells, too few for its kill rate to \
+                 be stable enough to decompose"
+            );
+        }
+        let run = |class: ChemoClass, delivery: bool, cycle: bool| {
+            let cond = Condition {
+                name: format!("chemo_t_{delivery}_{cycle}"),
+                treatment: Treatment::Chemotherapy,
+                treatment_name: "Chemotherapy".to_string(),
+                o2_lambda: Some(ZONE_REF_LAMBDA),
+                immune_on: false,
+                stromal_on: false,
+                ph_on: false,
+                dose_schedule: DoseSchedule::Constant,
+            };
+            let lambda = if delivery { 60.0 } else { 1.0e6 };
+            run_one_condition_full(
+                &cond,
+                cfg,
+                None,
+                Overrides {
+                    spheroid: Some(SpheroidConfig::literature()),
+                    chemo: Some((class, 1.0, 2.0, lambda, cycle)),
+                    chemo_step: 3,
+                    ..Default::default()
+                },
+            )
+        };
+        // 1. THE CONTROL. With neither term the kill must be flat with depth,
+        //    or every other column is decomposing the zoning.
+        let null = run(ChemoClass::PhaseNonspecific, false, false);
+        let flat = (null.hypoxic_kill_rate - null.normoxic_kill_rate).abs()
+            / null.normoxic_kill_rate.max(1e-9);
+        assert!(
+            flat < 0.15,
+            "with neither term the kill already varies {:.1}% with depth, so \
+             the decomposition has a term it did not name",
+            flat * 100.0
+        );
+        assert!(null.hypoxic_kill_rate > 0.05, "the null case barely kills");
+
+        // 2. Each term ALONE must cut the core kill.
+        let cyc = run(ChemoClass::SPhaseSpecific, false, true);
+        let del = run(ChemoClass::SPhaseSpecific, true, false);
+        let base = run(ChemoClass::SPhaseSpecific, false, false);
+        assert!(cyc.hypoxic_kill_rate < base.hypoxic_kill_rate);
+        assert!(del.hypoxic_kill_rate < base.hypoxic_kill_rate);
+
+        // 3. THE DISCRIMINATOR. With delivery uniform, a phase-NONSPECIFIC
+        //    agent must keep more of its core kill against a quiescent core
+        //    than a phase-specific one. If the classes behaved alike the
+        //    "cycle" arm would be measuring the drug field twice.
+        let keep = |class: ChemoClass| {
+            let b = run(class, false, false).hypoxic_kill_rate;
+            let c = run(class, false, true).hypoxic_kill_rate;
+            c / b.max(1e-12)
+        };
+        let nonspecific = keep(ChemoClass::PhaseNonspecific);
+        let s_phase = keep(ChemoClass::SPhaseSpecific);
+        assert!(
+            nonspecific > s_phase * 1.3,
+            "an alkylator kept {:.2} of its core kill against a quiescent core \
+             and an S-phase agent {:.2}; without a real gap the cycle term is \
+             not the cell cycle",
+            nonspecific,
+            s_phase
+        );
+
+        // 4. Delivery must dominate on these parameters, which is the
+        //    headline -- and is a statement about the parameters, so it is
+        //    asserted where it was measured rather than in general.
+        assert!(del.hypoxic_kill_rate < cyc.hypoxic_kill_rate);
+    }
+
+    /// The arm is off without its override.
+    #[test]
+    fn the_chemo_arm_is_inert_without_its_override() {
+        let cond = Condition {
+            name: "chemo_default".to_string(),
+            treatment: Treatment::Chemotherapy,
+            treatment_name: "Chemotherapy".to_string(),
+            o2_lambda: Some(50.0),
+            immune_on: false,
+            stromal_on: false,
+            ph_on: false,
+            dose_schedule: DoseSchedule::Constant,
+        };
+        let r = run_one_condition_full(
+            &cond,
+            RunConfig {
+                grid_dim: 20,
+                n_steps: 20,
+            },
+            None,
+            Overrides::default(),
+        );
+        assert!(r.chemo_kills.is_none());
+    }
+
     /// The bystander payload must reach cells the CONJUGATE could not.
     ///
     /// `adc::bystander_kill_fraction` takes `neighbours_in_reach` as a bare
@@ -6468,7 +6784,7 @@ mod tests {
     /// #844 exists to empty. Written to FAIL when an arm moves tier, so
     /// `analysis/arm-parity.md` and the epic move in the same commit.
     #[test]
-    fn the_spatial_engine_expresses_six_of_the_ten_treatment_arms() {
+    fn the_spatial_engine_expresses_seven_of_the_ten_treatment_arms() {
         // A BIGGER PROBE THAN THE UNIT DEFAULT, deliberately. At 10^3/20 the
         // in-vivo-tuned RSL3 switch kills nothing at all -- a documented
         // property of that parameterisation, not of the engine's ability to
@@ -6624,6 +6940,24 @@ mod tests {
         assert!(adc_probe.adc_bystander_kills.unwrap_or(0) > 0);
         on_demand.push("AntibodyDrugConjugate".to_string());
 
+        let chemo_probe = run_one_condition_full(
+            &base(Treatment::Chemotherapy),
+            cfg,
+            None,
+            Overrides {
+                spheroid: Some(SpheroidConfig::literature()),
+                chemo: Some((ChemoClass::PhaseNonspecific, 1.0, 2.0, 60.0, true)),
+                chemo_step: 5,
+                ..Default::default()
+            },
+        );
+        assert!(
+            moved(&chemo_probe),
+            "the chemo override is set and nothing moved"
+        );
+        assert!(chemo_probe.chemo_kills.unwrap_or(0) > 0);
+        on_demand.push("Chemotherapy".to_string());
+
         // THE TIER LIST MUST COVER EVERY ARM THAT HAS AN OVERRIDE, and the
         // table below is COMPLETE BY CONSTRUCTION rather than by care.
         //
@@ -6650,7 +6984,7 @@ mod tests {
             (Treatment::OncolyticVirus, Some("    oncolytic: Option<")),
             (Treatment::Ablation, None),
             (Treatment::AntibodyDrugConjugate, Some("    adc: Option<")),
-            (Treatment::Chemotherapy, None),
+            (Treatment::Chemotherapy, Some("    chemo: Option<")),
         ];
         assert_eq!(
             wiring.len(),
@@ -6698,7 +7032,8 @@ mod tests {
             vec![
                 "Radiation".to_string(),
                 "OncolyticVirus".to_string(),
-                "AntibodyDrugConjugate".to_string()
+                "AntibodyDrugConjugate".to_string(),
+                "Chemotherapy".to_string()
             ],
             "the ON DEMAND tier has changed. That is #844 progressing -- update \
              this literal, the test's NAME, `analysis/arm-parity.md` and the \

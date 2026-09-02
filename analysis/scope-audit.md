@@ -8,7 +8,7 @@
 |---|--:|--:|--:|
 | committed analyses (145) | 21 | **1** | 123 |
 
-| preregistered predictions | **10 of 25** |
+| preregistered predictions | **10 of 26** |
 |---|--:|
 | engine modules mentioning it anywhere | **36 of 40** |
 | engine modules mentioning it in code | **21 of 40** |
@@ -18,7 +18,7 @@ The module rows used to read `N of N` -- the same number on both sides of "of", 
 
 **4 modules mention neither ferroptosis nor a physical-ROS modality anywhere in their text**: `adoptive.rs`, `reaction_diffusion.rs`, `spheroid.rs`, `vasculature.rs`. An earlier version of this page said every module of the engine concerns one or the other. It does not.
 
-10 of 25 preregistered predictions and 36 of 40 engine modules concern ferroptosis or the physical-ROS modalities.
+10 of 26 preregistered predictions and 36 of 40 engine modules concern ferroptosis or the physical-ROS modalities.
 
 ### The '1' is a filename marker, not a subject measurement
 

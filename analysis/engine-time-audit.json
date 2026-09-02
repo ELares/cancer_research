@@ -42,14 +42,14 @@
    "window_hours": 48.0
   }
  ],
- "library_modules": 40,
+ "library_modules": 41,
  "modules": {
   "ablation.rs": {
    "examples": [
     {
      "context": "assert!((base - 10.0).abs() < 1e-12, \"43C for 10 min is 10 CEM43\");",
      "form": "magnitude",
-     "line": 209,
+     "line": 331,
      "value": "10 min"
     }
    ],
@@ -172,7 +172,7 @@
   },
   "oncolytic.rs": {
    "examples": [],
-   "per_step_mentions": 3,
+   "per_step_mentions": 4,
    "real_time_mentions": 0
   },
   "oxygen.rs": {
@@ -226,7 +226,7 @@
     {
      "context": "/// Validate a drug-light-interval value (hours): reject NaN, negative,",
      "form": "bare-unit",
-     "line": 384,
+     "line": 522,
      "value": "(hours)"
     }
    ],
@@ -342,7 +342,7 @@
   },
   "sim-tme-3d/main.rs": {
    "examples": [],
-   "per_step_mentions": 45,
+   "per_step_mentions": 47,
    "real_time_mentions": 0
   },
   "sim-tme-3d/snapshot.rs": {
@@ -494,7 +494,7 @@
    "real_time_mentions": 16
   }
  },
- "modules_total": 55,
+ "modules_total": 56,
  "n_solver_timestep_conventions": 1,
  "n_solver_timestep_matches": 3,
  "n_step_bindings": 6,
@@ -664,7 +664,8 @@
   ],
   "chemo.rs": [
    "sim-combo",
-   "sim-modality-panel"
+   "sim-modality-panel",
+   "sim-tme-3d"
   ],
   "drug_transport.rs": [
    "sim-modality-panel",
