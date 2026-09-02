@@ -218,7 +218,8 @@ fn run_spatial(
         | Treatment::AdoptiveCell
         | Treatment::OncolyticVirus
         | Treatment::Ablation
-        | Treatment::AntibodyDrugConjugate => 0.0,
+        | Treatment::AntibodyDrugConjugate
+        | Treatment::Chemotherapy => 0.0,
     };
 
     let rows = grid.rows;
@@ -347,7 +348,8 @@ fn run_spatial_cycling(
         | Treatment::AdoptiveCell
         | Treatment::OncolyticVirus
         | Treatment::Ablation
-        | Treatment::AntibodyDrugConjugate => 0.0,
+        | Treatment::AntibodyDrugConjugate
+        | Treatment::Chemotherapy => 0.0,
     };
 
     let rows = grid.rows;
@@ -542,7 +544,8 @@ fn run_spatial_with_immune(
         | Treatment::AdoptiveCell
         | Treatment::OncolyticVirus
         | Treatment::Ablation
-        | Treatment::AntibodyDrugConjugate => 0.0,
+        | Treatment::AntibodyDrugConjugate
+        | Treatment::Chemotherapy => 0.0,
     };
 
     let rows = grid.rows;

@@ -29,6 +29,7 @@ Run the included example: `cargo run -p ferroptosis-core --example basic_usage`
 |--------|---------|
 | `ablation` | Threshold destruction: CEM43 thermal dose, HIFU, irreversible electroporation, and the margin-coverage survival fraction. Not a dose-response |
 | `adc` | Antibody-drug conjugate: direct kill, the cleavable-linker bystander effect that reaches antigen-negative neighbours, and the antigen-limited ceiling |
+| `chemo` | Cytotoxic chemotherapy (#833): a population-level cell cycle (G1/S/G2M/G0), per-class phase sensitivity, log kill weighted by phase, the distribution left BEHIND after a dose, Gompertzian regrowth and redistribution between cycles, a marrow nadir with the shortest interval that clears a threshold, and an efflux factor. Two structural predictions that need no fitted potency; the dose-response target is access-blocked, so no magnitude here is defensible. |
 | `adoptive` | Adoptive cell therapy: the three multiplied barriers between an infusion and a kill (trafficking, infiltration, activation), persistence, and the antigen ceiling a larger dose cannot climb |
 | `cell` | Cell types, phenotypes (Glycolytic, OXPHOS, Persister, PersisterNrf2, Stromal), treatments, stochastic cell generation |
 | `oncolytic` | Oncolytic virus spread as a race between replication and clearance, with the threshold ratio below which an infection cannot establish |

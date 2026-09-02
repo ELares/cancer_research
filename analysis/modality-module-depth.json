@@ -28,6 +28,15 @@
    "reach": 1
   },
   {
+   "module": "chemo",
+   "pub_fns": 19,
+   "pub_types": 4,
+   "pub_consts": 0,
+   "code_lines": 282,
+   "serves": "Cytotoxic chemotherapy: the cell cycle, log kill and scheduling",
+   "reach": 1
+  },
+  {
    "module": "oncolytic",
    "pub_fns": 3,
    "pub_types": 1,
@@ -52,7 +61,7 @@
    "pub_fns": 5,
    "pub_types": 5,
    "pub_consts": 0,
-   "code_lines": 164,
+   "code_lines": 165,
    "serves": "CRISPR knockouts",
    "reach": 23
   },
@@ -123,20 +132,20 @@
   "vasculature"
  ],
  "ferroptosis_engine_modules": 27,
- "total_modules": 37,
+ "total_modules": 38,
  "engine_pub_fns": 186,
- "engine_code_lines": 3988,
- "dedicated_modules": 5,
- "dedicated_pub_fns": 44,
- "dedicated_code_lines": 534,
+ "engine_code_lines": 3992,
+ "dedicated_modules": 6,
+ "dedicated_pub_fns": 63,
+ "dedicated_code_lines": 816,
  "shared_modules": 5,
  "shared_pub_fns": 58,
- "shared_code_lines": 817,
+ "shared_code_lines": 818,
  "engine_modules_with_shared": 32,
  "engine_pub_fns_with_shared": 244,
- "engine_code_lines_with_shared": 4805,
- "line_ratio_narrow": 7.5,
- "line_ratio_wide": 9.0,
- "fn_ratio_narrow": 4.2,
- "fn_ratio_wide": 5.5
+ "engine_code_lines_with_shared": 4810,
+ "line_ratio_narrow": 4.9,
+ "line_ratio_wide": 5.9,
+ "fn_ratio_narrow": 3.0,
+ "fn_ratio_wide": 3.9
 }

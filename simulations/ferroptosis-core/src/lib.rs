@@ -63,6 +63,7 @@
 pub mod acsl4;
 pub mod alox;
 pub mod cell;
+pub mod chemo;
 pub mod clonal;
 pub mod contact;
 pub mod copper;

@@ -380,7 +380,16 @@ def test_the_drawn_numbers_are_the_artifact_numbers():
             assert got == want_seq, (
                 f"fig32's {ph} row for {arm} reads {got} left to right; the "
                 f"sweep gives {want_seq} in axis order {axis_order}")
-    assert f"{max(abs(v) for ax in tme['effects_by_phenotype'].values() for a in ax.values() for v in a.values()) * 100:+.0f}" in labels
+    # The colour scale has to REACH the largest measured effect, or a cell is
+    # drawn at the saturated colour and the picture understates it. The tick is
+    # in percent -- the same unit the cells print -- so this looks for the
+    # percent form; ticks used to be bare integers, which made a colorbar label
+    # indistinguishable from a cell value to the row check above.
+    _biggest = max(abs(v) for ax in tme["effects_by_phenotype"].values()
+                   for a in ax.values() for v in a.values())
+    assert f"{_biggest * 100:+.0f}%" in labels, (
+        f"the colour scale does not reach the largest measured effect "
+        f"({_biggest * 100:+.0f}%); ticks are {sorted(labels)}")
 
     panel = json.loads((REPO / "analysis/modality-panel.json").read_text())
     ab = panel["adoptive_barriers"]

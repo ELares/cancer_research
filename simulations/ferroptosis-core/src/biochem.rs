@@ -72,7 +72,7 @@ impl CellState {
             // Pinned by `radiation_through_from_cell_has_no_exogenous_ros`,
             // which asserts the zero rather than leaving it a silent trap.
             Treatment::Radiation => 0.0,
-            // NONE of these five kills through the exogenous-ROS path, and
+            // NONE of these six kills through the exogenous-ROS path, and
             // the zero is a routing fact rather than an absence of effect:
             //   Immunotherapy / AdoptiveCell / OncolyticVirus -> `immune`
             //   Ablation                                      -> `ablation`
@@ -80,7 +80,8 @@ impl CellState {
             //     arrives through `drug_transport`, so the consumer supplies
             //     the peak via `from_cell_with_ros` as it does for radiation.
             // Pinned by `arms_that_kill_elsewhere_carry_no_exogenous_ros`.
-            Treatment::Immunotherapy
+            Treatment::Chemotherapy
+            | Treatment::Immunotherapy
             | Treatment::AdoptiveCell
             | Treatment::OncolyticVirus
             | Treatment::Ablation
@@ -544,8 +545,9 @@ pub fn sim_cell(
         // See `CellState::from_cell`: radiation's ROS is dose-driven and
         // arrives through the explicit-ROS constructor.
         Treatment::Radiation => 0.0,
-        // See `CellState::from_cell`: these five route elsewhere.
-        Treatment::Immunotherapy
+        // See `CellState::from_cell`: these six route elsewhere.
+        Treatment::Chemotherapy
+        | Treatment::Immunotherapy
         | Treatment::AdoptiveCell
         | Treatment::OncolyticVirus
         | Treatment::Ablation

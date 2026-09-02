@@ -4,76 +4,76 @@
 
 The head-to-head panel asks what each arm does to a NAIVE tumour. This asks the question this project actually exists to ask: what the tumour microenvironment does to it. Every axis is applied through the same helpers the ferroptosis chapters use, so no arm gets a mechanism-specific adjustment.
 
-| condition | Ablation | AdoptiveCell | AntibodyDrugConjugate | Immunotherapy | OncolyticVirus | PDT | RSL3 | Radiation | SDT |
-|---|--:|--:|--:|--:|--:|--:|--:|--:|--:|
-| normoxic | 85.00% | 0.52% | 63.38% | 0.04% | 13.57% | 87.05% | 0.00% | 45.55% | 87.05% |
-| normoxic + acid | 85.00% | 0.52% | 0.00% | 0.04% | 13.57% | 87.05% | 0.00% | 45.55% | 87.05% |
-| normoxic + stroma | 85.00% | 0.52% | 63.20% | 0.04% | 13.57% | 87.02% | 0.00% | 45.55% | 87.02% |
-| normoxic + stroma + acid | 85.00% | 0.52% | 0.00% | 0.04% | 13.57% | 87.02% | 0.00% | 45.55% | 87.02% |
-| hypoxic | 85.00% | 0.23% | 63.38% | 0.02% | 13.53% | 27.95% | 0.00% | 30.16% | 27.95% |
-| hypoxic + acid | 85.00% | 0.23% | 0.00% | 0.02% | 13.53% | 27.95% | 0.00% | 30.16% | 27.95% |
-| hypoxic + stroma | 85.00% | 0.23% | 63.20% | 0.02% | 13.53% | 27.93% | 0.00% | 30.16% | 27.93% |
-| hypoxic + stroma + acid | 85.00% | 0.23% | 0.00% | 0.02% | 13.53% | 27.93% | 0.00% | 30.16% | 27.93% |
-| normoxic | 85.00% | 0.52% | 0.00% | 0.04% | 13.57% | 0.00% | 0.00% | 44.97% | 80.17% |
-| normoxic + acid | 85.00% | 0.52% | 0.00% | 0.04% | 13.57% | 0.00% | 0.00% | 44.97% | 80.17% |
-| normoxic + stroma | 85.00% | 0.52% | 0.00% | 0.04% | 13.57% | 0.00% | 0.00% | 44.97% | 80.03% |
-| normoxic + stroma + acid | 85.00% | 0.52% | 0.00% | 0.04% | 13.57% | 0.00% | 0.00% | 44.97% | 80.03% |
-| hypoxic | 85.00% | 0.23% | 0.00% | 0.02% | 13.53% | 0.00% | 0.00% | 29.74% | 18.80% |
-| hypoxic + acid | 85.00% | 0.23% | 0.00% | 0.02% | 13.53% | 0.00% | 0.00% | 29.74% | 18.80% |
-| hypoxic + stroma | 85.00% | 0.23% | 0.00% | 0.02% | 13.53% | 0.00% | 0.00% | 29.74% | 18.60% |
-| hypoxic + stroma + acid | 85.00% | 0.23% | 0.00% | 0.02% | 13.53% | 0.00% | 0.00% | 29.74% | 18.60% |
-| normoxic | 85.00% | 0.52% | 100.00% | 0.04% | 13.57% | 100.00% | 41.50% | 45.55% | 100.00% |
-| normoxic + acid | 85.00% | 0.52% | 96.15% | 0.04% | 13.57% | 100.00% | 2.08% | 45.55% | 100.00% |
-| normoxic + stroma | 85.00% | 0.52% | 100.00% | 0.04% | 13.57% | 100.00% | 40.67% | 45.55% | 100.00% |
-| normoxic + stroma + acid | 85.00% | 0.52% | 95.83% | 0.04% | 13.57% | 100.00% | 1.90% | 45.55% | 100.00% |
-| hypoxic | 85.00% | 0.23% | 100.00% | 0.02% | 13.53% | 100.00% | 41.50% | 30.16% | 100.00% |
-| hypoxic + acid | 85.00% | 0.23% | 96.15% | 0.02% | 13.53% | 100.00% | 2.08% | 30.16% | 100.00% |
-| hypoxic + stroma | 85.00% | 0.23% | 100.00% | 0.02% | 13.53% | 100.00% | 40.67% | 30.16% | 100.00% |
-| hypoxic + stroma + acid | 85.00% | 0.23% | 95.83% | 0.02% | 13.53% | 100.00% | 1.90% | 30.16% | 100.00% |
-| normoxic | 85.00% | 0.52% | 1.05% | 0.04% | 13.57% | 92.12% | 41.50% | 44.97% | 100.00% |
-| normoxic + acid | 85.00% | 0.52% | 1.05% | 0.04% | 13.57% | 92.12% | 2.08% | 44.97% | 100.00% |
-| normoxic + stroma | 85.00% | 0.52% | 0.95% | 0.04% | 13.57% | 91.85% | 40.67% | 44.97% | 100.00% |
-| normoxic + stroma + acid | 85.00% | 0.52% | 0.95% | 0.04% | 13.57% | 91.85% | 1.90% | 44.97% | 100.00% |
-| hypoxic | 85.00% | 0.23% | 1.05% | 0.02% | 13.53% | 58.03% | 41.50% | 29.74% | 100.00% |
-| hypoxic + acid | 85.00% | 0.23% | 1.05% | 0.02% | 13.53% | 58.03% | 2.08% | 29.74% | 100.00% |
-| hypoxic + stroma | 85.00% | 0.23% | 0.95% | 0.02% | 13.53% | 56.95% | 40.67% | 29.74% | 100.00% |
-| hypoxic + stroma + acid | 85.00% | 0.23% | 0.95% | 0.02% | 13.53% | 56.95% | 1.90% | 29.74% | 100.00% |
-| normoxic | 85.00% | 0.52% | 63.95% | 0.04% | 13.57% | 87.08% | 0.00% | 45.55% | 87.08% |
-| normoxic + acid | 85.00% | 0.52% | 0.00% | 0.04% | 13.57% | 87.08% | 0.00% | 45.55% | 87.08% |
-| normoxic + stroma | 85.00% | 0.52% | 63.82% | 0.04% | 13.57% | 87.02% | 0.00% | 45.55% | 87.02% |
-| normoxic + stroma + acid | 85.00% | 0.52% | 0.00% | 0.04% | 13.57% | 87.02% | 0.00% | 45.55% | 87.02% |
-| hypoxic | 85.00% | 0.23% | 63.95% | 0.02% | 13.53% | 29.00% | 0.00% | 30.16% | 29.00% |
-| hypoxic + acid | 85.00% | 0.23% | 0.00% | 0.02% | 13.53% | 29.00% | 0.00% | 30.16% | 29.00% |
-| hypoxic + stroma | 85.00% | 0.23% | 63.82% | 0.02% | 13.53% | 28.85% | 0.00% | 30.16% | 28.85% |
-| hypoxic + stroma + acid | 85.00% | 0.23% | 0.00% | 0.02% | 13.53% | 28.85% | 0.00% | 30.16% | 28.85% |
-| normoxic | 85.00% | 0.52% | 0.00% | 0.04% | 13.57% | 0.00% | 0.00% | 44.97% | 80.40% |
-| normoxic + acid | 85.00% | 0.52% | 0.00% | 0.04% | 13.57% | 0.00% | 0.00% | 44.97% | 80.40% |
-| normoxic + stroma | 85.00% | 0.52% | 0.00% | 0.04% | 13.57% | 0.00% | 0.00% | 44.97% | 80.35% |
-| normoxic + stroma + acid | 85.00% | 0.52% | 0.00% | 0.04% | 13.57% | 0.00% | 0.00% | 44.97% | 80.35% |
-| hypoxic | 85.00% | 0.23% | 0.00% | 0.02% | 13.53% | 0.00% | 0.00% | 29.74% | 19.32% |
-| hypoxic + acid | 85.00% | 0.23% | 0.00% | 0.02% | 13.53% | 0.00% | 0.00% | 29.74% | 19.32% |
-| hypoxic + stroma | 85.00% | 0.23% | 0.00% | 0.02% | 13.53% | 0.00% | 0.00% | 29.74% | 19.15% |
-| hypoxic + stroma + acid | 85.00% | 0.23% | 0.00% | 0.02% | 13.53% | 0.00% | 0.00% | 29.74% | 19.15% |
-| normoxic | 85.00% | 0.52% | 100.00% | 0.04% | 13.57% | 100.00% | 45.52% | 45.55% | 100.00% |
-| normoxic + acid | 85.00% | 0.52% | 95.65% | 0.04% | 13.57% | 100.00% | 4.30% | 45.55% | 100.00% |
-| normoxic + stroma | 85.00% | 0.52% | 100.00% | 0.04% | 13.57% | 100.00% | 44.35% | 45.55% | 100.00% |
-| normoxic + stroma + acid | 85.00% | 0.52% | 95.30% | 0.04% | 13.57% | 100.00% | 4.10% | 45.55% | 100.00% |
-| hypoxic | 85.00% | 0.23% | 100.00% | 0.02% | 13.53% | 100.00% | 45.52% | 30.16% | 100.00% |
-| hypoxic + acid | 85.00% | 0.23% | 95.65% | 0.02% | 13.53% | 100.00% | 4.30% | 30.16% | 100.00% |
-| hypoxic + stroma | 85.00% | 0.23% | 100.00% | 0.02% | 13.53% | 100.00% | 44.35% | 30.16% | 100.00% |
-| hypoxic + stroma + acid | 85.00% | 0.23% | 95.30% | 0.02% | 13.53% | 100.00% | 4.10% | 30.16% | 100.00% |
-| normoxic | 85.00% | 0.52% | 2.17% | 0.04% | 13.57% | 90.75% | 45.52% | 44.97% | 100.00% |
-| normoxic + acid | 85.00% | 0.52% | 2.17% | 0.04% | 13.57% | 90.75% | 4.30% | 44.97% | 100.00% |
-| normoxic + stroma | 85.00% | 0.52% | 2.12% | 0.04% | 13.57% | 90.35% | 44.35% | 44.97% | 100.00% |
-| normoxic + stroma + acid | 85.00% | 0.52% | 2.12% | 0.04% | 13.57% | 90.35% | 4.10% | 44.97% | 100.00% |
-| hypoxic | 85.00% | 0.23% | 2.17% | 0.02% | 13.53% | 56.75% | 45.52% | 29.74% | 100.00% |
-| hypoxic + acid | 85.00% | 0.23% | 2.17% | 0.02% | 13.53% | 56.75% | 4.30% | 29.74% | 100.00% |
-| hypoxic + stroma | 85.00% | 0.23% | 2.12% | 0.02% | 13.53% | 55.80% | 44.35% | 29.74% | 100.00% |
-| hypoxic + stroma + acid | 85.00% | 0.23% | 2.12% | 0.02% | 13.53% | 55.80% | 4.10% | 29.74% | 100.00% |
+| condition | Ablation | AdoptiveCell | AntibodyDrugConjugate | Chemotherapy | Immunotherapy | OncolyticVirus | PDT | RSL3 | Radiation | SDT |
+|---|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|
+| normoxic | 85.00% | 0.10% | 63.84% | 61.70% | 0.04% | 13.57% | 87.00% | 0.00% | 45.55% | 87.00% |
+| normoxic + acid | 85.00% | 0.10% | 0.00% | 25.19% | 0.04% | 13.57% | 87.00% | 0.00% | 45.55% | 87.00% |
+| normoxic + stroma | 85.00% | 0.10% | 63.73% | 47.40% | 0.04% | 13.57% | 86.96% | 0.00% | 45.55% | 86.96% |
+| normoxic + stroma + acid | 85.00% | 0.10% | 0.00% | 17.60% | 0.04% | 13.57% | 86.96% | 0.00% | 45.55% | 86.96% |
+| hypoxic | 85.00% | 0.05% | 63.84% | 48.77% | 0.02% | 13.53% | 29.14% | 0.00% | 30.16% | 29.14% |
+| hypoxic + acid | 85.00% | 0.05% | 0.00% | 18.94% | 0.02% | 13.53% | 29.14% | 0.00% | 30.16% | 29.14% |
+| hypoxic + stroma | 85.00% | 0.05% | 63.73% | 36.60% | 0.02% | 13.53% | 29.04% | 0.00% | 30.16% | 29.04% |
+| hypoxic + stroma + acid | 85.00% | 0.05% | 0.00% | 13.14% | 0.02% | 13.53% | 29.04% | 0.00% | 30.16% | 29.04% |
+| normoxic | 85.00% | 0.10% | 0.00% | 61.70% | 0.04% | 13.57% | 0.00% | 0.00% | 44.97% | 80.31% |
+| normoxic + acid | 85.00% | 0.10% | 0.00% | 25.19% | 0.04% | 13.57% | 0.00% | 0.00% | 44.97% | 80.31% |
+| normoxic + stroma | 85.00% | 0.10% | 0.00% | 47.40% | 0.04% | 13.57% | 0.00% | 0.00% | 44.97% | 80.20% |
+| normoxic + stroma + acid | 85.00% | 0.10% | 0.00% | 17.60% | 0.04% | 13.57% | 0.00% | 0.00% | 44.97% | 80.20% |
+| hypoxic | 85.00% | 0.05% | 0.00% | 48.77% | 0.02% | 13.53% | 0.00% | 0.00% | 29.74% | 19.71% |
+| hypoxic + acid | 85.00% | 0.05% | 0.00% | 18.94% | 0.02% | 13.53% | 0.00% | 0.00% | 29.74% | 19.71% |
+| hypoxic + stroma | 85.00% | 0.05% | 0.00% | 36.60% | 0.02% | 13.53% | 0.00% | 0.00% | 29.74% | 19.57% |
+| hypoxic + stroma + acid | 85.00% | 0.05% | 0.00% | 13.14% | 0.02% | 13.53% | 0.00% | 0.00% | 29.74% | 19.57% |
+| normoxic | 85.00% | 0.10% | 100.00% | 61.70% | 0.04% | 13.57% | 100.00% | 42.60% | 45.55% | 100.00% |
+| normoxic + acid | 85.00% | 0.10% | 96.47% | 25.19% | 0.04% | 13.57% | 100.00% | 2.40% | 45.55% | 100.00% |
+| normoxic + stroma | 85.00% | 0.10% | 100.00% | 47.40% | 0.04% | 13.57% | 100.00% | 41.61% | 45.55% | 100.00% |
+| normoxic + stroma + acid | 85.00% | 0.10% | 96.25% | 17.60% | 0.04% | 13.57% | 100.00% | 2.17% | 45.55% | 100.00% |
+| hypoxic | 85.00% | 0.05% | 100.00% | 48.77% | 0.02% | 13.53% | 99.99% | 42.60% | 30.16% | 99.99% |
+| hypoxic + acid | 85.00% | 0.05% | 96.47% | 18.94% | 0.02% | 13.53% | 99.99% | 2.40% | 30.16% | 99.99% |
+| hypoxic + stroma | 85.00% | 0.05% | 100.00% | 36.60% | 0.02% | 13.53% | 99.99% | 41.61% | 30.16% | 99.99% |
+| hypoxic + stroma + acid | 85.00% | 0.05% | 96.25% | 13.14% | 0.02% | 13.53% | 99.99% | 2.17% | 30.16% | 99.99% |
+| normoxic | 85.00% | 0.10% | 1.26% | 61.70% | 0.04% | 13.57% | 92.77% | 42.60% | 44.97% | 100.00% |
+| normoxic + acid | 85.00% | 0.10% | 1.26% | 25.19% | 0.04% | 13.57% | 92.77% | 2.40% | 44.97% | 100.00% |
+| normoxic + stroma | 85.00% | 0.10% | 1.10% | 47.40% | 0.04% | 13.57% | 92.42% | 41.61% | 44.97% | 100.00% |
+| normoxic + stroma + acid | 85.00% | 0.10% | 1.09% | 17.60% | 0.04% | 13.57% | 92.42% | 2.17% | 44.97% | 100.00% |
+| hypoxic | 85.00% | 0.05% | 1.26% | 48.77% | 0.02% | 13.53% | 58.34% | 42.60% | 29.74% | 99.99% |
+| hypoxic + acid | 85.00% | 0.05% | 1.26% | 18.94% | 0.02% | 13.53% | 58.34% | 2.40% | 29.74% | 99.99% |
+| hypoxic + stroma | 85.00% | 0.05% | 1.10% | 36.60% | 0.02% | 13.53% | 57.04% | 41.61% | 29.74% | 99.99% |
+| hypoxic + stroma + acid | 85.00% | 0.05% | 1.09% | 13.14% | 0.02% | 13.53% | 57.04% | 2.17% | 29.74% | 99.99% |
+| normoxic | 85.00% | 0.10% | 64.35% | 61.70% | 0.04% | 13.57% | 87.09% | 0.00% | 45.55% | 87.09% |
+| normoxic + acid | 85.00% | 0.10% | 0.00% | 25.19% | 0.04% | 13.57% | 87.09% | 0.00% | 45.55% | 87.09% |
+| normoxic + stroma | 85.00% | 0.10% | 64.23% | 47.40% | 0.04% | 13.57% | 87.04% | 0.00% | 45.55% | 87.04% |
+| normoxic + stroma + acid | 85.00% | 0.10% | 0.00% | 17.60% | 0.04% | 13.57% | 87.04% | 0.00% | 45.55% | 87.04% |
+| hypoxic | 85.00% | 0.05% | 64.35% | 48.77% | 0.02% | 13.53% | 29.67% | 0.00% | 30.16% | 29.67% |
+| hypoxic + acid | 85.00% | 0.05% | 0.00% | 18.94% | 0.02% | 13.53% | 29.67% | 0.00% | 30.16% | 29.67% |
+| hypoxic + stroma | 85.00% | 0.05% | 64.23% | 36.60% | 0.02% | 13.53% | 29.45% | 0.00% | 30.16% | 29.45% |
+| hypoxic + stroma + acid | 85.00% | 0.05% | 0.00% | 13.14% | 0.02% | 13.53% | 29.45% | 0.00% | 30.16% | 29.45% |
+| normoxic | 85.00% | 0.10% | 0.00% | 61.70% | 0.04% | 13.57% | 0.00% | 0.00% | 44.97% | 80.69% |
+| normoxic + acid | 85.00% | 0.10% | 0.00% | 25.19% | 0.04% | 13.57% | 0.00% | 0.00% | 44.97% | 80.69% |
+| normoxic + stroma | 85.00% | 0.10% | 0.00% | 47.40% | 0.04% | 13.57% | 0.00% | 0.00% | 44.97% | 80.64% |
+| normoxic + stroma + acid | 85.00% | 0.10% | 0.00% | 17.60% | 0.04% | 13.57% | 0.00% | 0.00% | 44.97% | 80.64% |
+| hypoxic | 85.00% | 0.05% | 0.00% | 48.77% | 0.02% | 13.53% | 0.00% | 0.00% | 29.74% | 20.04% |
+| hypoxic + acid | 85.00% | 0.05% | 0.00% | 18.94% | 0.02% | 13.53% | 0.00% | 0.00% | 29.74% | 20.04% |
+| hypoxic + stroma | 85.00% | 0.05% | 0.00% | 36.60% | 0.02% | 13.53% | 0.00% | 0.00% | 29.74% | 19.91% |
+| hypoxic + stroma + acid | 85.00% | 0.05% | 0.00% | 13.14% | 0.02% | 13.53% | 0.00% | 0.00% | 29.74% | 19.91% |
+| normoxic | 85.00% | 0.10% | 100.00% | 61.70% | 0.04% | 13.57% | 100.00% | 45.80% | 45.55% | 100.00% |
+| normoxic + acid | 85.00% | 0.10% | 95.08% | 25.19% | 0.04% | 13.57% | 100.00% | 4.30% | 45.55% | 100.00% |
+| normoxic + stroma | 85.00% | 0.10% | 100.00% | 47.40% | 0.04% | 13.57% | 100.00% | 44.74% | 45.55% | 100.00% |
+| normoxic + stroma + acid | 85.00% | 0.10% | 94.86% | 17.60% | 0.04% | 13.57% | 100.00% | 4.05% | 45.55% | 100.00% |
+| hypoxic | 85.00% | 0.05% | 100.00% | 48.77% | 0.02% | 13.53% | 100.00% | 45.80% | 30.16% | 100.00% |
+| hypoxic + acid | 85.00% | 0.05% | 95.08% | 18.94% | 0.02% | 13.53% | 100.00% | 4.30% | 30.16% | 100.00% |
+| hypoxic + stroma | 85.00% | 0.05% | 100.00% | 36.60% | 0.02% | 13.53% | 100.00% | 44.74% | 30.16% | 100.00% |
+| hypoxic + stroma + acid | 85.00% | 0.05% | 94.86% | 13.14% | 0.02% | 13.53% | 100.00% | 4.05% | 30.16% | 100.00% |
+| normoxic | 85.00% | 0.10% | 2.32% | 61.70% | 0.04% | 13.57% | 91.07% | 45.80% | 44.97% | 100.00% |
+| normoxic + acid | 85.00% | 0.10% | 2.31% | 25.19% | 0.04% | 13.57% | 91.07% | 4.30% | 44.97% | 100.00% |
+| normoxic + stroma | 85.00% | 0.10% | 2.17% | 47.40% | 0.04% | 13.57% | 90.69% | 44.74% | 44.97% | 100.00% |
+| normoxic + stroma + acid | 85.00% | 0.10% | 2.16% | 17.60% | 0.04% | 13.57% | 90.69% | 4.05% | 44.97% | 100.00% |
+| hypoxic | 85.00% | 0.05% | 2.32% | 48.77% | 0.02% | 13.53% | 58.31% | 45.80% | 29.74% | 99.99% |
+| hypoxic + acid | 85.00% | 0.05% | 2.31% | 18.94% | 0.02% | 13.53% | 58.31% | 4.30% | 29.74% | 99.99% |
+| hypoxic + stroma | 85.00% | 0.05% | 2.17% | 36.60% | 0.02% | 13.53% | 57.34% | 44.74% | 29.74% | 99.99% |
+| hypoxic + stroma + acid | 85.00% | 0.05% | 2.16% | 13.14% | 0.02% | 13.53% | 57.34% | 4.05% | 29.74% | 99.99% |
 
 ## Which axis bites depends on the phenotype, and that is the finding
 
-The axis that moves each cell state most is not the same one: **glycolytic** — acidic pH, a loss of 100% for `AntibodyDrugConjugate` — tied exactly with depth, so which one is named is arbitrary; **persister** — clonal heterogeneity, a gain of 124% for `AntibodyDrugConjugate`.
+The axis that moves each cell state most is not the same one: **glycolytic** — acidic pH, a loss of 100% for `AntibodyDrugConjugate` — tied exactly with depth, so which one is named is arbitrary; **persister** — depth, a loss of 99% for `AntibodyDrugConjugate`.
 
 **Read the direction, not just the size.** An earlier version of this section called both of these a *pressure* and printed the magnitude alone, because the field behind it was `max(abs(v))`. One of the two is a GAIN, which makes "dominant pressure" exactly wrong for it — the same sign collapse this page retracts elsewhere, surviving in the field the headline reads. Where two axes tie exactly, the winner was whichever a hard-coded list mentioned first, so swapping two entries changed the stated finding on identical data; ties are reported as ties now.
 
@@ -85,12 +85,13 @@ An axis reported inert is a statement about the run, not about the biology, and 
 
 **Largest relative MOVE first, and read the verb.** This header said "largest relative loss first" over a list whose top two entries are GAINS, because the sort is on `abs` -- the same sign collapse this page retracts elsewhere, surviving in a heading. An arm that GAINS is not an arm that is most exposed.
 
-* `AntibodyDrugConjugate` — GAINS 124% of its kill, largest to clonal heterogeneity
-* `RSL3` — GAINS 116% of its kill, largest to clonal heterogeneity
+* `AntibodyDrugConjugate` — loses 100% of its kill, largest to acidic pH
 * `PDT` — loses 100% of its kill, largest to depth
-* `SDT` — loses 77% of its kill, largest to hypoxia
-* `AdoptiveCell` — loses 56% of its kill, largest to hypoxia
+* `RSL3` — loses 95% of its kill, largest to acidic pH
+* `SDT` — loses 76% of its kill, largest to hypoxia
+* `Chemotherapy` — loses 64% of its kill, largest to acidic pH
 * `Immunotherapy` — loses 56% of its kill, largest to hypoxia
+* `AdoptiveCell` — loses 56% of its kill, largest to hypoxia
 * `Radiation` — loses 34% of its kill, largest to hypoxia
 * `OncolyticVirus` — loses 0% of its kill, largest to hypoxia
 * `Ablation` — is unmoved by 0% of its kill, largest to hypoxia
@@ -99,9 +100,9 @@ That ordering was not tuned for. It follows from the mechanisms: a delivered dru
 
 ## One axis can HELP, and it helps the arm that is failing
 
-`AntibodyDrugConjugate` GAINS 124% of its kill to clonal heterogeneity.
+`AntibodyDrugConjugate` GAINS 97% of its kill to clonal heterogeneity.
 
-`RSL3` GAINS 116% of its kill to clonal heterogeneity.
+`RSL3` GAINS 86% of its kill to clonal heterogeneity.
 
 Clonal heterogeneity is the only axis here that can raise an arm's kill rather than lower it, and it raises the pharmacologic arm from an acid-suppressed baseline. The mechanism is not subtle: widening the antioxidant setpoint while holding its MEAN fixed supplies a low-glutathione tail that dies even when the average cell resists. Variance rescues a marginal drug.
 
@@ -111,7 +112,7 @@ Clonal heterogeneity is the only axis here that can raise an arm's kill rather t
 
 The manuscript reports that sonodynamic therapy generates far more immune kills than the pharmacologic inducer, and it does. This measures WHY, and the answer refines the claim rather than confirming it.
 
-In the unstressed persister state, DAMP release PER DEATH is 20.05 for SDT against 17.73 for RSL3 — a ratio of **1.13×**. The two death modes are not very different in quality. What differs is how many cells they kill, and there the ratio is 2.41×. The amplification advantage is overwhelmingly a count effect.
+In the unstressed persister state, DAMP release PER DEATH is 20.06 for SDT against 17.73 for RSL3 — a ratio of **1.13×**. The two death modes are not very different in quality. What differs is how many cells they kill, and there the ratio is 2.35×. The amplification advantage is overwhelmingly a count effect.
 
 **And the first version of this measurement got it wrong in an instructive way.** It read lipid peroxidation at the moment of death, which returns approximately the death threshold FOR EVERY ARM by construction — death IS the threshold crossing. Measured that way both arms reported ~10.2 and the quality difference vanished entirely. It had not vanished; it was being measured before it happens. The spatial binaries read `lp_at_grace_end` rather than `lp` for exactly this reason, and the field name says so: an arm delivering exogenous ROS keeps climbing through the post-death grace period while one that merely disabled a repair enzyme does not.
 

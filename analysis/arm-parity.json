@@ -8,7 +8,7 @@
    "census": null,
    "trials": null,
    "modules": 27,
-   "code_lines": 3988,
+   "code_lines": 3992,
    "pub_fns": 186,
    "rust_tests": 315,
    "calibration": null,
@@ -71,7 +71,7 @@
    "parity_fns": 0.0,
    "parity_tests": 0.0,
    "parity_words": 0.0,
-   "lines_short_of_parity": 3988
+   "lines_short_of_parity": 3992
   },
   {
    "arm": "PDT",
@@ -99,7 +99,7 @@
    "parity_fns": 0.022,
    "parity_tests": 0.165,
    "parity_words": 0.0,
-   "lines_short_of_parity": 3801
+   "lines_short_of_parity": 3805
   },
   {
    "arm": "Radiation",
@@ -129,7 +129,7 @@
    "parity_fns": 0.124,
    "parity_tests": 0.105,
    "parity_words": 0.263,
-   "lines_short_of_parity": 3725
+   "lines_short_of_parity": 3729
   },
   {
    "arm": "Immunotherapy",
@@ -155,7 +155,7 @@
    "parity_fns": 0.0,
    "parity_tests": 0.0,
    "parity_words": 0.386,
-   "lines_short_of_parity": 3988
+   "lines_short_of_parity": 3992
   },
   {
    "arm": "AdoptiveCell",
@@ -181,7 +181,7 @@
    "parity_fns": 0.038,
    "parity_tests": 0.038,
    "parity_words": 0.0,
-   "lines_short_of_parity": 3924
+   "lines_short_of_parity": 3928
   },
   {
    "arm": "OncolyticVirus",
@@ -205,7 +205,7 @@
    "parity_fns": 0.016,
    "parity_tests": 0.022,
    "parity_words": 0.0,
-   "lines_short_of_parity": 3927
+   "lines_short_of_parity": 3931
   },
   {
    "arm": "Ablation",
@@ -231,7 +231,36 @@
    "parity_fns": 0.022,
    "parity_tests": 0.016,
    "parity_words": 0.0,
-   "lines_short_of_parity": 3922
+   "lines_short_of_parity": 3926
+  },
+  {
+   "arm": "Chemotherapy",
+   "label": "Cytotoxic chemotherapy",
+   "note": "no taxonomy row, and the only arm whose dose-response target is unreachable rather than merely unfitted",
+   "mechanism": null,
+   "census": null,
+   "trials": null,
+   "modules": 1,
+   "code_lines": 282,
+   "pub_fns": 19,
+   "rust_tests": 15,
+   "calibration": "NO TARGET",
+   "book_words": 1393,
+   "book_sections": [
+    "6.7 Chemotherapy, and the Cell Cycle the Engine Did Not Have"
+   ],
+   "figures": [
+    "fig37_chemotherapy"
+   ],
+   "predictions": [
+    "P8",
+    "P15"
+   ],
+   "parity_lines": 0.071,
+   "parity_fns": 0.102,
+   "parity_tests": 0.048,
+   "parity_words": 0.265,
+   "lines_short_of_parity": 3710
   },
   {
    "arm": "AntibodyDrugConjugate",
@@ -258,19 +287,15 @@
    "parity_fns": 0.038,
    "parity_tests": 0.019,
    "parity_words": 0.0,
-   "lines_short_of_parity": 3908
+   "lines_short_of_parity": 3912
   }
  ],
  "shared_modules": 5,
- "shared_code_lines": 817,
+ "shared_code_lines": 818,
  "shared_pub_fns": 58,
- "manuscript_words_in_sections": 57105,
- "manuscript_words_attributed": 8651,
+ "manuscript_words_in_sections": 58582,
+ "manuscript_words_attributed": 10044,
  "absent_arms": [
-  {
-   "arm": "Cytotoxic chemotherapy",
-   "why": "no Treatment variant, no module, no taxonomy row -- the modality most patients receive, and the one this engine cannot express at all"
-  },
   {
    "arm": "Targeted small-molecule therapy",
    "why": "PARP synthetic lethality is inside `radiation`; there is no arm for kinase inhibition, and the taxonomy's synthetic-lethality row is served by a boost on radiation's alpha"
@@ -286,5 +311,5 @@
  ],
  "comparator": "RSL3",
  "arms_at_parity": 0,
- "n_arms": 9
+ "n_arms": 10
 }

@@ -159,6 +159,11 @@ pub fn local_ros_multiplier(
         Treatment::Radiation => {
             crate::radiation::intensity_at_depth(z_um, crate::radiation::MU_6MV_SOFT_TISSUE_PER_CM)
         }
+        // Chemotherapy has a concentration-vs-depth profile, but it is a
+        // TRANSPORT question (`drug_transport`) rather than an energy one, and
+        // folding it in here would put a drug's penetration on the same axis
+        // as a beam's attenuation.
+        Treatment::Chemotherapy => 0.0,
         // These arms have no ENERGY-vs-depth profile of the kind this
         // function returns, and giving them one would be a fabrication: the
         // immune arms deliver CELLS rather than energy, ablation is a
@@ -235,6 +240,11 @@ pub fn local_ros_multiplier_3d(radial_depth_um: f64, tx: Treatment, params: &Spa
         Treatment::Radiation => {
             crate::radiation::intensity_at_depth(z_um, crate::radiation::MU_6MV_SOFT_TISSUE_PER_CM)
         }
+        // Chemotherapy has a concentration-vs-depth profile, but it is a
+        // TRANSPORT question (`drug_transport`) rather than an energy one, and
+        // folding it in here would put a drug's penetration on the same axis
+        // as a beam's attenuation.
+        Treatment::Chemotherapy => 0.0,
         // These arms have no ENERGY-vs-depth profile of the kind this
         // function returns, and giving them one would be a fabrication: the
         // immune arms deliver CELLS rather than energy, ablation is a

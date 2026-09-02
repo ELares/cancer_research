@@ -52,6 +52,7 @@ use ferroptosis_core::adc::{bystander_kill_fraction, AdcConfig, Linker};
 use ferroptosis_core::adoptive::{barrier_limited_kills, effective_effectors, AdoptiveBarriers};
 use ferroptosis_core::biochem::{sim_cell, CellState};
 use ferroptosis_core::cell::{gen_cell, Phenotype, Treatment};
+use ferroptosis_core::chemo;
 use ferroptosis_core::drug_transport::{
     antibody_drug_conjugate, concentration_at_distance, epithelial_well_vascularized,
 };
@@ -111,6 +112,19 @@ struct ArmResult {
     limited_by: &'static str,
     calibration: &'static str,
 }
+
+/// Dose and potency for the panel's chemotherapy row.
+///
+/// PLACEHOLDERS, and named so that they are visibly placeholders rather than
+/// two literals inside an expression. No cytotoxic dose-response is fitted in
+/// this repository -- the CTRPv2 route reached five ferroptosis compounds and
+/// the download catalogue has since moved behind a verification page -- so
+/// this row's height is a property of these two numbers and the phase
+/// distribution, and the panel's own refusal applies to it with particular
+/// force.
+const CHEMO_PANEL_DOSE: f64 = 2.0;
+/// See [`CHEMO_PANEL_DOSE`].
+const CHEMO_PANEL_POTENCY: f64 = 0.5;
 
 fn main() {
     let a = Args::parse();
@@ -283,6 +297,33 @@ fn main() {
         route: "threshold destruction (not a dose-response)",
         limited_by: "margin geometry -- coverage, and nothing else",
         calibration: "thresholds published; applicator field not modelled",
+    });
+
+    // ── Chemotherapy: the modality most patients receive ─────────────────
+    // Not a CellState arm. The kill is a function of dose, potency and where
+    // the population sits in the cell cycle, which is a different quantity
+    // from a lipid-peroxide burden -- so like ablation and adoptive transfer
+    // it is computed directly and the enum variant names the arm.
+    //
+    // The class shown is the phase-NONSPECIFIC one (an alkylator or a
+    // platinum), because it is the fairest single row: a phase-specific agent
+    // would report a smaller number for a reason that is about the cell cycle
+    // rather than about the drug, and the panel has one row per arm. The
+    // difference between the classes is the subject of Figure 33, not of this
+    // table.
+    let chemo_dist = chemo::PhaseDistribution::proliferating();
+    let chemo_survival = chemo::surviving_fraction(
+        CHEMO_PANEL_DOSE,
+        CHEMO_PANEL_POTENCY,
+        chemo::ChemoClass::PhaseNonspecific,
+        &chemo_dist,
+    );
+    arms.push(ArmResult {
+        name: "Chemotherapy",
+        kill_fraction: 1.0 - chemo_survival,
+        route: "log kill, weighted by the cell cycle (not CellState)",
+        limited_by: "the growth fraction, and marrow recovery between cycles",
+        calibration: "NO REACHABLE TARGET: the CTRPv2 route is access-blocked",
     });
 
     // ── ADC: the ferroptosis payload, limited by DELIVERY ────────────────
@@ -648,6 +689,47 @@ fn run_tme_sweep(a: &Args, params: &Params, immune: &ImmuneParams, rad: &Radiati
                                 &b,
                             ) / n as f64;
 
+                            // Chemotherapy: the microenvironment reaches it by three
+                            // routes, and they are NOT the routes it reaches the
+                            // ferroptosis arms by.
+                            //
+                            // Hypoxia acts on the CELL CYCLE rather than on a redox
+                            // state: a hypoxic region is a quiescent one, so the growth
+                            // fraction falls and a drug that needs a dividing cell loses
+                            // its target. That is a different mechanism from the
+                            // exogenous-ROS collapse the physical arms suffer, and it
+                            // costs the phase-nonspecific class less than it would cost
+                            // an antimetabolite.
+                            //
+                            // Acidic pH traps a weak base outside the cell, which is the
+                            // SAME ion-trap factor the RSL3 arm already uses -- most
+                            // cytotoxics in use are weak bases.
+                            //
+                            // Stroma acts through glutathione conjugation, which is a
+                            // documented platinum and alkylator resistance route, so the
+                            // stromal GSH boost lowers the effective dose here for a
+                            // reason unrelated to lipid peroxidation.
+                            let quiescent_shift = if hypoxic { 0.45 } else { 0.0 };
+                            let chemo_dist = {
+                                let base = chemo::PhaseDistribution::proliferating();
+                                let moved = base.growth_fraction() * quiescent_shift;
+                                chemo::PhaseDistribution {
+                                    g1: base.g1 * (1.0 - quiescent_shift),
+                                    s: base.s * (1.0 - quiescent_shift),
+                                    g2m: base.g2m * (1.0 - quiescent_shift),
+                                    g0: base.g0 + moved,
+                                }
+                            };
+                            let chemo_detox = if stroma { 1.0 / STROMAL_GSH_BOOST } else { 1.0 };
+                            let chemo_dose = CHEMO_PANEL_DOSE * trap * chemo_detox;
+                            let chemo_kill = 1.0
+                                - chemo::surviving_fraction(
+                                    chemo_dose,
+                                    CHEMO_PANEL_POTENCY,
+                                    chemo::ChemoClass::PhaseNonspecific,
+                                    &chemo_dist,
+                                );
+
                             // Ablation: a threshold. Nothing here touches it, and that is
                             // the finding rather than an omission.
                             let abl = 0.85;
@@ -681,6 +763,7 @@ fn run_tme_sweep(a: &Args, params: &Params, immune: &ImmuneParams, rad: &Radiati
                                     "Immunotherapy": blockade,
                                     "OncolyticVirus": viral,
                                     "Ablation": abl,
+                                    "Chemotherapy": chemo_kill,
                                 },
                             }));
                         }

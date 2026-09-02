@@ -120,6 +120,13 @@ ARMS = [
      "calibration": "Ablation (thermal)",
      "note": "two mechanisms in the taxonomy (hifu, electrochemical-therapy) "
              "share one arm"},
+    {"arm": "Chemotherapy", "label": "Cytotoxic chemotherapy",
+     "mechanism": None, "modules": ["chemo"],
+     "heading": ["chemotherapy", "cytotoxic"],
+     "topic": ["chemotherapy", "cytotoxic", "cell cycle", "dose density"],
+     "calibration": "Chemotherapy (cell-cycle)",
+     "note": "no taxonomy row, and the only arm whose dose-response target is "
+             "unreachable rather than merely unfitted"},
     {"arm": "AntibodyDrugConjugate", "label": "Antibody-drug conjugate",
      "mechanism": "antibody-drug-conjugate", "modules": ["adc"],
      "heading": ["antibody-drug conjugate", "adc"],
@@ -128,15 +135,15 @@ ARMS = [
 ]
 
 # Arms the engine does NOT have, listed because a parity table that shows only
-# what exists reports the campaign's progress and hides its scope. Chemotherapy
-# is the sharpest: it is what most patients actually receive, it has no arm, no
-# module and no taxonomy row, and this project has simulated a laboratory
-# ferroptosis inducer in far more detail than the modality it should be
-# compared against.
+# what exists reports the campaign's progress and hides its scope.
+#
+# Cytotoxic chemotherapy was the sharpest entry here and has left the list: it
+# now has a module, a `Treatment` variant and a row in the panel. What it does
+# NOT have is a fitted dose-response, and that is recorded as a calibration
+# verdict in the table above rather than as an absence here -- the two are
+# different claims and collapsing them would let a built-but-uncalibrated arm
+# read as a finished one.
 ABSENT_ARMS = [
-    ("Cytotoxic chemotherapy",
-     "no Treatment variant, no module, no taxonomy row -- the modality most "
-     "patients receive, and the one this engine cannot express at all"),
     ("Targeted small-molecule therapy",
      "PARP synthetic lethality is inside `radiation`; there is no arm for "
      "kinase inhibition, and the taxonomy's synthetic-lethality row is served "

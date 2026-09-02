@@ -41,7 +41,7 @@
    "window_hours": 48.0
   }
  ],
- "library_modules": 38,
+ "library_modules": 39,
  "modules": {
   "ablation.rs": {
    "examples": [
@@ -65,7 +65,7 @@
     {
      "context": "/// the ~48-72h SCD1/MUFA enrichment is already complete). An acute/naive",
      "form": "magnitude",
-     "line": 736,
+     "line": 738,
      "value": "72h"
     }
    ],
@@ -77,30 +77,48 @@
     {
      "context": "/// FSP1 re-expression half-time (days). Slowest \u2014 epigenetic.",
      "form": "bare-unit",
-     "line": 279,
+     "line": 296,
      "value": "(days)"
     },
     {
      "context": "/// GPX4 re-expression half-time (days). Transcriptional.",
      "form": "bare-unit",
-     "line": 281,
+     "line": 298,
      "value": "(days)"
     },
     {
      "context": "/// NRF2 re-activation half-time (days).",
      "form": "bare-unit",
-     "line": 283,
+     "line": 300,
      "value": "(days)"
     },
     {
      "context": "/// GSH resynthesis half-time (days). Fastest \u2014 metabolic.",
      "form": "bare-unit",
-     "line": 285,
+     "line": 302,
      "value": "(days)"
     }
    ],
    "per_step_mentions": 1,
    "real_time_mentions": 6
+  },
+  "chemo.rs": {
+   "examples": [
+    {
+     "context": "(burden * (ln_ratio * (1.0 - (-rate_per_day * days).exp())).exp()).min(carrying)",
+     "form": "bare-unit",
+     "line": 305,
+     "value": "(-rate_per_day * days)"
+    },
+    {
+     "context": "let w = 1.0 - (-rate_per_day * days).exp();",
+     "form": "bare-unit",
+     "line": 380,
+     "value": "(-rate_per_day * days)"
+    }
+   ],
+   "per_step_mentions": 0,
+   "real_time_mentions": 2
   },
   "clonal.rs": {
    "examples": [],
@@ -347,7 +365,7 @@
     {
      "context": "eprintln!(\"Immune model: resident T cell phase only (0-48h), not systemic.\\n\");",
      "form": "magnitude",
-     "line": 1256,
+     "line": 1259,
      "value": "48h"
     }
    ],
@@ -468,7 +486,7 @@
    "real_time_mentions": 16
   }
  },
- "modules_total": 53,
+ "modules_total": 54,
  "n_solver_timestep_conventions": 1,
  "n_solver_timestep_matches": 3,
  "n_step_bindings": 6,
@@ -487,6 +505,9 @@
    "nrf2_half_recovery_days": [
     "sim-window"
    ]
+  },
+  "chemo.rs": {
+   "interval_days": []
   },
   "radiation.rs": {
    "interval_hours": [],
@@ -627,6 +648,10 @@
    "sim-tumor-pk",
    "sim-window"
   ],
+  "chemo.rs": [
+   "sim-combo",
+   "sim-modality-panel"
+  ],
   "drug_transport.rs": [
    "sim-modality-panel",
    "sim-tissue-pk",
@@ -672,6 +697,7 @@
  },
  "real_time_only": [
   "ablation.rs",
+  "chemo.rs",
   "drug_transport.rs",
   "photosensitizer_pk.rs",
   "radiation.rs",

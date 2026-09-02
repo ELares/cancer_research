@@ -114,7 +114,8 @@ fn run_spatial(
         // Not wired into this binary. `sim-modality-panel` runs these arms;
         // stated explicitly rather than as a `_ =>` catch-all, which would
         // absorb every future variant too.
-        Treatment::Immunotherapy
+        Treatment::Chemotherapy
+        | Treatment::Immunotherapy
         | Treatment::AdoptiveCell
         | Treatment::OncolyticVirus
         | Treatment::Ablation

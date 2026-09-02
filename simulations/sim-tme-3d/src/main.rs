@@ -1224,7 +1224,8 @@ fn run_one_condition_full(
         | Treatment::AdoptiveCell
         | Treatment::OncolyticVirus
         | Treatment::Ablation
-        | Treatment::AntibodyDrugConjugate => 0.0,
+        | Treatment::AntibodyDrugConjugate
+        | Treatment::Chemotherapy => 0.0,
     };
 
     // Time-varying dose schedule (#239). `dosed == false` for the default
@@ -1657,6 +1658,7 @@ fn run_one_condition_full(
             ),
             Treatment::Control
             | Treatment::Radiation
+            | Treatment::Chemotherapy
             | Treatment::Immunotherapy
             | Treatment::AdoptiveCell
             | Treatment::OncolyticVirus
@@ -1801,6 +1803,7 @@ fn run_one_condition_full(
                         | Treatment::AdoptiveCell
                         | Treatment::OncolyticVirus
                         | Treatment::Ablation
+                        | Treatment::Chemotherapy
                         | Treatment::AntibodyDrugConjugate => {}
                     }
                 }
@@ -1932,7 +1935,8 @@ fn run_one_condition_full(
                             | Treatment::AdoptiveCell
                             | Treatment::OncolyticVirus
                             | Treatment::Ablation
-                            | Treatment::AntibodyDrugConjugate => 0.0,
+                            | Treatment::AntibodyDrugConjugate
+                            | Treatment::Chemotherapy => 0.0,
                             Treatment::RSL3 => {
                                 if dosed {
                                     (dose_factor * rsl3_drug_avail[idx]).clamp(0.0, 1.0)

@@ -463,8 +463,48 @@ def _adc_arm() -> dict:
     }
 
 
+def _chemo_arm() -> dict:
+    """No target REACHABLE, which is a different admission from no target.
+
+    The other four outcomes on this page are about what the literature
+    publishes. This one is about what this repository can still download. The
+    dose-response route is CTRPv2 through the DepMap download API; it reached
+    the five ferroptosis compounds `fetch_calibration_data.py` fetched and now
+    returns a verification page instead of the documented catalogue, which
+    `analysis/calibration/calibration-feasibility.md` records as an ACCESS
+    block rather than a method one.
+
+    So the target exists, is public, has been used by this project before, and
+    is out of reach today. Reporting that as NO TARGET would say the wrong
+    thing about the literature; reporting it as a fit would be false. It is
+    recorded as no target with the reason stated, and the arm's two
+    predictions are structural instead -- see
+    `analysis/calibration/chemo-validation.md`.
+    """
+    return {
+        "arm": "Chemotherapy (cell-cycle)",
+        "parameter": "chemo::surviving_fraction potency",
+        "target": None,
+        "source": "CTRPv2 cytotoxic dose-response, currently unreachable",
+        "target_kind": "published and public, but access-blocked",
+        "range_scanned": None,
+        "fit": None,
+        "mapping": None,
+        "no_target_reason": (
+            "The target is not missing from the literature -- it is missing "
+            "from this machine. CTRPv2 carries dose-response for the "
+            "cytotoxics, and the DepMap download catalogue that served it now "
+            "answers with a verification page. The arm therefore ships with "
+            "two STRUCTURAL predictions that need no fitted potency (a "
+            "phase-specific agent's residue, and the two-sided window in "
+            "which shortening the interval helps) and no magnitude that "
+            "anyone should carry away."),
+    }
+
+
 def scan() -> dict:
     return {"arms": [_radiation_arm(), _parp_arm(), _immunotherapy_arm(),
+                     _chemo_arm(),
                      _oncolytic_arm(), _ablation_arm(), _cart_arm(),
                      _adc_arm()],
             "unconstrained_width": UNCONSTRAINED_WIDTH}
