@@ -838,3 +838,23 @@ figures:
       the engine already contained is positive on every one of these
       conditions. Crosses in (a) mark runs where no enterable cell existed near
       the seed: a failure to START, a different claim from a failure to cross.
+  - manuscript_figure: 43
+    filename: fig47_adc_bystander_reach
+    generator:
+      script: scripts/generate_conceptual_diagrams.py
+      function: fig47_adc_bystander_reach
+    inputs:
+      - analysis/calibration/adc-bystander-validation.json
+    type: simulation
+    status: manuscript
+    note: >-
+      Every point is a matched PAIR of runs differing only in the linker, so
+      the bystander's contribution is measured rather than supplied. (a) is the
+      prediction and the condition on it together - the advantage falls with
+      penetration at a payload reach of two or three cells and is FLAT at one,
+      because a payload reaching only its immediate neighbours lands on cells
+      the conjugate reached anyway; the sweep found that condition rather than
+      the author choosing it. (b) is the column that points the other way,
+      reported beside the ratio rather than instead of it. (c) is why the arm
+      needed a distance at all: the scalar the point model returns has no term
+      for penetration and cannot move with it.

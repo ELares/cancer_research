@@ -15,9 +15,9 @@ The aggregate gap is already published: the modality arms are roughly an order o
 | Oncolytic virus | 165 | 11 | 14 | ADMISSIBLE | 2,000 | 3 | 3 | on demand |
 | Thermal and electrical ablation | 129 | 9 | 10 | UNCONSTRAINED | 877 | 2 | 2 | **no** |
 | Cytotoxic chemotherapy | 282 | 19 | 15 | NO TARGET | 1,393 | 1 | 2 | **no** |
-| Antibody-drug conjugate | 123 | 13 | 11 | NO TARGET | 998 | 3 | 2 | **no** |
+| Antibody-drug conjugate | 123 | 13 | 11 | NO TARGET | 1,865 | 4 | 3 | on demand |
 
-**5 of 10 arms can be expressed in the spatial engine at all.** `sim-tme-3d` carries the oxygen gradient, the vessel network, the immune coupling, the clonal and persister layers -- and for the other 5 it returns a literal zero, so a run of those arms is bit-identical to an untreated tumour. They are closed-form functions evaluated at a point beside an agent-based simulation over a 60^3 grid, and no further prose closes that. The column is MEASURED rather than read off the dispatch: a text scan over a match that names every variant would report ten, so `sim-tme-3d` runs each arm against Control and this reads the result. Tracked in #844.
+**6 of 10 arms can be expressed in the spatial engine at all.** `sim-tme-3d` carries the oxygen gradient, the vessel network, the immune coupling, the clonal and persister layers -- and for the other 4 it returns a literal zero, so a run of those arms is bit-identical to an untreated tumour. They are closed-form functions evaluated at a point beside an agent-based simulation over a 60^3 grid, and no further prose closes that. The column is MEASURED rather than read off the dispatch: a text scan over a match that names every variant would report ten, so `sim-tme-3d` runs each arm against Control and this reads the result. Tracked in #844.
 
 TWO TIERS, and collapsing them would flatter the engine. 3 arms act on selecting the `Treatment` alone; the rest of the expressive column needs its own `Overrides` field, which is how every one of the engine's ~30 ferroptosis realism layers ships and is required here -- the production matrix carries a committed byte-identity SHA, so an arm acting by default would move it. `on demand` is a wired arm, not a half-wired one.
 
@@ -68,7 +68,7 @@ A parity table listing only what exists measures the campaign's progress and hid
 
 Quality, correctness, or whether any of it is used. A module can be large and wrong, and an arm could reach every number in the first table and still be worse science than the arm it is measured against. What the table supports is the negative: an arm at a fraction of the comparator on every axis is not represented in any sense a reader would accept.
 
-The book column is attributed by HEADING -- a section counts for an arm when its own heading names it. That under-counts deliberately: 19,746 of 68,471 words in numbered sections are attributed, and the whole multi-modality chapter sits in the remainder because its headings name no arm. A keyword rule over body text was rejected; `analysis/scope-audit.md` records what happened the last time subject was counted by vocabulary.
+The book column is attributed by HEADING -- a section counts for an arm when its own heading names it. That under-counts deliberately: 20,613 of 69,338 words in numbered sections are attributed, and the whole multi-modality chapter sits in the remainder because its headings name no arm. A keyword rule over body text was rejected; `analysis/scope-audit.md` records what happened the last time subject was counted by vocabulary.
 
 A section whose heading names MORE THAN ONE arm is DIVIDED between them rather than credited whole to each, because two identical numbers side by side read as independent coverage when they are one section counted twice. 1 section(s) are split this way: *6.13 Photodynamic and Sonodynamic Therapy, the Two the Project Started With* (2 arms). Dividing UNDER-counts each arm, which keeps this column the lower bound the rest of the table is; crediting whole would over-count, which it must never do.
 

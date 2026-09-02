@@ -2223,6 +2223,94 @@ def fig46_oncolytic_percolation():
 
 
 
+def fig47_adc_bystander_reach():
+    """Where a bystander payload is worth most, and where the logic runs out.
+
+    The point model takes `neighbours_in_reach` as a scalar, so the payload has
+    nowhere to go. Give it a distance and the arm's clinical rationale becomes
+    measurable -- along with the condition under which it stops holding.
+    """
+    import json
+    src = Path(__file__).resolve().parent.parent / "analysis" / "calibration" / \
+        "adc-bystander-validation.json"
+    if not src.exists():
+        print("  fig47: adc-bystander-validation.json missing - skipping")
+        return
+    d = json.loads(src.read_text())
+
+    fig, axes = plt.subplots(1, 3, figsize=(15, 4.6))
+    colours = {1: "#9fb3b8", 2: "#a2582b", 3: "#14505c"}
+
+    # (a) the fold advantage: the finding, and the flat arm beside it
+    ax = axes[0]
+    for r in d["by_reach"]:
+        k = r["payload_reach_cells"]
+        flat = k in d["reaches_where_fold_is_flat"]
+        ax.plot([p["antibody_lambda_um"] for p in r["points"]],
+                [p["fold_advantage"] for p in r["points"]],
+                "o--" if flat else "o-", color=colours.get(k, "#666"), lw=2,
+                ms=6, label=f"payload reach {k} cell{'s' if k != 1 else ''}"
+                            + (" (flat)" if flat else ""))
+    ax.set_xscale("log")
+    ax.set_xlabel("antibody penetration λ (µm)")
+    ax.set_ylabel("kill with payload ÷ kill without")
+    ax.set_title("(a) worth most where the antibody reaches least", fontsize=10)
+    ax.legend(fontsize=7.5)
+    ax.grid(alpha=0.25, which="both")
+
+    # (b) the column that points the other way
+    ax = axes[1]
+    for r in d["by_reach"]:
+        k = r["payload_reach_cells"]
+        ax.plot([p["antibody_lambda_um"] for p in r["points"]],
+                [p["bystander_kills"] for p in r["points"]], "s-",
+                color=colours.get(k, "#666"), lw=2, ms=6,
+                label=f"reach {k}")
+    ax.set_xscale("log")
+    ax.set_xlabel("antibody penetration λ (µm)")
+    ax.set_ylabel("bystander kills (absolute)")
+    ax.set_title("(b) and the absolute count mostly rises", fontsize=10)
+    ax.legend(fontsize=7.5)
+    ax.grid(alpha=0.25, which="both")
+
+    # (c) what the point model returns for all of it
+    ax = axes[2]
+    demo = next(r for r in d["by_reach"]
+                if r["payload_reach_cells"] in d["reaches_where_fold_falls"])
+    xs = [p["antibody_lambda_um"] for p in demo["points"]]
+    ax.plot(xs, [p["scalar_bystander_fraction"] for p in demo["points"]], "s-",
+            color="#9fb3b8", lw=2, ms=7, label="point model (scalar)")
+    norm = demo["points"][0]["bystander_kills"]
+    ax.plot(xs, [p["bystander_kills"] / norm * demo["points"][0]["scalar_bystander_fraction"]
+                 for p in demo["points"]], "o-", color="#14505c", lw=2, ms=7,
+            label="on the grid (scaled)")
+    ax.set_xscale("log")
+    ax.set_xlabel("antibody penetration λ (µm)")
+    ax.set_ylabel("bystander contribution (arb.)")
+    ax.set_title("(c) the scalar has no term for penetration", fontsize=10)
+    ax.legend(fontsize=7.5)
+    ax.grid(alpha=0.25, which="both")
+
+    fig.suptitle("A bystander payload multiplies a conjugate's reach most "
+                 "where the conjugate reaches least", fontsize=12,
+                 fontweight="bold")
+    fig.text(0.5, 0.015,
+             "`adc::bystander_kill_fraction` takes `neighbours_in_reach` as a bare scalar, so the payload "
+             "has nowhere to go and no distance to travel - which makes the arm's own clinical rationale "
+             "inexpressible, since a bystander payload exists precisely because the antibody penetrates "
+             "badly and the small released drug does not. Every point is a matched PAIR of runs differing "
+             "only in the linker, so the bystander's contribution is measured rather than parameterised. "
+             "(a) is the prediction and the condition on it together: the advantage falls with penetration "
+             "at a payload reach of two or three cells and is FLAT at one, because a payload that reaches "
+             "only its immediate neighbours lands on cells the conjugate reached anyway. The sweep found "
+             "that condition; it was not chosen. (b) is the column that points the other way and is "
+             "reported beside it rather than instead of it. (c) is why the arm needed a 'where' at all.",
+             ha="center", fontsize=7.2, color="#555", wrap=True)
+    fig.tight_layout(rect=[0, 0.16, 1, 0.93])
+    save(fig, "fig47_adc_bystander_reach")
+
+
+
 if __name__ == "__main__":
     print("Generating conceptual diagrams...")
     fig18_hypoxia()
@@ -2248,4 +2336,5 @@ if __name__ == "__main__":
     fig44_pdt_fluence_rate()
     fig45_radiation_oer()
     fig46_oncolytic_percolation()
+    fig47_adc_bystander_reach()
     print("Done.")

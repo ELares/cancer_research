@@ -324,33 +324,36 @@
    "pub_fns": 13,
    "rust_tests": 11,
    "calibration": "NO TARGET",
-   "spatial": null,
-   "book_words": 998,
+   "spatial": "on demand",
+   "book_words": 1865,
    "book_sections": [
-    "6.11 Antibody-Drug Conjugates, and an Optimum Nobody Chose"
+    "6.11 Antibody-Drug Conjugates, and an Optimum Nobody Chose",
+    "6.16 Antibody-Drug Conjugates, and the Distance a Scalar Does Not Have"
    ],
    "figures": [
     "fig31_modality_panel",
     "fig35_calibration_verdicts",
-    "fig41_adc_loading"
+    "fig41_adc_loading",
+    "fig47_adc_bystander_reach"
    ],
    "predictions": [
     "P10",
-    "P19"
+    "P19",
+    "P25"
    ],
    "book_words_shared": 0,
    "parity_lines": 0.032,
    "parity_fns": 0.071,
    "parity_tests": 0.042,
-   "parity_words": 0.19,
+   "parity_words": 0.355,
    "lines_short_of_parity": 3682
   }
  ],
  "shared_modules": 5,
  "shared_code_lines": 818,
  "shared_pub_fns": 58,
- "manuscript_words_in_sections": 68471,
- "manuscript_words_attributed": 19746,
+ "manuscript_words_in_sections": 69338,
+ "manuscript_words_attributed": 20613,
  "sections_naming_more_than_one_arm": {
   "6.13 Photodynamic and Sonodynamic Therapy, the Two the Project Started With": 2
  },
@@ -369,6 +372,7 @@
   }
  ],
  "spatial_arms": [
+  "AntibodyDrugConjugate",
   "OncolyticVirus",
   "PDT",
   "RSL3",
@@ -381,6 +385,7 @@
   "SDT"
  ],
  "spatial_on_demand": [
+  "AntibodyDrugConjugate",
   "OncolyticVirus",
   "Radiation"
  ],
