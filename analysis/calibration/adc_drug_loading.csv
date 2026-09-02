@@ -1,0 +1,18 @@
+# Drug loading and clearance for one antibody-drug conjugate, from one study.
+#
+# Hamblett et al., "Effects of drug loading on the antitumor activity of a
+# monoclonal antibody drug conjugate", Clin Cancer Res 2004, PMID 15501986.
+# cAC10 (anti-CD30) conjugated with MMAE at two, four and eight drugs per
+# antibody. Quoted from the abstract:
+#
+#   "clearance, as E8 cleared 3-fold faster than E4 and 5-fold faster than E2"
+#   "the in vivo antitumor activity of E4 was comparable with E8 at equal mAb
+#    doses, although the E4 contained half the amount of MMAE per mAb"
+#   in-vitro potency ordered "IC(50) values E8<E4<E2" (E8 the most potent)
+#
+# The study reports RATIOS between arms, not absolute rates, which is why the
+# reference column is a ratio to E2 rather than a clearance in any unit.
+conjugate,drug_antibody_ratio,clearance_relative_to_dar2,in_vitro_potency_rank,pmid
+E2,2,1.0,3,15501986
+E4,4,1.6667,2,15501986
+E8,8,5.0,1,15501986

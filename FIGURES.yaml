@@ -716,3 +716,24 @@ figures:
       the scan returns the lowest competence reaching it: that reads as a
       boundary optimum and means the opposite, and finding it was worth more
       than the crossover.
+  - manuscript_figure: 37
+    filename: fig41_adc_loading
+    generator:
+      script: scripts/generate_conceptual_diagrams.py
+      function: fig41_adc_loading
+    inputs:
+      - analysis/calibration/adc-validation.json
+    type: simulation
+    status: manuscript
+    note: >-
+      The campaign's strongest calibration, and panel (a) is why it is worth a
+      figure rather than a sentence: a single power law fitted to one of the
+      two measured clearance ratios (PMID 15501986) misses the other by a
+      third, and the acceleration it misses is exactly what makes an interior
+      optimum exist. The first version of the layer used that smooth curve and
+      had NO optimum -- it fell monotonically and would have recommended the
+      lightest possible loading. Panel (b) is the optimum, at a
+      drug-antibody ratio of four, which nothing was tuned to produce. Panel
+      (c) is the in-vitro/in-vivo ordering disagreement, both halves measured
+      in one experiment. Delivered payload is not efficacy and one conjugate
+      is not all conjugates, which the caption says.

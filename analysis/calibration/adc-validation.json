@@ -1,0 +1,322 @@
+{
+ "anchor_points": [
+  {
+   "dar": 2.0,
+   "clearance_relative_to_dar2": 1.0
+  },
+  {
+   "dar": 4.0,
+   "clearance_relative_to_dar2": 1.6667
+  },
+  {
+   "dar": 8.0,
+   "clearance_relative_to_dar2": 5.0
+  }
+ ],
+ "measured_rows": [
+  {
+   "conjugate": "E2",
+   "drug_antibody_ratio": "2",
+   "clearance_relative_to_dar2": "1.0",
+   "in_vitro_potency_rank": "3",
+   "pmid": "15501986"
+  },
+  {
+   "conjugate": "E4",
+   "drug_antibody_ratio": "4",
+   "clearance_relative_to_dar2": "1.6667",
+   "in_vitro_potency_rank": "2",
+   "pmid": "15501986"
+  },
+  {
+   "conjugate": "E8",
+   "drug_antibody_ratio": "8",
+   "clearance_relative_to_dar2": "5.0",
+   "in_vitro_potency_rank": "1",
+   "pmid": "15501986"
+  }
+ ],
+ "single_power_law_predicts_c8_over_c4": 2.236,
+ "measured_c8_over_c4": 3.0,
+ "curve": [
+  {
+   "dar": 1.0,
+   "clearance": 0.6,
+   "delivered_per_dose": 1.6667,
+   "in_vitro_potency": 0.5
+  },
+  {
+   "dar": 1.25,
+   "clearance": 0.7072,
+   "delivered_per_dose": 1.7674,
+   "in_vitro_potency": 0.625
+  },
+  {
+   "dar": 1.5,
+   "clearance": 0.809,
+   "delivered_per_dose": 1.8542,
+   "in_vitro_potency": 0.75
+  },
+  {
+   "dar": 1.75,
+   "clearance": 0.9063,
+   "delivered_per_dose": 1.931,
+   "in_vitro_potency": 0.875
+  },
+  {
+   "dar": 2.0,
+   "clearance": 1.0,
+   "delivered_per_dose": 2.0,
+   "in_vitro_potency": 1.0
+  },
+  {
+   "dar": 2.25,
+   "clearance": 1.0907,
+   "delivered_per_dose": 2.0629,
+   "in_vitro_potency": 1.125
+  },
+  {
+   "dar": 2.5,
+   "clearance": 1.1787,
+   "delivered_per_dose": 2.1209,
+   "in_vitro_potency": 1.25
+  },
+  {
+   "dar": 2.75,
+   "clearance": 1.2645,
+   "delivered_per_dose": 2.1747,
+   "in_vitro_potency": 1.375
+  },
+  {
+   "dar": 3.0,
+   "clearance": 1.3483,
+   "delivered_per_dose": 2.2251,
+   "in_vitro_potency": 1.5
+  },
+  {
+   "dar": 3.25,
+   "clearance": 1.4302,
+   "delivered_per_dose": 2.2724,
+   "in_vitro_potency": 1.625
+  },
+  {
+   "dar": 3.5,
+   "clearance": 1.5105,
+   "delivered_per_dose": 2.3172,
+   "in_vitro_potency": 1.75
+  },
+  {
+   "dar": 3.75,
+   "clearance": 1.5893,
+   "delivered_per_dose": 2.3596,
+   "in_vitro_potency": 1.875
+  },
+  {
+   "dar": 4.0,
+   "clearance": 1.6667,
+   "delivered_per_dose": 2.4,
+   "in_vitro_potency": 2.0
+  },
+  {
+   "dar": 4.25,
+   "clearance": 1.8348,
+   "delivered_per_dose": 2.3164,
+   "in_vitro_potency": 2.125
+  },
+  {
+   "dar": 4.5,
+   "clearance": 2.0087,
+   "delivered_per_dose": 2.2402,
+   "in_vitro_potency": 2.25
+  },
+  {
+   "dar": 4.75,
+   "clearance": 2.1885,
+   "delivered_per_dose": 2.1705,
+   "in_vitro_potency": 2.375
+  },
+  {
+   "dar": 5.0,
+   "clearance": 2.3738,
+   "delivered_per_dose": 2.1063,
+   "in_vitro_potency": 2.5
+  },
+  {
+   "dar": 5.25,
+   "clearance": 2.5647,
+   "delivered_per_dose": 2.047,
+   "in_vitro_potency": 2.625
+  },
+  {
+   "dar": 5.5,
+   "clearance": 2.7609,
+   "delivered_per_dose": 1.9921,
+   "in_vitro_potency": 2.75
+  },
+  {
+   "dar": 5.75,
+   "clearance": 2.9625,
+   "delivered_per_dose": 1.941,
+   "in_vitro_potency": 2.875
+  },
+  {
+   "dar": 6.0,
+   "clearance": 3.1692,
+   "delivered_per_dose": 1.8932,
+   "in_vitro_potency": 3.0
+  },
+  {
+   "dar": 6.25,
+   "clearance": 3.381,
+   "delivered_per_dose": 1.8486,
+   "in_vitro_potency": 3.125
+  },
+  {
+   "dar": 6.5,
+   "clearance": 3.5979,
+   "delivered_per_dose": 1.8066,
+   "in_vitro_potency": 3.25
+  },
+  {
+   "dar": 6.75,
+   "clearance": 3.8196,
+   "delivered_per_dose": 1.7672,
+   "in_vitro_potency": 3.375
+  },
+  {
+   "dar": 7.0,
+   "clearance": 4.0463,
+   "delivered_per_dose": 1.73,
+   "in_vitro_potency": 3.5
+  },
+  {
+   "dar": 7.25,
+   "clearance": 4.2777,
+   "delivered_per_dose": 1.6948,
+   "in_vitro_potency": 3.625
+  },
+  {
+   "dar": 7.5,
+   "clearance": 4.5138,
+   "delivered_per_dose": 1.6616,
+   "in_vitro_potency": 3.75
+  },
+  {
+   "dar": 7.75,
+   "clearance": 4.7546,
+   "delivered_per_dose": 1.63,
+   "in_vitro_potency": 3.875
+  },
+  {
+   "dar": 8.0,
+   "clearance": 5.0,
+   "delivered_per_dose": 1.6,
+   "in_vitro_potency": 4.0
+  },
+  {
+   "dar": 8.25,
+   "clearance": 5.2499,
+   "delivered_per_dose": 1.5715,
+   "in_vitro_potency": 4.125
+  },
+  {
+   "dar": 8.5,
+   "clearance": 5.5043,
+   "delivered_per_dose": 1.5443,
+   "in_vitro_potency": 4.25
+  },
+  {
+   "dar": 8.75,
+   "clearance": 5.7631,
+   "delivered_per_dose": 1.5183,
+   "in_vitro_potency": 4.375
+  },
+  {
+   "dar": 9.0,
+   "clearance": 6.0262,
+   "delivered_per_dose": 1.4935,
+   "in_vitro_potency": 4.5
+  },
+  {
+   "dar": 9.25,
+   "clearance": 6.2937,
+   "delivered_per_dose": 1.4697,
+   "in_vitro_potency": 4.625
+  },
+  {
+   "dar": 9.5,
+   "clearance": 6.5654,
+   "delivered_per_dose": 1.447,
+   "in_vitro_potency": 4.75
+  },
+  {
+   "dar": 9.75,
+   "clearance": 6.8413,
+   "delivered_per_dose": 1.4252,
+   "in_vitro_potency": 4.875
+  },
+  {
+   "dar": 10.0,
+   "clearance": 7.1215,
+   "delivered_per_dose": 1.4042,
+   "in_vitro_potency": 5.0
+  },
+  {
+   "dar": 10.25,
+   "clearance": 7.4057,
+   "delivered_per_dose": 1.3841,
+   "in_vitro_potency": 5.125
+  },
+  {
+   "dar": 10.5,
+   "clearance": 7.694,
+   "delivered_per_dose": 1.3647,
+   "in_vitro_potency": 5.25
+  },
+  {
+   "dar": 10.75,
+   "clearance": 7.9864,
+   "delivered_per_dose": 1.346,
+   "in_vitro_potency": 5.375
+  },
+  {
+   "dar": 11.0,
+   "clearance": 8.2828,
+   "delivered_per_dose": 1.3281,
+   "in_vitro_potency": 5.5
+  },
+  {
+   "dar": 11.25,
+   "clearance": 8.5831,
+   "delivered_per_dose": 1.3107,
+   "in_vitro_potency": 5.625
+  },
+  {
+   "dar": 11.5,
+   "clearance": 8.8874,
+   "delivered_per_dose": 1.294,
+   "in_vitro_potency": 5.75
+  },
+  {
+   "dar": 11.75,
+   "clearance": 9.1955,
+   "delivered_per_dose": 1.2778,
+   "in_vitro_potency": 5.875
+  },
+  {
+   "dar": 12.0,
+   "clearance": 9.5075,
+   "delivered_per_dose": 1.2622,
+   "in_vitro_potency": 6.0
+  }
+ ],
+ "optimal_dar": 4.0,
+ "delivered_at_optimum": 2.4,
+ "delivered_8_over_4": 0.6667,
+ "verdict": {
+  "optimum_is_emergent": "YES -- both factors monotonic, the ratio is not",
+  "optimum_dar": 4.0,
+  "single_power_law_fits_both_ratios": "NO",
+  "in_vitro_and_in_vivo_orderings_agree": "NO"
+ }
+}
