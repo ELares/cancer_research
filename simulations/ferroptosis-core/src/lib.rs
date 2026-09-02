@@ -94,6 +94,7 @@ pub mod reaction_diffusion;
 pub mod repair;
 pub mod senescence;
 pub mod slab;
+pub mod sonodynamic;
 pub mod spheroid;
 pub mod stats;
 pub mod stromal;

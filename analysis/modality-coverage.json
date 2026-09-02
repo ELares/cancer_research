@@ -43,7 +43,7 @@
   "trigger_wave",
   "tumor_pk"
  ],
- "module_count": 39,
+ "module_count": 40,
  "taxonomy_named": [
   "antibody-drug-conjugate",
   "bioelectric",
@@ -173,6 +173,7 @@
     "checkpoint",
     "immune",
     "immune_spatial",
+    "oncolytic",
     "params",
     "physics",
     "senescence"
@@ -182,7 +183,6 @@
     "chemo",
     "clonal",
     "ifngamma",
-    "oncolytic",
     "oxygen",
     "ph",
     "radiation",
@@ -202,7 +202,9 @@
    "prose_only_modules": [
     "adc",
     "adoptive",
-    "cell"
+    "cell",
+    "oncolytic",
+    "sonodynamic"
    ]
   },
   {
@@ -235,7 +237,8 @@
     "adoptive",
     "biochem",
     "cell",
-    "physics"
+    "physics",
+    "sonodynamic"
    ]
   },
   {
@@ -261,7 +264,9 @@
    ],
    "prose_only_modules": [
     "cell",
-    "oncolytic"
+    "oncolytic",
+    "photosensitizer_pk",
+    "sonodynamic"
    ]
   },
   {
@@ -323,7 +328,8 @@
     "io",
     "oxygen",
     "persister",
-    "radiation"
+    "radiation",
+    "sonodynamic"
    ]
   },
   {
@@ -416,6 +422,7 @@
     "checkpoint",
     "immune",
     "immune_spatial",
+    "oncolytic",
     "params",
     "physics",
     "senescence"
@@ -425,7 +432,6 @@
     "chemo",
     "clonal",
     "ifngamma",
-    "oncolytic",
     "oxygen",
     "ph",
     "radiation",
@@ -446,7 +452,9 @@
    "prose_only_modules": [
     "adc",
     "adoptive",
-    "cell"
+    "cell",
+    "oncolytic",
+    "sonodynamic"
    ],
    "engine_tier": "treatment"
   },
@@ -481,7 +489,8 @@
     "adoptive",
     "biochem",
     "cell",
-    "physics"
+    "physics",
+    "sonodynamic"
    ],
    "engine_tier": "treatment"
   },
@@ -509,7 +518,9 @@
    ],
    "prose_only_modules": [
     "cell",
-    "oncolytic"
+    "oncolytic",
+    "photosensitizer_pk",
+    "sonodynamic"
    ],
    "engine_tier": "treatment"
   },
@@ -575,7 +586,8 @@
     "io",
     "oxygen",
     "persister",
-    "radiation"
+    "radiation",
+    "sonodynamic"
    ],
    "engine_tier": "treatment"
   },

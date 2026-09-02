@@ -758,3 +758,42 @@ figures:
       The coolest applicator FAILS EVERYWHERE rather than leaving a sleeve and
       is marked, which is the same degenerate-row defect the oncolytic figure
       two sections earlier had to fix.
+  - manuscript_figure: 39
+    filename: fig43_sonodynamic_frequency
+    generator:
+      script: scripts/generate_conceptual_diagrams.py
+      function: fig43_sonodynamic_frequency
+    inputs:
+      - analysis/calibration/sonodynamic-validation.json
+    type: simulation
+    status: manuscript
+    note: >-
+      The chapter's first REFUTED prediction, drawn as such. Panel (a) is the
+      interior optimum three opposing frequency dependences produce; panel (b)
+      is the model's 1/depth scaling crossing the flat optimum an independent
+      full-wave study reports (PMID 26233216), which is a disagreement rather
+      than a tuning gap because no attenuation coefficient makes a 1/z law
+      flat; panel (c) is why this arm is structurally unlike the dose-response
+      arms, since inertial cavitation is a THRESHOLD and below it no
+      insonation time helps. The threshold height is a parameter, not a
+      measurement. Panel (c) starts at 0.5 cm deliberately: at zero depth
+      nothing attenuates, the optimal frequency is unbounded, and plotting the
+      divergence would put an artifact of the axis choice on the page.
+  - manuscript_figure: 40
+    filename: fig44_pdt_fluence_rate
+    generator:
+      script: scripts/generate_conceptual_diagrams.py
+      function: fig44_pdt_fluence_rate
+    inputs:
+      - analysis/calibration/pdt-fluence-rate-validation.json
+    type: simulation
+    status: manuscript
+    note: >-
+      Why the same joules delivered faster do less. Panel (a) is the two
+      opposing monotonic effects separately -- oxygen depletion punishing
+      speed, sensitizer clearance punishing slowness -- and (b) their product,
+      an interior optimum that MOVES with the drug's half-life, which is the
+      registered prediction (P21). Panel (c) is the refusal: the optimum's
+      position scales as roughly the square root of a parameter nothing in
+      this repository measures, so the ordering is the result and the
+      milliwatt figures are a restatement of an assumption.

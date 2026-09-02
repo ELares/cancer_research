@@ -34,7 +34,8 @@ Run the included example: `cargo run -p ferroptosis-core --example basic_usage`
 | `adoptive` | Adoptive cell therapy: the three multiplied barriers between an infusion and a kill (trafficking, infiltration, activation), persistence, and the antigen ceiling a larger dose cannot climb |
 | `cell` | Cell types, phenotypes (Glycolytic, OXPHOS, Persister, PersisterNrf2, Stromal), treatments, stochastic cell generation |
 | `oncolytic` | Oncolytic virus spread as a race between replication and clearance, with the threshold ratio below which an infection cannot establish |
-| `photosensitizer_pk` | Photosensitizer plasma PK and drug-light-interval scaling for PDT |
+| `photosensitizer_pk` | Photosensitizer plasma PK, drug-light-interval scaling, and the fluence-rate layer (O2 depletion against sensitizer clearance) for PDT |
+| `sonodynamic` | Mechanical index, the inertial-cavitation threshold, and the frequency optimum for SDT |
 | `params` | All rate constants: `Params` (biochemistry), `SpatialParams` (physics), `ImmuneParams` (immune cascade), `RecoveryRates` |
 | `biochem` | Core simulation engine: `sim_cell` (full 180-step loop), `sim_cell_step` (single timestep for spatial interleaving) |
 | `radiation` | Ionizing radiation on two independent channels: the linear-quadratic DNA-damage survival, a separate ferroptosis channel, and the PARP synthetic-lethality arm |

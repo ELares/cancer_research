@@ -57,6 +57,23 @@ def test_every_arm_names_a_source_that_is_in_the_corpus(d):
             assert f.exists(), (
                 f"{a['arm']} cites PMID {pmid}, which is not in the frozen "
                 "corpus; a target quoted from outside it cannot be checked")
+        # An arm may ALSO name an external comparator, and two arms do -- the
+        # frozen corpus was retrieved from ferroptosis and photo/sonodynamic
+        # queries and structurally holds no acoustics-physics literature, so
+        # requiring every citation to be corpus-held would forbid comparing
+        # against the only relevant study rather than making anything
+        # checkable. The split is the point: `source` stays corpus-checked and
+        # a comparator must SAY it is outside, so an unverifiable citation
+        # cannot be moved into the checked field to escape this guard.
+        ext = a.get("comparator_source")
+        if ext:
+            assert "OUTSIDE the frozen corpus" in ext or "outside the frozen corpus" in ext, (
+                f"{a['arm']} names a comparator without saying it is outside "
+                "the corpus, which is the whole reason it lives in a separate "
+                f"field: {ext[:120]}")
+            assert re.search(r"\b(19|20)\d\d\b", ext), (
+                f"{a['arm']}'s comparator has no year; an external citation "
+                "must carry enough to be located")
 
 
 def test_a_wide_fit_is_called_unconstrained_rather_than_fitted(d):
@@ -70,6 +87,24 @@ def test_a_wide_fit_is_called_unconstrained_rather_than_fitted(d):
     assert 0.0 < cap < 1.0, cap
     for a in d["arms"]:
         f = a["fit"]
+        # A DIRECTIONAL arm is exempt from the width test and NOT from
+        # scrutiny: it has no fitted range because its target constrains a
+        # sign rather than a value, so what is checked instead is that it
+        # actually scored some directions and did not simply decline to be
+        # measured. An exemption that asserted nothing would be the easiest
+        # place in this file to hide an unfitted arm.
+        if a.get("directional") is not None:
+            assert a["verdict"] in ("DIRECTIONAL", "PARTLY REFUTED"), a["arm"]
+            dd = a["directional"]
+            assert dd["confirmed"] + dd["refuted"] >= 2, (
+                f"{a['arm']} claims a directional verdict on fewer than two "
+                "scored claims, which is not a verdict")
+            assert (a["verdict"] == "PARTLY REFUTED") == (dd["refuted"] > 0), (
+                f"{a['arm']}'s verdict and its refuted count disagree -- a "
+                "refuted direction must show in the headline, since that is "
+                "the one a reader would otherwise never see")
+            assert f is None
+            continue
         if a["target"] is None:
             # A row with NO TARGET is a different outcome from one whose
             # target nothing satisfies, and collapsing them would hide the
@@ -231,7 +266,15 @@ def test_only_one_parameter_moves_per_arm(d):
         assert isinstance(a["parameter"], str) and "," not in a["parameter"], (
             f"{a['arm']} fits more than one parameter: {a['parameter']}")
         if a["range_scanned"] is None:
-            assert a["verdict"] == "NO TARGET", a["arm"]
+            assert a["verdict"] in ("NO TARGET", "DIRECTIONAL",
+                                    "PARTLY REFUTED"), a["arm"]
+            # NO TARGET means there is nothing to fit; DIRECTIONAL means there
+            # is a target and it constrains a sign. Collapsing them would hide
+            # the more interesting admission, which is the same reason the
+            # page splits NO TARGET from UNCONSTRAINED.
+            assert (a["verdict"] == "NO TARGET") == (a["target"] is None), (
+                f"{a['arm']}: a directional arm must NAME its target and an "
+                "arm with no target must not claim a direction")
             continue
         lo, hi = a["range_scanned"]
         assert lo < hi and lo >= 0.0

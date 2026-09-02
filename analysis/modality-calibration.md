@@ -14,6 +14,8 @@ Every arm this project added carries a NAMED target — a published number, cite
 | Ablation (thermal) | `AblationConfig::cem43_threshold` | exposure at 57 C must be seconds, not hours | **UNCONSTRAINED** | 27.49 – 2000 | 99% |
 | CAR-T (adoptive transfer) | `adoptive_transfer_kills effector count` | B-ALL complete remission 70%-94% | **ADMISSIBLE** | 8.14e+05 – 1.093e+06 | 6% |
 | ADC bystander effect | `AdcConfig::payload_escape_fraction` | *none in this corpus* | **NO TARGET** | — | — |
+| Sonodynamic frequency | `sonodynamic::optimal_frequency_mhz` | cavitation is induced at LOW frequency and high pressure amplitude, while thermal effects take over at higher frequency -- so the model's index must fall with frequency once attenuation is accounted for, and its optimum must sit BELOW a thermal one | **PARTLY REFUTED** | — | — |
+| PDT fluence rate | `photosensitizer_pk::optimal_fluence_rate` | the fluence-rate effect: high fluence rates deplete tumour oxygen and can make a treatment inefficient, so the delivered dose must FALL with rate at fixed total fluence | **DIRECTIONAL** | — | — |
 
 **4 admissible, 1 unconstrained, 1 inadmissible, 2 with no target at all.** The width column is the point: a fit that admits most of the search range has been given a target that cannot discriminate, and reporting it as "calibrated" would be the same error as reporting a p-value without an effect size.
 
@@ -45,7 +47,7 @@ A row like this is worth more than the three that fitted. The fitted ones show t
 
 ## The mapping is the weak link, and it is stated per row
 
-3 of the 8 targets are CLINICAL, and no amount of fitting makes a clinical endpoint and a lattice kill fraction the same quantity.
+3 of the 10 targets are CLINICAL, and no amount of fitting makes a clinical endpoint and a lattice kill fraction the same quantity.
 
 **Checkpoint blockade** — An objective response in a patient is mapped onto a KILL FRACTION in a lattice. Those are different quantities and no fit makes them the same one: a partial response is a 30% diameter reduction, roughly a 66% volume reduction, and a responding patient is not a dead tumour. Even had the fit succeeded, this mapping would be the weakest link in the row.
 

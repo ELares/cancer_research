@@ -7,10 +7,10 @@
    "mechanism": null,
    "census": null,
    "trials": null,
-   "modules": 27,
-   "code_lines": 3992,
-   "pub_fns": 186,
-   "rust_tests": 315,
+   "modules": 26,
+   "code_lines": 3805,
+   "pub_fns": 182,
+   "rust_tests": 263,
    "calibration": null,
    "book_words": 5249,
    "book_sections": [
@@ -34,6 +34,7 @@
     "P7",
     "P8"
    ],
+   "book_words_shared": 0,
    "parity_lines": 1.0,
    "parity_fns": 1.0,
    "parity_tests": 1.0,
@@ -43,35 +44,40 @@
   {
    "arm": "SDT",
    "label": "Sonodynamic therapy",
-   "note": "shares the exogenous-ROS path and the depth physics with PDT",
+   "note": "shares the exogenous-ROS path and one death threshold with PDT BY DESIGN (the kill dose is source-independent, Zhu 2015), so the arms are separated upstream of the cell and not at it",
    "mechanism": "sonodynamic",
    "census": 2513,
    "trials": 114,
-   "modules": 0,
-   "code_lines": 0,
-   "pub_fns": 0,
-   "rust_tests": 0,
-   "calibration": null,
-   "book_words": 0,
-   "book_sections": [],
+   "modules": 1,
+   "code_lines": 59,
+   "pub_fns": 7,
+   "rust_tests": 8,
+   "calibration": "PARTLY REFUTED",
+   "book_words": 962,
+   "book_sections": [
+    "6.13 Photodynamic and Sonodynamic Therapy, the Two the Project Started With"
+   ],
    "figures": [
     "fig24_hypoxia_killcurve",
     "fig26_vulnerability_window",
     "fig27_resistance_asymmetry",
     "fig31_modality_panel",
+    "fig43_sonodynamic_frequency",
     "fig6_sdt_chain_evidence",
     "fig8_simulation_by_treatment"
    ],
    "predictions": [
     "P2",
     "P4",
-    "P6"
+    "P6",
+    "P22"
    ],
-   "parity_lines": 0.0,
-   "parity_fns": 0.0,
-   "parity_tests": 0.0,
-   "parity_words": 0.0,
-   "lines_short_of_parity": 3992
+   "book_words_shared": 1924,
+   "parity_lines": 0.016,
+   "parity_fns": 0.038,
+   "parity_tests": 0.03,
+   "parity_words": 0.183,
+   "lines_short_of_parity": 3746
   },
   {
    "arm": "PDT",
@@ -81,25 +87,30 @@
    "census": null,
    "trials": null,
    "modules": 1,
-   "code_lines": 187,
-   "pub_fns": 4,
-   "rust_tests": 52,
-   "calibration": null,
-   "book_words": 0,
-   "book_sections": [],
+   "code_lines": 249,
+   "pub_fns": 9,
+   "rust_tests": 59,
+   "calibration": "DIRECTIONAL",
+   "book_words": 962,
+   "book_sections": [
+    "6.13 Photodynamic and Sonodynamic Therapy, the Two the Project Started With"
+   ],
    "figures": [
     "fig31_modality_panel",
     "fig34_depth_reach",
+    "fig44_pdt_fluence_rate",
     "fig8_simulation_by_treatment"
    ],
    "predictions": [
-    "P2"
+    "P2",
+    "P21"
    ],
-   "parity_lines": 0.047,
-   "parity_fns": 0.022,
-   "parity_tests": 0.165,
-   "parity_words": 0.0,
-   "lines_short_of_parity": 3805
+   "book_words_shared": 1924,
+   "parity_lines": 0.065,
+   "parity_fns": 0.049,
+   "parity_tests": 0.224,
+   "parity_words": 0.183,
+   "lines_short_of_parity": 3556
   },
   {
    "arm": "Radiation",
@@ -125,11 +136,12 @@
     "P9",
     "P14"
    ],
-   "parity_lines": 0.066,
-   "parity_fns": 0.124,
-   "parity_tests": 0.105,
+   "book_words_shared": 0,
+   "parity_lines": 0.069,
+   "parity_fns": 0.126,
+   "parity_tests": 0.125,
    "parity_words": 0.263,
-   "lines_short_of_parity": 3729
+   "lines_short_of_parity": 3542
   },
   {
    "arm": "Immunotherapy",
@@ -156,11 +168,12 @@
    "predictions": [
     "P16"
    ],
-   "parity_lines": 0.031,
+   "book_words_shared": 0,
+   "parity_lines": 0.032,
    "parity_fns": 0.038,
-   "parity_tests": 0.032,
+   "parity_tests": 0.038,
    "parity_words": 0.625,
-   "lines_short_of_parity": 3870
+   "lines_short_of_parity": 3683
   },
   {
    "arm": "AdoptiveCell",
@@ -186,11 +199,12 @@
     "P11",
     "P17"
    ],
-   "parity_lines": 0.042,
-   "parity_fns": 0.07,
-   "parity_tests": 0.051,
+   "book_words_shared": 0,
+   "parity_lines": 0.044,
+   "parity_fns": 0.071,
+   "parity_tests": 0.061,
    "parity_words": 0.202,
-   "lines_short_of_parity": 3826
+   "lines_short_of_parity": 3639
   },
   {
    "arm": "OncolyticVirus",
@@ -216,11 +230,12 @@
     "P12",
     "P18"
    ],
-   "parity_lines": 0.041,
-   "parity_fns": 0.059,
-   "parity_tests": 0.044,
+   "book_words_shared": 0,
+   "parity_lines": 0.043,
+   "parity_fns": 0.06,
+   "parity_tests": 0.053,
    "parity_words": 0.187,
-   "lines_short_of_parity": 3827
+   "lines_short_of_parity": 3640
   },
   {
    "arm": "Ablation",
@@ -246,11 +261,12 @@
     "P13",
     "P20"
    ],
-   "parity_lines": 0.032,
-   "parity_fns": 0.048,
-   "parity_tests": 0.032,
+   "book_words_shared": 0,
+   "parity_lines": 0.034,
+   "parity_fns": 0.049,
+   "parity_tests": 0.038,
    "parity_words": 0.167,
-   "lines_short_of_parity": 3863
+   "lines_short_of_parity": 3676
   },
   {
    "arm": "Chemotherapy",
@@ -275,11 +291,12 @@
     "P8",
     "P15"
    ],
-   "parity_lines": 0.071,
-   "parity_fns": 0.102,
-   "parity_tests": 0.048,
+   "book_words_shared": 0,
+   "parity_lines": 0.074,
+   "parity_fns": 0.104,
+   "parity_tests": 0.057,
    "parity_words": 0.265,
-   "lines_short_of_parity": 3710
+   "lines_short_of_parity": 3523
   },
   {
    "arm": "AntibodyDrugConjugate",
@@ -306,18 +323,22 @@
     "P10",
     "P19"
    ],
-   "parity_lines": 0.031,
-   "parity_fns": 0.07,
-   "parity_tests": 0.035,
+   "book_words_shared": 0,
+   "parity_lines": 0.032,
+   "parity_fns": 0.071,
+   "parity_tests": 0.042,
    "parity_words": 0.19,
-   "lines_short_of_parity": 3869
+   "lines_short_of_parity": 3682
   }
  ],
  "shared_modules": 5,
  "shared_code_lines": 818,
  "shared_pub_fns": 58,
- "manuscript_words_in_sections": 63763,
- "manuscript_words_attributed": 15221,
+ "manuscript_words_in_sections": 65870,
+ "manuscript_words_attributed": 17145,
+ "sections_naming_more_than_one_arm": {
+  "6.13 Photodynamic and Sonodynamic Therapy, the Two the Project Started With": 2
+ },
  "absent_arms": [
   {
    "arm": "Targeted small-molecule therapy",

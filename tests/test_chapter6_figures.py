@@ -602,7 +602,8 @@ def test_the_calibration_figure_draws_the_arms_that_failed():
         (REPO / "analysis/modality-calibration.json").read_text())["arms"]
     verdicts = {a["arm"]: a.get("verdict") for a in arms}
     failed = [k for k, v in verdicts.items()
-              if v in ("INADMISSIBLE", "NO TARGET", "UNCONSTRAINED")]
+              if v in ("INADMISSIBLE", "NO TARGET", "UNCONSTRAINED",
+                       "PARTLY REFUTED")]
     assert failed, (
         "every arm now fits its target, which would make this figure a "
         "success chart; re-derive its caption rather than leaving it")
@@ -631,8 +632,17 @@ def test_the_calibration_figure_draws_the_arms_that_failed():
         counts[a["verdict"]] = counts.get(a["verdict"], 0) + 1
     for v, n in counts.items():
         token = {"ADMISSIBLE": "fitted", "UNCONSTRAINED": "unconstrained",
-                 "INADMISSIBLE": "inadmissible", "NO TARGET": "with no target"}[v]
+                 "INADMISSIBLE": "inadmissible", "NO TARGET": "with no target",
+                 "DIRECTIONAL": "directional",
+                 "PARTLY REFUTED": "partly refuted"}[v]
         assert f"{n} {token}" in w, (
             f"fig35's title does not state the live count {n} {token}")
     assert "NOT that the arm is validated" in w, (
         "fig35 no longer says ADMISSIBLE is not validation")
+    # A REFUTED row must be findable, not folded into the greens. This figure's
+    # whole job is to make the informative rows the visible ones, and the one
+    # an independent study contradicts is the most informative of them.
+    if "PARTLY REFUTED" in counts:
+        assert "CONTRADICTS" in w, (
+            "fig35 carries a PARTLY REFUTED row and its caption does not say "
+            "an independent study contradicts the arm")

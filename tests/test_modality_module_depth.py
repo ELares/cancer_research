@@ -31,13 +31,22 @@ MD_ = _load()
 
 # The classification, as a decision record. A module must be added to one of
 # these deliberately; see `test_every_module_is_classified_by_a_decision`.
+# `photosensitizer_pk` MOVED, AND THE MOVE IS THE LESSON THIS FILE ALMOST
+# TAUGHT ITSELF. It is photodynamic therapy's own file and has been since long
+# before any arm below existed, and it sat in ENGINE_PIN -- so its lines were
+# counted on the COMPARATOR'S side of a ratio measuring distance from the
+# comparator, while `arm_parity.py` credited the same lines to PDT. The guard
+# below exists for precisely this defect and its docstring describes it
+# exactly; it did not fire, because the error was already inside the pin when
+# the pin was written. A pin catches a NEW mistake and freezes an OLD one, and
+# nothing here distinguished the two.
 DEDICATED_PIN = {"ablation", "adc", "adoptive", "checkpoint", "chemo",
-                 "oncolytic", "radiation"}
+                 "oncolytic", "photosensitizer_pk", "radiation", "sonodynamic"}
 SHARED_PIN = {"cell", "drug_transport", "immune", "immune_spatial", "nutrient"}
 ENGINE_PIN = {
     "acsl4", "alox", "biochem", "clonal", "contact", "copper", "dose_schedule",
     "grid", "ifngamma", "io", "oxygen", "params", "persister", "ph",
-    "phenotype_mufa", "photosensitizer_pk", "physics", "reaction_diffusion",
+    "phenotype_mufa", "physics", "reaction_diffusion",
     "repair", "senescence", "slab", "spheroid", "stats", "stromal",
     "trigger_wave", "tumor_pk", "vasculature",
 }
@@ -253,6 +262,34 @@ def test_the_retracted_sentence_is_quoted_and_not_standing(d):
     assert "An earlier version of this paragraph said" in para, (
         "the retraction is no longer attached to the measurement that "
         "replaced it")
+
+
+def test_no_engine_module_is_named_after_a_treatment_arm(d):
+    """The check the pin could not make for itself.
+
+    `test_every_module_is_classified_by_a_decision_somebody_made` catches a
+    NEW module landing unclassified and is powerless against one already
+    misfiled when the pin was written -- which is how `photosensitizer_pk`
+    spent eight sections on the comparator's side of the gap ratio.
+
+    So this asks a question the pin cannot: does any module the engine claims
+    share a name with an arm the parity table measures? A modality's own file
+    counted as engine inflates the comparator and the gap at once, in the
+    direction least likely to be questioned, because it makes this project's
+    self-criticism look better founded than it is.
+    """
+    engine = set(d["engine_module_names"])
+    arm_words = {"photo", "sono", "radiat", "chemo", "immun", "onco", "ablat",
+                 "adc", "adoptive", "checkpoint", "conjugate", "cart"}
+    suspicious = sorted(m for m in engine
+                        if any(w in m for w in arm_words)
+                        and m not in SHARED_PIN)
+    assert not suspicious, (
+        f"{suspicious} are counted as ferroptosis engine while named after a "
+        "treatment modality. If one of them really is shared machinery, put "
+        "it in SHARED (credited to no arm) rather than leaving it on the "
+        "comparator's side of a ratio that measures distance from the "
+        "comparator.")
 
 
 def test_every_module_is_classified_by_a_decision_somebody_made(d):

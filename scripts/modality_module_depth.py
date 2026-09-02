@@ -73,6 +73,19 @@ DEDICATED = {
     "oncolytic": "Oncolytic virus spread",
     "adc": "Antibody-drug conjugate bystander effect",
     "adoptive": "CAR-T trafficking, infiltration and activation barriers",
+    # ADDED LATE, AND THE OMISSION RAN AGAINST THIS PAGE'S OWN ARGUMENT.
+    # `photosensitizer_pk` is photodynamic therapy's own file and has been
+    # since long before any of the arms above existed, and it was filed as
+    # ENGINE -- so its lines were counted on the comparator's side of a ratio
+    # measuring how far the arms are from the comparator, and `arm_parity.py`
+    # credited the same lines to PDT at the same time. The gap this page
+    # reports was therefore overstated, in the direction that made the
+    # chapter's case look worse rather than better, which is the direction an
+    # error of this kind is least likely to be noticed in.
+    "photosensitizer_pk": "Photodynamic therapy: photosensitizer PK, drug-"
+                          "light interval, singlet-O2 yield and fluence rate",
+    "sonodynamic": "Sonodynamic therapy: the mechanical index, the inertial-"
+                   "cavitation threshold and the frequency optimum",
 }
 # Machinery more than one arm reaches through. Credited to none of them.
 SHARED = {

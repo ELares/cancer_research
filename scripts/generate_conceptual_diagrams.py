@@ -1149,9 +1149,10 @@ def fig35_calibration_verdicts():
         print("  fig35: analysis/modality-calibration.json missing - skipping")
         return
     arms = json.loads(src.read_text())["arms"]
-    order = {"ADMISSIBLE": 0, "UNCONSTRAINED": 1, "INADMISSIBLE": 2,
-             "NO TARGET": 3}
-    colour = {"ADMISSIBLE": "#2E7D32", "UNCONSTRAINED": "#F9A825",
+    order = {"ADMISSIBLE": 0, "DIRECTIONAL": 1, "UNCONSTRAINED": 2,
+             "PARTLY REFUTED": 3, "INADMISSIBLE": 4, "NO TARGET": 5}
+    colour = {"ADMISSIBLE": "#2E7D32", "DIRECTIONAL": "#1565C0",
+              "UNCONSTRAINED": "#F9A825", "PARTLY REFUTED": "#EF6C00",
               "INADMISSIBLE": "#C62828", "NO TARGET": "#9E9E9E"}
     rows = sorted(arms, key=lambda a: (order.get(a.get("verdict"), 9),
                                        a["arm"]))
@@ -1175,8 +1176,10 @@ def fig35_calibration_verdicts():
               for v in order}
     ax.set_title(
         f"What a published target could settle, per arm "
-        f"({counts['ADMISSIBLE']} fitted, {counts['UNCONSTRAINED']} "
-        f"unconstrained, {counts['INADMISSIBLE']} inadmissible, "
+        f"({counts['ADMISSIBLE']} fitted, {counts['DIRECTIONAL']} directional, "
+        f"{counts['UNCONSTRAINED']} unconstrained, "
+        f"{counts['PARTLY REFUTED']} partly refuted, "
+        f"{counts['INADMISSIBLE']} inadmissible, "
         f"{counts['NO TARGET']} with no target)",
         fontsize=11, fontweight="bold")
     fig.text(0.5, 0.02,
@@ -1187,7 +1190,12 @@ def fig35_calibration_verdicts():
              "a target so loose it admits almost the whole scanned range, an "
              "INADMISSIBLE one has a target that constrains a PRODUCT of "
              "factors neither of which is identifiable from it, and an arm "
-             "with NO TARGET has nothing published to fit at all.",
+             "with NO TARGET has nothing published to fit at all. Two rows "
+             "are neither fitted nor failed: a DIRECTIONAL arm has a target "
+             "that constrains a SIGN and not a value, and the PARTLY REFUTED "
+             "one is the sharpest row on the page - an independent study "
+             "CONTRADICTS one of its three directional claims, and it is "
+             "coloured to be found rather than folded into the greens.",
              ha="center", fontsize=7.2, color="#555", wrap=True)
     fig.tight_layout(rect=[0, 0.10, 1, 1])
     save(fig, "fig35_calibration_verdicts")
@@ -1821,6 +1829,208 @@ def fig42_ablation_sleeve():
     save(fig, "fig42_ablation_sleeve")
 
 
+def fig43_sonodynamic_frequency():
+    """The frequency an SDT applicator should use, and the one claim that fails.
+
+    The chapter's other arms all closed with a direction their comparator
+    confirmed. This one closes with a direction its comparator CONTRADICTS,
+    and that is the panel's subject rather than a footnote to it.
+    """
+    import json
+    src = Path(__file__).resolve().parent.parent / "analysis" / "calibration" / \
+        "sonodynamic-validation.json"
+    if not src.exists():
+        print("  fig43: sonodynamic-validation.json missing - skipping")
+        return
+    d = json.loads(src.read_text())
+    alpha = d["alpha_db_cm_mhz_from_params_rs"]
+
+    def delivered(z, f, a):
+        return f * pow(10.0, -a * f * z / 20.0) / (f ** 0.5)
+
+    fig, axes = plt.subplots(1, 3, figsize=(15, 4.6))
+
+    # (a) the interior optimum, and that it IS interior
+    ax = axes[0]
+    freqs = [0.05 + i * 0.01 for i in range(0, 500)]
+    for z, colour in ((5.0, "#14505c"), (10.0, "#a2582b"), (15.0, "#9fb3b8")):
+        ys = [delivered(z, f, alpha) for f in freqs]
+        peak = max(ys)
+        ax.plot(freqs, [y / peak for y in ys], color=colour, lw=2,
+                label=f"{z:.0f} cm deep")
+        fstar = 10.0 / (alpha * 2.302585092994046 * z)
+        ax.plot([fstar], [1.0], "o", color=colour, ms=7)
+    ax.set_xlim(0, 5)
+    ax.set_xlabel("frequency (MHz)")
+    ax.set_ylabel("delivered mechanical index (peak = 1)")
+    ax.set_title("(a) three effects, two of them opposing", fontsize=10)
+    ax.legend(fontsize=7.5)
+    ax.grid(alpha=0.25)
+
+    # (b) the model against the comparator -- the disagreement
+    ax = axes[1]
+    depths = [r["depth_mm"] for r in d["band"]]
+    ax.plot(depths, [r["model_khz"] for r in d["band"]], "o-", color="#14505c",
+            lw=2, ms=7, label="this model")
+    for a_val, marker, colour in ((5.0, "s--", "#a2582b"), (10.0, "^--", "#9fb3b8")):
+        rows = [e for e in d["ellens"] if e["alpha_np_m_mhz"] == a_val]
+        ax.plot([e["depth_mm"] for e in rows], [e["reported_khz"] for e in rows],
+                marker, color=colour, lw=1.6, ms=7,
+                label=f"PMID 26233216, $\\alpha$={a_val:.0f}")
+    ax.axhspan(250, 1500, color="#eef2f3", zorder=0)
+    ax.set_ylim(200, 1650)
+    ax.annotate("the band they scanned", (52, 1520), fontsize=7.5, color="#888",
+                va="top")
+    ax.set_xlabel("focal depth (mm)")
+    ax.set_ylabel("optimal frequency (kHz)")
+    ax.set_title("(b) the depth scaling is REFUTED", fontsize=10)
+    ax.legend(fontsize=7.5)
+    ax.grid(alpha=0.25)
+
+    # (c) what makes this arm structurally different: a threshold
+    ax = axes[2]
+    # STARTS AT 0.5 cm DELIBERATELY. At zero depth nothing attenuates, the
+    # optimal frequency is unbounded, and evaluating "the index at the
+    # optimum" there diverges -- a degenerate regime, which the crate's
+    # `optimal_frequency_mhz` returns infinity for rather than inventing a
+    # limit. Plotting it would put a spike on the page that is an artifact of
+    # the axis choice and not a property of any applicator.
+    zs = [0.5 + i * 0.25 for i in range(0, 59)]
+    for surface, colour, lab in ((3.0, "#14505c", "strong applicator"),
+                                 (1.5, "#a2582b", "moderate"),
+                                 (0.6, "#9fb3b8", "weak")):
+        idx = [surface * delivered(z, 10.0 / (alpha * 2.302585092994046 * z), alpha)
+               for z in zs]
+        ax.plot(zs, idx, color=colour, lw=2, label=lab)
+    ax.axhline(0.7, color="#c1440e", ls="--", lw=1.4)
+    ax.annotate("a cavitation threshold", (0.7, 0.78), fontsize=7.5, color="#c1440e")
+    ax.set_xlabel("focal depth (cm)")
+    ax.set_ylabel("delivered mechanical index")
+    ax.set_ylim(0, 3.6)
+    ax.set_xlim(0.5, 15.5)
+    ax.set_title("(c) below the line, no exposure time helps", fontsize=10)
+    ax.legend(fontsize=7.5)
+    ax.grid(alpha=0.25)
+
+    fig.suptitle("Sonodynamic therapy: an optimum the model finds, and a "
+                 "scaling an independent study contradicts", fontsize=12,
+                 fontweight="bold")
+    fig.text(0.5, 0.015,
+             "(a) Focusing favours a high frequency, while attenuation and the mechanical index's "
+             "own 1/sqrt(f) both favour a low one, so the product peaks in between. (b) Ellens & "
+             "Hynynen 2015 (PMID 26233216) simulated the same three mechanisms by an independent "
+             "full-wave route and report a near-flat optimum where this model predicts a 3x fall "
+             "across 50-150 mm. They name the missing term themselves - near-field heating, which "
+             "this model has no representation of at all. (c) is why SDT is structurally unlike "
+             "the dose-response arms: inertial cavitation is a THRESHOLD, so below the line no "
+             "insonation time produces sonochemical ROS and the depth limit is a hard edge rather "
+             "than a fade. The threshold height is a parameter, not a measurement: published "
+             "in-vivo values move by more than an order of magnitude with nucleation.",
+             ha="center", fontsize=7.2, color="#555", wrap=True)
+    fig.tight_layout(rect=[0, 0.15, 1, 0.93])
+    save(fig, "fig43_sonodynamic_frequency")
+
+
+def fig44_pdt_fluence_rate():
+    """Why the same joules delivered faster kill less, and what bounds it.
+
+    The fourth interior optimum in the chapter built from two opposing
+    monotonic effects, and the only one whose slow side is bounded by the
+    treatment's own pharmacokinetics rather than by biology.
+    """
+    import json
+    src = Path(__file__).resolve().parent.parent / "analysis" / "calibration" / \
+        "pdt-fluence-rate-validation.json"
+    if not src.exists():
+        print("  fig44: pdt-fluence-rate-validation.json missing - skipping")
+        return
+    d = json.loads(src.read_text())
+    pc = d["phi_crit_default_mw_cm2"]
+    p_full = d["oer_reference_po2_mmhg_from_oxygen_rs"]
+    total = d["total_fluence_j_cm2"]
+
+    def oer(p):
+        return (3.0 * max(p, 0.0) + 3.0) / (max(p, 0.0) + 3.0)
+
+    def yield_factor(rate):
+        o2 = 1.0 / (1.0 + rate / pc) if rate > 0 else 1.0
+        return oer(o2 * p_full) / oer(p_full)
+
+    fig, axes = plt.subplots(1, 3, figsize=(15, 4.6))
+
+    # (a) the two opposing terms, separately
+    ax = axes[0]
+    rates = [5.0 * pow(400.0 / 5.0, i / 300.0) for i in range(301)]
+    ax.plot(rates, [yield_factor(r) for r in rates], color="#14505c", lw=2,
+            label="oxygen: faster is worse")
+    import math as _m
+    t_half = 4.0
+    k = _m.log(2.0) / t_half
+    drug = []
+    for r in rates:
+        dur = total * 1000.0 / r / 3600.0
+        drug.append((1.0 - _m.exp(-k * dur)) / (k * dur) if dur > 0 else 1.0)
+    ax.plot(rates, drug, color="#a2582b", lw=2, label="drug: slower is worse")
+    ax.set_xscale("log")
+    ax.set_xlabel("fluence rate (mW/cm$^2$)")
+    ax.set_ylabel("relative factor")
+    ax.set_title("(a) two monotonic effects, opposed", fontsize=10)
+    ax.legend(fontsize=7.5)
+    ax.grid(alpha=0.25)
+
+    # (b) their product: an interior optimum per sensitizer
+    ax = axes[1]
+    for th, colour in ((0.5, "#14505c"), (4.0, "#a2582b"), (48.0, "#9fb3b8")):
+        kk = _m.log(2.0) / th
+        ys = []
+        for r in rates:
+            dur = total * 1000.0 / r / 3600.0
+            ys.append(yield_factor(r) * ((1.0 - _m.exp(-kk * dur)) / (kk * dur)))
+        peak = max(ys)
+        ax.plot(rates, [y / peak for y in ys], color=colour, lw=2,
+                label=f"half-life {th:.1f} h")
+        row = min(d["by_half_life"], key=lambda x: abs(x["t_half_h"] - th))
+        ax.plot([row["optimal_mw_cm2"]], [1.0], "o", color=colour, ms=7)
+    ax.set_xscale("log")
+    ax.set_xlabel("fluence rate (mW/cm$^2$)")
+    ax.set_ylabel("delivered singlet oxygen (peak = 1)")
+    ax.set_title("(b) a best rate, per drug", fontsize=10)
+    ax.legend(fontsize=7.5)
+    ax.grid(alpha=0.25)
+
+    # (c) how much of the answer is the uncalibrated knob
+    ax = axes[2]
+    rows = d["by_phi_crit"]
+    ax.plot([r["phi_crit"] for r in rows], [r["optimal_mw_cm2"] for r in rows],
+            "o-", color="#9fb3b8", lw=2, ms=7)
+    ax.set_xscale("log")
+    ax.set_yscale("log")
+    ax.set_xlabel("$\\varphi_{crit}$ (mW/cm$^2$) — measured nowhere here")
+    ax.set_ylabel("optimal fluence rate (mW/cm$^2$)")
+    ax.set_title(f"(c) the optimum rides on it, exponent "
+                 f"{d['optimum_scaling_exponent']:.2f}", fontsize=10)
+    ax.grid(alpha=0.25, which="both")
+
+    fig.suptitle("Photodynamic therapy consumes the oxygen it needs, so the "
+                 "same light delivered faster does less", fontsize=12,
+                 fontweight="bold")
+    fig.text(0.5, 0.015,
+             "A Type II photosensitizer works by handing energy to ground-state oxygen, so it "
+             "depletes its own substrate at the site it is treating; Henderson & Busch (PMID "
+             "16615136) report depletion within seconds at 75 mW/cm2. Against that, a slower "
+             "illumination runs further into the sensitizer's own clearance, and drug that has "
+             "left cannot be excited - which is not new machinery here but the module's existing "
+             "pharmacokinetics, integrated across the illumination instead of sampled once at its "
+             "start. Sampling once is exactly the approximation that makes a long treatment look "
+             "free. (c) is the refusal: the optimum's POSITION scales as roughly the square root "
+             "of a parameter nothing in this repository measures, so the direction is the result "
+             "and the milliwatt figure is a restatement of an assumption.",
+             ha="center", fontsize=7.2, color="#555", wrap=True)
+    fig.tight_layout(rect=[0, 0.15, 1, 0.93])
+    save(fig, "fig44_pdt_fluence_rate")
+
+
+
 if __name__ == "__main__":
     print("Generating conceptual diagrams...")
     fig18_hypoxia()
@@ -1842,4 +2052,6 @@ if __name__ == "__main__":
     fig40_oncolytic_bind()
     fig41_adc_loading()
     fig42_ablation_sleeve()
+    fig43_sonodynamic_frequency()
+    fig44_pdt_fluence_rate()
     print("Done.")

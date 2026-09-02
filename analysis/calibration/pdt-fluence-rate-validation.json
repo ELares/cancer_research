@@ -1,0 +1,122 @@
+{
+  "all_optima_interior": true,
+  "by_half_life": [
+    {
+      "delivered": 100.63275335510723,
+      "duration_h": 0.1322735798173492,
+      "interior": true,
+      "optimal_mw_cm2": 315.0036970663556,
+      "t_half_h": 0.25
+    },
+    {
+      "delivered": 111.8111928080695,
+      "duration_h": 0.2005911950697872,
+      "interior": true,
+      "optimal_mw_cm2": 207.71932014349144,
+      "t_half_h": 0.5
+    },
+    {
+      "delivered": 121.13241015264488,
+      "duration_h": 0.297273983927646,
+      "interior": true,
+      "optimal_mw_cm2": 140.16250637259932,
+      "t_half_h": 1.0
+    },
+    {
+      "delivered": 128.56338752898387,
+      "duration_h": 0.4343255235813157,
+      "interior": true,
+      "optimal_mw_cm2": 95.934188539269,
+      "t_half_h": 2.0
+    },
+    {
+      "delivered": 134.29353190790346,
+      "duration_h": 0.6276461737971128,
+      "interior": true,
+      "optimal_mw_cm2": 66.38559813818836,
+      "t_half_h": 4.0
+    },
+    {
+      "delivered": 138.60564369561794,
+      "duration_h": 0.9010711203770251,
+      "interior": true,
+      "optimal_mw_cm2": 46.24126300844327,
+      "t_half_h": 8.0
+    },
+    {
+      "delivered": 141.7936409748866,
+      "duration_h": 1.2879520352703198,
+      "interior": true,
+      "optimal_mw_cm2": 32.35110122553712,
+      "t_half_h": 16.0
+    },
+    {
+      "delivered": 145.17138445537182,
+      "duration_h": 2.254655694302325,
+      "interior": true,
+      "optimal_mw_cm2": 18.480279171654143,
+      "t_half_h": 48.0
+    }
+  ],
+  "by_phi_crit": [
+    {
+      "optimal_mw_cm2": 72.62681069375243,
+      "phi_crit": 10.0
+    },
+    {
+      "optimal_mw_cm2": 103.80961783468524,
+      "phi_crit": 25.0
+    },
+    {
+      "optimal_mw_cm2": 140.16250637259932,
+      "phi_crit": 50.0
+    },
+    {
+      "optimal_mw_cm2": 191.96086872825646,
+      "phi_crit": 100.0
+    },
+    {
+      "optimal_mw_cm2": 265.5073705409473,
+      "phi_crit": 200.0
+    }
+  ],
+  "oer_reference_po2_mmhg_from_oxygen_rs": 40.0,
+  "optimum_falls_with_half_life": true,
+  "optimum_scaling_exponent": 0.4327183926821681,
+  "optimum_span_over_phi_crit": 3.6557762623023597,
+  "oxygen_blind_gap": [
+    {
+      "o2_fraction": 0.6666666666666666,
+      "rate_mw_cm2": 25.0,
+      "yield_factor": 0.9780761852562346
+    },
+    {
+      "o2_fraction": 0.5,
+      "rate_mw_cm2": 50.0,
+      "yield_factor": 0.9575821845174973
+    },
+    {
+      "o2_fraction": 0.3333333333333333,
+      "rate_mw_cm2": 100.0,
+      "yield_factor": 0.9203583872573419
+    },
+    {
+      "o2_fraction": 0.2,
+      "rate_mw_cm2": 200.0,
+      "yield_factor": 0.8580931263858093
+    },
+    {
+      "o2_fraction": 0.1111111111111111,
+      "rate_mw_cm2": 400.0,
+      "yield_factor": 0.7670185657080452
+    }
+  ],
+  "phi_crit_default_mw_cm2": 50.0,
+  "phi_crit_span": 20.0,
+  "scan_range_mw_cm2": [
+    5.0,
+    400.0
+  ],
+  "total_fluence_j_cm2": 150.0,
+  "verdict": "DIRECTION ANCHORED, MAGNITUDE UNCONSTRAINED"
+}

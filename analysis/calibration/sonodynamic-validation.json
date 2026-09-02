@@ -1,0 +1,119 @@
+{
+  "alpha_db_cm_mhz_from_params_rs": 0.7,
+  "attenuation": [
+    {
+      "at_2alpha_mhz": 0.6204206884332168,
+      "at_alpha_mhz": 1.2408413768664337,
+      "depth_cm": 5.0,
+      "falls": true,
+      "ratio": 2.0
+    },
+    {
+      "at_2alpha_mhz": 0.3102103442166084,
+      "at_alpha_mhz": 0.6204206884332168,
+      "depth_cm": 10.0,
+      "falls": true,
+      "ratio": 2.0
+    },
+    {
+      "at_2alpha_mhz": 0.20680689614440564,
+      "at_alpha_mhz": 0.4136137922888113,
+      "depth_cm": 15.0,
+      "falls": true,
+      "ratio": 2.0
+    }
+  ],
+  "band": [
+    {
+      "depth_mm": 50,
+      "in_scanned_band": true,
+      "model_khz": 1240.8413768664336
+    },
+    {
+      "depth_mm": 100,
+      "in_scanned_band": true,
+      "model_khz": 620.4206884332168
+    },
+    {
+      "depth_mm": 150,
+      "in_scanned_band": true,
+      "model_khz": 413.6137922888113
+    }
+  ],
+  "claim_depth_scaling": "REFUTED",
+  "claim_falls_with_attenuation": "CONFIRMED",
+  "claim_interior_optimum": "CONFIRMED",
+  "ellens": [
+    {
+      "alpha_np_m_mhz": 5.0,
+      "depth_mm": 50,
+      "reported_khz": 750
+    },
+    {
+      "alpha_np_m_mhz": 5.0,
+      "depth_mm": 100,
+      "reported_khz": 750
+    },
+    {
+      "alpha_np_m_mhz": 5.0,
+      "depth_mm": 150,
+      "reported_khz": 750
+    },
+    {
+      "alpha_np_m_mhz": 10.0,
+      "depth_mm": 50,
+      "reported_khz": 750
+    },
+    {
+      "alpha_np_m_mhz": 10.0,
+      "depth_mm": 100,
+      "reported_khz": 500
+    },
+    {
+      "alpha_np_m_mhz": 10.0,
+      "depth_mm": 150,
+      "reported_khz": 500
+    }
+  ],
+  "interior": [
+    {
+      "agrees": true,
+      "beats_high_end": true,
+      "beats_low_end": true,
+      "closed_form_mhz": 2.0680689614440566,
+      "depth_cm": 3.0,
+      "scanned_mhz": 2.069999999999978
+    },
+    {
+      "agrees": true,
+      "beats_high_end": true,
+      "beats_low_end": true,
+      "closed_form_mhz": 1.2408413768664337,
+      "depth_cm": 5.0,
+      "scanned_mhz": 1.2399999999999956
+    },
+    {
+      "agrees": true,
+      "beats_high_end": true,
+      "beats_low_end": true,
+      "closed_form_mhz": 0.6204206884332168,
+      "depth_cm": 10.0,
+      "scanned_mhz": 0.6200000000000004
+    },
+    {
+      "agrees": true,
+      "beats_high_end": true,
+      "beats_low_end": true,
+      "closed_form_mhz": 0.4136137922888113,
+      "depth_cm": 15.0,
+      "scanned_mhz": 0.41500000000000026
+    }
+  ],
+  "model_depth_span_ratio": 2.9999999999999996,
+  "reported_depth_span_ratios": {
+    "10.0": 1.5,
+    "5.0": 1.0
+  },
+  "reported_optimum_falls_with_attenuation": true,
+  "verdict": "PARTIAL"
+}

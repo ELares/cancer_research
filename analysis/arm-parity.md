@@ -6,9 +6,9 @@ The aggregate gap is already published: the modality arms are roughly an order o
 
 | arm | engine lines | pub fns | rust tests | calibration | book words | figures | predictions |
 |---|--:|--:|--:|---|--:|--:|--:|
-| Ferroptosis induction | 3,992 | 186 | 315 | -- | 5,249 | 7 | 7 |
-| Sonodynamic therapy | 0 | 0 | 0 | -- | 0 | 6 | 3 |
-| Photodynamic therapy | 187 | 4 | 52 | -- | 0 | 3 | 1 |
+| Ferroptosis induction | 3,805 | 182 | 263 | -- | 5,249 | 7 | 7 |
+| Sonodynamic therapy | 59 | 7 | 8 | PARTLY REFUTED | 962 | 7 | 4 |
+| Photodynamic therapy | 249 | 9 | 59 | DIRECTIONAL | 962 | 4 | 2 |
 | Ionizing radiation | 263 | 23 | 33 | ADMISSIBLE | 1,378 | 2 | 2 |
 | Checkpoint blockade | 122 | 7 | 10 | INADMISSIBLE | 3,281 | 3 | 1 |
 | Adoptive cell therapy (CAR-T) | 166 | 13 | 16 | ADMISSIBLE | 1,062 | 2 | 2 |
@@ -17,21 +17,21 @@ The aggregate gap is already published: the modality arms are roughly an order o
 | Cytotoxic chemotherapy | 282 | 19 | 15 | NO TARGET | 1,393 | 1 | 2 |
 | Antibody-drug conjugate | 123 | 13 | 11 | NO TARGET | 998 | 3 | 2 |
 
-**3,992 lines of production code carry the ferroptosis arm.** No other arm reaches a tenth of it, and the table's own worst row is the one to read first: an arm with no module of its own has no engine column to shrink.
+**3,805 lines of production code carry the ferroptosis arm.** No other arm reaches a tenth of it, and the table's own worst row is the one to read first: an arm with no module of its own has no engine column to shrink.
 
 ## What each arm is short, on the axis the criticism was about
 
 | arm | lines | share of ferroptosis | lines short of parity |
 |---|--:|--:|--:|
-| Sonodynamic therapy | 0 | 0.000x | 3,992 |
-| Photodynamic therapy | 187 | 0.047x | 3,805 |
-| Ionizing radiation | 263 | 0.066x | 3,729 |
-| Checkpoint blockade | 122 | 0.031x | 3,870 |
-| Adoptive cell therapy (CAR-T) | 166 | 0.042x | 3,826 |
-| Oncolytic virus | 165 | 0.041x | 3,827 |
-| Thermal and electrical ablation | 129 | 0.032x | 3,863 |
-| Cytotoxic chemotherapy | 282 | 0.071x | 3,710 |
-| Antibody-drug conjugate | 123 | 0.031x | 3,869 |
+| Sonodynamic therapy | 59 | 0.016x | 3,746 |
+| Photodynamic therapy | 249 | 0.065x | 3,556 |
+| Ionizing radiation | 263 | 0.069x | 3,542 |
+| Checkpoint blockade | 122 | 0.032x | 3,683 |
+| Adoptive cell therapy (CAR-T) | 166 | 0.044x | 3,639 |
+| Oncolytic virus | 165 | 0.043x | 3,640 |
+| Thermal and electrical ablation | 129 | 0.034x | 3,676 |
+| Cytotoxic chemotherapy | 282 | 0.074x | 3,523 |
+| Antibody-drug conjugate | 123 | 0.032x | 3,682 |
 
 Shared machinery -- 5 modules, 818 lines -- is credited to NO arm, so every row above is a lower bound. It is not divided up because dividing it would be a judgement about how much of the immune model belongs to checkpoint blockade rather than to CAR-T, and no such split is measurable from the code.
 
@@ -64,5 +64,7 @@ A parity table listing only what exists measures the campaign's progress and hid
 
 Quality, correctness, or whether any of it is used. A module can be large and wrong, and an arm could reach every number in the first table and still be worse science than the arm it is measured against. What the table supports is the negative: an arm at a fraction of the comparator on every axis is not represented in any sense a reader would accept.
 
-The book column is attributed by HEADING -- a section counts for an arm when its own heading names it. That under-counts deliberately: 15,221 of 63,763 words in numbered sections are attributed, and the whole multi-modality chapter sits in the remainder because its headings name no arm. A keyword rule over body text was rejected; `analysis/scope-audit.md` records what happened the last time subject was counted by vocabulary.
+The book column is attributed by HEADING -- a section counts for an arm when its own heading names it. That under-counts deliberately: 17,145 of 65,870 words in numbered sections are attributed, and the whole multi-modality chapter sits in the remainder because its headings name no arm. A keyword rule over body text was rejected; `analysis/scope-audit.md` records what happened the last time subject was counted by vocabulary.
+
+A section whose heading names MORE THAN ONE arm is DIVIDED between them rather than credited whole to each, because two identical numbers side by side read as independent coverage when they are one section counted twice. 1 section(s) are split this way: *6.13 Photodynamic and Sonodynamic Therapy, the Two the Project Started With* (2 arms). Dividing UNDER-counts each arm, which keeps this column the lower bound the rest of the table is; crediting whole would over-count, which it must never do.
 
