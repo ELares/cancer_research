@@ -1742,6 +1742,85 @@ def fig41_adc_loading():
     save(fig, "fig41_adc_loading")
 
 
+def fig42_ablation_sleeve():
+    """Where a thermal ablation fails, and where electroporation does not.
+
+    The arm's calibration is UNCONSTRAINED and will stay so -- a threshold
+    observable cannot identify a threshold parameter. What replaces it is a
+    statement about WHERE the survivors are, which a coverage fraction cannot
+    make and a clinician can check.
+    """
+    import json
+    src = Path(__file__).resolve().parent.parent / "analysis" / "calibration" / \
+        "ablation-validation.json"
+    if not src.exists():
+        print("  fig42: ablation-validation.json missing - skipping")
+        return
+    d = json.loads(src.read_text())
+
+    fig, axes = plt.subplots(1, 3, figsize=(15, 4.6))
+
+    ax = axes[0]
+    body = d["body_temperature_c"]
+    length = d["cooling_length_mm"]
+    xs = [i * 0.05 for i in range(0, 201)]
+    for applicator, colour in ((90.0, "#14505c"), (60.0, "#a2582b"),
+                               (50.0, "#9fb3b8")):
+        ys = [body + (applicator - body) * (1 - pow(2.718281828459045, -x / length))
+              for x in xs]
+        ax.plot(xs, ys, color=colour, lw=2, label=f"{applicator:.0f} °C applicator")
+    ax.axhline(43.0, color="#888", ls="--", lw=1)
+    ax.annotate("43 °C, the dose reference", (7.5, 43.6), fontsize=7.5, color="#555")
+    ax.set_xlabel("distance from the vessel (mm)")
+    ax.set_ylabel("peak tissue temperature (°C)")
+    ax.set_title("(a) blood carries the heat away", fontsize=10)
+    ax.legend(fontsize=7.5, loc="lower right")
+    ax.grid(alpha=0.25)
+
+    ax = axes[1]
+    rows = [r for r in d["by_applicator_temperature"] if not r["total_failure"]]
+    dead = [r for r in d["by_applicator_temperature"] if r["total_failure"]]
+    ax.plot([r["applicator_c"] for r in rows],
+            [r["thermal_sleeve_mm"] for r in rows], "o-", color="#14505c",
+            lw=2, ms=6, label="thermal")
+    ax.plot([r["applicator_c"] for r in rows],
+            [r["electroporation_sleeve_mm"] for r in rows], "s-",
+            color="#a2582b", lw=2, ms=6, label="electroporation")
+    for r in dead:
+        ax.annotate("fails\neverywhere", (r["applicator_c"], 0.6),
+                    fontsize=7.5, color="#888", ha="center")
+    ax.set_xlabel("applicator temperature (°C)")
+    ax.set_ylabel("surviving perivascular sleeve (mm)")
+    ax.set_title("(b) a radius, not a percentage", fontsize=10)
+    ax.legend(fontsize=7.5)
+    ax.grid(alpha=0.25)
+
+    ax = axes[2]
+    sens = d["sensitivity_to_cooling_length"]
+    ax.plot([r["cooling_length_mm"] for r in sens],
+            [r["sleeve_at_60c_mm"] for r in sens], "o-", color="#9fb3b8",
+            lw=2, ms=6)
+    ax.set_xlabel("cooling length (mm) — a placeholder")
+    ax.set_ylabel("sleeve at 60 °C (mm)")
+    ax.set_title("(c) the size is a restatement of an assumption", fontsize=10)
+    ax.grid(alpha=0.25)
+
+    fig.suptitle("Thermal ablation fails in a place, and electroporation does "
+                 "not fail there", fontsize=12, fontweight="bold")
+    fig.text(0.5, 0.015,
+             "This arm's calibration is UNCONSTRAINED and will stay so: a threshold observable "
+             "cannot identify a threshold parameter. What replaces it is a statement about WHERE "
+             "the survivors are - a radius rather than a coverage percentage, which a clinician "
+             "can look for. Electroporation's zero is structural rather than measured: it is "
+             "non-thermal, so a heat sink removes nothing that matters to it, which is the "
+             "documented reason it is reached for near vessels. (c) is why the SIZE is not a "
+             "result: the cooling length stands in for vessel calibre and flow, which this layer "
+             "does not represent, and the sleeve scales with it almost proportionally.",
+             ha="center", fontsize=7.2, color="#555", wrap=True)
+    fig.tight_layout(rect=[0, 0.13, 1, 0.93])
+    save(fig, "fig42_ablation_sleeve")
+
+
 if __name__ == "__main__":
     print("Generating conceptual diagrams...")
     fig18_hypoxia()
@@ -1762,4 +1841,5 @@ if __name__ == "__main__":
     fig39_adoptive_escalation()
     fig40_oncolytic_bind()
     fig41_adc_loading()
+    fig42_ablation_sleeve()
     print("Done.")

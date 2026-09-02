@@ -2,10 +2,10 @@
  "dedicated": [
   {
    "module": "ablation",
-   "pub_fns": 4,
+   "pub_fns": 9,
    "pub_types": 1,
    "pub_consts": 2,
-   "code_lines": 66,
+   "code_lines": 129,
    "serves": "HIFU + irreversible electroporation",
    "reach": 1
   },
@@ -145,16 +145,16 @@
  "engine_pub_fns": 186,
  "engine_code_lines": 3992,
  "dedicated_modules": 7,
- "dedicated_pub_fns": 90,
- "dedicated_code_lines": 1187,
+ "dedicated_pub_fns": 95,
+ "dedicated_code_lines": 1250,
  "shared_modules": 5,
  "shared_pub_fns": 58,
  "shared_code_lines": 818,
  "engine_modules_with_shared": 32,
  "engine_pub_fns_with_shared": 244,
  "engine_code_lines_with_shared": 4810,
- "line_ratio_narrow": 3.4,
- "line_ratio_wide": 4.1,
- "fn_ratio_narrow": 2.1,
- "fn_ratio_wide": 2.7
+ "line_ratio_narrow": 3.2,
+ "line_ratio_wide": 3.8,
+ "fn_ratio_narrow": 2.0,
+ "fn_ratio_wide": 2.6
 }

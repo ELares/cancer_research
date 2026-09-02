@@ -183,6 +183,128 @@ pub fn margin_survival_fraction(cfg: &AblationConfig, covered_fraction: f64) -> 
     }
 }
 
+// ── Where an ablation fails, and why it is not where the dose is lowest ──
+//
+// The module above treats ablation as a threshold and a coverage fraction: get
+// the applicator field over the margin and everything inside it dies. That is
+// the right first model and it cannot express the failure the clinic actually
+// sees, which is spatial and has a cause.
+//
+// Flowing blood carries heat away. Tissue next to a large vessel therefore
+// reaches a lower peak temperature than tissue the same distance from the
+// applicator but away from the vessel, and survives an ablation that killed
+// everything around it. Perivascular local progression after thermal ablation
+// is a recognised problem for exactly this reason (PMID 35114665).
+//
+// The consequence is a DISCRIMINATION rather than a correction, because
+// irreversible electroporation is not thermal: it kills by permeabilising
+// membranes with an electric field, and a heat sink does not apply to it. So
+// the two modalities fail in different PLACES -- one perivascular, one not --
+// which is testable in a way that a coverage fraction is not, and which is the
+// reason IRE is reached for near vessels.
+
+/// Perfusion-driven cooling as a function of distance from a vessel, in mm.
+///
+/// Returns a multiplier on the temperature RISE above body temperature: 0
+/// against the vessel wall, approaching 1 far from it. The length scale is the
+/// distance over which flowing blood stops mattering.
+///
+/// UNCALIBRATED. The exponential form has the right limits and the right
+/// direction; the length scale is a placeholder and depends on vessel calibre
+/// and flow, neither of which this layer represents.
+#[must_use]
+pub fn perfusion_cooling(distance_mm: f64, cooling_length_mm: f64) -> f64 {
+    let d = distance_mm.max(0.0);
+    let l = cooling_length_mm.max(f64::MIN_POSITIVE);
+    1.0 - (-d / l).exp()
+}
+
+/// Peak temperature at a point, given the applicator's unimpeded temperature
+/// and the cooling a nearby vessel imposes.
+///
+/// Body temperature is the floor: a heat sink cannot cool tissue below the
+/// blood that is doing the cooling.
+#[must_use]
+pub fn perivascular_temperature(
+    unimpeded_c: f64,
+    distance_mm: f64,
+    cooling_length_mm: f64,
+    body_temperature_c: f64,
+) -> f64 {
+    let rise = (unimpeded_c - body_temperature_c).max(0.0);
+    body_temperature_c + rise * perfusion_cooling(distance_mm, cooling_length_mm)
+}
+
+/// Whether a thermal ablation kills at a given distance from a vessel.
+///
+/// The threshold is the module's existing thermal-dose criterion; what changes
+/// here is the temperature that reaches the tissue.
+#[must_use]
+pub fn thermal_kills_at(
+    unimpeded_c: f64,
+    minutes: f64,
+    distance_mm: f64,
+    cooling_length_mm: f64,
+    body_temperature_c: f64,
+    cem43_threshold: f64,
+) -> bool {
+    let t = perivascular_temperature(
+        unimpeded_c,
+        distance_mm,
+        cooling_length_mm,
+        body_temperature_c,
+    );
+    cem43(t, minutes) >= cem43_threshold
+}
+
+/// The distance from a vessel inside which a thermal ablation fails, in mm.
+///
+/// **The layer's spatial prediction.** Returns the radius of the surviving
+/// perivascular sleeve: 0 when the applicator is hot enough that the sink
+/// cannot save anything, and larger as the margin gets thinner. A coverage
+/// fraction cannot express this at all, because the survivors are not
+/// distributed at random through the volume -- they are in a specific place, a
+/// clinician can see where, and that is what makes it checkable.
+#[must_use]
+pub fn perivascular_failure_radius_mm(
+    unimpeded_c: f64,
+    minutes: f64,
+    cooling_length_mm: f64,
+    body_temperature_c: f64,
+    cem43_threshold: f64,
+    max_distance_mm: f64,
+) -> f64 {
+    let mut d = 0.0;
+    let step = max_distance_mm / 500.0;
+    while d <= max_distance_mm {
+        if thermal_kills_at(
+            unimpeded_c,
+            minutes,
+            d,
+            cooling_length_mm,
+            body_temperature_c,
+            cem43_threshold,
+        ) {
+            return d;
+        }
+        d += step;
+    }
+    max_distance_mm
+}
+
+/// The same radius for irreversible electroporation, which is zero.
+///
+/// Not a stub. IRE kills by permeabilising membranes with an electric field
+/// and deposits little heat, so flowing blood removes nothing that matters to
+/// it -- which is the documented reason it is reached for near vessels. The
+/// function exists so the CONTRAST is a value the model produces rather than a
+/// sentence in a comment, and so a change that gave electroporation a thermal
+/// dependence would break a test rather than pass silently.
+#[must_use]
+pub fn electroporation_failure_radius_mm() -> f64 {
+    0.0
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -314,5 +436,98 @@ mod tests {
         // Either alone is sufficient for the margin result.
         assert_eq!(margin_survival_fraction(&field_only, 1.0), 0.0);
         assert_eq!(margin_survival_fraction(&heat_only, 1.0), 0.0);
+    }
+    // ── The heat sink ────────────────────────────────────────────────────
+
+    #[test]
+    fn cooling_is_total_at_the_vessel_wall_and_absent_far_away() {
+        assert!(
+            perfusion_cooling(0.0, 2.0).abs() < 1e-12,
+            "tissue against the vessel wall should get no temperature rise"
+        );
+        assert!(
+            perfusion_cooling(20.0, 2.0) > 0.99,
+            "tissue far from a vessel should be unaffected"
+        );
+        assert!(perfusion_cooling(1.0, 2.0) < perfusion_cooling(3.0, 2.0));
+        // A longer cooling length means the sink reaches further, which is the
+        // direction a larger vessel with more flow would move it.
+        assert!(perfusion_cooling(2.0, 5.0) < perfusion_cooling(2.0, 1.0));
+    }
+
+    #[test]
+    fn a_heat_sink_cannot_cool_below_the_blood_doing_the_cooling() {
+        let t = perivascular_temperature(90.0, 0.0, 2.0, 37.0);
+        assert!(
+            (t - 37.0).abs() < 1e-9,
+            "temperature at the wall was {t}, not body"
+        );
+        let far = perivascular_temperature(90.0, 50.0, 2.0, 37.0);
+        assert!(
+            (far - 90.0).abs() < 0.1,
+            "temperature far away was {far}, not the applicator's"
+        );
+        // And it never inverts: hotter applicator, hotter tissue, everywhere.
+        for d in [0.5, 2.0, 5.0] {
+            assert!(
+                perivascular_temperature(90.0, d, 2.0, 37.0)
+                    > perivascular_temperature(60.0, d, 2.0, 37.0)
+            );
+        }
+    }
+
+    #[test]
+    fn the_kill_criterion_is_a_thermal_DOSE_and_not_a_temperature() {
+        // A MUTATION SURVIVOR: replacing the CEM43 dose with a bare 43 C
+        // threshold left every other test green, because at the temperatures
+        // those tests use the two criteria happen to agree on which side of
+        // the line each point falls. TIME is what separates them.
+        let hot_and_brief = thermal_kills_at(55.0, 0.05, 10.0, 2.0, 37.0, 240.0);
+        let hot_and_sustained = thermal_kills_at(55.0, 30.0, 10.0, 2.0, 37.0, 240.0);
+        assert!(
+            !hot_and_brief,
+            "three seconds at 55 C should not reach a CEM43 of 240"
+        );
+        assert!(hot_and_sustained, "thirty minutes at 55 C should");
+        // A bare temperature test would call both of those the same, and a
+        // long exposure just above 43 C the same as a short one.
+        assert!(
+            thermal_kills_at(44.0, 600.0, 10.0, 2.0, 37.0, 240.0),
+            "ten hours just above 43 C should accumulate a lethal dose"
+        );
+        assert!(
+            !thermal_kills_at(44.0, 1.0, 10.0, 2.0, 37.0, 240.0),
+            "one minute just above 43 C should not"
+        );
+    }
+
+    #[test]
+    fn the_surviving_sleeve_shrinks_as_the_applicator_gets_hotter() {
+        // THE LAYER'S SPATIAL PREDICTION. A coverage fraction cannot express
+        // it: the survivors are not scattered through the volume, they are in
+        // a specific place, and a clinician can look there.
+        let radius = |c: f64| perivascular_failure_radius_mm(c, 5.0, 2.0, 37.0, 240.0, 20.0);
+        let cool = radius(50.0);
+        let hot = radius(90.0);
+        assert!(
+            cool > hot,
+            "a hotter applicator left a WIDER sleeve: {cool} vs {hot}"
+        );
+        assert!(hot > 0.0, "even a very hot applicator leaves some sleeve");
+        assert!(cool < 20.0, "the sleeve filled the whole scanned range");
+        // Millimetre scale, which is what makes it a clinical problem rather
+        // than a rounding error.
+        assert!((0.1..=10.0).contains(&cool), "sleeve radius {cool} mm");
+    }
+
+    #[test]
+    fn electroporation_has_no_perivascular_sleeve_and_that_is_the_contrast() {
+        // Not a stub: the CONTRAST is the finding, and it is the documented
+        // reason IRE is reached for near vessels. A change that gave
+        // electroporation a thermal dependence should break this.
+        assert!(electroporation_failure_radius_mm().abs() < 1e-12);
+        let thermal = perivascular_failure_radius_mm(60.0, 5.0, 2.0, 37.0, 240.0, 20.0);
+        assert!(thermal > electroporation_failure_radius_mm(),
+                "thermal ablation no longer leaves a sleeve that electroporation                  does not, which is this section's whole claim");
     }
 }

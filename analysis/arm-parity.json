@@ -209,7 +209,8 @@
     "6.10 Oncolytic Virus, and a Tension That Names Its Own Condition"
    ],
    "figures": [
-    "fig40_oncolytic_bind"
+    "fig40_oncolytic_bind",
+    "fig42_ablation_sleeve"
    ],
    "predictions": [
     "P12",
@@ -229,23 +230,27 @@
    "census": 1352,
    "trials": 96,
    "modules": 1,
-   "code_lines": 66,
-   "pub_fns": 4,
-   "rust_tests": 5,
+   "code_lines": 129,
+   "pub_fns": 9,
+   "rust_tests": 10,
    "calibration": "UNCONSTRAINED",
-   "book_words": 0,
-   "book_sections": [],
+   "book_words": 877,
+   "book_sections": [
+    "6.12 Ablation, and a Failure With an Address"
+   ],
    "figures": [
-    "fig35_calibration_verdicts"
+    "fig35_calibration_verdicts",
+    "fig42_ablation_sleeve"
    ],
    "predictions": [
-    "P13"
+    "P13",
+    "P20"
    ],
-   "parity_lines": 0.017,
-   "parity_fns": 0.022,
-   "parity_tests": 0.016,
-   "parity_words": 0.0,
-   "lines_short_of_parity": 3926
+   "parity_lines": 0.032,
+   "parity_fns": 0.048,
+   "parity_tests": 0.032,
+   "parity_words": 0.167,
+   "lines_short_of_parity": 3863
   },
   {
    "arm": "Chemotherapy",
@@ -311,8 +316,8 @@
  "shared_modules": 5,
  "shared_code_lines": 818,
  "shared_pub_fns": 58,
- "manuscript_words_in_sections": 62886,
- "manuscript_words_attributed": 14344,
+ "manuscript_words_in_sections": 63763,
+ "manuscript_words_attributed": 15221,
  "absent_arms": [
   {
    "arm": "Targeted small-molecule therapy",

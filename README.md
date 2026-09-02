@@ -66,7 +66,7 @@ literature and describing a search.
   — with `sim-tme-3d` as the 3D-spheroid capstone and `sim-modality-panel`
   running every applicable arm against the identical tumour from the identical
   seed. **Read the depth honestly:** the arms a modality owns outright are
-  7 modules and 1187 lines against the ferroptosis engine's 27 modules and
+  7 modules and 1250 lines against the ferroptosis engine's 27 modules and
   3,992, so the newer arms are roughly 3 to 4 times smaller — measured in
   [`analysis/modality-module-depth.md`](analysis/modality-module-depth.md),
   which reports it against itself rather than leaving you to count.
@@ -78,7 +78,7 @@ literature and describing a search.
   [`simulations/ferroptosis-core/README.md`](simulations/ferroptosis-core/README.md)
 - **Calibration infrastructure** linking simulation parameters to published experimental data
 - **[Model card](MODEL_CARD.md)** with the simulation suite's intended use, out-of-scope cases, assumptions/scope checklist, and per-layer calibration/validation status (the honest "broad but mostly uncalibrated" accounting, consolidated from [`CALIBRATION_STATUS.md`](simulations/calibration/CALIBRATION_STATUS.md))
-- **Book-format manuscript (~270 pp at 6x9 trim)** with 12 chapters, 3 appendices, and 37 figures (~70,700 words), cross-referenced against all analysis outputs and indexed in [`FIGURES.yaml`](FIGURES.yaml)
+- **Book-format manuscript (~270 pp at 6x9 trim)** with 12 chapters, 3 appendices, and 38 figures (~71,500 words), cross-referenced against all analysis outputs and indexed in [`FIGURES.yaml`](FIGURES.yaml)
 
 ## What the work is actually about
 
@@ -88,7 +88,7 @@ than leaving you to count files.**
 | | ferroptosis / physical-ROS | other therapy | method & tooling |
 |---|--:|--:|--:|
 | committed analyses | 20 | **1** | 124 |
-| preregistered predictions | **8 of 19** | 0 | — |
+| preregistered predictions | **8 of 20** | 0 | — |
 | engine modules mentioning it anywhere | **35 of 39** | — | — |
 | engine modules mentioning it in code | **21 of 39** | — | — |
 | engine modules mentioning it in PRODUCTION code | **15 of 39** | — | — |
@@ -107,7 +107,7 @@ therapy vocabulary admits 50 -- but 10 of those sit in this table's own
 ferroptosis column, so 50 is not a bound either. Neither rule measures subject. See
 [`analysis/scope-audit.md`](analysis/scope-audit.md).
 
-8 of 19 preregistered predictions, and 33 of 38 modules of the simulation engine, concern ferroptosis or the physical-ROS modalities (PDT and
+8 of 20 preregistered predictions, and 33 of 38 modules of the simulation engine, concern ferroptosis or the physical-ROS modalities (PDT and
 SDT). That first count read "every falsifiable commitment this project makes" until P9 to P13 registered predictions for the modality arms, and it sat sixteen lines below a table this same change had already updated to 8 of 13 -- the file contradicted itself. One committed analysis is FILED as taking another therapy as its subject, and that filing is a filename match rather than a measurement -- see the scope audit for what the rules do and do not establish.
 
 A narrow thesis on a broad corpus is how most good science works, and the census
@@ -122,7 +122,7 @@ much.** A deliberate campaign widened the engine from 3 selectable treatment
 arms to 9, took the mechanisms with no engine representation from 13 of 16 to
 0 of 16, and registered the first 5 preregistered predictions that are not
 about ferroptosis or physical ROS — which is why the predictions row reads
-8 of 19 rather than the 8 of 8 it read for most of this project's life. None of
+8 of 20 rather than the 8 of 8 it read for most of this project's life. None of
 that makes the work broad yet: the modality arms are roughly 11 to 13 times
 smaller than the ferroptosis engine by line count, every one of them is
 recorded in `CALIBRATION_STATUS.md` as feeding no number in the manuscript's
@@ -198,13 +198,13 @@ These are computational predictions with documented assumptions and caveats, not
 | Directory | What you'll find |
 |-----------|-----------------|
 | `analysis/` | 144 analysis outputs. Frozen-corpus work (evidence tiers, tissue-of-origin, diagnostic-therapy matching, combination audits, gap analysis) plus 34 census-scale ones, including the drug-by-variant map, the co-treatment layer, retraction exposure, entity-ambiguity impact, and the manuscript-vs-census re-test |
-| `article/drafts/` | Manuscript (v1.md + v1.tex) with 37 figures; [`FIGURES.yaml`](FIGURES.yaml) indexes 42 entries, the extra 4 being supplementary and 1 orphan |
+| `article/drafts/` | Manuscript (v1.md + v1.tex) with 38 figures; [`FIGURES.yaml`](FIGURES.yaml) indexes 43 entries, the extra 4 being supplementary and 1 orphan |
 | `scripts/` | Python pipeline: tagging, indexing, analysis, figure generation, LaTeX generation, news authentication. 38 of them are census-scale (33 `atlas_*.py` + 5 `comention_*.py`); `scripts/atlas_pipeline.sh` documents the dependency order, which is load-bearing and fails silently if run wrong |
 | `simulations/` | [13 Rust binaries](simulations/README.md) (most with their own README; `sim-modality-panel`, `sim-scale` do not yet) + [ferroptosis-core library](simulations/ferroptosis-core/) + [Python bindings](simulations/ferroptosis-python/) + [calibration](simulations/calibration/) |
 | `corpus/` | Frozen full text by PubMed ID + INDEX.jsonl; `corpus/atlas/` holds the census (bulk gitignored, committed artifacts in `analysis/`); `corpus/living/` documents the frozen-versus-living split (the monthly deltas themselves are uploaded as workflow artifacts, never committed) |
 | `tags/` | Precomputed tag indexes (mechanism, cancer type, tissue, evidence level, diagnostic-therapy) |
 | `news/` | News source scaffolding: fetched articles, extracted claims, verification results, credibility scores |
-| `tests/` | 1881 Python tests (pipeline smoke + figure traceability + calibration-status ref guard + manuscript-inventory drift guard + depth-kill physics-constant guard + flagship-figure data guard + quantitative-figure drift guards (Figs 21/22/23) + invariant/integration + calibrate-extractor + MeSH evidence-fallback + gold-set precision-floor regression (#346) + Bliss/sim-tme/penetration prior-predictive intervals + ABC posterior (#332) + non-circular mechanism-recall (#412) + CTRPv2 calibration target + in-vitro kill-switch fit (#330) + System Xc-/erastin fit (#502) + joint multi-inducer posterior (#500) + spheroid structure validation (#333) + embedding evidence leg (#411) + RD-vs-BioFVM cross-check (#408) + dashboard data layer (#354) + tumor-PK measured-data anchor (#334) + Krogh penetration validation (#335) + spheroid size-aware zone thresholds (#333) + spheroid kill-vs-size direction (#333) + gene-symbol ambiguity/FSP1 sense disambiguation (#ATLAS-AMBIG) + rare-event Poisson intervals + tail-resolution classification + ferroptosis-python bindings) |
+| `tests/` | 1891 Python tests (pipeline smoke + figure traceability + calibration-status ref guard + manuscript-inventory drift guard + depth-kill physics-constant guard + flagship-figure data guard + quantitative-figure drift guards (Figs 21/22/23) + invariant/integration + calibrate-extractor + MeSH evidence-fallback + gold-set precision-floor regression (#346) + Bliss/sim-tme/penetration prior-predictive intervals + ABC posterior (#332) + non-circular mechanism-recall (#412) + CTRPv2 calibration target + in-vitro kill-switch fit (#330) + System Xc-/erastin fit (#502) + joint multi-inducer posterior (#500) + spheroid structure validation (#333) + embedding evidence leg (#411) + RD-vs-BioFVM cross-check (#408) + dashboard data layer (#354) + tumor-PK measured-data anchor (#334) + Krogh penetration validation (#335) + spheroid size-aware zone thresholds (#333) + spheroid kill-vs-size direction (#333) + gene-symbol ambiguity/FSP1 sense disambiguation (#ATLAS-AMBIG) + rare-event Poisson intervals + tail-resolution classification + ferroptosis-python bindings) |
 
 Start with the files in `analysis/` if you want to see what we've concluded so far—and where we're still uncertain.
 

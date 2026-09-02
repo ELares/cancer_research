@@ -1,0 +1,87 @@
+{
+ "body_temperature_c": 37.0,
+ "minutes": 5.0,
+ "cem43_threshold": 240.0,
+ "cooling_length_mm": 2.0,
+ "by_applicator_temperature": [
+  {
+   "applicator_c": 45.0,
+   "thermal_sleeve_mm": 20.0,
+   "electroporation_sleeve_mm": 0.0,
+   "total_failure": true
+  },
+  {
+   "applicator_c": 50.0,
+   "thermal_sleeve_mm": 4.44,
+   "electroporation_sleeve_mm": 0.0,
+   "total_failure": false
+  },
+  {
+   "applicator_c": 55.0,
+   "thermal_sleeve_mm": 2.08,
+   "electroporation_sleeve_mm": 0.0,
+   "total_failure": false
+  },
+  {
+   "applicator_c": 60.0,
+   "thermal_sleeve_mm": 1.44,
+   "electroporation_sleeve_mm": 0.0,
+   "total_failure": false
+  },
+  {
+   "applicator_c": 70.0,
+   "thermal_sleeve_mm": 0.88,
+   "electroporation_sleeve_mm": 0.0,
+   "total_failure": false
+  },
+  {
+   "applicator_c": 80.0,
+   "thermal_sleeve_mm": 0.64,
+   "electroporation_sleeve_mm": 0.0,
+   "total_failure": false
+  },
+  {
+   "applicator_c": 90.0,
+   "thermal_sleeve_mm": 0.52,
+   "electroporation_sleeve_mm": 0.0,
+   "total_failure": false
+  }
+ ],
+ "sensitivity_to_cooling_length": [
+  {
+   "cooling_length_mm": 0.5,
+   "sleeve_at_60c_mm": 0.36
+  },
+  {
+   "cooling_length_mm": 1.0,
+   "sleeve_at_60c_mm": 0.72
+  },
+  {
+   "cooling_length_mm": 2.0,
+   "sleeve_at_60c_mm": 1.44
+  },
+  {
+   "cooling_length_mm": 4.0,
+   "sleeve_at_60c_mm": 2.84
+  },
+  {
+   "cooling_length_mm": 8.0,
+   "sleeve_at_60c_mm": 5.64
+  }
+ ],
+ "anchor": {
+  "pmid": "35114665",
+  "claim": "local tumour progression remains a challenge in perivascular hepatocellular carcinoma after radiofrequency ablation",
+  "kind": "DIRECTION only -- no sleeve radius is published here"
+ },
+ "n_total_failure": 1,
+ "verdict": {
+  "sleeve_shrinks_with_temperature": "YES",
+  "electroporation_contrast": "YES -- exactly zero at every temperature",
+  "sleeve_size_anchored": "NO",
+  "sleeve_range_mm": [
+   0.52,
+   4.44
+  ]
+ }
+}

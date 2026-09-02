@@ -12,8 +12,8 @@ The aggregate gap is already published: the modality arms are roughly an order o
 | Ionizing radiation | 263 | 23 | 33 | ADMISSIBLE | 1,378 | 2 | 2 |
 | Checkpoint blockade | 122 | 7 | 10 | INADMISSIBLE | 3,281 | 3 | 1 |
 | Adoptive cell therapy (CAR-T) | 166 | 13 | 16 | ADMISSIBLE | 1,062 | 2 | 2 |
-| Oncolytic virus | 165 | 11 | 14 | ADMISSIBLE | 983 | 1 | 2 |
-| Thermal and electrical ablation | 66 | 4 | 5 | UNCONSTRAINED | 0 | 1 | 1 |
+| Oncolytic virus | 165 | 11 | 14 | ADMISSIBLE | 983 | 2 | 2 |
+| Thermal and electrical ablation | 129 | 9 | 10 | UNCONSTRAINED | 877 | 2 | 2 |
 | Cytotoxic chemotherapy | 282 | 19 | 15 | NO TARGET | 1,393 | 1 | 2 |
 | Antibody-drug conjugate | 123 | 13 | 11 | NO TARGET | 998 | 3 | 2 |
 
@@ -29,7 +29,7 @@ The aggregate gap is already published: the modality arms are roughly an order o
 | Checkpoint blockade | 122 | 0.031x | 3,870 |
 | Adoptive cell therapy (CAR-T) | 166 | 0.042x | 3,826 |
 | Oncolytic virus | 165 | 0.041x | 3,827 |
-| Thermal and electrical ablation | 66 | 0.017x | 3,926 |
+| Thermal and electrical ablation | 129 | 0.032x | 3,863 |
 | Cytotoxic chemotherapy | 282 | 0.071x | 3,710 |
 | Antibody-drug conjugate | 123 | 0.031x | 3,869 |
 
@@ -64,5 +64,5 @@ A parity table listing only what exists measures the campaign's progress and hid
 
 Quality, correctness, or whether any of it is used. A module can be large and wrong, and an arm could reach every number in the first table and still be worse science than the arm it is measured against. What the table supports is the negative: an arm at a fraction of the comparator on every axis is not represented in any sense a reader would accept.
 
-The book column is attributed by HEADING -- a section counts for an arm when its own heading names it. That under-counts deliberately: 14,344 of 62,886 words in numbered sections are attributed, and the whole multi-modality chapter sits in the remainder because its headings name no arm. A keyword rule over body text was rejected; `analysis/scope-audit.md` records what happened the last time subject was counted by vocabulary.
+The book column is attributed by HEADING -- a section counts for an arm when its own heading names it. That under-counts deliberately: 15,221 of 63,763 words in numbered sections are attributed, and the whole multi-modality chapter sits in the remainder because its headings name no arm. A keyword rule over body text was rejected; `analysis/scope-audit.md` records what happened the last time subject was counted by vocabulary.
 
