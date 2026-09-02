@@ -218,6 +218,138 @@ pub fn antigen_limited_ceiling(cfg: &AdcConfig) -> f64 {
     cfg.antigen_positive_fraction.clamp(0.0, 1.0)
 }
 
+// ── Drug loading, and the barrier that made it a trade-off ───────────────
+//
+// The module above treats an ADC as a payload with a delivery problem. The
+// engineering question it cannot ask is the one that actually decides the
+// design: HOW MUCH payload per antibody?
+//
+// More looks strictly better -- each antibody that arrives carries more drug --
+// and it is not, because loading changes the antibody. A more heavily
+// conjugated antibody is cleared faster, so fewer arrive. Two monotonic
+// effects in opposite directions, which is the shape this chapter keeps
+// finding, and here the trade-off has been MEASURED: Hamblett 2004 (PMID
+// 15501986) reports that an eight-loaded conjugate clears three times faster
+// than a four-loaded one and five times faster than a two-loaded one, and
+// that at equal antibody dose the four-loaded conjugate performed comparably
+// to the eight.
+//
+// The second effect is the binding-site barrier: a higher-affinity antibody
+// binds the first antigen it meets and never reaches the cell behind it, so
+// affinity buys retention at the cost of penetration. `scripts/validate_
+// penetration.py` deliberately did NOT add this for small molecules, on the
+// grounds that it is an antibody phenomenon and physically weak for a small
+// drug. This is the case that refusal excluded.
+
+/// Clearance of an ADC relative to a two-loaded conjugate, by drug-antibody
+/// ratio.
+///
+/// Anchored on Hamblett 2004 (PMID 15501986), which measured RATIOS rather
+/// than absolute rates: an eight-loaded conjugate clears three times faster
+/// than a four-loaded one and five times faster than a two-loaded one. Taking
+/// DAR 2 as the reference, that fixes `c(2) = 1`, `c(4) = 5/3` and `c(8) = 5`.
+///
+/// **A single power law cannot pass through both measurements, and finding
+/// that out is worth more than the curve.** A law fitted to `c(8)/c(2) = 5`
+/// predicts `c(8)/c(4) = 2.24` against a measured 3. The two ratios together
+/// say the penalty ACCELERATES: clearance rises more slowly than linearly
+/// between DAR 2 and 4, and faster than linearly between 4 and 8. That
+/// acceleration is what produces the interior optimum below -- so a curve
+/// chosen for smoothness would have removed the finding.
+///
+/// Interpolated log-linearly WITHIN each measured segment and extrapolated
+/// with the nearest segment's exponent outside `[2, 8]`, where nothing is
+/// measured and the result should not be trusted.
+#[must_use]
+pub fn clearance_multiplier(dar: f64) -> f64 {
+    let d = dar.max(0.1);
+    // c(2) = 1, c(4) = 5/3, c(8) = 5.
+    let (lo, hi, c_lo, c_hi) = if d <= 4.0 {
+        (2.0f64, 4.0f64, 1.0f64, 5.0f64 / 3.0)
+    } else {
+        (4.0f64, 8.0f64, 5.0f64 / 3.0, 5.0f64)
+    };
+    let exponent = (c_hi / c_lo).ln() / (hi / lo).ln();
+    c_lo * (d / lo).powf(exponent)
+}
+
+/// The drug-antibody ratios Hamblett 2004 measured, and the clearance ratios
+/// it reported between them.
+///
+/// Public so a validation can assert the crate reproduces them rather than
+/// restating them in a second place.
+pub const HAMBLETT_DAR_POINTS: [(f64, f64); 3] = [(2.0, 1.0), (4.0, 5.0 / 3.0), (8.0, 5.0)];
+
+/// Payload delivered to the tumour per unit of antibody dose.
+///
+/// `dar / clearance(dar)`: more drug on each antibody, fewer antibodies
+/// surviving to arrive. **The interior optimum is not put in.** Both factors
+/// are monotonic in DAR; the ratio is not, and where it peaks follows from the
+/// measured clearance ratios rather than from a choice made here.
+#[must_use]
+pub fn payload_delivered_per_dose(dar: f64) -> f64 {
+    let d = dar.max(0.0);
+    d / clearance_multiplier(d).max(f64::MIN_POSITIVE)
+}
+
+/// In-vitro potency relative to a two-loaded conjugate.
+///
+/// Rises monotonically with loading, because in a dish there is no clearance:
+/// every conjugate reaches every cell. That is why the in-vitro ordering and
+/// the in-vivo ordering DISAGREE, and reproducing the disagreement is the
+/// point -- it is the same in-vitro-to-in-vivo gap this book argues about
+/// everywhere else, arriving in the one place where the field measured both
+/// halves.
+#[must_use]
+pub fn in_vitro_potency(dar: f64) -> f64 {
+    (dar.max(0.0) / 2.0).max(0.0)
+}
+
+/// Penetration depth relative to a low-affinity antibody, by binding affinity.
+///
+/// THE BINDING-SITE BARRIER. A higher-affinity antibody is captured by the
+/// first antigen it meets, so the front of the tumour consumes it and the
+/// cells behind never see it. Penetration therefore FALLS as affinity rises,
+/// which is the opposite of the intuition that a better binder is a better
+/// drug (Thurber 2008, PMID 18541331).
+///
+/// UNCALIBRATED. The form is `1 / (1 + affinity/scale)`, which has the right
+/// direction and the right limits and is not fitted to a measured depth.
+#[must_use]
+pub fn penetration_vs_affinity(relative_affinity: f64, scale: f64) -> f64 {
+    let a = relative_affinity.max(0.0);
+    (1.0 / (1.0 + a / scale.max(f64::MIN_POSITIVE))).clamp(0.0, 1.0)
+}
+
+/// Tumour cells reached, combining loading and the binding-site barrier.
+///
+/// The product of what arrives (loading against clearance) and how far it
+/// spreads (affinity against the barrier). Both halves have interior optima
+/// and they are not at the same place, which is why an ADC is an engineering
+/// compromise rather than a maximisation.
+#[must_use]
+pub fn delivered_reach(dar: f64, relative_affinity: f64, barrier_scale: f64) -> f64 {
+    payload_delivered_per_dose(dar) * penetration_vs_affinity(relative_affinity, barrier_scale)
+}
+
+/// The drug-antibody ratio that maximises delivered payload, by scan.
+///
+/// Returns `(dar, delivered)`. Scanned rather than solved because the point is
+/// the shape, and because the same scan produces the figure.
+#[must_use]
+pub fn optimal_dar(max_dar: f64) -> (f64, f64) {
+    let mut best = (0.0, f64::NEG_INFINITY);
+    let n = 400;
+    for i in 1..=n {
+        let d = max_dar * f64::from(i) / f64::from(n);
+        let v = payload_delivered_per_dose(d);
+        if v > best.1 {
+            best = (d, v);
+        }
+    }
+    best
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -440,5 +572,96 @@ mod tests {
             "bystander killing adds only {gain:.3}x; it cannot be what makes \
              a one-cell penetration depth clinically survivable"
         );
+    }
+    // ── Drug loading, and the barrier ────────────────────────────────────
+
+    #[test]
+    fn the_clearance_curve_passes_through_both_measured_ratios() {
+        // Hamblett 2004 (PMID 15501986) measured two ratios, not a curve. A
+        // single power law fitted to one of them misses the other by a third,
+        // which is why this is piecewise -- and why the acceleration it
+        // encodes is a property of the DATA rather than of the fit.
+        for (dar, expected) in HAMBLETT_DAR_POINTS {
+            let got = clearance_multiplier(dar);
+            assert!(
+                (got - expected).abs() < 1e-9,
+                "clearance at DAR {dar} is {got}, measured {expected}"
+            );
+        }
+        let c8 = clearance_multiplier(8.0);
+        assert!((c8 / clearance_multiplier(4.0) - 3.0).abs() < 1e-9);
+        assert!((c8 / clearance_multiplier(2.0) - 5.0).abs() < 1e-9);
+    }
+
+    #[test]
+    fn the_penalty_for_loading_accelerates() {
+        // The shape that produces the optimum. Between DAR 2 and 4 clearance
+        // rises MORE SLOWLY than linearly; between 4 and 8, faster. A single
+        // exponent cannot do both, and a model that used one would have no
+        // interior optimum at all.
+        let low = clearance_multiplier(4.0) / clearance_multiplier(2.0);
+        let high = clearance_multiplier(8.0) / clearance_multiplier(4.0);
+        assert!(
+            high > low,
+            "the penalty did not accelerate: {low} then {high}"
+        );
+        assert!(
+            low < 2.0,
+            "doubling the load below DAR 4 more than doubled clearance"
+        );
+        assert!(
+            high > 2.0,
+            "doubling the load above DAR 4 did not more than double it"
+        );
+    }
+
+    #[test]
+    fn the_optimal_loading_falls_out_of_the_measured_clearance() {
+        // THE FINDING, and it is not tuned: both factors in
+        // `payload_delivered_per_dose` are monotonic in DAR, the ratio is not,
+        // and where it peaks follows from ratios somebody else measured.
+        let (dar, _) = optimal_dar(16.0);
+        assert!((dar - 4.0).abs() < 0.2,
+                "the optimum moved to DAR {dar}; it should sit where the                  clearance penalty starts accelerating");
+        // And the consequence Hamblett reports: twice the payload per antibody
+        // does NOT double what arrives.
+        let ratio = payload_delivered_per_dose(8.0) / payload_delivered_per_dose(4.0);
+        assert!(ratio < 1.0,
+                "an eight-loaded conjugate delivered MORE than a four-loaded                  one ({ratio}), which is the opposite of the measurement");
+        assert!(ratio > 0.5, "it should be comparable, not halved: {ratio}");
+    }
+
+    #[test]
+    fn the_in_vitro_and_in_vivo_orderings_disagree() {
+        // The reason this arm is worth a section in THIS book. In a dish
+        // there is no clearance, so potency rises monotonically with loading
+        // and the eight-loaded conjugate wins. In an animal the four-loaded
+        // one matches it at equal antibody dose. Same molecule, opposite
+        // ordering, and the model reproduces both halves.
+        assert!(in_vitro_potency(8.0) > in_vitro_potency(4.0));
+        assert!(in_vitro_potency(4.0) > in_vitro_potency(2.0));
+        assert!(payload_delivered_per_dose(8.0) < payload_delivered_per_dose(4.0));
+    }
+
+    #[test]
+    fn higher_affinity_costs_penetration() {
+        // The binding-site barrier (Thurber 2008, PMID 18541331). Deliberately
+        // NOT added for small molecules by `scripts/validate_penetration.py`,
+        // on the grounds that it is an antibody phenomenon; this is the case
+        // that refusal excluded.
+        let weak = penetration_vs_affinity(0.1, 1.0);
+        let strong = penetration_vs_affinity(10.0, 1.0);
+        assert!(
+            strong < weak,
+            "affinity did not cost penetration: {weak} {strong}"
+        );
+        assert!(
+            penetration_vs_affinity(0.0, 1.0) > 0.99,
+            "a non-binding antibody should penetrate freely"
+        );
+        assert!(strong > 0.0, "penetration should fall, not vanish");
+        // And the combined reach is worse than either factor alone suggests.
+        let reach = delivered_reach(4.0, 10.0, 1.0);
+        assert!(reach < payload_delivered_per_dose(4.0));
     }
 }

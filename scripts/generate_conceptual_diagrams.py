@@ -1664,6 +1664,84 @@ def fig40_oncolytic_bind():
     save(fig, "fig40_oncolytic_bind")
 
 
+def fig41_adc_loading():
+    """An optimum that falls out of somebody else's measurement.
+
+    Panel (a) is the anchor and the alternative that fails it: a single power
+    law through one measured ratio misses the other, and the acceleration it
+    misses is what makes an optimum exist. Panel (b) is the optimum. Panel (c)
+    is the in-vitro/in-vivo disagreement, measured in the same study.
+    """
+    import json
+    src = Path(__file__).resolve().parent.parent / "analysis" / "calibration" / \
+        "adc-validation.json"
+    if not src.exists():
+        print("  fig41: adc-validation.json missing - skipping")
+        return
+    d = json.loads(src.read_text())
+    curve = d["curve"]
+    dars = [r["dar"] for r in curve]
+
+    fig, axes = plt.subplots(1, 3, figsize=(15, 4.6))
+
+    ax = axes[0]
+    ax.plot(dars, [r["clearance"] for r in curve], color="#14505c", lw=2,
+            label="piecewise, through both ratios")
+    import math as _m
+    e = _m.log(5.0) / _m.log(4.0)
+    ax.plot(dars, [(x / 2.0) ** e for x in dars], color="#a2582b", lw=1.8,
+            ls="--", label="single power law (misses c8/c4)")
+    for p in d["anchor_points"]:
+        ax.plot([p["dar"]], [p["clearance_relative_to_dar2"]], "o", ms=9,
+                color="#14505c", zorder=5)
+    ax.set_xlabel("drug-antibody ratio")
+    ax.set_ylabel("clearance, relative to DAR 2")
+    ax.set_title("(a) the measured ratios, and a curve that misses one",
+                 fontsize=10)
+    ax.legend(fontsize=7.5, loc="upper left")
+    ax.grid(alpha=0.25)
+
+    ax = axes[1]
+    ax.plot(dars, [r["delivered_per_dose"] for r in curve], color="#14505c", lw=2)
+    ax.plot([d["optimal_dar"]], [d["delivered_at_optimum"]], "*", ms=17,
+            color="#a2582b", zorder=5)
+    ax.annotate(f"optimum at DAR {d['optimal_dar']:g}",
+                (d["optimal_dar"], d["delivered_at_optimum"]),
+                textcoords="offset points", xytext=(10, -4), fontsize=8.5,
+                color="#a2582b", fontweight="bold")
+    ax.set_xlabel("drug-antibody ratio")
+    ax.set_ylabel("payload delivered per unit antibody dose")
+    ax.set_title("(b) more drug per antibody, fewer antibodies", fontsize=10)
+    ax.grid(alpha=0.25)
+
+    ax = axes[2]
+    ax.plot(dars, [r["in_vitro_potency"] for r in curve], color="#a2582b",
+            lw=2, label="in vitro (no clearance)")
+    scale = max(r["delivered_per_dose"] for r in curve)
+    ax.plot(dars, [r["delivered_per_dose"] / scale * 4 for r in curve],
+            color="#14505c", lw=2, label="in vivo delivery (scaled)")
+    ax.set_xlabel("drug-antibody ratio")
+    ax.set_ylabel("relative magnitude")
+    ax.set_title("(c) the two orderings disagree", fontsize=10)
+    ax.legend(fontsize=7.5, loc="upper left")
+    ax.grid(alpha=0.25)
+
+    fig.suptitle("Antibody-drug conjugates: an optimum nobody chose",
+                 fontsize=12, fontweight="bold")
+    fig.text(0.5, 0.015,
+             "The inputs are two clearance RATIOS from one study (PMID 15501986): a DAR-8 "
+             "conjugate clears three times faster than DAR-4 and five times faster than DAR-2. "
+             "The optimum is the output. A single power law fitted to one ratio misses the other "
+             "by a third, and the acceleration it misses is exactly what makes an interior optimum "
+             "exist - a smoother curve would have removed the result before it appeared. Panel (c) "
+             "is the in-vitro-to-in-vivo gap this book argues about elsewhere, with both halves "
+             "measured in one experiment. Delivered payload is not efficacy, and one conjugate is "
+             "not all conjugates.",
+             ha="center", fontsize=7.2, color="#555", wrap=True)
+    fig.tight_layout(rect=[0, 0.13, 1, 0.93])
+    save(fig, "fig41_adc_loading")
+
+
 if __name__ == "__main__":
     print("Generating conceptual diagrams...")
     fig18_hypoxia()
@@ -1683,4 +1761,5 @@ if __name__ == "__main__":
     fig38_checkpoint()
     fig39_adoptive_escalation()
     fig40_oncolytic_bind()
+    fig41_adc_loading()
     print("Done.")
