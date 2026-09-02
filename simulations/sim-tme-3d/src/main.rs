@@ -5941,6 +5941,71 @@ fn run_spheroid_size_sweep() {
 /// misstate the kill, and in a direction that follows the sign.
 ///
 /// Does NOT write summary.json; the matrix is untouched and byte-identical.
+/// `--checkpoint-priming-sweep`: what checkpoint blockade has to work with (#844).
+///
+/// This arm is unlike the other six, and the difference is the section. The
+/// checkpoint MECHANISM is already in the engine: `Overrides.checkpoints`
+/// carries the multi-checkpoint panel and the spatial immune layer reads it.
+/// What is missing is any way to ask the question the arm exists for, because
+/// `checkpoint::residual_brake` returns a MULTIPLIER and a multiplier has no
+/// denominator. A fold-change on an immune contribution says nothing at all
+/// about whether that contribution matters.
+///
+/// The spatial engine has a denominator. So the sweep runs a cold-to-hot
+/// ladder -- Control, then a pharmacologic inducer, then a physical one --
+/// and reports the immune kill BOTH as a fold-change under blockade and as a
+/// SHARE of the kill actually happening.
+///
+/// Converged at these settings: 150 steps and 250 steps agree to within the
+/// per-cell RNG (27/87 against 28/84 immune kills), so the numbers are not a
+/// function of how long the run was left going. Checked before they were
+/// reported, because counts this small are exactly where that goes wrong.
+///
+/// Does NOT write summary.json; the matrix is untouched and byte-identical.
+fn run_checkpoint_priming_sweep() {
+    let grid_dim = 40usize;
+    let n_steps = bench_env_u32("BENCH_N_STEPS", 150);
+    let blockades = [0.0f64, 0.3, 0.6, 0.9];
+    eprintln!("=== --checkpoint-priming-sweep: grid {grid_dim}, {n_steps} steps (#844) ===");
+    println!("CHECKPOINT_PRIMING_META grid_dim={grid_dim} n_steps={n_steps}");
+    let cfg = RunConfig { grid_dim, n_steps };
+    for tx in [Treatment::Control, Treatment::RSL3, Treatment::SDT] {
+        for &anti in &blockades {
+            let condition = Condition {
+                name: format!("cp_prime_{tx:?}_{anti}"),
+                treatment: tx,
+                treatment_name: format!("{tx:?}"),
+                o2_lambda: Some(ZONE_REF_LAMBDA),
+                // The immune layer must be ON for this arm to have anything to
+                // modulate at all, which is the arm's defining property rather
+                // than a setting: checkpoint blockade cannot START a response.
+                immune_on: true,
+                stromal_on: false,
+                ph_on: false,
+                dose_schedule: DoseSchedule::Constant,
+            };
+            let overrides = Overrides {
+                immune: Some(SpatialImmuneConfig::for_3d()),
+                checkpoints: Some(CheckpointPanel::pd1_only(0.7, anti)),
+                ..Default::default()
+            };
+            let r = run_one_condition_full(&condition, cfg, None, overrides);
+            let panel = CheckpointPanel::pd1_only(0.7, anti);
+            println!(
+                "CHECKPOINT_PRIMING treatment={tx:?} anti_pd1={anti} \
+                 immune_kills={} ferroptosis_kills={} total_dead={} \
+                 total_damp={:.3} total_tumor={} combined_brake={:.6}",
+                r.immune_kills.unwrap_or(0),
+                r.ferroptosis_kills.unwrap_or(0),
+                r.total_dead,
+                r.total_damp,
+                r.total_tumor,
+                panel.combined_brake()
+            );
+        }
+    }
+}
+
 fn run_cart_independence_sweep() {
     let grid_dim = 60usize;
     let n_steps = bench_env_u32("BENCH_N_STEPS", 8);
@@ -6395,6 +6460,10 @@ fn main() {
     // `--spheroid-size-sweep` runs RSL3 across a range of spheroid sizes, fixed vs
     // size-aware zone thresholds (#333 kill leg), emitting SPHEROID_SIZE_SWEEP lines.
     // Does NOT write summary.json; the default matrix path below is byte-identical.
+    if std::env::args().any(|a| a == "--checkpoint-priming-sweep") {
+        run_checkpoint_priming_sweep();
+        return;
+    }
     if std::env::args().any(|a| a == "--cart-independence-sweep") {
         run_cart_independence_sweep();
         return;
@@ -6476,6 +6545,7 @@ fn main() {
 
 #[cfg(test)]
 mod tests {
+
     /// Multiplying the barrier fractions is right only when they are
     /// independent, and in a tumour two of them are not.
     ///
@@ -7336,6 +7406,65 @@ mod tests {
         );
         assert!(cart_probe.adoptive_kills.unwrap_or(0) > 0);
         on_demand.push("AdoptiveCell".to_string());
+
+        // A THIRD TIER, because forcing checkpoint blockade into the second
+        // one would be false. Its mechanism needs no wiring -- the panel was
+        // already an `Overrides` field and the spatial immune layer already
+        // read it -- but selecting `Treatment::Immunotherapy` does NOTHING,
+        // because the brake acts through the immune layer regardless of which
+        // treatment is chosen. `analysis/modality-coverage.md` already draws
+        // exactly this line between a TREATMENT and a MODIFIER, and the
+        // parity table should draw it too rather than round the arm up.
+        let mut as_modifier: Vec<String> = Vec::new();
+        {
+            let immune_cond = |tx: Treatment| Condition {
+                name: format!("cp_tier_{tx:?}"),
+                treatment: tx,
+                treatment_name: format!("{tx:?}"),
+                o2_lambda: Some(ZONE_REF_LAMBDA),
+                immune_on: true,
+                stromal_on: false,
+                ph_on: false,
+                dose_schedule: DoseSchedule::Constant,
+            };
+            let mk = |anti: f64| Overrides {
+                immune: Some(SpatialImmuneConfig::for_3d()),
+                checkpoints: Some(CheckpointPanel::pd1_only(0.7, anti)),
+                ..Default::default()
+            };
+            let cfg_cp = RunConfig {
+                grid_dim: 30,
+                n_steps: 120,
+            };
+            let blocked =
+                run_one_condition_full(&immune_cond(Treatment::SDT), cfg_cp, None, mk(0.9));
+            let unblocked =
+                run_one_condition_full(&immune_cond(Treatment::SDT), cfg_cp, None, mk(0.0));
+            assert!(
+                blocked.immune_kills.unwrap_or(0) > unblocked.immune_kills.unwrap_or(0),
+                "the checkpoint panel is set and immune killing did not rise, so                  the modifier is not modifying anything"
+            );
+            // And the arm is NOT selectable as a treatment: choosing it changes
+            // nothing against Control on the same settings.
+            let named = run_one_condition_full(
+                &immune_cond(Treatment::Immunotherapy),
+                cfg_cp,
+                None,
+                Overrides::default(),
+            );
+            let control = run_one_condition_full(
+                &immune_cond(Treatment::Control),
+                cfg_cp,
+                None,
+                Overrides::default(),
+            );
+            assert_eq!(
+                named.overall_kill_rate, control.overall_kill_rate,
+                "selecting Treatment::Immunotherapy now changes the answer, so                  it has become a TREATMENT and belongs in the on-demand tier"
+            );
+            as_modifier.push("Immunotherapy".to_string());
+        }
+        assert_eq!(as_modifier, vec!["Immunotherapy".to_string()]);
 
         // THE TIER LIST MUST COVER EVERY ARM THAT HAS AN OVERRIDE, and the
         // table below is COMPLETE BY CONSTRUCTION rather than by care.

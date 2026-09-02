@@ -161,25 +161,28 @@
    "pub_fns": 7,
    "rust_tests": 10,
    "calibration": "INADMISSIBLE",
-   "spatial": null,
-   "book_words": 3281,
+   "spatial": "as modifier",
+   "book_words": 4279,
    "book_sections": [
     "6.8 Checkpoint Blockade, and What a Ratio Can Constrain",
+    "6.19 Checkpoint Blockade, and a Number With No Denominator",
     "8.2 Immune Coupling: DAMP-Mediated T Cell Activation"
    ],
    "figures": [
     "fig35_calibration_verdicts",
     "fig38_checkpoint",
-    "fig39_adoptive_escalation"
+    "fig39_adoptive_escalation",
+    "fig50_checkpoint_priming"
    ],
    "predictions": [
-    "P16"
+    "P16",
+    "P28"
    ],
    "book_words_shared": 0,
    "parity_lines": 0.032,
    "parity_fns": 0.038,
    "parity_tests": 0.038,
-   "parity_words": 0.625,
+   "parity_words": 0.815,
    "lines_short_of_parity": 3683
   },
   {
@@ -357,8 +360,8 @@
  "shared_modules": 5,
  "shared_code_lines": 818,
  "shared_pub_fns": 58,
- "manuscript_words_in_sections": 71047,
- "manuscript_words_attributed": 22322,
+ "manuscript_words_in_sections": 72045,
+ "manuscript_words_attributed": 23320,
  "sections_naming_more_than_one_arm": {
   "6.13 Photodynamic and Sonodynamic Therapy, the Two the Project Started With": 2
  },
@@ -380,6 +383,7 @@
   "AdoptiveCell",
   "AntibodyDrugConjugate",
   "Chemotherapy",
+  "Immunotherapy",
   "OncolyticVirus",
   "PDT",
   "RSL3",
@@ -397,6 +401,9 @@
   "Chemotherapy",
   "OncolyticVirus",
   "Radiation"
+ ],
+ "spatial_as_modifier": [
+  "Immunotherapy"
  ],
  "comparator": "RSL3",
  "arms_at_parity": 0,
