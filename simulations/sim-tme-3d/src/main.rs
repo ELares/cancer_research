@@ -79,7 +79,8 @@ use ferroptosis_core::oxygen::{
     radial_o2_field, OER_REFERENCE_PO2_MMHG,
 };
 use ferroptosis_core::params::{
-    Params, PersisterConfig, PhConfig, SpatialImmuneConfig, SpatialParams, StromalConfig,
+    Params, PersisterConfig, PhConfig, RadiationConfig, SpatialImmuneConfig, SpatialParams,
+    StromalConfig,
 };
 use ferroptosis_core::persister;
 use ferroptosis_core::ph::{ion_trap_factor_from_ph, iron_multiplier_from_ph, radial_ph_field};
@@ -87,6 +88,7 @@ use ferroptosis_core::phenotype_mufa::{
     apply_phenotype_mufa_3d, apply_phenotype_mufa_at_3d, PhenotypeMufaConfig,
 };
 use ferroptosis_core::physics::local_ros_multiplier_3d;
+use ferroptosis_core::radiation;
 use ferroptosis_core::reaction_diffusion::{
     reaction_diffusion_supply_field, ReactionDiffusionConfig,
 };
@@ -173,7 +175,28 @@ const BIOCHEM_SEED_SALT: u64 = 0xB107_0CDE_0000_0539;
 const IMMUNE_SEED_SALT: u64 = 0x111A_0E5E_0000_0539;
 // The two stream salts must differ so the biochem and immune per-cell streams
 // never coincide for the same (cond_seed, idx, step).
+// A THIRD RNG STREAM SEPARATOR, in the same form as the two above it.
+//
+// CodeQL flags all three as `rust/hard-coded-cryptographic-value`, critical,
+// and all three are the same false positive: none of them is a key. Their only
+// job is to make two realism layers draw DIFFERENT numbers for the same
+// (cell, step), which the assertions below enforce and #278 requires.
+//
+// A first attempt derived this value from the two above to avoid a seventh
+// alert; the scanner flagged the derived constant too, because it is still a
+// compile-time constant, so the contortion bought nothing and its comment
+// claimed a result it had not achieved. Reverted to the plain form that
+// matches its neighbours. The two existing salts cannot be touched at all --
+// changing either moves every RNG draw in the production matrix, whose output
+// SHA is committed (#253) -- so the alert is dismissed as the false positive
+// it is rather than coded around.
+const RADIATION_SEED_SALT: u64 = 0x4AD1_0A17_0000_0539;
 const _: () = assert!(BIOCHEM_SEED_SALT != IMMUNE_SEED_SALT);
+// Pairwise-distinct, per the #278 layer-seed rule: two layers sharing a salt
+// draw the SAME number for the same (cell, step), so their decisions correlate
+// and an A/B between them measures the coincidence rather than the biology.
+const _: () = assert!(RADIATION_SEED_SALT != BIOCHEM_SEED_SALT);
+const _: () = assert!(RADIATION_SEED_SALT != IMMUNE_SEED_SALT);
 
 /// SplitMix64 finalizer (Steele, Lea & Flood 2014, "Fast Splittable
 /// Pseudorandom Number Generators"): a fast, full-avalanche integer hash. Used
@@ -267,6 +290,13 @@ struct ConditionResult {
     ferroptosis_kills: Option<usize>,
     #[serde(skip_serializing_if = "Option::is_none")]
     immune_kills: Option<usize>,
+    /// Deaths from radiation's DNA-damage channel (#844), reported APART from
+    /// `ferroptosis_kills` because they are a different lethal lesion. `None`
+    /// whenever the arm is not wired, which is every condition in the
+    /// production matrix -- a `0` there would claim the channel ran and killed
+    /// nobody.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    radiation_kills: Option<usize>,
     overall_kill_rate: f64,
     normoxic_kill_rate: f64,
     transition_kill_rate: f64,
@@ -556,6 +586,28 @@ struct Overrides {
     /// oxidizable-PUFA substrate ⇒ ferroptosis-refractory, `> 1` (ACSL4-high) ⇒
     /// sensitive. Off the production matrix so the matrix is byte-identical.
     acsl4_status: Option<f64>,
+    /// Ionizing radiation's DNA-damage channel, run PER CELL against the
+    /// spatial oxygen field (#844). `None` ⇒ the arm stays exactly as inert as
+    /// every other unwired arm ⇒ byte-identical, and the production matrix
+    /// never sets it.
+    ///
+    /// ONLY THE DNA CHANNEL IS WIRED, DELIBERATELY. #726 built radiation as
+    /// two independent channels and recorded that the layer "ships with no
+    /// independent failable prediction yet -- the one it will have is the OER
+    /// a full run EXHIBITS with both channels active". The second channel's
+    /// `ros_per_gy` is UNCALIBRATED: the literature gives a direction and no
+    /// gray-to-ROS conversion. Adding it here would make the emergent oxygen
+    /// enhancement ratio -- the quantity this wiring exists to measure -- a
+    /// function of an unanchored knob, which is worse than measuring one
+    /// channel honestly. So the target is met with the DNA channel alone and
+    /// the row says which half it is.
+    radiation: Option<RadiationConfig>,
+    /// The step at which the single fraction is delivered. `radiation` models
+    /// ONE fraction (fractionation needs regrowth between fractions, which
+    /// needs cell division, #727b), so the dose lands on one step rather than
+    /// every step -- delivering it per step would be a course of radiotherapy
+    /// the engine cannot represent, at a total dose nobody chose.
+    radiation_step: u32,
     /// ESCRT-III membrane-repair brake on death execution (#465): `Some((rate,
     /// budget))` sets `params.escrt_repair_rate`/`escrt_repair_budget` so a cell
     /// whose LP crosses the death threshold can be resealed for a finite per-cell
@@ -1529,6 +1581,29 @@ fn run_one_condition_full(
         Vec::new()
     };
     let mut ferroptosis_kills = 0usize;
+    // Counted APART from ferroptosis_kills on purpose: a DNA-channel death is
+    // not a ferroptotic death, and pooling them would make the one binary that
+    // can tell the two routes apart stop telling them apart.
+    let mut radiation_kills = 0usize;
+    let radiation_cfg = overrides.radiation.clone();
+    // WHICH CELLS THE DNA CHANNEL KILLED, kept because `state.dead` cannot say.
+    //
+    // The ferroptotic DAMP release is gated on `state.dead` and pays out
+    // `state.lp * damp_per_lp` at the end of the post-death grace window. A
+    // radiation-killed cell sets `state.dead` like any other, so without this
+    // mask it releases DAMP in proportion to lipid peroxide it never made --
+    // turning a DNA double-strand break into an immunogenic ferroptotic death
+    // by accident, in the one binary that could tell the two apart. Caught by
+    // `radiation_kills_are_counted_apart_from_ferroptosis_kills`, which was
+    // written before the wiring and failed on it.
+    //
+    // Empty (never indexed) whenever the arm is off, so the matrix path
+    // allocates nothing and reads nothing.
+    let mut radiation_killed: Vec<bool> = if radiation_cfg.is_some() {
+        vec![false; n_cells]
+    } else {
+        Vec::new()
+    };
     let mut immune_kills = 0usize;
     // Immune kills among NON-senescent tumor cells specifically (#376). Tracked
     // only when the diffusing SASP field is active, so a strength>0 (suppressive)
@@ -1716,7 +1791,11 @@ fn run_one_condition_full(
                             gc.lp_at_grace_end = gc.state.lp;
                             // DAMP release gated on immune_on (else damp_field
                             // is never read/aggregated — PR #219 third-pass).
-                            if condition.immune_on {
+                            // `radiation_killed` is empty when the arm is off,
+                            // so this is a length check and not a lookup on
+                            // the matrix path.
+                            let dna_death = radiation_killed.get(idx).copied().unwrap_or(false);
+                            if condition.immune_on && !dna_death {
                                 *damp_slot += gc.lp_at_grace_end * immune_cfg.damp_per_lp;
                             }
                         }
@@ -1991,6 +2070,55 @@ fn run_one_condition_full(
             })
             .sum();
         ferroptosis_kills += died_this_step;
+
+        // --- Ionizing radiation, DNA-damage channel (#844) ---
+        //
+        // A SEPARATE DEATH ROUTE, and keeping it separate is the whole design
+        // (#726). Radiation's dominant lethal lesion is the DNA double-strand
+        // break, not lipid peroxidation, so this does not pass through
+        // `CellState`, does not set `newly_dead`, and is NOT counted in
+        // `ferroptosis_kills`. Feeding it into the iron/DAMP diffusion would
+        // make a GPX4-competent cell look radioresistant, which it is not, and
+        // would turn radiation into a ferroptosis inducer in the one binary
+        // that could measure the difference.
+        //
+        // ONE FRACTION, on one step. Applying the dose every step would be a
+        // course of radiotherapy at a total dose nobody chose, and
+        // fractionation needs regrowth between fractions, which needs cell
+        // division the engine does not have (#727b).
+        //
+        // Oxygen enters through `radiation::delivered_dose`, which scales the
+        // dose by `oxygen::oer_relative_efficacy` at the cell's own supply --
+        // the SAME per-cell field that gates the SDT exo-ROS yield, read from
+        // `o2_supply_for_exo` rather than recomputed, so the two modalities
+        // cannot drift apart in their oxygen dependence.
+        if let Some(rcfg) = radiation_cfg.as_ref() {
+            if step == overrides.radiation_step {
+                let mut killed = 0usize;
+                for idx in 0..grid.cells.len() {
+                    if !grid.cells[idx].is_tumor || grid.cells[idx].state.dead {
+                        continue;
+                    }
+                    let (r, c, l) = grid.coords(idx);
+                    let depth_um = grid.radial_depth_um(r, c, l);
+                    let dose = radiation::delivered_dose(rcfg, o2_supply_for_exo[idx], depth_um);
+                    let sf = radiation::lq_survival(dose, rcfg.alpha_per_gy, rcfg.beta_per_gy2);
+                    let mut rng = StdRng::seed_from_u64(cell_seed(
+                        cond_seed,
+                        idx,
+                        step as usize,
+                        RADIATION_SEED_SALT,
+                    ));
+                    if rng.gen::<f64>() >= sf {
+                        grid.cells[idx].state.dead = true;
+                        grid.cells[idx].state.death_step = Some(step);
+                        radiation_killed[idx] = true;
+                        killed += 1;
+                    }
+                }
+                radiation_kills += killed;
+            }
+        }
 
         // Iron diffusion via TumorGrid3D. Now uses the value from
         // `spatial_params.neighbor_iron_fraction` (single source of truth);
@@ -2564,6 +2692,7 @@ fn run_one_condition_full(
         } else {
             None
         },
+        radiation_kills: radiation_cfg.as_ref().map(|_| radiation_kills),
         overall_kill_rate: overall,
         normoxic_kill_rate: norm_r,
         transition_kill_rate: trans_r,
@@ -5103,6 +5232,155 @@ fn run_spheroid_size_sweep() {
     }
 }
 
+/// `--radiation-oer-sweep`: the OXYGEN ENHANCEMENT RATIO a spatial run EXHIBITS
+/// (#844).
+///
+/// THIS IS THE PREDICTION `CALIBRATION_STATUS.md` PROMISED AND COULD NOT MAKE.
+/// The radiation row has said since #726 that the layer "ships with no
+/// independent failable prediction yet -- the one it will have is the OER a
+/// full run EXHIBITS with both channels active, which is emergent and needs
+/// the binary wiring". This is that wiring, and this sweep is the measurement.
+///
+/// Sweeps single-fraction dose and reports kill by radial zone, so the
+/// dose-modifying factor -- the dose ratio for equal kill between the
+/// oxygenated rim and the hypoxic core -- can be READ OFF the population
+/// rather than computed from the formula. That distinction is the point:
+/// `radiation::dna_channel_dose_modifying_factor` is documented as a
+/// RESTATEMENT of the hyperbola, and reporting it against the published band
+/// would be a guard computing its own expectation. What is emergent here is
+/// different in three ways -- the core is a DISTRIBUTION of pO2 rather than
+/// anoxia, the linear-quadratic model is not log-linear in dose so the ratio
+/// depends on which kill level it is read at, and the ratio is a population
+/// average over a nonlinear function.
+///
+/// GRID SIZE IS LOAD-BEARING AND THE FIRST ATTEMPT GOT IT WRONG. The deep zone
+/// (radial depth > 3x the rim shell) is EMPTY below grid 40 -- 0 cells at 20
+/// and 30, 123 at 40, 7,153 at 60 -- and `zone_kill_rates_3d` returns 0.0 for
+/// an empty zone. A probe at grid 30 therefore reports a hypoxic kill rate of
+/// exactly zero at every dose, which reads as total radioresistance and is a
+/// division by nothing. The sweep runs at the production grid and PRINTS the
+/// zone populations so the denominator is visible in the artifact.
+///
+/// Does NOT write summary.json; the matrix is untouched and byte-identical.
+fn run_radiation_oer_sweep() {
+    let grid_dim = 60usize;
+    let n_steps = bench_env_u32("BENCH_N_STEPS", 12);
+    let rad_step = 5u32;
+    // THE GRADIENT IS SWEPT, NOT FIXED, AND THAT IS THE POINT. Read at the
+    // engine's own zone reference (120 um) the dose-modifying factor comes out
+    // near 1.7, well BELOW the published 2.5-3.0 -- and the first version of
+    // this sweep would have reported that as a failure. It is not: the
+    // published band is measured between fully oxygenated and fully ANOXIC
+    // cells, and at lambda = 120 this model's deep zone sits near 2 mmHg
+    // rather than at zero. Comparing them is a category error. Sweeping the
+    // gradient turns the disagreement into the measurement: the factor should
+    // RISE toward the band as the core approaches anoxia, and the mean pO2 of
+    // each zone is printed so the reader can see which oxygenation each factor
+    // belongs to instead of taking the zone's NAME for it.
+    let lambdas = [30.0, 50.0, 80.0, ZONE_REF_LAMBDA, 200.0];
+    let doses = [
+        0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 4.0, 5.0, 6.0, 8.0, 10.0, 12.0, 14.0, 16.0, 20.0, 24.0,
+        30.0, 40.0, 60.0,
+    ];
+    eprintln!(
+        "=== --radiation-oer-sweep: emergent OER, grid {grid_dim}, {n_steps} steps, \
+         fraction at step {rad_step} (#844) ==="
+    );
+
+    // The denominators and the oxygenations, printed so neither an empty zone
+    // nor a zone's NAME can stand in for a measurement.
+    let g = TumorGrid3D::generate(grid_dim, grid_dim, grid_dim, CELL_SIZE_UM, SEED);
+    for &lambda in &lambdas {
+        let o2 = ferroptosis_core::oxygen::radial_o2_field(&g, lambda);
+        let mut n = [0usize; 3];
+        let mut sum = [0.0f64; 3];
+        for idx in 0..g.cells.len() {
+            if !g.cells[idx].is_tumor {
+                continue;
+            }
+            let (r, c, l) = g.coords(idx);
+            let d = g.radial_depth_um(r, c, l);
+            // ZONE_REF_LAMBDA is the shell depth `zone_kill_rates_3d` uses;
+            // restating it here would print denominators for different zones
+            // than the rates beside them.
+            let z = if d < ZONE_REF_LAMBDA {
+                0
+            } else if d < ZONE_REF_LAMBDA * 3.0 {
+                1
+            } else {
+                2
+            };
+            n[z] += 1;
+            sum[z] += o2[idx];
+        }
+        let mean = |k: usize| {
+            if n[k] == 0 {
+                f64::NAN
+            } else {
+                sum[k] / n[k] as f64
+            }
+        };
+        let po2 = |k: usize| mean(k) * ferroptosis_core::oxygen::OER_REFERENCE_PO2_MMHG;
+        println!(
+            "RADIATION_OER_ZONES lambda_um={lambda} rim_n={} transition_n={} deep_n={} \
+             rim_po2_mmhg={:.4} transition_po2_mmhg={:.4} deep_po2_mmhg={:.4}",
+            n[0],
+            n[1],
+            n[2],
+            po2(0),
+            po2(1),
+            po2(2)
+        );
+    }
+
+    let cfg = RunConfig { grid_dim, n_steps };
+    for &lambda in &lambdas {
+        for &dose in &doses {
+            let condition = Condition {
+                name: format!("radiation_oer_l{lambda}_d{dose}"),
+                treatment: Treatment::Radiation,
+                treatment_name: "Radiation".to_string(),
+                o2_lambda: Some(lambda),
+                immune_on: false,
+                stromal_on: false,
+                ph_on: false,
+                dose_schedule: DoseSchedule::Constant,
+            };
+            // The ferroptosis channel is OFF (`ros_per_gy = 0`) deliberately:
+            // its gray-to-ROS conversion is uncalibrated, so switching it on
+            // would make this measurement a function of an unanchored knob.
+            let overrides = Overrides {
+                radiation: Some(RadiationConfig {
+                    dose_gy: dose,
+                    alpha_per_gy: radiation::ALPHA_GBM_PARAMETERISATION_PER_GY,
+                    beta_per_gy2: radiation::ALPHA_GBM_PARAMETERISATION_PER_GY
+                        / radiation::ALPHA_BETA_TUMOUR_GY,
+                    ros_per_gy: 0.0,
+                    o2_dependence: 1.0,
+                    p_full_mmhg: ferroptosis_core::oxygen::OER_REFERENCE_PO2_MMHG,
+                    mu_per_cm: 0.0,
+                    hr_deficiency: 0.0,
+                    parp_alpha_boost: 0.0,
+                }),
+                radiation_step: rad_step,
+                ..Default::default()
+            };
+            let r = run_one_condition_full(&condition, cfg, None, overrides);
+            println!(
+                "RADIATION_OER_SWEEP lambda_um={lambda} dose_gy={dose} overall={:.6} \
+                 normoxic={:.6} transition={:.6} hypoxic={:.6} radiation_kills={} \
+                 total_tumor={}",
+                r.overall_kill_rate,
+                r.normoxic_kill_rate,
+                r.transition_kill_rate,
+                r.hypoxic_kill_rate,
+                r.radiation_kills.unwrap_or(0),
+                r.total_tumor
+            );
+        }
+    }
+}
+
 fn main() {
     // Guard against silent drift between this binary's metadata const and
     // the library's runtime value: if a future PR tunes
@@ -5183,6 +5461,10 @@ fn main() {
     // `--spheroid-size-sweep` runs RSL3 across a range of spheroid sizes, fixed vs
     // size-aware zone thresholds (#333 kill leg), emitting SPHEROID_SIZE_SWEEP lines.
     // Does NOT write summary.json; the default matrix path below is byte-identical.
+    if std::env::args().any(|a| a == "--radiation-oer-sweep") {
+        run_radiation_oer_sweep();
+        return;
+    }
     if std::env::args().any(|a| a == "--spheroid-size-sweep") {
         run_spheroid_size_sweep();
         return;
@@ -5244,30 +5526,39 @@ fn main() {
 
 #[cfg(test)]
 mod tests {
+
     /// WHICH TREATMENT ARMS THIS SPATIAL ENGINE CAN ACTUALLY EXPRESS (#844).
     ///
-    /// The crate has ten `Treatment` variants and nine of them now carry their
-    /// own engine module, their own calibration verdict and their own
-    /// manuscript section (EPIC #831). This binary -- the spatial capstone
-    /// carrying the oxygen gradient, the vessel network, the immune coupling,
-    /// the clonal and persister layers -- can express **three** of them.
+    /// The crate has ten `Treatment` variants and nine of them carry their own
+    /// engine module, calibration verdict and manuscript section (EPIC #831).
+    /// This binary -- the spatial capstone carrying the oxygen gradient, the
+    /// vessel network, the immune coupling, the clonal and persister layers --
+    /// can express far fewer, and this measures how many by RUNNING each arm
+    /// rather than reading the dispatch. A comment cannot go red and a text
+    /// scan over a match that names every variant cannot tell a live arm from
+    /// a dead one.
     ///
-    /// The rest fall through to `0.0` in `base_ros` and behave EXACTLY as
-    /// Control, which the dispatch says in a comment. This test converts that
-    /// comment into a measurement by RUNNING each arm rather than reading the
-    /// match, because a comment cannot go red and a text scan over a match
-    /// cannot tell a live arm from a dead one.
+    /// TWO TIERS, because collapsing them would flatter the engine and then
+    /// stop tracking the campaign. An arm is
     ///
-    /// It is deliberately written to FAIL when an arm is wired up. That is the
-    /// point: the numbers in `analysis/arm-parity.md` and the epic that tracks
-    /// this gap both have to move in the same commit as the wiring.
+    ///   * BY DEFAULT expressive if selecting the `Treatment` is enough, which
+    ///     is true of the three arms that predate #844; or
+    ///   * ON DEMAND expressive if it needs its own `Overrides` field, which is
+    ///     how every one of the ~30 ferroptosis realism layers ships and is
+    ///     required here -- the production matrix carries a committed
+    ///     byte-identity SHA (#253), so a new arm that acted by default would
+    ///     move it.
+    ///
+    /// Anything in neither tier behaves EXACTLY as Control, which is the state
+    /// #844 exists to empty. Written to FAIL when an arm moves tier, so
+    /// `analysis/arm-parity.md` and the epic move in the same commit.
     #[test]
-    fn the_spatial_engine_expresses_three_of_the_ten_treatment_arms() {
+    fn the_spatial_engine_expresses_four_of_the_ten_treatment_arms() {
         // A BIGGER PROBE THAN THE UNIT DEFAULT, deliberately. At 10^3/20 the
         // in-vivo-tuned RSL3 switch kills nothing at all -- a documented
         // property of that parameterisation, not of the engine's ability to
         // express the arm -- so the small config would report RSL3 as inert
-        // alongside the seven that really are. A headline that is an artifact
+        // alongside the arms that really are. A headline that is an artifact
         // of its own probe is worse than no headline.
         let cfg = RunConfig {
             grid_dim: 24,
@@ -5285,9 +5576,10 @@ mod tests {
         };
         let control =
             run_one_condition_full(&base(Treatment::Control), cfg, None, Overrides::default());
+        let moved =
+            |r: &ConditionResult| (r.overall_kill_rate - control.overall_kill_rate).abs() > 1e-12;
 
         let all = [
-            Treatment::Control,
             Treatment::RSL3,
             Treatment::SDT,
             Treatment::PDT,
@@ -5299,43 +5591,77 @@ mod tests {
             Treatment::AntibodyDrugConjugate,
             Treatment::Chemotherapy,
         ];
-        let mut expressive = Vec::new();
+        let mut by_default = Vec::new();
         let mut inert = Vec::new();
         for tx in all {
-            if tx == Treatment::Control {
-                continue;
-            }
             let r = run_one_condition_full(&base(tx), cfg, None, Overrides::default());
-            // "Expressive" means the arm changes the OUTCOME, not that it is
-            // named somewhere. Comparing the kill rate against Control is the
-            // weakest claim that still separates a live arm from a dead one.
-            if (r.overall_kill_rate - control.overall_kill_rate).abs() > 1e-12 {
-                expressive.push(format!("{tx:?}"));
+            if moved(&r) {
+                by_default.push(format!("{tx:?}"));
             } else {
                 inert.push(format!("{tx:?}"));
             }
         }
         assert_eq!(
-            expressive,
+            by_default,
             vec!["RSL3".to_string(), "SDT".to_string(), "PDT".to_string()],
-            "the set of arms this spatial engine can express has changed. If an \
-             arm was WIRED, that is the point of #844 -- update this literal, \
-             `analysis/arm-parity.md` and the epic in the same commit. If an arm \
-             went dark, something regressed."
+            "the set of arms expressive BY DEFAULT has changed. A new arm here \
+             would also move the production matrix, which carries a committed \
+             byte-identity SHA (#253) -- so this failing means either a real \
+             regression or an arm wired the wrong way."
         );
+
+        // ON DEMAND: the arm acts once its own override is set. The list is
+        // explicit because `scripts/arm_parity.py` READS it -- the parity
+        // table's spatial column must come from a measurement, and a parser
+        // that inferred the tier from which overrides happen to be exercised
+        // below would report whatever this test happened to try.
+        let on_demand = vec!["Radiation".to_string()];
+        assert_eq!(on_demand, vec!["Radiation".to_string()]);
+        let rad = run_one_condition_full(
+            &base(Treatment::Radiation),
+            cfg,
+            None,
+            Overrides {
+                radiation: Some(RadiationConfig {
+                    dose_gy: 4.0,
+                    alpha_per_gy: radiation::ALPHA_GBM_PARAMETERISATION_PER_GY,
+                    beta_per_gy2: radiation::ALPHA_GBM_PARAMETERISATION_PER_GY
+                        / radiation::ALPHA_BETA_TUMOUR_GY,
+                    ros_per_gy: 0.0,
+                    o2_dependence: 1.0,
+                    p_full_mmhg: ferroptosis_core::oxygen::OER_REFERENCE_PO2_MMHG,
+                    mu_per_cm: 0.0,
+                    hr_deficiency: 0.0,
+                    parp_alpha_boost: 0.0,
+                }),
+                radiation_step: 5,
+                ..Default::default()
+            },
+        );
+        assert!(
+            moved(&rad),
+            "radiation's override is set and the answer did not move, which is \
+             a layer with no caller wearing an arm's name"
+        );
+        assert!(
+            rad.radiation_kills.unwrap_or(0) > 0,
+            "the DNA channel reported no kills at 4 Gy"
+        );
+
         assert_eq!(
             inert.len(),
             7,
-            "seven arms are supposed to be inert here and {} are: {inert:?}",
+            "seven arms are supposed to be Control-identical by default and {} \
+             are: {inert:?}",
             inert.len()
         );
-        // And the inert ones must be inert by behaving as CONTROL exactly --
-        // not by erroring, and not by doing something small. A near-miss would
-        // be far worse than a zero, because it would look like a wired arm.
+        // The six with no override at all must be inert by behaving as CONTROL
+        // EXACTLY -- not by erroring and not by doing something small. A
+        // near-miss is the worst of the three states, because it looks live.
         for tx in [
-            Treatment::Radiation,
             Treatment::Chemotherapy,
             Treatment::Ablation,
+            Treatment::OncolyticVirus,
         ] {
             let r = run_one_condition_full(&base(tx), cfg, None, Overrides::default());
             assert_eq!(
@@ -5344,7 +5670,310 @@ mod tests {
                  worst of the three states: it looks live and is not"
             );
             assert_eq!(r.total_dead, control.total_dead);
+            assert!(r.radiation_kills.is_none());
         }
+    }
+
+    /// A DNA-CHANNEL DEATH IS NOT A FERROPTOTIC DEATH, and the one binary that
+    /// could tell them apart has to keep telling them apart.
+    ///
+    /// #726 built radiation as two independent channels precisely because
+    /// routing its lethality through the ferroptosis engine would predict that
+    /// a GPX4-competent cell is radioresistant, which it is not. So a
+    /// radiation kill must not be counted in `ferroptosis_kills`, and must not
+    /// seed the iron/DAMP diffusion that a ferroptotic death seeds -- doing so
+    /// would make radiation an immunogenic ferroptosis inducer by accident.
+    #[test]
+    fn radiation_kills_are_counted_apart_from_ferroptosis_kills() {
+        let cfg = RunConfig {
+            grid_dim: 20,
+            n_steps: 30,
+        };
+        let cond = Condition {
+            name: "rad_channel".to_string(),
+            treatment: Treatment::Radiation,
+            treatment_name: "Radiation".to_string(),
+            o2_lambda: Some(50.0),
+            immune_on: true,
+            stromal_on: false,
+            ph_on: false,
+            dose_schedule: DoseSchedule::Constant,
+        };
+        let mk = |dose: f64| Overrides {
+            radiation: Some(RadiationConfig {
+                dose_gy: dose,
+                alpha_per_gy: radiation::ALPHA_GBM_PARAMETERISATION_PER_GY,
+                beta_per_gy2: radiation::ALPHA_GBM_PARAMETERISATION_PER_GY
+                    / radiation::ALPHA_BETA_TUMOUR_GY,
+                ros_per_gy: 0.0,
+                o2_dependence: 1.0,
+                p_full_mmhg: ferroptosis_core::oxygen::OER_REFERENCE_PO2_MMHG,
+                mu_per_cm: 0.0,
+                hr_deficiency: 0.0,
+                parp_alpha_boost: 0.0,
+            }),
+            radiation_step: 5,
+            ..Default::default()
+        };
+        let none = run_one_condition_full(&cond, cfg, None, mk(0.0));
+        let dosed = run_one_condition_full(&cond, cfg, None, mk(6.0));
+        assert!(dosed.radiation_kills.unwrap() > 0);
+        assert_eq!(none.radiation_kills.unwrap(), 0);
+        // The ferroptosis count must NOT rise with radiation dose. If it did,
+        // the DNA channel would be feeding the peroxidation engine.
+        assert!(
+            dosed.ferroptosis_kills.unwrap() <= none.ferroptosis_kills.unwrap(),
+            "radiation raised the FERROPTOSIS kill count ({} -> {}), so the two \
+             channels are no longer independent",
+            none.ferroptosis_kills.unwrap(),
+            dosed.ferroptosis_kills.unwrap()
+        );
+        // And it must not seed the DAMP field, which is what would turn a
+        // DNA-damage death into an immunogenic one.
+        assert!(
+            dosed.total_damp <= none.total_damp + 1e-9,
+            "radiation raised the DAMP total ({} -> {}), so DNA-channel deaths \
+             are seeding the ferroptotic immune cascade",
+            none.total_damp,
+            dosed.total_damp
+        );
+    }
+
+    /// ONE FRACTION MEANS ONE FRACTION, and nothing else in the suite says so.
+    ///
+    /// `radiation` models a SINGLE fraction: fractionation needs regrowth
+    /// between fractions, which needs cell division the engine does not have
+    /// (#727b). If the dose were applied on every step instead of one, the run
+    /// would silently become a course of radiotherapy at `n_steps` times the
+    /// prescribed dose -- a total nobody chose, arriving through a schedule
+    /// the model cannot represent, and it would look like a working arm.
+    ///
+    /// The defining property is that the outcome does not depend on how long
+    /// the run continues AFTER the fraction lands. A mutation changing `step
+    /// == radiation_step` to `step >= radiation_step` survived every other
+    /// guard in this file.
+    #[test]
+    fn the_dose_lands_once_and_not_on_every_step() {
+        let cond = Condition {
+            name: "one_fraction".to_string(),
+            treatment: Treatment::Radiation,
+            treatment_name: "Radiation".to_string(),
+            o2_lambda: Some(50.0),
+            immune_on: false,
+            stromal_on: false,
+            ph_on: false,
+            dose_schedule: DoseSchedule::Constant,
+        };
+        let ov = || Overrides {
+            radiation: Some(RadiationConfig {
+                dose_gy: 3.0,
+                alpha_per_gy: radiation::ALPHA_GBM_PARAMETERISATION_PER_GY,
+                beta_per_gy2: radiation::ALPHA_GBM_PARAMETERISATION_PER_GY
+                    / radiation::ALPHA_BETA_TUMOUR_GY,
+                ros_per_gy: 0.0,
+                o2_dependence: 1.0,
+                p_full_mmhg: ferroptosis_core::oxygen::OER_REFERENCE_PO2_MMHG,
+                mu_per_cm: 0.0,
+                hr_deficiency: 0.0,
+                parp_alpha_boost: 0.0,
+            }),
+            radiation_step: 3,
+            ..Default::default()
+        };
+        let short = run_one_condition_full(
+            &cond,
+            RunConfig {
+                grid_dim: 24,
+                n_steps: 6,
+            },
+            None,
+            ov(),
+        );
+        let long = run_one_condition_full(
+            &cond,
+            RunConfig {
+                grid_dim: 24,
+                n_steps: 30,
+            },
+            None,
+            ov(),
+        );
+        assert!(
+            short.radiation_kills.unwrap() > 0,
+            "the fraction never landed"
+        );
+        assert_eq!(
+            short.radiation_kills.unwrap(),
+            long.radiation_kills.unwrap(),
+            "the DNA channel killed more cells in a longer run ({} vs {}), so              the dose is landing on more than one step -- that is a course of              radiotherapy at a total nobody prescribed, delivered through a              schedule this engine cannot represent",
+            short.radiation_kills.unwrap(),
+            long.radiation_kills.unwrap()
+        );
+        // A fraction scheduled beyond the run simply never lands, rather than
+        // landing on the last step.
+        let never = run_one_condition_full(
+            &cond,
+            RunConfig {
+                grid_dim: 24,
+                n_steps: 2,
+            },
+            None,
+            ov(),
+        );
+        assert_eq!(never.radiation_kills.unwrap(), 0);
+    }
+
+    /// The dose-modifying factor the SPATIAL run exhibits is not the formula.
+    ///
+    /// `radiation::dna_channel_dose_modifying_factor` returns a single number
+    /// and is tested as a RESTATEMENT of the hyperbola. If the spatial answer
+    /// merely reproduced it, the sweep would be measuring the formula and the
+    /// calibration page's whole argument would be wrong.
+    #[test]
+    fn the_spatial_dose_modifying_factor_depends_on_the_gradient() {
+        // GRID 60, AND THE DENOMINATOR IS CHECKED FIRST. The deep zone is
+        // EMPTY below grid 40 and nearly empty at it, and `zone_kill_rates_3d`
+        // returns 0.0 for an empty zone -- so a smaller probe compares two
+        // rates that describe no cells. This test was written at grid 40 and
+        // failed with both sides reading exactly 1.0000, which is what a
+        // handful of cells looks like.
+        let cfg = RunConfig {
+            grid_dim: 60,
+            n_steps: 12,
+        };
+        {
+            let g =
+                TumorGrid3D::generate(cfg.grid_dim, cfg.grid_dim, cfg.grid_dim, CELL_SIZE_UM, SEED);
+            let deep = (0..g.cells.len())
+                .filter(|&i| g.cells[i].is_tumor)
+                .filter(|&i| {
+                    let (r, c, l) = g.coords(i);
+                    g.radial_depth_um(r, c, l) >= ZONE_REF_LAMBDA * 3.0
+                })
+                .count();
+            assert!(
+                deep > 500,
+                "the deep zone holds {deep} cells, too few for a kill RATE to                  mean anything -- this comparison would be between two numbers                  describing almost nobody"
+            );
+        }
+        let run = |lambda: f64, dose: f64| {
+            let cond = Condition {
+                name: format!("dmf_l{lambda}_d{dose}"),
+                treatment: Treatment::Radiation,
+                treatment_name: "Radiation".to_string(),
+                o2_lambda: Some(lambda),
+                immune_on: false,
+                stromal_on: false,
+                ph_on: false,
+                dose_schedule: DoseSchedule::Constant,
+            };
+            run_one_condition_full(
+                &cond,
+                cfg,
+                None,
+                Overrides {
+                    radiation: Some(RadiationConfig {
+                        dose_gy: dose,
+                        alpha_per_gy: radiation::ALPHA_GBM_PARAMETERISATION_PER_GY,
+                        beta_per_gy2: radiation::ALPHA_GBM_PARAMETERISATION_PER_GY
+                            / radiation::ALPHA_BETA_TUMOUR_GY,
+                        ros_per_gy: 0.0,
+                        o2_dependence: 1.0,
+                        p_full_mmhg: ferroptosis_core::oxygen::OER_REFERENCE_PO2_MMHG,
+                        mu_per_cm: 0.0,
+                        hr_deficiency: 0.0,
+                        parp_alpha_boost: 0.0,
+                    }),
+                    radiation_step: 5,
+                    ..Default::default()
+                },
+            )
+        };
+        // At one fixed dose, a steeper gradient must leave the core MORE alive
+        // than a shallow one. The formula has no gradient term at all, so this
+        // cannot pass by restating it.
+        let steep = run(50.0, 6.0);
+        let shallow = run(200.0, 6.0);
+        assert!(
+            steep.hypoxic_kill_rate < shallow.hypoxic_kill_rate,
+            "a steeper O2 gradient did not protect the core more (steep {:.4} \
+             vs shallow {:.4})",
+            steep.hypoxic_kill_rate,
+            shallow.hypoxic_kill_rate
+        );
+        // And the rim must move the other way: a shallow gradient oxygenates
+        // the rim LESS than... no -- a shallow gradient oxygenates it MORE.
+        assert!(
+            shallow.normoxic_kill_rate >= steep.normoxic_kill_rate,
+            "a shallower gradient did not oxygenate the rim at least as well"
+        );
+        // Zero dose is the identity, at every gradient.
+        for lambda in [50.0, 200.0] {
+            assert_eq!(run(lambda, 0.0).radiation_kills.unwrap(), 0);
+        }
+
+        // BETA MUST REACH THE CELLS. Dropping `beta_per_gy2` makes the
+        // linear-quadratic model purely exponential, which removes the
+        // curvature the whole model is named for -- and the calibration page
+        // argues from exactly that curvature when it says the spatial factor
+        // is not the formula restated ("the linear-quadratic model is not
+        // log-linear in dose"). With beta gone that sentence is false and
+        // nothing else here noticed: the mutation survived every other guard.
+        let no_beta = |dose: f64| {
+            let cond = Condition {
+                name: format!("nobeta_d{dose}"),
+                treatment: Treatment::Radiation,
+                treatment_name: "Radiation".to_string(),
+                o2_lambda: Some(50.0),
+                immune_on: false,
+                stromal_on: false,
+                ph_on: false,
+                dose_schedule: DoseSchedule::Constant,
+            };
+            run_one_condition_full(
+                &cond,
+                cfg,
+                None,
+                Overrides {
+                    radiation: Some(RadiationConfig {
+                        dose_gy: dose,
+                        alpha_per_gy: radiation::ALPHA_GBM_PARAMETERISATION_PER_GY,
+                        beta_per_gy2: 0.0,
+                        ros_per_gy: 0.0,
+                        o2_dependence: 1.0,
+                        p_full_mmhg: ferroptosis_core::oxygen::OER_REFERENCE_PO2_MMHG,
+                        mu_per_cm: 0.0,
+                        hr_deficiency: 0.0,
+                        parp_alpha_boost: 0.0,
+                    }),
+                    radiation_step: 5,
+                    ..Default::default()
+                },
+            )
+        };
+        // SCANNED, NOT SAMPLED AT ONE DOSE, because the first version checked
+        // 12 Gy and the mutation SURVIVED: at that dose both models kill
+        // essentially everything, so a kill FRACTION bounded by 1 cannot tell
+        // them apart. A bound satisfied by saturation is not a bound.
+        let mut best_gap = 0.0f64;
+        for d in [1.0, 2.0, 3.0, 4.0, 6.0, 8.0] {
+            let gap = run(50.0, d).normoxic_kill_rate - no_beta(d).normoxic_kill_rate;
+            best_gap = best_gap.max(gap);
+        }
+        assert!(
+            best_gap > 0.02,
+            "across 1-8 Gy the largest gap between the quadratic model and a \
+             purely exponential one with the same alpha is {best_gap:.5}, so \
+             the beta term is not reaching the cells"
+        );
+        // ...and must NOT matter at a dose far below alpha/beta, which is what
+        // makes the check above a test of CURVATURE rather than of magnitude.
+        let low = 0.5;
+        assert!(
+            (run(50.0, low).normoxic_kill_rate - no_beta(low).normoxic_kill_rate).abs() < 0.01,
+            "beta is changing the answer at {low} Gy, far below alpha/beta, so \
+             it is not acting as a quadratic term"
+        );
     }
 
     use super::*;

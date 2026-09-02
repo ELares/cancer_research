@@ -70,7 +70,7 @@
    "pub_consts": 11,
    "code_lines": 263,
    "serves": "Radiation + synthetic lethality (PARP)",
-   "reach": 4
+   "reach": 5
   },
   {
    "module": "sonodynamic",

@@ -797,3 +797,24 @@ figures:
       position scales as roughly the square root of a parameter nothing in
       this repository measures, so the ordering is the result and the
       milliwatt figures are a restatement of an assumption.
+  - manuscript_figure: 41
+    filename: fig45_radiation_oer
+    generator:
+      script: scripts/generate_conceptual_diagrams.py
+      function: fig45_radiation_oer
+    inputs:
+      - analysis/calibration/radiation-oer-validation.json
+    type: simulation
+    status: manuscript
+    note: >-
+      The first modality arm measured from a POPULATION rather than evaluated at
+      a point. (b) is the load-bearing panel: the engine already contains the
+      Alper-Howard-Flanders hyperbola and a function returning 2.86 from it,
+      which the crate documents and tests as a RESTATEMENT -- so scoring that
+      against the published band would be a guard computing its own
+      expectation. The plotted quantity is different: a dose ratio read off a
+      60^3 grid that moves 1.24 to 2.55 with the oxygen gradient, a parameter
+      the formula has no term for, and peaks interior to the swept range. (c)
+      is why every value is a LOWER bound rather than a match -- one lambda
+      sets rim and core together, so the model can never present the
+      fully-oxic-versus-anoxic pair the published band was measured on.

@@ -15,7 +15,7 @@ Chapter 6 carried a sentence since it was written, calling each modality arm *"o
 | `chemo` | Cytotoxic chemotherapy: the cell cycle, log kill and scheduling | 19 | 4 | 0 | 282 | 1 |
 | `oncolytic` | Oncolytic virus spread | 11 | 1 | 1 | 165 | 1 |
 | `photosensitizer_pk` | Photodynamic therapy: photosensitizer PK, drug-light interval, singlet-O2 yield and fluence rate | 9 | 1 | 0 | 249 | 2 |
-| `radiation` | Radiation + synthetic lethality (PARP) | 23 | 1 | 11 | 263 | 4 |
+| `radiation` | Radiation + synthetic lethality (PARP) | 23 | 1 | 11 | 263 | 5 |
 | `sonodynamic` | Sonodynamic therapy: the mechanical index, the inertial-cavitation threshold and the frequency optimum | 8 | 0 | 1 | 63 | 0 |
 
 The last column is why it is there. **`sonodynamic` has no production caller at all**, so its functions are counted below and reached by nothing — a layer without a caller, which is the defect this campaign keeps finding in its own work. The count that follows includes them, because hiding them would be the more flattering error.

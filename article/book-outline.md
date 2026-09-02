@@ -2,7 +2,7 @@
 
 **Working title:** Cancer Therapy Mechanisms and Evidence: A Cross-Literature Synthesis
 
-**Target:** ~59,000 words (current: ~73,900 measured prose-only from v1.md by `tests/test_book_outline_wordcount.py`, which recomputes it and fails on drift). 5 Parts, 12 chapters, 3 appendices.
+**Target:** ~59,000 words (current: ~75,100 measured prose-only from v1.md by `tests/test_book_outline_wordcount.py`, which recomputes it and fails on drift). 5 Parts, 12 chapters, 3 appendices.
 
 > **Note:** This is a planning document, not manuscript content. Headings here
 > use the outline's own hierarchy for readability. The manuscript heading
@@ -232,11 +232,11 @@ Step-by-step: clone, build, run analysis, run simulations, compile PDF.
 |------|----------|--------------|-------------|
 | I: Why This Exists | 1-2 | ~4,300 | 6,000 |
 | II: What We Found | 3-4 | ~16,100 | 12,000 |
-| III: Simulations | 5-9 | ~35,900 | 21,500 |
+| III: Simulations | 5-9 | ~37,100 | 21,500 |
 | IV: What's Next | 10-12 | ~8,000 | 11,500 |
 | V: References/Tools | Apps A-C | ~7,700 | 8,000 |
 | front matter (title, abstract) | — | ~1,900 | — |
-| **Total** | **12 + 3 apps** | **~73,900** | **~59,000** |
+| **Total** | **12 + 3 apps** | **~75,100** | **~59,000** |
 
 Part III is over its target and Part IV well under it. The per-part figures are
 measured, not planned: an earlier revision changed only the Total and left the

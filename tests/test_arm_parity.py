@@ -203,19 +203,36 @@ def test_the_spatial_column_is_measured_and_not_asserted():
     spatial = set(d["spatial_arms"])
     assert spatial, "the spatial column has no measurement behind it"
     src = (REPO / "simulations" / "sim-tme-3d" / "src" / "main.rs").read_text()
-    assert "fn the_spatial_engine_expresses_three_of_the_ten_treatment_arms" in src, (
+    import re as _re
+    assert _re.search(r"fn the_spatial_engine_expresses_\w+_treatment_arms", src), (
         "the measurement this column reads no longer exists")
+    # The parser must NOT depend on the test's name, which carries a count and
+    # therefore changes every time an arm lands -- matching the literal name is
+    # how this parser broke the first time one did.
+    gen = (REPO / "scripts" / "arm_parity.py").read_text()
+    assert "expresses_three_of_the_ten" not in gen, (
+        "arm_parity.py is matching the spatial test by its exact name again, "
+        "which breaks on the next arm")
+    tiers = {"by default": set(d["spatial_by_default"]),
+             "on demand": set(d["spatial_on_demand"])}
+    assert not (tiers["by default"] & tiers["on demand"]), (
+        "an arm is in both tiers, so the two are not measuring different things")
     for r in d["arms"]:
-        assert r["spatial"] == (r["arm"] in spatial)
+        assert (r["spatial"] is not None) == (r["arm"] in spatial)
+        if r["spatial"] is not None:
+            assert r["arm"] in tiers[r["spatial"]], (
+                f"{r['arm']} is labelled {r['spatial']!r} and is not in that "
+                "tier's measured list")
     # The COMPARATOR must be spatial. It is the comparator BECAUSE it runs in
     # the spatial engine; a table reporting otherwise is reading its own
     # instrument wrong, which is exactly what a character class excluding
     # digits did to `RSL3` on the first attempt -- silently, and in the
     # direction that understated the page's own headline.
-    assert d["comparator"] in spatial, (
-        f"the comparator {d['comparator']} is reported as not expressible in "
-        "the spatial engine, which cannot be true and means the parser is "
-        "dropping a name rather than the engine dropping an arm")
+    assert d["comparator"] in set(d["spatial_by_default"]), (
+        f"the comparator {d['comparator']} is not reported as expressible BY "
+        "DEFAULT in the spatial engine, which cannot be true -- it is the "
+        "comparator because it runs there -- and means the parser is dropping "
+        "a name rather than the engine dropping an arm")
     assert any(not r["spatial"] for r in d["arms"]), (
         "every arm is now spatial, which is #844 succeeding -- re-derive this "
         "page's framing rather than relaxing the guard")

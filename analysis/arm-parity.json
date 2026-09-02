@@ -12,7 +12,7 @@
    "pub_fns": 182,
    "rust_tests": 263,
    "calibration": null,
-   "spatial": true,
+   "spatial": "by default",
    "book_words": 5249,
    "book_sections": [
     "Chapter 5: The Ferroptosis Engine"
@@ -54,7 +54,7 @@
    "pub_fns": 8,
    "rust_tests": 10,
    "calibration": "PARTLY REFUTED",
-   "spatial": true,
+   "spatial": "by default",
    "book_words": 1144,
    "book_sections": [
     "6.13 Photodynamic and Sonodynamic Therapy, the Two the Project Started With"
@@ -93,7 +93,7 @@
    "pub_fns": 9,
    "rust_tests": 59,
    "calibration": "DIRECTIONAL",
-   "spatial": true,
+   "spatial": "by default",
    "book_words": 1144,
    "book_sections": [
     "6.13 Photodynamic and Sonodynamic Therapy, the Two the Project Started With"
@@ -127,14 +127,16 @@
    "pub_fns": 23,
    "rust_tests": 33,
    "calibration": "ADMISSIBLE",
-   "spatial": false,
-   "book_words": 1378,
+   "spatial": "on demand",
+   "book_words": 2598,
    "book_sections": [
-    "6.6 Radiation, in the Form It Is Actually Given"
+    "6.6 Radiation, in the Form It Is Actually Given",
+    "6.14 Radiation in the Spatial Engine, and an Effect the Formula Could Not Have"
    ],
    "figures": [
     "fig34_depth_reach",
-    "fig36_fractionation"
+    "fig36_fractionation",
+    "fig45_radiation_oer"
    ],
    "predictions": [
     "P9",
@@ -144,7 +146,7 @@
    "parity_lines": 0.069,
    "parity_fns": 0.126,
    "parity_tests": 0.125,
-   "parity_words": 0.263,
+   "parity_words": 0.495,
    "lines_short_of_parity": 3542
   },
   {
@@ -159,7 +161,7 @@
    "pub_fns": 7,
    "rust_tests": 10,
    "calibration": "INADMISSIBLE",
-   "spatial": false,
+   "spatial": null,
    "book_words": 3281,
    "book_sections": [
     "6.8 Checkpoint Blockade, and What a Ratio Can Constrain",
@@ -192,7 +194,7 @@
    "pub_fns": 13,
    "rust_tests": 16,
    "calibration": "ADMISSIBLE",
-   "spatial": false,
+   "spatial": null,
    "book_words": 1062,
    "book_sections": [
     "6.9 Adoptive Cell Therapy, and a Failure More Dose Cannot Fix"
@@ -224,7 +226,7 @@
    "pub_fns": 11,
    "rust_tests": 14,
    "calibration": "ADMISSIBLE",
-   "spatial": false,
+   "spatial": null,
    "book_words": 983,
    "book_sections": [
     "6.10 Oncolytic Virus, and a Tension That Names Its Own Condition"
@@ -256,7 +258,7 @@
    "pub_fns": 9,
    "rust_tests": 10,
    "calibration": "UNCONSTRAINED",
-   "spatial": false,
+   "spatial": null,
    "book_words": 877,
    "book_sections": [
     "6.12 Ablation, and a Failure With an Address"
@@ -288,7 +290,7 @@
    "pub_fns": 19,
    "rust_tests": 15,
    "calibration": "NO TARGET",
-   "spatial": false,
+   "spatial": null,
    "book_words": 1393,
    "book_sections": [
     "6.7 Chemotherapy, and the Cell Cycle the Engine Did Not Have"
@@ -319,7 +321,7 @@
    "pub_fns": 13,
    "rust_tests": 11,
    "calibration": "NO TARGET",
-   "spatial": false,
+   "spatial": null,
    "book_words": 998,
    "book_sections": [
     "6.11 Antibody-Drug Conjugates, and an Optimum Nobody Chose"
@@ -344,8 +346,8 @@
  "shared_modules": 5,
  "shared_code_lines": 818,
  "shared_pub_fns": 58,
- "manuscript_words_in_sections": 66234,
- "manuscript_words_attributed": 17509,
+ "manuscript_words_in_sections": 67454,
+ "manuscript_words_attributed": 18729,
  "sections_naming_more_than_one_arm": {
   "6.13 Photodynamic and Sonodynamic Therapy, the Two the Project Started With": 2
  },
@@ -366,7 +368,16 @@
  "spatial_arms": [
   "PDT",
   "RSL3",
+  "Radiation",
   "SDT"
+ ],
+ "spatial_by_default": [
+  "PDT",
+  "RSL3",
+  "SDT"
+ ],
+ "spatial_on_demand": [
+  "Radiation"
  ],
  "comparator": "RSL3",
  "arms_at_parity": 0,

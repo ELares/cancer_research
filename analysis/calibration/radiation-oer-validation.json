@@ -1,0 +1,203 @@
+{
+  "arms_below_band": [
+    30.0,
+    80.0,
+    120.0,
+    200.0
+  ],
+  "best_dmf": 2.5515493858396807,
+  "best_lambda_um": 50.0,
+  "best_reaches_band": true,
+  "best_rim_po2_at_anoxic_core": 11.2299,
+  "by_lambda": [
+    {
+      "core_n": 3071,
+      "core_po2_mmhg": 0.0001,
+      "dmf_mean": 2.26858086868642,
+      "dmf_spread": 0.13590463045833756,
+      "factors": [
+        {
+          "dmf": 2.325890778558944,
+          "dose_core_gy": 3.6370777362274636,
+          "dose_rim_gy": 1.5637353953829654,
+          "kill_level": 0.3
+        },
+        {
+          "dmf": 2.2836822120152673,
+          "dose_core_gy": 6.458617017622204,
+          "dose_rim_gy": 2.8281592699899814,
+          "kill_level": 0.5
+        },
+        {
+          "dmf": 2.2747643360708625,
+          "dose_core_gy": 10.324303822248323,
+          "dose_rim_gy": 4.538625675871641,
+          "kill_level": 0.7
+        },
+        {
+          "dmf": 2.1899861481006067,
+          "dose_core_gy": 16.895600197743924,
+          "dose_rim_gy": 7.714934732531354,
+          "kill_level": 0.9
+        }
+      ],
+      "lambda_um": 30.0,
+      "rim_n": 43608,
+      "rim_po2_mmhg": 11.2299
+    },
+    {
+      "core_n": 3071,
+      "core_po2_mmhg": 0.0149,
+      "dmf_mean": 2.5515493858396807,
+      "dmf_spread": 0.13974799353658351,
+      "factors": [
+        {
+          "dmf": 2.636414277314044,
+          "dose_core_gy": 3.642917466410749,
+          "dose_rim_gy": 1.3817697384502565,
+          "kill_level": 0.3
+        },
+        {
+          "dmf": 2.545478449957381,
+          "dose_core_gy": 6.308293288355663,
+          "dose_rim_gy": 2.4782348043297255,
+          "kill_level": 0.5
+        },
+        {
+          "dmf": 2.5276385323098367,
+          "dose_core_gy": 9.905307151791252,
+          "dose_rim_gy": 3.9187989204846736,
+          "kill_level": 0.7
+        },
+        {
+          "dmf": 2.4966662837774605,
+          "dose_core_gy": 16.352079334612927,
+          "dose_rim_gy": 6.549565490936259,
+          "kill_level": 0.9
+        }
+      ],
+      "lambda_um": 50.0,
+      "rim_n": 43608,
+      "rim_po2_mmhg": 16.6251
+    },
+    {
+      "core_n": 3071,
+      "core_po2_mmhg": 0.2762,
+      "dmf_mean": 2.3563774802535864,
+      "dmf_spread": 0.10019458112045942,
+      "factors": [
+        {
+          "dmf": 2.343538983441923,
+          "dose_core_gy": 3.096812484345563,
+          "dose_rim_gy": 1.3214256328679959,
+          "kill_level": 0.3
+        },
+        {
+          "dmf": 2.3970700088334786,
+          "dose_core_gy": 5.614070527790751,
+          "dose_rim_gy": 2.3420553038093406,
+          "kill_level": 0.5
+        },
+        {
+          "dmf": 2.2968754277130192,
+          "dose_core_gy": 8.605687185368033,
+          "dose_rim_gy": 3.746693042877231,
+          "kill_level": 0.7
+        },
+        {
+          "dmf": 2.3880255010259255,
+          "dose_core_gy": 14.571984276472033,
+          "dose_rim_gy": 6.102105806747762,
+          "kill_level": 0.9
+        }
+      ],
+      "lambda_um": 80.0,
+      "rim_n": 43608,
+      "rim_po2_mmhg": 22.0335
+    },
+    {
+      "core_n": 3071,
+      "core_po2_mmhg": 1.426,
+      "dmf_mean": 1.6673120587834538,
+      "dmf_spread": 0.1100218431236355,
+      "factors": [
+        {
+          "dmf": 1.630076888596461,
+          "dose_core_gy": 2.105368172669859,
+          "dose_rim_gy": 1.2915759909231255,
+          "kill_level": 0.3
+        },
+        {
+          "dmf": 1.6726924867356245,
+          "dose_core_gy": 3.8545696146463895,
+          "dose_rim_gy": 2.3044101920783118,
+          "kill_level": 0.5
+        },
+        {
+          "dmf": 1.628228508339047,
+          "dose_core_gy": 5.959936779137115,
+          "dose_rim_gy": 3.6603810513162154,
+          "kill_level": 0.7
+        },
+        {
+          "dmf": 1.7382503514626826,
+          "dose_core_gy": 10.317802437967483,
+          "dose_rim_gy": 5.935740170732817,
+          "kill_level": 0.9
+        }
+      ],
+      "lambda_um": 120.0,
+      "rim_n": 43608,
+      "rim_po2_mmhg": 26.3754
+    },
+    {
+      "core_n": 3071,
+      "core_po2_mmhg": 5.3636,
+      "dmf_mean": 1.2413641010076617,
+      "dmf_spread": 0.06507011540981367,
+      "factors": [
+        {
+          "dmf": 1.1993149607876983,
+          "dose_core_gy": 1.5408924109931292,
+          "dose_rim_gy": 1.284810463784331,
+          "kill_level": 0.3
+        },
+        {
+          "dmf": 1.2513414213417644,
+          "dose_core_gy": 2.8516373916537514,
+          "dose_rim_gy": 2.278864379472113,
+          "kill_level": 0.5
+        },
+        {
+          "dmf": 1.2504149457036726,
+          "dose_core_gy": 4.5102271104127984,
+          "dose_rim_gy": 3.606984326210738,
+          "kill_level": 0.7
+        },
+        {
+          "dmf": 1.264385076197512,
+          "dose_core_gy": 7.446478733301419,
+          "dose_rim_gy": 5.88940732810278,
+          "kill_level": 0.9
+        }
+      ],
+      "lambda_um": 200.0,
+      "rim_n": 43608,
+      "rim_po2_mmhg": 30.8647
+    }
+  ],
+  "kill_levels": [
+    0.3,
+    0.5,
+    0.7,
+    0.9
+  ],
+  "max_spread_across_kill_levels": 0.13974799353658351,
+  "optimum_is_interior": true,
+  "published_oer_band": [
+    2.5,
+    3.0
+  ],
+  "restated_single_cell_dmf": 2.86,
+  "verdict": "PARTIAL \u2014 reaches the band at one gradient only"
+}
