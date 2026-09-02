@@ -52,7 +52,7 @@
    "pub_consts": 1,
    "code_lines": 165,
    "serves": "Oncolytic virus spread",
-   "reach": 1
+   "reach": 2
   },
   {
    "module": "photosensitizer_pk",

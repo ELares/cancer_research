@@ -13,7 +13,7 @@ Chapter 6 carried a sentence since it was written, calling each modality arm *"o
 | `adoptive` | CAR-T trafficking, infiltration and activation barriers | 13 | 2 | 1 | 166 | 1 |
 | `checkpoint` | Checkpoint blockade: occupancy, the PD-L1 brake, mutational-burden antigenicity and the resistance modes | 7 | 2 | 2 | 122 | 1 |
 | `chemo` | Cytotoxic chemotherapy: the cell cycle, log kill and scheduling | 19 | 4 | 0 | 282 | 1 |
-| `oncolytic` | Oncolytic virus spread | 11 | 1 | 1 | 165 | 1 |
+| `oncolytic` | Oncolytic virus spread | 11 | 1 | 1 | 165 | 2 |
 | `photosensitizer_pk` | Photodynamic therapy: photosensitizer PK, drug-light interval, singlet-O2 yield and fluence rate | 9 | 1 | 0 | 249 | 2 |
 | `radiation` | Radiation + synthetic lethality (PARP) | 23 | 1 | 11 | 263 | 5 |
 | `sonodynamic` | Sonodynamic therapy: the mechanical index, the inertial-cavitation threshold and the frequency optimum | 8 | 0 | 1 | 63 | 0 |

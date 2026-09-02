@@ -74,6 +74,7 @@ use ferroptosis_core::immune_spatial::{
     DcSubsetConfig, SuppressorConfig, DAMP_KILL_THRESHOLD,
 };
 use ferroptosis_core::nutrient::{apply_nutrient_stress_3d, NutrientConfig};
+use ferroptosis_core::oncolytic::{self, OncolyticConfig};
 use ferroptosis_core::oxygen::{
     fenton_o2_factor, hypoxia_iron_factor, o2_dependent_exo_factor, oer_exo_factor, por_o2_factor,
     radial_o2_field, OER_REFERENCE_PO2_MMHG,
@@ -191,12 +192,17 @@ const IMMUNE_SEED_SALT: u64 = 0x111A_0E5E_0000_0539;
 // SHA is committed (#253) -- so the alert is dismissed as the false positive
 // it is rather than coded around.
 const RADIATION_SEED_SALT: u64 = 0x4AD1_0A17_0000_0539;
+// A fourth stream. Same CodeQL false positive as the three above; see the note.
+const ONCOLYTIC_SEED_SALT: u64 = 0x0C01_9713_0000_0539;
 const _: () = assert!(BIOCHEM_SEED_SALT != IMMUNE_SEED_SALT);
 // Pairwise-distinct, per the #278 layer-seed rule: two layers sharing a salt
 // draw the SAME number for the same (cell, step), so their decisions correlate
 // and an A/B between them measures the coincidence rather than the biology.
 const _: () = assert!(RADIATION_SEED_SALT != BIOCHEM_SEED_SALT);
 const _: () = assert!(RADIATION_SEED_SALT != IMMUNE_SEED_SALT);
+const _: () = assert!(ONCOLYTIC_SEED_SALT != BIOCHEM_SEED_SALT);
+const _: () = assert!(ONCOLYTIC_SEED_SALT != IMMUNE_SEED_SALT);
+const _: () = assert!(ONCOLYTIC_SEED_SALT != RADIATION_SEED_SALT);
 
 /// SplitMix64 finalizer (Steele, Lea & Flood 2014, "Fast Splittable
 /// Pseudorandom Number Generators"): a fast, full-avalanche integer hash. Used
@@ -297,6 +303,20 @@ struct ConditionResult {
     /// nobody.
     #[serde(skip_serializing_if = "Option::is_none")]
     radiation_kills: Option<usize>,
+    /// Cells lysed by the oncolytic front (#844), apart from
+    /// `ferroptosis_kills` because lysis is not peroxidation.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    oncolytic_kills: Option<usize>,
+    /// Whether an infectible seed cell was found at all. A front radius of
+    /// zero cannot distinguish "never started" from "started and went
+    /// nowhere", and those are different claims.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    oncolytic_seeded: Option<bool>,
+    /// Farthest the infection reached from its seed, in microns. The quantity
+    /// a percolation threshold is about: below the threshold this stays near
+    /// zero however long the run continues.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    oncolytic_front_radius_um: Option<f64>,
     overall_kill_rate: f64,
     normoxic_kill_rate: f64,
     transition_kill_rate: f64,
@@ -608,6 +628,26 @@ struct Overrides {
     /// every step -- delivering it per step would be a course of radiotherapy
     /// the engine cannot represent, at a total dose nobody chose.
     radiation_step: u32,
+    /// Oncolytic virus spread as a FRONT on the grid (#844).
+    ///
+    /// `None` ⇒ the arm is as inert as any unwired one ⇒ byte-identical, and
+    /// the production matrix never sets it.
+    ///
+    /// The engine's `oncolytic::front_speed` is the homogeneous Fisher-KPP
+    /// closed form `2*sqrt(D*r)`, which has NO term for how much of the tumour
+    /// the virus can enter -- it returns a positive speed whenever replication
+    /// beats clearance. On a lattice that is false: below a percolation
+    /// threshold in the permissive fraction the infection cannot cross the
+    /// tissue at all, however long it is given and whatever the dose. That is
+    /// the quantity this wiring exists to measure, and a point model cannot
+    /// express it.
+    ///
+    /// `(config, permissive_fraction)`. Each tumour cell is independently
+    /// permissive with that probability, drawn once at setup from its own RNG
+    /// stream.
+    oncolytic: Option<(OncolyticConfig, f64)>,
+    /// The step at which the virus is seeded at the tumour centre.
+    oncolytic_seed_step: u32,
     /// ESCRT-III membrane-repair brake on death execution (#465): `Some((rate,
     /// budget))` sets `params.escrt_repair_rate`/`escrt_repair_budget` so a cell
     /// whose LP crosses the death threshold can be resealed for a finite per-cell
@@ -1586,6 +1626,34 @@ fn run_one_condition_full(
     // can tell the two routes apart stop telling them apart.
     let mut radiation_kills = 0usize;
     let radiation_cfg = overrides.radiation.clone();
+    let oncolytic_cfg = overrides.oncolytic.clone();
+    // Per-cell infection state for the oncolytic front. Empty (never indexed)
+    // when the arm is off, so the matrix path allocates and reads nothing.
+    let (mut onc_permissive, mut onc_infected) = if oncolytic_cfg.is_some() {
+        (vec![false; n_cells], vec![false; n_cells])
+    } else {
+        (Vec::new(), Vec::new())
+    };
+    let mut oncolytic_kills = 0usize;
+    // WHETHER A SEED WAS EVER PLACED, which a front radius of zero cannot say.
+    // At a very low permissive fraction there may be no enterable cell near
+    // the tumour centre at all, and reporting "the front did not spread" for
+    // that row would be reporting a failure to START as a failure to CROSS --
+    // two different claims that render identically.
+    let mut onc_seeded = false;
+    // Permissiveness is a PROPERTY OF THE CELL, drawn once, not re-rolled each
+    // step. Re-rolling would let the front cross a non-permissive cell by
+    // waiting, which is exactly the barrier being measured -- and would turn a
+    // percolation threshold into no threshold at all.
+    if let Some((_, permissive_fraction)) = oncolytic_cfg.as_ref() {
+        for idx in 0..n_cells {
+            if !grid.cells[idx].is_tumor {
+                continue;
+            }
+            let mut rng = StdRng::seed_from_u64(cell_seed(cond_seed, idx, 0, ONCOLYTIC_SEED_SALT));
+            onc_permissive[idx] = rng.gen::<f64>() < *permissive_fraction;
+        }
+    }
     // WHICH CELLS THE DNA CHANNEL KILLED, kept because `state.dead` cannot say.
     //
     // The ferroptotic DAMP release is gated on `state.dead` and pays out
@@ -2117,6 +2185,88 @@ fn run_one_condition_full(
                     }
                 }
                 radiation_kills += killed;
+            }
+        }
+
+        // --- Oncolytic virus, spread as a FRONT (#844) ---
+        //
+        // The engine's closed form is `2*sqrt(D*r)`, the Fisher-KPP speed of a
+        // front in a HOMOGENEOUS medium. It has no term for how much of the
+        // tumour the virus can enter, so it returns a positive speed whenever
+        // replication beats clearance. On a lattice that is false: below a
+        // percolation threshold in the permissive fraction the infection
+        // cannot cross the tissue at all, whatever the dose and however long
+        // it is given. A point model cannot express that; this can.
+        //
+        // Deliberately simple. One infection step per simulation step: an
+        // infected cell dies, and each permissive living tumour cell in its
+        // 26-Moore neighbourhood becomes infected with probability
+        // `effective_replication`. That is a contact process, not a PDE, and
+        // it is the right shape here -- the question is whether the front
+        // CROSSES, not how fast a continuum approximation says it should.
+        if let Some((ocfg, _)) = oncolytic_cfg.as_ref() {
+            if step == overrides.oncolytic_seed_step {
+                // Seed at the tumour centre, on a permissive cell. Seeding a
+                // NON-permissive cell would report "no spread" for a reason
+                // that has nothing to do with percolation.
+                let (rr, cc, ll) = (grid.rows / 2, grid.cols / 2, grid.layers / 2);
+                let seed_idx = (0..n_cells).find(|&i| {
+                    grid.cells[i].is_tumor && onc_permissive[i] && !grid.cells[i].state.dead && {
+                        let (r, c, l) = grid.coords(i);
+                        let (dr, dc, dl) = (
+                            r as i64 - rr as i64,
+                            c as i64 - cc as i64,
+                            l as i64 - ll as i64,
+                        );
+                        dr * dr + dc * dc + dl * dl <= 9
+                    }
+                });
+                if let Some(i) = seed_idx {
+                    onc_infected[i] = true;
+                    onc_seeded = true;
+                }
+            }
+            if step >= overrides.oncolytic_seed_step {
+                let p = oncolytic::effective_replication(ocfg).clamp(0.0, 1.0);
+                let newly: Vec<usize> = (0..n_cells)
+                    .filter(|&i| onc_infected[i] && !grid.cells[i].state.dead)
+                    .collect();
+                let mut to_infect = Vec::new();
+                for &i in &newly {
+                    let (r, c, l) = grid.coords(i);
+                    let (nb, n) = grid.neighbors(r, c, l);
+                    for &(nr, nc, nl) in nb.iter().take(n) {
+                        let j = grid.flat_index(nr, nc, nl);
+                        if !grid.cells[j].is_tumor
+                            || grid.cells[j].state.dead
+                            || onc_infected[j]
+                            || !onc_permissive[j]
+                        {
+                            continue;
+                        }
+                        let mut rng = StdRng::seed_from_u64(cell_seed(
+                            cond_seed,
+                            i * 31 + j,
+                            step as usize,
+                            ONCOLYTIC_SEED_SALT,
+                        ));
+                        if rng.gen::<f64>() < p {
+                            to_infect.push(j);
+                        }
+                    }
+                }
+                for j in to_infect {
+                    onc_infected[j] = true;
+                }
+                // An infected cell lyses. Counted apart from ferroptosis for
+                // the same reason radiation is: lysis is not peroxidation.
+                for &i in &newly {
+                    if !grid.cells[i].state.dead {
+                        grid.cells[i].state.dead = true;
+                        grid.cells[i].state.death_step = Some(step);
+                        oncolytic_kills += 1;
+                    }
+                }
             }
         }
 
@@ -2693,6 +2843,28 @@ fn run_one_condition_full(
             None
         },
         radiation_kills: radiation_cfg.as_ref().map(|_| radiation_kills),
+        oncolytic_kills: oncolytic_cfg.as_ref().map(|_| oncolytic_kills),
+        oncolytic_seeded: oncolytic_cfg.as_ref().map(|_| onc_seeded),
+        oncolytic_front_radius_um: oncolytic_cfg.as_ref().map(|_| {
+            // How far the infection actually reached from the seed, which is
+            // the quantity a percolation threshold is about. Zero when the
+            // front never left its starting cell.
+            let (rr, cc, ll) = (grid.rows / 2, grid.cols / 2, grid.layers / 2);
+            let mut far: f64 = 0.0;
+            for i in 0..n_cells {
+                if !onc_infected[i] {
+                    continue;
+                }
+                let (r, c, l) = grid.coords(i);
+                let (dr, dc, dl) = (
+                    r as f64 - rr as f64,
+                    c as f64 - cc as f64,
+                    l as f64 - ll as f64,
+                );
+                far = far.max((dr * dr + dc * dc + dl * dl).sqrt() * CELL_SIZE_UM);
+            }
+            far
+        }),
         overall_kill_rate: overall,
         normoxic_kill_rate: norm_r,
         transition_kill_rate: trans_r,
@@ -5262,6 +5434,84 @@ fn run_spheroid_size_sweep() {
 /// zone populations so the denominator is visible in the artifact.
 ///
 /// Does NOT write summary.json; the matrix is untouched and byte-identical.
+/// `--oncolytic-percolation-sweep`: does the front CROSS, and at what
+/// permissive fraction (#844)?
+///
+/// The engine's `oncolytic::front_speed` is `2*sqrt(D*r)` -- the Fisher-KPP
+/// speed of a front in a HOMOGENEOUS medium -- and it has no term for how much
+/// of the tumour the virus can enter. It returns a positive speed whenever
+/// replication beats clearance, so read literally it says a virus always
+/// spreads eventually. On a lattice that is false, and the failure is sharp
+/// rather than gradual: below a site-percolation threshold in the permissive
+/// fraction there is no connected path of enterable cells, so the infection
+/// cannot cross the tissue at ANY dose or duration.
+///
+/// The comparator is not from cancer biology. Site percolation on a
+/// three-dimensional cubic lattice with 26-neighbour (Moore) connectivity --
+/// which is the neighbourhood `TumorGrid3D::neighbors` returns -- has a
+/// threshold near 0.0976, an established computational-physics constant. If
+/// this front is behaving like site percolation its threshold should land near
+/// there; if it lands near 0.31 it is behaving like 6-neighbour connectivity
+/// instead, and if it lands nowhere near either then the spread is dominated
+/// by something other than connectivity and the whole framing is wrong.
+///
+/// Swept at several replication probabilities because the threshold is JOINT:
+/// pure site percolation is the limit of certain transmission, and at lower
+/// replication the front also has to survive its own stochasticity.
+///
+/// Does NOT write summary.json; the matrix is untouched and byte-identical.
+fn run_oncolytic_percolation_sweep() {
+    let grid_dim = 60usize;
+    let n_steps = bench_env_u32("BENCH_N_STEPS", 60);
+    let seed_step = 2u32;
+    let fractions: [f64; 16] = [
+        0.02, 0.04, 0.06, 0.08, 0.10, 0.12, 0.14, 0.16, 0.20, 0.25, 0.30, 0.40, 0.55, 0.70, 0.85,
+        1.0,
+    ];
+    let replications = [1.0f64, 0.6, 0.3];
+    eprintln!(
+        "=== --oncolytic-percolation-sweep: grid {grid_dim}, {n_steps} steps, \
+         seeded at step {seed_step} (#844) ==="
+    );
+    println!(
+        "ONCOLYTIC_PERC_META grid_dim={grid_dim} n_steps={n_steps} cell_size_um={CELL_SIZE_UM}"
+    );
+    let cfg = RunConfig { grid_dim, n_steps };
+    for &rep in &replications {
+        for &frac in &fractions {
+            let condition = Condition {
+                name: format!("onc_perc_r{rep}_f{frac}"),
+                treatment: Treatment::OncolyticVirus,
+                treatment_name: "OncolyticVirus".to_string(),
+                o2_lambda: Some(ZONE_REF_LAMBDA),
+                immune_on: false,
+                stromal_on: false,
+                ph_on: false,
+                dose_schedule: DoseSchedule::Constant,
+            };
+            let mut ocfg = OncolyticConfig::default();
+            ocfg.replication_rate = rep;
+            ocfg.clearance_rate = 0.0;
+            let overrides = Overrides {
+                oncolytic: Some((ocfg.clone(), frac)),
+                oncolytic_seed_step: seed_step,
+                ..Default::default()
+            };
+            let r = run_one_condition_full(&condition, cfg, None, overrides);
+            println!(
+                "ONCOLYTIC_PERC replication={rep} permissive_fraction={frac} \
+                 front_radius_um={:.3} oncolytic_kills={} total_tumor={} \
+                 seeded={} closed_form_speed={:.6}",
+                r.oncolytic_front_radius_um.unwrap_or(0.0),
+                r.oncolytic_kills.unwrap_or(0),
+                r.total_tumor,
+                r.oncolytic_seeded.unwrap_or(false),
+                oncolytic::front_speed(&ocfg, 1.0)
+            );
+        }
+    }
+}
+
 fn run_radiation_oer_sweep() {
     let grid_dim = 60usize;
     let n_steps = bench_env_u32("BENCH_N_STEPS", 12);
@@ -5461,6 +5711,10 @@ fn main() {
     // `--spheroid-size-sweep` runs RSL3 across a range of spheroid sizes, fixed vs
     // size-aware zone thresholds (#333 kill leg), emitting SPHEROID_SIZE_SWEEP lines.
     // Does NOT write summary.json; the default matrix path below is byte-identical.
+    if std::env::args().any(|a| a == "--oncolytic-percolation-sweep") {
+        run_oncolytic_percolation_sweep();
+        return;
+    }
     if std::env::args().any(|a| a == "--radiation-oer-sweep") {
         run_radiation_oer_sweep();
         return;
@@ -5526,6 +5780,222 @@ fn main() {
 
 #[cfg(test)]
 mod tests {
+    /// The oncolytic front is a THRESHOLD, and the closed form is not.
+    ///
+    /// `oncolytic::front_speed` is `2*sqrt(D*r)` and returns a positive number
+    /// whenever replication beats clearance -- it has no term for how much of
+    /// the tumour the virus can enter. On a lattice that is wrong: below a
+    /// site-percolation threshold in the permissive fraction there is no
+    /// connected path of enterable cells, so no dose and no duration gets the
+    /// infection across. This pins the contrast, which is the arm's whole
+    /// reason for being in the spatial engine.
+    #[test]
+    fn the_front_does_not_cross_below_the_percolation_threshold() {
+        let cfg = RunConfig {
+            grid_dim: 40,
+            n_steps: 60,
+        };
+        let run = |frac: f64, rep: f64| {
+            let cond = Condition {
+                name: format!("perc_f{frac}_r{rep}"),
+                treatment: Treatment::OncolyticVirus,
+                treatment_name: "OncolyticVirus".to_string(),
+                o2_lambda: Some(ZONE_REF_LAMBDA),
+                immune_on: false,
+                stromal_on: false,
+                ph_on: false,
+                dose_schedule: DoseSchedule::Constant,
+            };
+            let mut ocfg = OncolyticConfig::default();
+            ocfg.replication_rate = rep;
+            ocfg.clearance_rate = 0.0;
+            run_one_condition_full(
+                &cond,
+                cfg,
+                None,
+                Overrides {
+                    oncolytic: Some((ocfg, frac)),
+                    oncolytic_seed_step: 2,
+                    ..Default::default()
+                },
+            )
+        };
+        let radius_um = cfg.grid_dim as f64 * TUMOR_RADIUS_FRACTION * CELL_SIZE_UM;
+        // Well BELOW the Moore threshold (~0.0976): the front must stay local.
+        let below = run(0.05, 1.0);
+        // Well ABOVE it: the front must span.
+        let above = run(0.5, 1.0);
+        assert!(
+            below.oncolytic_seeded.unwrap(),
+            "the low-fraction run never seeded, \
+             so it tests nothing about crossing"
+        );
+        assert!(
+            below.oncolytic_front_radius_um.unwrap() < radius_um * 0.5,
+            "the front crossed at a permissive fraction of 0.05, below the \
+             lattice threshold: {:.1} um of a {radius_um:.1} um radius",
+            below.oncolytic_front_radius_um.unwrap()
+        );
+        assert!(
+            above.oncolytic_front_radius_um.unwrap() > radius_um * 0.5,
+            "the front failed to cross at a permissive fraction of 0.5, far \
+             above the lattice threshold: {:.1} um",
+            above.oncolytic_front_radius_um.unwrap()
+        );
+        // THE CONTRAST. The closed form is positive for BOTH, which is the
+        // thing the spatial run adds.
+        let mut c = OncolyticConfig::default();
+        c.replication_rate = 1.0;
+        c.clearance_rate = 0.0;
+        assert!(
+            oncolytic::front_speed(&c, 1.0) > 0.0,
+            "the closed form no longer predicts spread, so there is no contrast"
+        );
+        // Lysis is not peroxidation: counted apart, like radiation's DNA
+        // channel, and it must actually KILL. Counting a lysis without killing
+        // the cell survived every other guard here -- the count rose, the
+        // front advanced, and nobody died.
+        assert!(above.oncolytic_kills.unwrap() > 0);
+        assert!(above.oncolytic_kills.unwrap() > below.oncolytic_kills.unwrap());
+        let untreated = {
+            let cond = Condition {
+                name: "perc_control".to_string(),
+                treatment: Treatment::OncolyticVirus,
+                treatment_name: "OncolyticVirus".to_string(),
+                o2_lambda: Some(ZONE_REF_LAMBDA),
+                immune_on: false,
+                stromal_on: false,
+                ph_on: false,
+                dose_schedule: DoseSchedule::Constant,
+            };
+            run_one_condition_full(&cond, cfg, None, Overrides::default())
+        };
+        assert!(
+            above.total_dead >= untreated.total_dead + above.oncolytic_kills.unwrap(),
+            "the arm reports {} lyses but the tumour is only {} deaths worse off \
+             than untreated ({}), so the count is rising without anything dying",
+            above.oncolytic_kills.unwrap(),
+            above.total_dead as i64 - untreated.total_dead as i64,
+            untreated.total_dead
+        );
+    }
+
+    /// A front radius of zero cannot say whether the infection ever STARTED.
+    ///
+    /// At a low enough permissive fraction there is no enterable cell near the
+    /// tumour centre at all, and reporting that as "the front did not spread"
+    /// would report a failure to start as a failure to cross -- two different
+    /// claims rendering as the same zero. A mutation hard-coding the flag to
+    /// `true` survived every other guard in this file.
+    #[test]
+    fn a_run_with_no_enterable_seed_says_so() {
+        let cond = Condition {
+            name: "perc_noseed".to_string(),
+            treatment: Treatment::OncolyticVirus,
+            treatment_name: "OncolyticVirus".to_string(),
+            o2_lambda: Some(ZONE_REF_LAMBDA),
+            immune_on: false,
+            stromal_on: false,
+            ph_on: false,
+            dose_schedule: DoseSchedule::Constant,
+        };
+        let cfg = RunConfig {
+            grid_dim: 40,
+            n_steps: 20,
+        };
+        let mk = |frac: f64| {
+            let mut ocfg = OncolyticConfig::default();
+            ocfg.replication_rate = 1.0;
+            ocfg.clearance_rate = 0.0;
+            Overrides {
+                oncolytic: Some((ocfg, frac)),
+                oncolytic_seed_step: 2,
+                ..Default::default()
+            }
+        };
+        // No cell is permissive, so no seed can exist.
+        let none = run_one_condition_full(&cond, cfg, None, mk(0.0));
+        assert!(
+            !none.oncolytic_seeded.unwrap(),
+            "a run where NO cell is \
+             permissive reports that it seeded"
+        );
+        assert_eq!(none.oncolytic_front_radius_um.unwrap(), 0.0);
+        assert_eq!(none.oncolytic_kills.unwrap(), 0);
+        // Every cell permissive, so a seed must exist -- the control that
+        // stops this passing by always reporting false.
+        let all = run_one_condition_full(&cond, cfg, None, mk(1.0));
+        assert!(all.oncolytic_seeded.unwrap());
+    }
+
+    /// Permissiveness is a PROPERTY OF THE CELL, drawn once.
+    ///
+    /// Re-rolling it each step would let the front cross a non-permissive cell
+    /// by waiting, which is precisely the barrier being measured -- and would
+    /// turn a percolation threshold into no threshold at all. The property
+    /// that catches it: a longer run must not reach further below threshold.
+    #[test]
+    fn waiting_does_not_get_the_front_past_a_non_permissive_cell() {
+        let run = |steps: u32| {
+            let cond = Condition {
+                name: "perc_wait".to_string(),
+                treatment: Treatment::OncolyticVirus,
+                treatment_name: "OncolyticVirus".to_string(),
+                o2_lambda: Some(ZONE_REF_LAMBDA),
+                immune_on: false,
+                stromal_on: false,
+                ph_on: false,
+                dose_schedule: DoseSchedule::Constant,
+            };
+            let mut ocfg = OncolyticConfig::default();
+            ocfg.replication_rate = 1.0;
+            ocfg.clearance_rate = 0.0;
+            run_one_condition_full(
+                &cond,
+                RunConfig {
+                    grid_dim: 40,
+                    n_steps: steps,
+                },
+                None,
+                Overrides {
+                    oncolytic: Some((ocfg, 0.05)),
+                    oncolytic_seed_step: 2,
+                    ..Default::default()
+                },
+            )
+        };
+        let short = run(20).oncolytic_front_radius_um.unwrap();
+        let long = run(200).oncolytic_front_radius_um.unwrap();
+        assert_eq!(
+            short, long,
+            "a ten-times longer run reached further below the percolation \
+             threshold ({short:.1} -> {long:.1} um), so permissiveness is being \
+             re-rolled and the barrier is not a barrier"
+        );
+    }
+
+    /// The arm is off by default, like every other unwired one.
+    #[test]
+    fn the_oncolytic_arm_is_inert_without_its_override() {
+        let cond = Condition {
+            name: "onc_default".to_string(),
+            treatment: Treatment::OncolyticVirus,
+            treatment_name: "OncolyticVirus".to_string(),
+            o2_lambda: Some(50.0),
+            immune_on: false,
+            stromal_on: false,
+            ph_on: false,
+            dose_schedule: DoseSchedule::Constant,
+        };
+        let cfg = RunConfig {
+            grid_dim: 20,
+            n_steps: 20,
+        };
+        let r = run_one_condition_full(&cond, cfg, None, Overrides::default());
+        assert!(r.oncolytic_kills.is_none());
+        assert!(r.oncolytic_front_radius_um.is_none());
+        assert!(r.oncolytic_seeded.is_none());
+    }
 
     /// WHICH TREATMENT ARMS THIS SPATIAL ENGINE CAN ACTUALLY EXPRESS (#844).
     ///

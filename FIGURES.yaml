@@ -818,3 +818,23 @@ figures:
       is why every value is a LOWER bound rather than a match -- one lambda
       sets rim and core together, so the model can never present the
       fully-oxic-versus-anoxic pair the published band was measured on.
+  - manuscript_figure: 42
+    filename: fig46_oncolytic_percolation
+    generator:
+      script: scripts/generate_conceptual_diagrams.py
+      function: fig46_oncolytic_percolation
+    inputs:
+      - analysis/calibration/oncolytic-percolation-validation.json
+    type: simulation
+    status: manuscript
+    note: >-
+      The chapter's strongest external anchor, and it is from computational
+      physics rather than oncology. (a) The front either makes a local cluster
+      or spans the tumour, with almost nothing between - the transition a
+      closed-form speed cannot express. (b) The permissive fraction needed to
+      cross converges on the 26-neighbour site-percolation constant as
+      transmission approaches certainty, which is the site-bond signature and
+      the reason the agreement is not a coincidence. (c) The Fisher-KPP speed
+      the engine already contained is positive on every one of these
+      conditions. Crosses in (a) mark runs where no enterable cell existed near
+      the seed: a failure to START, a different claim from a failure to cross.

@@ -2127,6 +2127,102 @@ def fig45_radiation_oer():
 
 
 
+def fig46_oncolytic_percolation():
+    """Whether the front crosses, against a constant from another field.
+
+    The closed form the engine already contained predicts spread on every one
+    of these conditions. On a lattice it is wrong on most of them, and the
+    place it becomes wrong is a solved problem in computational physics.
+    """
+    import json
+    src = Path(__file__).resolve().parent.parent / "analysis" / "calibration" / \
+        "oncolytic-percolation-validation.json"
+    if not src.exists():
+        print("  fig46: oncolytic-percolation-validation.json missing - skipping")
+        return
+    d = json.loads(src.read_text())
+    radius = d["tumour_radius_um"]
+
+    fig, axes = plt.subplots(1, 3, figsize=(15, 4.6))
+
+    # (a) the transition itself
+    ax = axes[0]
+    colours = ["#14505c", "#a2582b", "#9fb3b8"]
+    for r, colour in zip(d["by_replication"], colours):
+        pts = [p for p in r["points"] if p["seeded"]]
+        ax.plot([p["permissive_fraction"] for p in pts],
+                [p["front_radius_um"] for p in pts], "o-", color=colour, lw=2,
+                ms=5, label=f"transmission {r['replication']:g}")
+        unseeded = [p for p in r["points"] if not p["seeded"]]
+        ax.plot([p["permissive_fraction"] for p in unseeded],
+                [0.0 for _ in unseeded], "x", color=colour, ms=8)
+    ax.axvline(d["pc_moore_26"], color="#c1440e", ls="--", lw=1.6)
+    ax.annotate("26-neighbour\npercolation, 0.0976", (d["pc_moore_26"] + 0.012,
+                radius * 0.62), fontsize=7.5, color="#c1440e")
+    ax.axhline(d["cross_threshold_um"], color="#888", ls=":", lw=1.2)
+    ax.set_xscale("log")
+    ax.set_xlabel("fraction of the tumour the virus can enter")
+    ax.set_ylabel("front reach from the seed (µm)")
+    ax.set_title("(a) it crosses, or it does not", fontsize=10)
+    ax.legend(fontsize=7.5, loc="center right")
+    ax.grid(alpha=0.25, which="both")
+
+    # (b) the threshold against the two lattice constants
+    ax = axes[1]
+    reps = [r["replication"] for r in d["by_replication"]]
+    lows = [r["lowest_crossing"] for r in d["by_replication"]]
+    ax.plot(reps, lows, "o-", color="#14505c", lw=2, ms=8)
+    ax.axhline(d["pc_moore_26"], color="#c1440e", ls="--", lw=1.6)
+    ax.annotate("26-neighbour (this lattice)", (0.33, d["pc_moore_26"] * 1.08),
+                fontsize=7.5, color="#c1440e")
+    ax.axhline(d["pc_von_neumann_6"], color="#9fb3b8", ls="--", lw=1.6)
+    ax.annotate("6-neighbour (not this lattice)",
+                (0.33, d["pc_von_neumann_6"] + 0.008), fontsize=7.5,
+                color="#7d8e94")
+    ax.set_ylim(0.05, 0.37)
+    ax.set_xlabel("transmission probability")
+    ax.set_ylabel("permissive fraction needed to cross")
+    ax.set_title("(b) site–bond: certain transmission is the limit", fontsize=10)
+    ax.grid(alpha=0.25)
+
+    # (c) what the closed form says about the same conditions
+    ax = axes[2]
+    top = d["by_replication"][0]
+    xs = [p["permissive_fraction"] for p in top["points"]]
+    ax.plot(xs, [p["closed_form_speed"] for p in top["points"]], "s-",
+            color="#9fb3b8", lw=2, ms=5, label="closed form: spreads")
+    ax.plot(xs, [p["closed_form_speed"] if p["crossed"] else 0.0
+                 for p in top["points"]], "o-", color="#14505c", lw=2, ms=5,
+            label="on the grid: crosses")
+    ax.axvline(d["pc_moore_26"], color="#c1440e", ls="--", lw=1.6)
+    ax.set_xscale("log")
+    ax.set_xlabel("fraction of the tumour the virus can enter")
+    ax.set_ylabel("predicted front speed (arb.)")
+    ax.set_title(f"(c) the closed form is wrong on "
+                 f"{d['rows_where_closed_form_is_wrong']} conditions", fontsize=10)
+    ax.legend(fontsize=7.5)
+    ax.grid(alpha=0.25, which="both")
+
+    fig.suptitle("Oncolytic spread is a threshold, and a closed-form front "
+                 "speed cannot express one", fontsize=12, fontweight="bold")
+    fig.text(0.5, 0.015,
+             "`oncolytic::front_speed` is the Fisher-KPP speed 2*sqrt(D*r) - the speed of a front in a "
+             "HOMOGENEOUS medium - so it returns a positive number whenever replication beats clearance and "
+             "has no term for how much of the tumour the virus can enter. On a lattice that is false, and "
+             "the failure is sharp: below a site-percolation threshold there is no connected path of "
+             "enterable cells and no dose or duration gets the infection across. The measured threshold at "
+             "certain transmission brackets 0.0976, the 26-neighbour site-percolation constant for the "
+             "neighbourhood this grid uses - a number from computational physics that nothing here was "
+             "fitted to, and which excludes the 6-neighbour value of 0.3116. Crosses mark runs where no "
+             "enterable cell existed near the seed at all: a failure to START, which is a different claim "
+             "from a failure to cross and is marked rather than drawn as a zero. This says the spread RULE "
+             "behaves like site percolation on its own lattice; it is not evidence that tumours percolate.",
+             ha="center", fontsize=7.2, color="#555", wrap=True)
+    fig.tight_layout(rect=[0, 0.16, 1, 0.93])
+    save(fig, "fig46_oncolytic_percolation")
+
+
+
 if __name__ == "__main__":
     print("Generating conceptual diagrams...")
     fig18_hypoxia()
@@ -2151,4 +2247,5 @@ if __name__ == "__main__":
     fig43_sonodynamic_frequency()
     fig44_pdt_fluence_rate()
     fig45_radiation_oer()
+    fig46_oncolytic_percolation()
     print("Done.")

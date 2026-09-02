@@ -12,7 +12,7 @@ The aggregate gap is already published: the modality arms are roughly an order o
 | Ionizing radiation | 263 | 23 | 33 | ADMISSIBLE | 2,598 | 3 | 2 | on demand |
 | Checkpoint blockade | 122 | 7 | 10 | INADMISSIBLE | 3,281 | 3 | 1 | **no** |
 | Adoptive cell therapy (CAR-T) | 166 | 13 | 16 | ADMISSIBLE | 1,062 | 2 | 2 | **no** |
-| Oncolytic virus | 165 | 11 | 14 | ADMISSIBLE | 983 | 2 | 2 | **no** |
+| Oncolytic virus | 165 | 11 | 14 | ADMISSIBLE | 2,000 | 3 | 3 | **no** |
 | Thermal and electrical ablation | 129 | 9 | 10 | UNCONSTRAINED | 877 | 2 | 2 | **no** |
 | Cytotoxic chemotherapy | 282 | 19 | 15 | NO TARGET | 1,393 | 1 | 2 | **no** |
 | Antibody-drug conjugate | 123 | 13 | 11 | NO TARGET | 998 | 3 | 2 | **no** |
@@ -68,7 +68,7 @@ A parity table listing only what exists measures the campaign's progress and hid
 
 Quality, correctness, or whether any of it is used. A module can be large and wrong, and an arm could reach every number in the first table and still be worse science than the arm it is measured against. What the table supports is the negative: an arm at a fraction of the comparator on every axis is not represented in any sense a reader would accept.
 
-The book column is attributed by HEADING -- a section counts for an arm when its own heading names it. That under-counts deliberately: 18,729 of 67,454 words in numbered sections are attributed, and the whole multi-modality chapter sits in the remainder because its headings name no arm. A keyword rule over body text was rejected; `analysis/scope-audit.md` records what happened the last time subject was counted by vocabulary.
+The book column is attributed by HEADING -- a section counts for an arm when its own heading names it. That under-counts deliberately: 19,746 of 68,471 words in numbered sections are attributed, and the whole multi-modality chapter sits in the remainder because its headings name no arm. A keyword rule over body text was rejected; `analysis/scope-audit.md` records what happened the last time subject was counted by vocabulary.
 
 A section whose heading names MORE THAN ONE arm is DIVIDED between them rather than credited whole to each, because two identical numbers side by side read as independent coverage when they are one section counted twice. 1 section(s) are split this way: *6.13 Photodynamic and Sonodynamic Therapy, the Two the Project Started With* (2 arms). Dividing UNDER-counts each arm, which keeps this column the lower bound the rest of the table is; crediting whole would over-count, which it must never do.
 
