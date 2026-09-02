@@ -12,12 +12,12 @@ The aggregate gap is already published: the modality arms are roughly an order o
 | Ionizing radiation | 263 | 23 | 33 | ADMISSIBLE | 2,598 | 3 | 2 | on demand |
 | Checkpoint blockade | 122 | 7 | 10 | INADMISSIBLE | 3,281 | 3 | 1 | **no** |
 | Adoptive cell therapy (CAR-T) | 166 | 13 | 16 | ADMISSIBLE | 1,062 | 2 | 2 | **no** |
-| Oncolytic virus | 165 | 11 | 14 | ADMISSIBLE | 2,000 | 3 | 3 | **no** |
+| Oncolytic virus | 165 | 11 | 14 | ADMISSIBLE | 2,000 | 3 | 3 | on demand |
 | Thermal and electrical ablation | 129 | 9 | 10 | UNCONSTRAINED | 877 | 2 | 2 | **no** |
 | Cytotoxic chemotherapy | 282 | 19 | 15 | NO TARGET | 1,393 | 1 | 2 | **no** |
 | Antibody-drug conjugate | 123 | 13 | 11 | NO TARGET | 998 | 3 | 2 | **no** |
 
-**4 of 10 arms can be expressed in the spatial engine at all.** `sim-tme-3d` carries the oxygen gradient, the vessel network, the immune coupling, the clonal and persister layers -- and for the other 6 it returns a literal zero, so a run of those arms is bit-identical to an untreated tumour. They are closed-form functions evaluated at a point beside an agent-based simulation over a 60^3 grid, and no further prose closes that. The column is MEASURED rather than read off the dispatch: a text scan over a match that names every variant would report ten, so `sim-tme-3d` runs each arm against Control and this reads the result. Tracked in #844.
+**5 of 10 arms can be expressed in the spatial engine at all.** `sim-tme-3d` carries the oxygen gradient, the vessel network, the immune coupling, the clonal and persister layers -- and for the other 5 it returns a literal zero, so a run of those arms is bit-identical to an untreated tumour. They are closed-form functions evaluated at a point beside an agent-based simulation over a 60^3 grid, and no further prose closes that. The column is MEASURED rather than read off the dispatch: a text scan over a match that names every variant would report ten, so `sim-tme-3d` runs each arm against Control and this reads the result. Tracked in #844.
 
 TWO TIERS, and collapsing them would flatter the engine. 3 arms act on selecting the `Treatment` alone; the rest of the expressive column needs its own `Overrides` field, which is how every one of the engine's ~30 ferroptosis realism layers ships and is required here -- the production matrix carries a committed byte-identity SHA, so an arm acting by default would move it. `on demand` is a wired arm, not a half-wired one.
 
