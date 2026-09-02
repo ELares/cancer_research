@@ -877,3 +877,22 @@ figures:
       is doing and keeps most of its core kill, while the phase-specific agents
       lose most of theirs. The two terms have opposite remedies, which is why
       separating them is worth more than either number alone.
+  - manuscript_figure: 45
+    filename: fig49_cart_independence
+    generator:
+      script: scripts/generate_conceptual_diagrams.py
+      function: fig49_cart_independence
+    inputs:
+      - analysis/calibration/cart-independence-validation.json
+    type: simulation
+    status: manuscript
+    note: >-
+      The control IS the design. The spatial run replaces the infiltration
+      scalar with a depth field of the same mean, so the two models differ in
+      distribution and nothing else; at zero antigen-depth correlation they
+      must agree, and they do to under one per cent. That is what makes the
+      divergence elsewhere a finding rather than a bug - the first version of
+      this measurement double-counted the infiltration barrier and its control
+      failed at every correlation. (c) is a bucket a product of fractions has
+      no slot for: cells that failed BOTH ways, which improving trafficking
+      would not rescue.

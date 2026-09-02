@@ -1550,6 +1550,47 @@ And the fitted verdict stays NO TARGET. This is the arm whose dose-response targ
 \label{fig:fig48_chemo_decomposition}
 \end{figure}
 
+\section{CAR-T, and What Multiplying Fractions Assumes}
+
+Every arm in this chapter that models a sequence of barriers multiplies them. The CAR-T arm multiplies four: the fraction of infused cells that reach the tumour, of those the fraction that penetrate past the rim, of those the fraction not suppressed on arrival, and finally the fraction of tumour cells carrying the target antigen. It is the natural thing to write and it produces a number that matches the clinical picture -- a therapy that cures a leukaemia doing almost nothing to a solid tumour.
+
+\textbf{Multiplying fractions asserts that they are independent.} That is a real assumption, and in a point model it is invisible, because there is nowhere for two fractions to fail to be independent. Two of these four are not independent in a tumour: infiltration is a property of \textit{where a cell sits}, and antigen expression is a property of \textit{the cell}. Whether they correlate decides whether the product is the answer.
+
+\begin{numbers}
+What was wired: the infiltration \textbf{scalar} replaced by a depth field with the same mean, so the two models differ in \textit{distribution} and in nothing else. Antigen positivity is then given a tunable correlation with depth -- from negative, where the antigen sits deep in the tumour that no effector reaches, through zero, where it is independent of position, to positive, where it sits at the rim where the effectors already are.
+\end{numbers}
+
+\textbf{The control comes first, and it is the whole design.} At zero correlation the two terms genuinely are independent, so the product must be right. The spatial run agrees with it to 0.6\%. Without that agreement, every disagreement elsewhere would be indistinguishable from a coding error -- and the first version of this measurement had one. It multiplied the depth field \textit{on top of} the infiltration fraction rather than in place of it, double-counting the same barrier, and its control failed at every correlation including zero. The control caught it, which is what a control is for.
+
+\begin{finding}
+Away from zero the product is wrong in both directions, and not by a little.
+
+
+
+
+
+
+
+When the antigen is concentrated where the effectors cannot reach, the product \textbf{over-states} the kill by a fifth. When it is concentrated where they already are, it \textbf{under-states} it by a ninth. Neither direction is available to a model with no geometry.
+\end{finding}
+
+There is a second thing the product cannot represent at all. In the spatial run each cell fails in a nameable way: no effector reached it, or it was below the antigen threshold, or \textbf{both}. Between 10,970 and 23,599 cells fall into that last category depending on the correlation, and a product of fractions has no slot for them -- it cannot distinguish a cell lost to one barrier from a cell lost to two. The distinction matters for the same reason the chemotherapy decomposition mattered: improving trafficking rescues the first group and does nothing for the second.
+
+\begin{refusal}
+This is not a measurement of any real antigen-depth correlation. Whether antigen expression tracks depth in real tumours, and in which sign, is not something this project measures. What is shown is that the answer \textit{depends} on it, and by how much -- which is a statement about the model's structure rather than about biology.
+
+Every barrier value here remains a placeholder, as this arm's calibration row has said since it was built, and the fitted verdict is unchanged: it was earned on a different quantity and nothing here touches it. The effector field is the same radial-depth proxy the other arms use, while real T-cell infiltration is shaped by chemokine gradients, stromal exclusion and vessel adhesion that this does not represent.
+
+One row of the sweep is marked rather than read as a reversal. At the strongest positive correlation the effect stops growing, because the per-cell antigen probability saturates at one: once the rim cells are certainly positive, a stronger correlation cannot add more of them. That is a ceiling in the parameterisation, not a turning point in the biology.
+\end{refusal}
+
+\begin{figure}[tbp]
+\setcounter{figure}{44}
+\bookgraphic{../figures/fig49_cart_independence.pdf}
+\caption{\figlabel{45}Multiplying the barrier fractions is right only when the barriers are independent. The spatial run replaces the infiltration scalar with a depth field of the same mean, so the two models differ in distribution and nothing else. (b) is the control and the finding at once: at zero antigen--depth correlation they agree to under one per cent, which is what makes the rest a finding rather than a bug --- the first version of this measurement double-counted the infiltration barrier and its control failed everywhere. (c) is a bucket the product has no slot for: cells that failed both ways, which improving trafficking would not rescue.}
+\label{fig:fig49_cart_independence}
+\end{figure}
+
 \section{What This Chapter Does Not Claim}
 
 \textbf{Breadth is not depth, and this project's own guidance says so.} The engine can now express every mechanism its taxonomy can count, and 8 of the sixteen can be applied as a treatment. Neither of those is a claim that any of them is modelled well. \bookcode{simulations/calibration/CALIBRATION\_STATUS.md} carries a row per layer with its named target and its used-in-any-reported-number status, and for every arm in this chapter that status is N: none of them feeds a number this manuscript reports.

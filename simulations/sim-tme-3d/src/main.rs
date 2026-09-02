@@ -57,6 +57,7 @@ mod snapshot;
 
 use ferroptosis_core::acsl4::{pufa_boost_from_status, ACSL4_NEGATIVE};
 use ferroptosis_core::adc::{self, AdcConfig, Linker};
+use ferroptosis_core::adoptive::{self, AdoptiveBarriers};
 use ferroptosis_core::alox::AloxConfig;
 use ferroptosis_core::biochem::{exo_decay_factor, sim_cell_step, CellState};
 use ferroptosis_core::cell::{Phenotype, Treatment};
@@ -200,6 +201,8 @@ const ONCOLYTIC_SEED_SALT: u64 = 0x0C01_9713_0000_0539;
 const ADC_SEED_SALT: u64 = 0x0AD0_C047_0000_0539;
 // A sixth stream. Same CodeQL false positive as the five above.
 const CHEMO_SEED_SALT: u64 = 0x0CE0_3E70_0000_0539;
+// A seventh stream. Same CodeQL false positive as the six above.
+const ADOPTIVE_SEED_SALT: u64 = 0x0CA47_0E5_0000_0539 & 0xFFFF_FFFF_FFFF_FFFF;
 const _: () = assert!(BIOCHEM_SEED_SALT != IMMUNE_SEED_SALT);
 // Pairwise-distinct, per the #278 layer-seed rule: two layers sharing a salt
 // draw the SAME number for the same (cell, step), so their decisions correlate
@@ -218,6 +221,12 @@ const _: () = assert!(CHEMO_SEED_SALT != IMMUNE_SEED_SALT);
 const _: () = assert!(CHEMO_SEED_SALT != RADIATION_SEED_SALT);
 const _: () = assert!(CHEMO_SEED_SALT != ONCOLYTIC_SEED_SALT);
 const _: () = assert!(CHEMO_SEED_SALT != ADC_SEED_SALT);
+const _: () = assert!(ADOPTIVE_SEED_SALT != BIOCHEM_SEED_SALT);
+const _: () = assert!(ADOPTIVE_SEED_SALT != IMMUNE_SEED_SALT);
+const _: () = assert!(ADOPTIVE_SEED_SALT != RADIATION_SEED_SALT);
+const _: () = assert!(ADOPTIVE_SEED_SALT != ONCOLYTIC_SEED_SALT);
+const _: () = assert!(ADOPTIVE_SEED_SALT != ADC_SEED_SALT);
+const _: () = assert!(ADOPTIVE_SEED_SALT != CHEMO_SEED_SALT);
 
 /// SplitMix64 finalizer (Steele, Lea & Flood 2014, "Fast Splittable
 /// Pseudorandom Number Generators"): a fast, full-avalanche integer hash. Used
@@ -339,6 +348,31 @@ struct ConditionResult {
     /// route so the decomposition below is about this arm alone.
     #[serde(skip_serializing_if = "Option::is_none")]
     chemo_kills: Option<usize>,
+    /// Cells killed by the CAR-T arm (#844).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    adoptive_kills: Option<usize>,
+    /// Antigen-positive cells no effector reached. Tracked apart from the
+    /// next field because the two failure modes have different remedies and
+    /// the whole question is whether they overlap.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    adoptive_unreached: Option<usize>,
+    /// Cells an effector reached that were below the antigen threshold.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    adoptive_antigen_negative: Option<usize>,
+    /// Cells that failed BOTH ways. The product model has no slot for this at
+    /// all, and its size is the whole measurement.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    adoptive_lost_to_both: Option<usize>,
+    /// The tumour mean of the normalised reach field ACTUALLY achieved.
+    ///
+    /// The normalisation targets the point model's `infiltration`, but the
+    /// field is clamped at 1, so where the target scale would push rim cells
+    /// above one the achieved mean lands BELOW the target. Reporting the
+    /// target instead would make the control fail for a reason that has
+    /// nothing to do with geometry, so the achieved value is published and the
+    /// comparison uses it.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    adoptive_reach_mean: Option<f64>,
     /// Farthest the infection reached from its seed, in microns. The quantity
     /// a percolation threshold is about: below the threshold this stays near
     /// zero however long the run continues.
@@ -717,6 +751,25 @@ struct Overrides {
     chemo: Option<(ChemoClass, f64, f64, f64, bool)>,
     /// The step at which the dose is given. One administration.
     chemo_step: u32,
+    /// CAR-T, with infiltration as a DEPTH and antigen as a cell property (#844).
+    ///
+    /// `(barriers, infiltration_lambda_um, antigen_depth_correlation)`. `None`
+    /// ⇒ inert ⇒ byte-identical; the production matrix never sets it.
+    ///
+    /// `adoptive::delivery_efficiency` is `trafficking * infiltration *
+    /// activation` -- a product of three fractions, which is exactly right if
+    /// they are INDEPENDENT and wrong if they are not. Two of the arm's
+    /// failure modes are not independent in a tumour: infiltration is a
+    /// DEPTH phenomenon and antigen expression is a property of the cell, and
+    /// whether they correlate decides whether the product is the answer.
+    ///
+    /// `antigen_depth_correlation` runs from -1 (antigen highest in the core,
+    /// where no effector reaches) through 0 (uniform, where the product IS
+    /// correct and the spatial answer must agree with it -- the control)
+    /// to +1 (antigen highest at the rim, where the effectors already are).
+    adoptive: Option<(AdoptiveBarriers, f64, f64)>,
+    /// The step at which the product is infused.
+    adoptive_step: u32,
     /// ESCRT-III membrane-repair brake on death execution (#465): `Some((rate,
     /// budget))` sets `params.escrt_repair_rate`/`escrt_repair_budget` so a cell
     /// whose LP crosses the death threshold can be resealed for a finite per-cell
@@ -1728,6 +1781,47 @@ fn run_one_condition_full(
     let mut oncolytic_kills = 0usize;
     let adc_cfg = overrides.adc.clone();
     let chemo_cfg = overrides.chemo;
+    let adoptive_cfg = overrides.adoptive.clone();
+    let mut adoptive_kills = 0usize;
+    let mut adoptive_unreached = 0usize;
+    let mut adoptive_antigen_negative = 0usize;
+    let mut adoptive_lost_to_both = 0usize;
+    // Effector reach: the fraction of infused cells that got this deep, on the
+    // same radial geometry with its own (much shorter) length. T cells are
+    // cells, not molecules, and they do not diffuse.
+    // NORMALISED SO ITS TUMOUR MEAN IS THE POINT MODEL'S OWN `infiltration`.
+    //
+    // Without this the comparison is not a comparison. `delivery_efficiency`
+    // already contains an `infiltration` fraction meaning "of those that
+    // reached the tumour, the share penetrating past the rim"; multiplying a
+    // depth field ON TOP of it double-counts the same barrier, and the spatial
+    // answer then sits below the product at EVERY correlation including zero.
+    // The first version did exactly that and its own control failed -- which
+    // is what a control is for.
+    //
+    // Replacing the scalar with a field of the same mean makes the two models
+    // differ in DISTRIBUTION and nothing else, so any disagreement is the
+    // geometry rather than a term one of them is missing.
+    let adoptive_reach: Vec<f64> = match adoptive_cfg.as_ref() {
+        Some((b, lambda_um, _)) => {
+            let raw = ferroptosis_core::oxygen::radial_o2_field(&grid, *lambda_um);
+            let (mut sum, mut n) = (0.0f64, 0usize);
+            for idx in 0..grid.cells.len() {
+                if grid.cells[idx].is_tumor {
+                    sum += raw[idx];
+                    n += 1;
+                }
+            }
+            let mean = if n > 0 { sum / n as f64 } else { 1.0 };
+            let scale = if mean > 0.0 {
+                b.infiltration.clamp(0.0, 1.0) / mean
+            } else {
+                0.0
+            };
+            raw.iter().map(|v| (v * scale).clamp(0.0, 1.0)).collect()
+        }
+        None => Vec::new(),
+    };
     let mut chemo_kills = 0usize;
     // The drug's own penetration field, on the same radial geometry, with its
     // own length. Empty when the arm is off.
@@ -2295,6 +2389,64 @@ fn run_one_condition_full(
                     }
                 }
                 radiation_kills += killed;
+            }
+        }
+
+        // --- CAR-T: infiltration is a DEPTH, antigen is a CELL (#844) ---
+        //
+        // `adoptive::delivery_efficiency` multiplies trafficking, infiltration
+        // and activation. That is exactly right if the three are INDEPENDENT
+        // and wrong if they are not -- and two of this arm's failure modes are
+        // not independent in a tumour, because infiltration is a property of
+        // WHERE a cell sits and antigen expression is a property of the cell.
+        //
+        // The two failure modes are tracked SEPARATELY here, and the point is
+        // that they can overlap or be disjoint: a deep cell is unreachable
+        // whatever its antigen, and a rim cell below threshold is reachable
+        // and not killable. The product treats the losses as independent; the
+        // grid says whether they are.
+        if let Some((b, _, correlation)) = adoptive_cfg.as_ref() {
+            if step == overrides.adoptive_step {
+                // `delivery_efficiency` WITHOUT its infiltration term, because
+                // the spatial field replaces that term rather than adding to
+                // it. Written out rather than divided out: dividing by
+                // `infiltration` would blow up at zero.
+                let arrive = b.trafficking.clamp(0.0, 1.0)
+                    * b.activation.clamp(0.0, 1.0)
+                    * adoptive::persistence_factor(b, step);
+                let mut killed = 0usize;
+                for idx in 0..n_cells {
+                    if !grid.cells[idx].is_tumor || grid.cells[idx].state.dead {
+                        continue;
+                    }
+                    // Antigen positivity, tilted by depth. `correlation = 0`
+                    // leaves it independent of position, which is the case in
+                    // which the product IS the answer and the spatial run must
+                    // agree with it -- the control this whole comparison rests
+                    // on.
+                    let depth_frac = 1.0 - adoptive_reach[idx];
+                    let p_ag = (b.antigen_positive_fraction + correlation * (0.5 - depth_frac))
+                        .clamp(0.0, 1.0);
+                    let mut rng = StdRng::seed_from_u64(cell_seed(
+                        cond_seed,
+                        idx,
+                        step as usize,
+                        ADOPTIVE_SEED_SALT,
+                    ));
+                    let antigen_positive = rng.gen::<f64>() < p_ag;
+                    let reached = rng.gen::<f64>() < arrive * adoptive_reach[idx];
+                    match (reached, antigen_positive) {
+                        (true, true) => {
+                            grid.cells[idx].state.dead = true;
+                            grid.cells[idx].state.death_step = Some(step);
+                            killed += 1;
+                        }
+                        (false, true) => adoptive_unreached += 1,
+                        (true, false) => adoptive_antigen_negative += 1,
+                        (false, false) => adoptive_lost_to_both += 1,
+                    }
+                }
+                adoptive_kills += killed;
             }
         }
 
@@ -3098,6 +3250,24 @@ fn run_one_condition_full(
         adc_direct_kills: adc_cfg.as_ref().map(|_| adc_direct_kills),
         adc_bystander_kills: adc_cfg.as_ref().map(|_| adc_bystander_kills),
         chemo_kills: chemo_cfg.as_ref().map(|_| chemo_kills),
+        adoptive_kills: adoptive_cfg.as_ref().map(|_| adoptive_kills),
+        adoptive_unreached: adoptive_cfg.as_ref().map(|_| adoptive_unreached),
+        adoptive_antigen_negative: adoptive_cfg.as_ref().map(|_| adoptive_antigen_negative),
+        adoptive_lost_to_both: adoptive_cfg.as_ref().map(|_| adoptive_lost_to_both),
+        adoptive_reach_mean: adoptive_cfg.as_ref().map(|_| {
+            let (mut sum, mut n) = (0.0f64, 0usize);
+            for idx in 0..n_cells {
+                if grid.cells[idx].is_tumor {
+                    sum += adoptive_reach[idx];
+                    n += 1;
+                }
+            }
+            if n > 0 {
+                sum / n as f64
+            } else {
+                0.0
+            }
+        }),
         oncolytic_front_radius_um: oncolytic_cfg.as_ref().map(|_| {
             // How far the infection actually reached from the seed, which is
             // the quantity a percolation threshold is about. Zero when the
@@ -5756,6 +5926,84 @@ fn run_spheroid_size_sweep() {
 /// measuring the drug field twice.
 ///
 /// Does NOT write summary.json; the matrix is untouched and byte-identical.
+/// `--cart-independence-sweep`: is the product the answer (#844)?
+///
+/// `adoptive::delivery_efficiency` multiplies trafficking, infiltration and
+/// activation. Multiplying fractions is exactly right when they are
+/// INDEPENDENT and wrong when they are not -- and two of this arm's failure
+/// modes are not independent in a tumour, because infiltration is a property
+/// of WHERE a cell sits and antigen expression is a property of the CELL.
+///
+/// Sweeps the correlation between antigen expression and depth. At zero the
+/// two are independent, the product IS the answer, and the spatial run must
+/// agree with it -- that is the control, and without it a disagreement
+/// anywhere else would just be a bug. Away from zero the product should
+/// misstate the kill, and in a direction that follows the sign.
+///
+/// Does NOT write summary.json; the matrix is untouched and byte-identical.
+fn run_cart_independence_sweep() {
+    let grid_dim = 60usize;
+    let n_steps = bench_env_u32("BENCH_N_STEPS", 8);
+    let infuse_step = 3u32;
+    let lambda = 60.0f64;
+    let correlations = [-0.6f64, -0.4, -0.2, 0.0, 0.2, 0.4, 0.6];
+    eprintln!(
+        "=== --cart-independence-sweep: grid {grid_dim}, {n_steps} steps, infused \
+         at step {infuse_step} (#844) ==="
+    );
+    println!(
+        "CART_INDEP_META grid_dim={grid_dim} n_steps={n_steps} \
+         infiltration_lambda_um={lambda} infuse_step={infuse_step}"
+    );
+    let cfg = RunConfig { grid_dim, n_steps };
+    for &corr in &correlations {
+        let b = AdoptiveBarriers::solid_tumour();
+        let condition = Condition {
+            name: format!("cart_corr{corr}"),
+            treatment: Treatment::AdoptiveCell,
+            treatment_name: "AdoptiveCell".to_string(),
+            o2_lambda: Some(ZONE_REF_LAMBDA),
+            immune_on: false,
+            stromal_on: false,
+            ph_on: false,
+            dose_schedule: DoseSchedule::Constant,
+        };
+        let overrides = Overrides {
+            adoptive: Some((b.clone(), lambda, corr)),
+            adoptive_step: infuse_step,
+            ..Default::default()
+        };
+        let r = run_one_condition_full(&condition, cfg, None, overrides);
+        // What the POINT model predicts for the same settings: the product of
+        // the barrier fractions and the antigen fraction, with no geometry in
+        // it anywhere.
+        // The point model's own prediction, with its `infiltration` scalar
+        // replaced by the ACHIEVED mean of the field that stands in for it --
+        // the field is clamped at 1, so the achieved mean sits below the
+        // target where the rim would have exceeded it. Using the target
+        // instead would make the control fail for a reason with nothing to do
+        // with geometry.
+        let reach_mean = r.adoptive_reach_mean.unwrap_or(0.0);
+        let product = b.trafficking.clamp(0.0, 1.0)
+            * b.activation.clamp(0.0, 1.0)
+            * adoptive::persistence_factor(&b, infuse_step)
+            * reach_mean
+            * b.antigen_positive_fraction;
+        println!(
+            "CART_INDEP correlation={corr} kills={} unreached={} \
+             antigen_negative={} lost_to_both={} total_tumor={} \
+             reach_mean={:.6} product_prediction={:.6}",
+            r.adoptive_kills.unwrap_or(0),
+            r.adoptive_unreached.unwrap_or(0),
+            r.adoptive_antigen_negative.unwrap_or(0),
+            r.adoptive_lost_to_both.unwrap_or(0),
+            r.total_tumor,
+            reach_mean,
+            product
+        );
+    }
+}
+
 fn run_chemo_decomposition_sweep() {
     let grid_dim = 60usize;
     let n_steps = bench_env_u32("BENCH_N_STEPS", 10);
@@ -6147,6 +6395,10 @@ fn main() {
     // `--spheroid-size-sweep` runs RSL3 across a range of spheroid sizes, fixed vs
     // size-aware zone thresholds (#333 kill leg), emitting SPHEROID_SIZE_SWEEP lines.
     // Does NOT write summary.json; the default matrix path below is byte-identical.
+    if std::env::args().any(|a| a == "--cart-independence-sweep") {
+        run_cart_independence_sweep();
+        return;
+    }
     if std::env::args().any(|a| a == "--chemo-decomposition-sweep") {
         run_chemo_decomposition_sweep();
         return;
@@ -6224,6 +6476,116 @@ fn main() {
 
 #[cfg(test)]
 mod tests {
+    /// Multiplying the barrier fractions is right only when they are
+    /// independent, and in a tumour two of them are not.
+    ///
+    /// `adoptive::delivery_efficiency` multiplies trafficking, infiltration
+    /// and activation, and the arm multiplies by the antigen fraction on top.
+    /// Infiltration is a property of WHERE a cell sits and antigen of the
+    /// CELL, so whether the product is the answer depends on a correlation a
+    /// point model has no way to represent.
+    #[test]
+    fn the_product_is_right_only_when_the_barriers_are_independent() {
+        let cfg = RunConfig {
+            grid_dim: 50,
+            n_steps: 6,
+        };
+        let run = |corr: f64| {
+            let cond = Condition {
+                name: format!("cart_t_{corr}"),
+                treatment: Treatment::AdoptiveCell,
+                treatment_name: "AdoptiveCell".to_string(),
+                o2_lambda: Some(ZONE_REF_LAMBDA),
+                immune_on: false,
+                stromal_on: false,
+                ph_on: false,
+                dose_schedule: DoseSchedule::Constant,
+            };
+            run_one_condition_full(
+                &cond,
+                cfg,
+                None,
+                Overrides {
+                    adoptive: Some((AdoptiveBarriers::solid_tumour(), 60.0, corr)),
+                    adoptive_step: 3,
+                    ..Default::default()
+                },
+            )
+        };
+        let b = AdoptiveBarriers::solid_tumour();
+        let predicted = |r: &ConditionResult| {
+            b.trafficking.clamp(0.0, 1.0)
+                * b.activation.clamp(0.0, 1.0)
+                * adoptive::persistence_factor(&b, 3)
+                * r.adoptive_reach_mean.unwrap()
+                * b.antigen_positive_fraction
+        };
+
+        // THE CONTROL. With antigen independent of position the product must
+        // be right, because the spatial field has the same mean as the scalar
+        // it replaced. A failure here is a wiring bug, not a finding -- and
+        // the first version of this arm HAD one, multiplying the depth field
+        // on top of the infiltration fraction instead of in place of it.
+        let zero = run(0.0);
+        let measured = zero.adoptive_kills.unwrap() as f64 / zero.total_tumor as f64;
+        let ratio = predicted(&zero) / measured;
+        assert!(
+            (ratio - 1.0).abs() < 0.05,
+            "with antigen independent of position the product predicts {:.2}x \
+             the measured kill; that is a double-counted barrier, not geometry",
+            ratio
+        );
+
+        // Antigen concentrated DEEP, where no effector reaches, must make the
+        // product optimistic; concentrated at the RIM, pessimistic.
+        let deep = run(-0.6);
+        let rim = run(0.6);
+        let r_deep =
+            predicted(&deep) / (deep.adoptive_kills.unwrap() as f64 / deep.total_tumor as f64);
+        let r_rim = predicted(&rim) / (rim.adoptive_kills.unwrap() as f64 / rim.total_tumor as f64);
+        assert!(
+            r_deep > 1.05,
+            "antigen concentrated where effectors cannot reach did not make \
+             the product optimistic ({r_deep:.3})"
+        );
+        assert!(
+            r_rim < 0.96,
+            "antigen concentrated at the rim did not make the product \
+             pessimistic ({r_rim:.3})"
+        );
+
+        // The bucket the product has no slot for must be non-empty, or the
+        // page's claim about it is about nothing.
+        assert!(zero.adoptive_lost_to_both.unwrap() > 0);
+        assert!(zero.adoptive_unreached.unwrap() > 0);
+    }
+
+    /// The arm is off without its override.
+    #[test]
+    fn the_adoptive_arm_is_inert_without_its_override() {
+        let cond = Condition {
+            name: "cart_default".to_string(),
+            treatment: Treatment::AdoptiveCell,
+            treatment_name: "AdoptiveCell".to_string(),
+            o2_lambda: Some(50.0),
+            immune_on: false,
+            stromal_on: false,
+            ph_on: false,
+            dose_schedule: DoseSchedule::Constant,
+        };
+        let r = run_one_condition_full(
+            &cond,
+            RunConfig {
+                grid_dim: 20,
+                n_steps: 20,
+            },
+            None,
+            Overrides::default(),
+        );
+        assert!(r.adoptive_kills.is_none());
+        assert!(r.adoptive_reach_mean.is_none());
+    }
+
     /// The two rim biases are SEPARABLE, and only one is class-dependent.
     ///
     /// A chemotherapy kill is biased toward the rim because the drug has to
@@ -6784,7 +7146,7 @@ mod tests {
     /// #844 exists to empty. Written to FAIL when an arm moves tier, so
     /// `analysis/arm-parity.md` and the epic move in the same commit.
     #[test]
-    fn the_spatial_engine_expresses_seven_of_the_ten_treatment_arms() {
+    fn the_spatial_engine_expresses_eight_of_the_ten_treatment_arms() {
         // A BIGGER PROBE THAN THE UNIT DEFAULT, deliberately. At 10^3/20 the
         // in-vivo-tuned RSL3 switch kills nothing at all -- a documented
         // property of that parameterisation, not of the engine's ability to
@@ -6958,6 +7320,23 @@ mod tests {
         assert!(chemo_probe.chemo_kills.unwrap_or(0) > 0);
         on_demand.push("Chemotherapy".to_string());
 
+        let cart_probe = run_one_condition_full(
+            &base(Treatment::AdoptiveCell),
+            cfg,
+            None,
+            Overrides {
+                adoptive: Some((AdoptiveBarriers::solid_tumour(), 60.0, 0.0)),
+                adoptive_step: 5,
+                ..Default::default()
+            },
+        );
+        assert!(
+            moved(&cart_probe),
+            "the CAR-T override is set and nothing moved"
+        );
+        assert!(cart_probe.adoptive_kills.unwrap_or(0) > 0);
+        on_demand.push("AdoptiveCell".to_string());
+
         // THE TIER LIST MUST COVER EVERY ARM THAT HAS AN OVERRIDE, and the
         // table below is COMPLETE BY CONSTRUCTION rather than by care.
         //
@@ -6980,7 +7359,7 @@ mod tests {
             (Treatment::PDT, None),
             (Treatment::Radiation, Some("    radiation: Option<")),
             (Treatment::Immunotherapy, None),
-            (Treatment::AdoptiveCell, None),
+            (Treatment::AdoptiveCell, Some("    adoptive: Option<")),
             (Treatment::OncolyticVirus, Some("    oncolytic: Option<")),
             (Treatment::Ablation, None),
             (Treatment::AntibodyDrugConjugate, Some("    adc: Option<")),
@@ -7033,7 +7412,8 @@ mod tests {
                 "Radiation".to_string(),
                 "OncolyticVirus".to_string(),
                 "AntibodyDrugConjugate".to_string(),
-                "Chemotherapy".to_string()
+                "Chemotherapy".to_string(),
+                "AdoptiveCell".to_string()
             ],
             "the ON DEMAND tier has changed. That is #844 progressing -- update \
              this literal, the test's NAME, `analysis/arm-parity.md` and the \

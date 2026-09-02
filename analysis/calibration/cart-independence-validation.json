@@ -1,0 +1,90 @@
+{
+  "control_error": 0.006274030364963545,
+  "control_holds": true,
+  "control_tolerance": 0.03,
+  "lost_to_both_range": [
+    10970,
+    23599
+  ],
+  "max_overstatement": 1.201285658417567,
+  "max_understatement": 0.8878126105100463,
+  "points": [
+    {
+      "antigen_negative": 1445,
+      "correlation": -0.6,
+      "lost_to_both": 10996,
+      "measured_kill_fraction": 0.0347677504574704,
+      "product_over_measured": 1.201285658417567,
+      "product_prediction": 0.041766,
+      "reach_mean": 0.369796,
+      "unreached": 67209
+    },
+    {
+      "antigen_negative": 1253,
+      "correlation": -0.4,
+      "lost_to_both": 10970,
+      "measured_kill_fraction": 0.03669457943019183,
+      "product_over_measured": 1.1382062595772788,
+      "product_prediction": 0.041766,
+      "reach_mean": 0.369796,
+      "unreached": 67268
+    },
+    {
+      "antigen_negative": 1051,
+      "correlation": -0.2,
+      "lost_to_both": 13335,
+      "measured_kill_fraction": 0.03938486893927459,
+      "product_over_measured": 1.0604580166153845,
+      "product_prediction": 0.041766,
+      "reach_mean": 0.369796,
+      "unreached": 64883
+    },
+    {
+      "antigen_negative": 834,
+      "correlation": 0.0,
+      "lost_to_both": 15526,
+      "measured_kill_fraction": 0.041505592651389374,
+      "product_over_measured": 1.0062740303649635,
+      "product_prediction": 0.041766,
+      "reach_mean": 0.369796,
+      "unreached": 62734
+    },
+    {
+      "antigen_negative": 702,
+      "correlation": 0.2,
+      "lost_to_both": 17742,
+      "measured_kill_fraction": 0.04425647426653256,
+      "product_over_measured": 0.9437263291347207,
+      "product_prediction": 0.041766,
+      "reach_mean": 0.369796,
+      "unreached": 60423
+    },
+    {
+      "antigen_negative": 521,
+      "correlation": 0.4,
+      "lost_to_both": 20553,
+      "measured_kill_fraction": 0.04704371114531199,
+      "product_over_measured": 0.8878126105100463,
+      "product_prediction": 0.041766,
+      "reach_mean": 0.369796,
+      "unreached": 57563
+    },
+    {
+      "antigen_negative": 487,
+      "correlation": 0.6,
+      "lost_to_both": 23599,
+      "measured_kill_fraction": 0.04592881639380022,
+      "product_over_measured": 0.9093637345646437,
+      "product_prediction": 0.041766,
+      "reach_mean": 0.369796,
+      "unreached": 54643
+    }
+  ],
+  "positive_arm_is_monotone": false,
+  "product_optimistic_when_antigen_is_deep": true,
+  "product_pessimistic_when_antigen_is_rim": true,
+  "saturating_correlations": [
+    0.6
+  ],
+  "verdict": "CONFIRMED \u2014 the product is right only when the barriers are independent"
+}

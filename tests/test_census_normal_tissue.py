@@ -159,7 +159,14 @@ def test_the_manuscript_states_the_selectivity_assumption_as_one(d):
 
 
 def test_the_no_normal_tissue_column_claim_is_still_true():
-    """A handwritten claim ABOUT the document, so it needs checking.
+    """
+    A KEYWORD SCAN, which cannot tell a SCORED quantity from a DISCLAIMED one.
+    P27's note said real T-cell infiltration is shaped by "stromal exclusion",
+    which this model does NOT represent -- the opposite of scoring on it -- and
+    this guard fired anyway. It was reworded rather than exempted, because the
+    check is worth more than the phrase; but a future author hitting this should
+    know it is the scan's blind spot and not necessarily their mistake.
+A handwritten claim ABOUT the document, so it needs checking.
 
     Section 8.4 asserts that no Chapter 5-7 results table carries a
     normal-tissue column and no preregistered prediction is scored on one. Both are the kind

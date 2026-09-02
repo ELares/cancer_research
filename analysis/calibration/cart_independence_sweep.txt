@@ -1,0 +1,8 @@
+CART_INDEP_META grid_dim=60 n_steps=8 infiltration_lambda_um=60 infuse_step=3
+CART_INDEP correlation=-0.6 kills=2869 unreached=67209 antigen_negative=1445 lost_to_both=10996 total_tumor=82519 reach_mean=0.369796 product_prediction=0.041766
+CART_INDEP correlation=-0.4 kills=3028 unreached=67268 antigen_negative=1253 lost_to_both=10970 total_tumor=82519 reach_mean=0.369796 product_prediction=0.041766
+CART_INDEP correlation=-0.2 kills=3250 unreached=64883 antigen_negative=1051 lost_to_both=13335 total_tumor=82519 reach_mean=0.369796 product_prediction=0.041766
+CART_INDEP correlation=0 kills=3425 unreached=62734 antigen_negative=834 lost_to_both=15526 total_tumor=82519 reach_mean=0.369796 product_prediction=0.041766
+CART_INDEP correlation=0.2 kills=3652 unreached=60423 antigen_negative=702 lost_to_both=17742 total_tumor=82519 reach_mean=0.369796 product_prediction=0.041766
+CART_INDEP correlation=0.4 kills=3882 unreached=57563 antigen_negative=521 lost_to_both=20553 total_tumor=82519 reach_mean=0.369796 product_prediction=0.041766
+CART_INDEP correlation=0.6 kills=3790 unreached=54643 antigen_negative=487 lost_to_both=23599 total_tumor=82519 reach_mean=0.369796 product_prediction=0.041766
