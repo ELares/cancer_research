@@ -162,6 +162,12 @@ def cvt(t):
     t = t.replace('%', '\\%')
     t = t.replace('&', '\\&')
     t = t.replace('#', '\\#')
+    # `^` is a superscript command in text mode, so a formula written in prose
+    # -- `exp(-alpha*D - beta*D^2)` -- reaches pdflatex as an unclosed group
+    # and the document compiles with a group still open. The negative
+    # lookbehind spares `[^label]`, which is a footnote reference and is
+    # converted later.
+    t = re.sub(r'(?<!\[)\^', r'\\textasciicircum{}', t)
     # NOTE: underscore escaping is done AFTER all LaTeX conversions
     # (cites, figures, tables) to avoid breaking citation keys and labels.
     # See the escape_prose_underscores() call below cvt().
@@ -481,6 +487,7 @@ figs = {
     '29': ('fig29_rare_event_resolution', 'How far down the death-rate tail a given sample size can see. Several conditions report exactly 0\\% at one million cells; because the support is unbounded, such a rate is a statement about the sample size rather than about the biology, and it can be pushed down by simulating more cells. The curve is the resolution floor, not a result.'),
     '30': ('fig34_depth_reach', 'How far each modality reaches into tissue. (a) Kill at the surface and at 9.4 mm: photodynamic therapy falls from 92.5\\% to 0.6\\% while megavoltage radiation goes 45.4\\% to 43.7\\%, and the pharmacologic arm does not attenuate at all. (b) Retention as a share of surface kill. Both panels share one order, sorted by kill at depth, and the UNTREATED arm is the TALLEST bar in (b) at 400\\% -- a ratio of two near-zero numbers is not robustness, and the two panels must be read together or neither. Attenuation is fixed physics; every kill magnitude rests on uncalibrated biochemistry.'),
     '31': ('fig35_calibration_verdicts', 'What a published target could settle, per arm. Drawn because the informative rows are the THREE that failed: a thermal-ablation arm whose target admits almost the whole scanned range, checkpoint blockade, whose response band constrains a product of two factors neither of which is identifiable from it, and the antibody-drug-conjugate bystander effect, which has no published target at all. ADMISSIBLE means a parameter reproduces a band, not that the arm is validated -- none of these feeds a number the quantitative chapters of this manuscript report.'),
+    '32': ('fig36_fractionation', 'The schedule, and the two things it can be checked against. Panel (a) is the radiation arm\'s external check, and it runs backwards: two schedules a trial reported as not differing imply the $\\alpha/\\beta$ at which they are equivalent, and that value is compared against estimates derived from other data (shaded bands). Prostate lands inside its band at 2.29 Gy; breast crosses at 0.70 Gy, below any plausible tissue, because its shorter arm delivers less total dose and was still not inferior --- a statement about what EQD2 leaves out rather than about the trial. Panels (b) and (c) are DIRECTION-only: the late-responding $\\alpha/\\beta$ is a convention and the reoxygenation half-life is a free parameter no dataset here constrains.'),
 }
 def repl_figure(match):
     num = match.group(1)

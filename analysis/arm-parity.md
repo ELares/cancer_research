@@ -9,7 +9,7 @@ The aggregate gap is already published: the modality arms are roughly an order o
 | Ferroptosis induction | 3,988 | 186 | 315 | -- | 5,249 | 7 | 7 |
 | Sonodynamic therapy | 0 | 0 | 0 | -- | 0 | 6 | 3 |
 | Photodynamic therapy | 187 | 4 | 52 | -- | 0 | 3 | 1 |
-| Ionizing radiation | 95 | 10 | 16 | ADMISSIBLE | 0 | 1 | 1 |
+| Ionizing radiation | 264 | 23 | 33 | ADMISSIBLE | 1,378 | 2 | 2 |
 | Checkpoint blockade | 0 | 0 | 0 | INADMISSIBLE | 2,024 | 1 | 0 |
 | Adoptive cell therapy (CAR-T) | 64 | 7 | 12 | ADMISSIBLE | 0 | 1 | 1 |
 | Oncolytic virus | 61 | 3 | 7 | ADMISSIBLE | 0 | 0 | 1 |
@@ -24,7 +24,7 @@ The aggregate gap is already published: the modality arms are roughly an order o
 |---|--:|--:|--:|
 | Sonodynamic therapy | 0 | 0.000x | 3,988 |
 | Photodynamic therapy | 187 | 0.047x | 3,801 |
-| Ionizing radiation | 95 | 0.024x | 3,893 |
+| Ionizing radiation | 264 | 0.066x | 3,724 |
 | Checkpoint blockade | 0 | 0.000x | 3,988 |
 | Adoptive cell therapy (CAR-T) | 64 | 0.016x | 3,924 |
 | Oncolytic virus | 61 | 0.015x | 3,927 |
@@ -62,5 +62,5 @@ A parity table listing only what exists measures the campaign's progress and hid
 
 Quality, correctness, or whether any of it is used. A module can be large and wrong, and an arm could reach every number in the first table and still be worse science than the arm it is measured against. What the table supports is the negative: an arm at a fraction of the comparator on every axis is not represented in any sense a reader would accept.
 
-The book column is attributed by HEADING -- a section counts for an arm when its own heading names it. That under-counts deliberately: 7,273 of 55,676 words in numbered sections are attributed, and the whole multi-modality chapter sits in the remainder because its headings name no arm. A keyword rule over body text was rejected; `analysis/scope-audit.md` records what happened the last time subject was counted by vocabulary.
+The book column is attributed by HEADING -- a section counts for an arm when its own heading names it. That under-counts deliberately: 8,651 of 57,105 words in numbered sections are attributed, and the whole multi-modality chapter sits in the remainder because its headings name no arm. A keyword rule over body text was rejected; `analysis/scope-audit.md` records what happened the last time subject was counted by vocabulary.
 

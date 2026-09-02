@@ -1,0 +1,13 @@
+# Randomised fractionation trials whose two arms were reported as not
+# differing, plus the alpha/beta the radiobiology literature estimates for the
+# same site INDEPENDENTLY of these schedules. The schedules are protocol
+# facts; the outcome column is the trial's own conclusion; the alpha/beta
+# column is somebody else's estimate and is what the model is checked against.
+#
+# Columns:
+#   site, trial, pmid, arm_a_fractions, arm_a_dose_per_fraction_gy,
+#   arm_a_weeks, arm_b_fractions, arm_b_dose_per_fraction_gy, arm_b_weeks,
+#   outcome, published_ab_lo_gy, published_ab_hi_gy, published_ab_source_pmid
+site,trial,pmid,arm_a_fractions,arm_a_dose_per_fraction_gy,arm_a_weeks,arm_b_fractions,arm_b_dose_per_fraction_gy,arm_b_weeks,outcome,published_ab_lo_gy,published_ab_hi_gy,published_ab_source_pmid
+prostate,CHHiP,27339115,37,2.0,7.4,20,3.0,4.0,non-inferior,1.2,3.0,23972468
+breast,START-B,24055415,25,2.0,5.0,15,2.67,3.0,non-inferior,2.3,4.5,24055415

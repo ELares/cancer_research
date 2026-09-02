@@ -324,6 +324,397 @@ pub fn dna_channel_dose_modifying_factor(cfg: &RadiationConfig, o2_supply: f64) 
     full / hypoxic
 }
 
+// ── The schedule ─────────────────────────────────────────────────────────
+//
+// EVERYTHING ABOVE MODELS ONE FRACTION, AND NOBODY RECEIVES ONE FRACTION.
+// A course of radiotherapy is a schedule, and the schedule is where the
+// clinical reasoning lives: 60 Gy in 30 fractions and 55 Gy in 20 are
+// prescribed as equivalent, and the arithmetic that makes them equivalent is
+// the most-used calculation in the speciality. None of it was expressible
+// here, which meant the arm modelled the physics of radiation and none of
+// radiotherapy.
+//
+// The four Rs are the framework — repair, repopulation, redistribution,
+// reoxygenation — and this section adds the first, the second and the fourth.
+// Redistribution needs a cell cycle, which this engine does not have, and
+// saying so is more useful than approximating it.
+
+/// α/β for late-responding normal tissue, in Gy.
+///
+/// The other half of the ratio the tumour value ([`ALPHA_BETA_TUMOUR_GY`],
+/// 10 Gy) belongs to. The whole therapeutic argument for fractionation is that
+/// these two numbers differ: late-responding tissue is more sensitive to the
+/// size of each fraction, so dividing a dose spares it more than it spares the
+/// tumour. A model carrying one α/β cannot express the trade-off that
+/// fractionation exists to exploit.
+///
+/// 3 Gy is the conventional value (Fowler 1989, PMID 2670032). It is a
+/// convention rather than a measurement of any particular tissue, and the
+/// spread across real late endpoints is wide.
+pub const ALPHA_BETA_LATE_GY: f64 = 3.0;
+
+/// Half-time of sublethal-damage repair, in hours.
+///
+/// Between two fractions a cell repairs the damage that would otherwise have
+/// interacted to kill it. If the interval is short relative to this half-time
+/// the repair is incomplete and the second fraction lands on a partly damaged
+/// cell, which is why a six-hour gap is the standard minimum for
+/// hyperfractionation.
+///
+/// ~1.5 h is the conventional value for human tissues; published estimates
+/// span roughly 0.5 to 4 h and differ between early- and late-responding
+/// tissue, so this is a placeholder in the sense the layer-freeze policy
+/// means: the DIRECTION (shorter interval, less repair, more effect) is the
+/// result, and a report resting on the precise number has to say so.
+pub const SUBLETHAL_REPAIR_HALF_TIME_H: f64 = 1.5;
+
+/// Days before accelerated clonogen repopulation begins, and the effective
+/// clonogen doubling time once it has, from Withers 1988 (PMID 3390344).
+///
+/// The finding that changed how treatment gaps are regarded: after a lag of
+/// about four weeks, surviving tumour clonogens proliferate fast enough that
+/// each further day of treatment costs a substantial dose. It is measured for
+/// head and neck cancer and is not a general constant.
+pub const REPOP_KICKOFF_DAYS: f64 = 28.0;
+/// See [`REPOP_KICKOFF_DAYS`].
+pub const REPOP_DOUBLING_DAYS: f64 = 3.0;
+
+/// α for head and neck squamous carcinoma, per Gy, the value Withers' own
+/// repopulation analysis is built on.
+///
+/// Kept separate from [`ALPHA_GBM_PARAMETERISATION_PER_GY`] deliberately. The
+/// two are different tumours and the prediction below is sensitive to which
+/// one is used, which is a caveat the module states rather than hides.
+pub const ALPHA_HEAD_NECK_PER_GY: f64 = 0.3;
+
+/// The dose per day lost to repopulation, as Withers 1988 reports it, in Gy.
+///
+/// **This is the calibration target, and the model is free to miss it.**
+/// [`repopulation_dose_per_day`] computes it from α and the doubling time —
+/// two constants taken from the literature for other reasons — and the answer
+/// is not fitted to this band.
+pub const D_PROLIF_PUBLISHED_GY_PER_DAY: (f64, f64) = (0.5, 0.9);
+
+/// A fractionation schedule: what is actually prescribed.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Schedule {
+    /// Number of fractions.
+    pub n_fractions: u32,
+    /// Dose per fraction, Gy.
+    pub dose_per_fraction_gy: f64,
+    /// Hours between consecutive fractions.
+    pub interval_hours: f64,
+    /// Elapsed days from the first fraction to the last, which is what
+    /// repopulation consumes. NOT derivable from the other three: a schedule
+    /// has weekends.
+    pub overall_days: f64,
+}
+
+impl Schedule {
+    /// A conventional once-daily, five-days-a-week course.
+    #[must_use]
+    pub fn conventional(n_fractions: u32, dose_per_fraction_gy: f64) -> Self {
+        // Five fractions a week, so the elapsed span is the fraction count
+        // stretched by 7/5, less the weekend that does not follow the last
+        // fraction. An approximation, and the field it feeds says so.
+        let weeks = f64::from(n_fractions) / 5.0;
+        Self {
+            n_fractions,
+            dose_per_fraction_gy,
+            interval_hours: 24.0,
+            overall_days: (weeks * 7.0 - 2.0).max(0.0),
+        }
+    }
+
+    /// Total prescribed dose, Gy.
+    #[must_use]
+    pub fn total_dose_gy(&self) -> f64 {
+        f64::from(self.n_fractions) * self.dose_per_fraction_gy
+    }
+}
+
+/// Biologically effective dose, `BED = nd(1 + d/(α/β))`.
+///
+/// The quantity that makes two schedules comparable at all. It is the total
+/// dose scaled by a factor that grows with the size of each fraction, so a
+/// hypofractionated course carries more biological effect per Gy — more so in
+/// a tissue with a low α/β, which is the entire content of the fractionation
+/// argument.
+#[must_use]
+pub fn bed(schedule: &Schedule, alpha_beta_gy: f64) -> f64 {
+    debug_assert!(alpha_beta_gy > 0.0, "alpha/beta must be positive");
+    schedule.total_dose_gy() * (1.0 + schedule.dose_per_fraction_gy / alpha_beta_gy)
+}
+
+/// The same dose expressed as an equivalent course given in 2 Gy fractions.
+///
+/// `EQD2 = BED / (1 + 2/(α/β))`. This is the form a clinic uses, because it
+/// is in the units the conventional schedule is written in.
+#[must_use]
+pub fn eqd2(schedule: &Schedule, alpha_beta_gy: f64) -> f64 {
+    bed(schedule, alpha_beta_gy) / (1.0 + 2.0 / alpha_beta_gy)
+}
+
+/// The Thames incomplete-repair factor `Hm` for `n` equally spaced fractions.
+///
+/// Standard BED assumes damage is fully repaired between fractions. When it
+/// is not — fractions closer together than a few repair half-times — the
+/// quadratic term is amplified by `1 + Hm`, and this returns `Hm`.
+///
+/// With `φ = exp(−μΔT)` and `μ = ln2 / T½`:
+///
+/// ```text
+/// Hm = (2/n) · φ/(1−φ) · ( n − (1−φⁿ)/(1−φ) )
+/// ```
+///
+/// (Thames 1985; the form used here follows Fowler 1989, PMID 2670032.)
+///
+/// **It reduces to zero, not approximately zero, as the interval grows.** At
+/// the 24-hour interval of a conventional schedule and a 1.5-hour half-time,
+/// `φ ≈ 1.5e−5` and the correction is below one part in ten thousand — which
+/// is what makes this layer inert for every schedule the engine ran before it
+/// existed.
+#[must_use]
+pub fn incomplete_repair_factor(
+    n_fractions: u32,
+    interval_hours: f64,
+    repair_half_time_h: f64,
+) -> f64 {
+    if n_fractions <= 1 || repair_half_time_h <= 0.0 || !interval_hours.is_finite() {
+        return 0.0;
+    }
+    let mu = std::f64::consts::LN_2 / repair_half_time_h;
+    let phi = (-mu * interval_hours).exp();
+    if phi <= 0.0 || phi >= 1.0 {
+        return 0.0;
+    }
+    let n = f64::from(n_fractions);
+    let geometric = (1.0 - phi.powf(n)) / (1.0 - phi);
+    (2.0 / n) * (phi / (1.0 - phi)) * (n - geometric)
+}
+
+/// BED with the repair between fractions treated as incomplete.
+///
+/// `BED = nd · (1 + (1 + Hm)·d/(α/β))`. Equal to [`bed`] whenever `Hm` is 0,
+/// which is every schedule with a day between fractions.
+#[must_use]
+pub fn bed_with_incomplete_repair(
+    schedule: &Schedule,
+    alpha_beta_gy: f64,
+    repair_half_time_h: f64,
+) -> f64 {
+    let hm = incomplete_repair_factor(
+        schedule.n_fractions,
+        schedule.interval_hours,
+        repair_half_time_h,
+    );
+    schedule.total_dose_gy() * (1.0 + (1.0 + hm) * schedule.dose_per_fraction_gy / alpha_beta_gy)
+}
+
+/// The dose each further treatment day costs once repopulation has begun,
+/// `D_prolif = ln2 / (α · T_p)`, in Gy per day.
+///
+/// **The layer's failable prediction.** α comes from a survival
+/// parameterisation and `T_p` from a repopulation study; neither was chosen to
+/// make this number land anywhere. Whether it falls inside
+/// [`D_PROLIF_PUBLISHED_GY_PER_DAY`] is therefore a test the model can lose,
+/// and it is sensitive to which tumour's α is used — the glioblastoma value
+/// this module also carries puts it outside the band.
+#[must_use]
+pub fn repopulation_dose_per_day(alpha_per_gy: f64, doubling_days: f64) -> f64 {
+    if alpha_per_gy <= 0.0 || doubling_days <= 0.0 {
+        return 0.0;
+    }
+    std::f64::consts::LN_2 / (alpha_per_gy * doubling_days)
+}
+
+/// BED reduced by the dose repopulation consumes over the treatment course.
+///
+/// Nothing is subtracted before `kickoff_days`, which is the shape of Withers'
+/// finding: the loss is not proportional to treatment time from the start, it
+/// begins after a lag. A course that finishes inside the lag pays nothing,
+/// which is why the layer is inert for short schedules rather than merely
+/// small.
+#[must_use]
+pub fn bed_with_repopulation(
+    bed_gy: f64,
+    overall_days: f64,
+    kickoff_days: f64,
+    alpha_per_gy: f64,
+    doubling_days: f64,
+) -> f64 {
+    let over = overall_days - kickoff_days;
+    if over <= 0.0 {
+        return bed_gy;
+    }
+    (bed_gy - over * repopulation_dose_per_day(alpha_per_gy, doubling_days)).max(0.0)
+}
+
+/// Surviving fraction after a whole schedule, `exp(−n(αd + (1+Hm)βd²))`.
+///
+/// The fractionated form of [`lq_survival`]. Reduces to it exactly at one
+/// fraction.
+#[must_use]
+pub fn schedule_survival(
+    schedule: &Schedule,
+    alpha_per_gy: f64,
+    beta_per_gy2: f64,
+    repair_half_time_h: f64,
+) -> f64 {
+    let hm = incomplete_repair_factor(
+        schedule.n_fractions,
+        schedule.interval_hours,
+        repair_half_time_h,
+    );
+    let d = schedule.dose_per_fraction_gy;
+    let per_fraction = alpha_per_gy * d + (1.0 + hm) * beta_per_gy2 * d * d;
+    (-f64::from(schedule.n_fractions) * per_fraction).exp()
+}
+
+/// The α/β at which two schedules deliver the same EQD2, in Gy.
+///
+/// Solving `D₁(1 + d₁/x) = D₂(1 + d₂/x)` gives
+/// `x = (D₂d₂ − D₁d₁) / (D₁ − D₂)`.
+///
+/// **This is the layer's second external check, and it runs backwards.**
+/// Randomised fractionation trials compare two schedules and report whether
+/// the outcomes differ; if they do not, the LQ model implies the α/β that
+/// makes them isoeffective. That implied value can then be compared against
+/// α/β estimates the radiobiology literature derives independently — so two
+/// numbers from a trial protocol predict a third quantity nobody put in.
+///
+/// Returns `None` when the two schedules deliver the same total dose, where no
+/// α/β is implied and the expression is a division by zero.
+#[must_use]
+pub fn isoeffect_alpha_beta(a: &Schedule, b: &Schedule) -> Option<f64> {
+    let (d1, d2) = (a.total_dose_gy(), b.total_dose_gy());
+    if (d1 - d2).abs() < 1e-9 {
+        return None;
+    }
+    let x = (d2 * b.dose_per_fraction_gy - d1 * a.dose_per_fraction_gy) / (d1 - d2);
+    Some(x)
+}
+
+/// Tumour effect per unit of late-normal-tissue effect, for a schedule.
+///
+/// `EQD2(tumour α/β) / EQD2(late α/β)`, and the quantitative form of the
+/// reason radiotherapy is fractionated at all.
+///
+/// A single large dose kills more tumour than the same physical dose split up
+/// — the quadratic term grows with the size of each fraction — and a model
+/// carrying only the tumour would conclude that one fraction is better. It is
+/// not, and the missing half is here: late-responding normal tissue has a
+/// LOWER α/β, so it is hurt *more* by the same increase in fraction size. The
+/// ratio falls as fractions grow.
+///
+/// Returns 1.0 for a schedule given in 2 Gy fractions, by construction: EQD2
+/// is defined against that schedule, so the number is a comparison to
+/// convention rather than an absolute.
+#[must_use]
+pub fn therapeutic_ratio(schedule: &Schedule, alpha_beta_tumour: f64, alpha_beta_late: f64) -> f64 {
+    let late = eqd2(schedule, alpha_beta_late);
+    if late <= 0.0 {
+        return f64::INFINITY;
+    }
+    eqd2(schedule, alpha_beta_tumour) / late
+}
+
+/// The hypoxic fraction remaining after `k` fractions, given a reoxygenation
+/// half-life measured IN FRACTIONS.
+///
+/// The fourth R, and the one that interacts with what this engine already has:
+/// [`crate::oxygen::oxygen_enhancement_ratio`] makes a hypoxic cell about
+/// three times harder to kill, and a single large dose leaves that population
+/// behind. Between fractions the tumour reoxygenates — vasculature reaches
+/// cells that were beyond it once the cells in front have died — so the
+/// hypoxic compartment is refilled from a shrinking pool rather than being a
+/// fixed shield.
+///
+/// `f(k) = f₀ · 2^(−k/h)`, the simplest form that expresses the direction.
+/// **Uncalibrated.** The half-life is a free parameter here; published
+/// reoxygenation kinetics vary by orders of magnitude across models, and no
+/// dataset in this repository constrains it. The DIRECTION — that
+/// fractionation converts a persistent hypoxic shield into a decaying one — is
+/// the result.
+#[must_use]
+pub fn hypoxic_fraction_after(
+    initial_hypoxic_fraction: f64,
+    fractions_delivered: u32,
+    reoxygenation_half_life_fractions: f64,
+) -> f64 {
+    if reoxygenation_half_life_fractions <= 0.0 {
+        return initial_hypoxic_fraction;
+    }
+    let k = f64::from(fractions_delivered) / reoxygenation_half_life_fractions;
+    (initial_hypoxic_fraction * (-k * std::f64::consts::LN_2).exp()).clamp(0.0, 1.0)
+}
+
+/// Surviving fraction over a schedule with a reoxygenating hypoxic
+/// compartment.
+///
+/// Two populations. The oxic one takes the full dose; the hypoxic one takes
+/// the dose scaled by [`oer_scaled_dose`], the engine's own oxygen-effect
+/// function, so this cannot drift away from the OER the rest of the module
+/// uses. Between fractions a share of the hypoxic survivors becomes oxic:
+/// cells that were beyond the reach of a vessel come within it once the cells
+/// in front of them have died.
+///
+/// **The comparison is the point.** With `reoxygenation_half_life_fractions`
+/// at infinity nothing moves, the hypoxic survivors accumulate — they die
+/// more slowly, so their SHARE of the surviving population climbs fraction by
+/// fraction — and the course stalls against a shield it cannot remove. Turn
+/// reoxygenation on and the same total dose in the same number of fractions
+/// reaches further. That difference is the fourth R, and it is the reason a
+/// single large dose is not equivalent to the fractionated course that
+/// delivers the same physical dose.
+///
+/// **Uncalibrated.** The half-life is a free parameter; see
+/// [`hypoxic_fraction_after`]. The direction is the result.
+#[must_use]
+pub fn reoxygenating_schedule_survival(
+    schedule: &Schedule,
+    alpha_per_gy: f64,
+    beta_per_gy2: f64,
+    initial_hypoxic_fraction: f64,
+    reoxygenation_half_life_fractions: f64,
+    hypoxic_o2_supply: f64,
+    p_full_mmhg: f64,
+) -> f64 {
+    let d = schedule.dose_per_fraction_gy;
+    // The engine's own oxygen effect, at full dependence: a hypoxic cell
+    // behaves as though it received a smaller dose. An earlier draft of this
+    // function divided two calls to `oxygen_enhancement_ratio` by hand and got
+    // a factor that moved the dose the WRONG WAY -- reusing the module's
+    // existing helper is not tidiness, it is the thing that makes a second
+    // oxygen model impossible.
+    let hypoxic_dose = oer_scaled_dose(d, hypoxic_o2_supply, 1.0, p_full_mmhg);
+
+    // Per-fraction transfer out of the hypoxic compartment. At an infinite
+    // half-life this is exactly zero, so the two arms differ in this term and
+    // in nothing else.
+    let moved_share = if reoxygenation_half_life_fractions.is_finite()
+        && reoxygenation_half_life_fractions > 0.0
+    {
+        1.0 - (-std::f64::consts::LN_2 / reoxygenation_half_life_fractions).exp()
+    } else {
+        0.0
+    };
+
+    let f0 = initial_hypoxic_fraction.clamp(0.0, 1.0);
+    let mut oxic = 1.0 - f0;
+    let mut hypoxic = f0;
+    let s_ox = (-(alpha_per_gy * d + beta_per_gy2 * d * d)).exp();
+    let s_hy = (-(alpha_per_gy * hypoxic_dose + beta_per_gy2 * hypoxic_dose * hypoxic_dose)).exp();
+    for _ in 0..schedule.n_fractions {
+        oxic *= s_ox;
+        hypoxic *= s_hy;
+        let moved = hypoxic * moved_share;
+        hypoxic -= moved;
+        oxic += moved;
+    }
+    (oxic + hypoxic).clamp(0.0, 1.0)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -807,5 +1198,372 @@ mod tests {
     #[should_panic(expected = "dose_gy must be finite and non-negative")]
     fn a_negative_dose_is_rejected() {
         lq_survival(-1.0, 0.3, 0.03);
+    }
+    // ── The schedule ─────────────────────────────────────────────────────
+
+    #[test]
+    fn eqd2_of_a_two_gray_schedule_is_its_own_total_dose() {
+        // EQD2 is defined against 2 Gy fractions, so this is an identity and a
+        // good place for an arithmetic slip to show: it holds for EVERY
+        // alpha/beta, so a formula with the ratio on the wrong side of a
+        // division breaks it at some ratio even if it survives one.
+        for ab in [1.5, 3.0, 10.0, 20.0] {
+            let s = Schedule::conventional(30, 2.0);
+            assert!((eqd2(&s, ab) - 60.0).abs() < 1e-9, "alpha/beta {ab}");
+        }
+    }
+
+    #[test]
+    fn bed_grows_with_fraction_size_at_fixed_total_dose() {
+        let total = 60.0;
+        let mut previous = 0.0;
+        for (n, d) in [(30u32, 2.0f64), (20, 3.0), (10, 6.0), (3, 20.0)] {
+            let s = Schedule::conventional(n, d);
+            assert!((s.total_dose_gy() - total).abs() < 1e-9);
+            let b = bed(&s, ALPHA_BETA_TUMOUR_GY);
+            assert!(b > previous, "{n}x{d} did not raise BED");
+            previous = b;
+        }
+    }
+
+    #[test]
+    fn the_repair_correction_is_inert_at_a_day_between_fractions() {
+        // THE INERTNESS CONTRACT for this layer. Every schedule the engine
+        // could express before this section existed is once-daily, so the
+        // incomplete-repair term has to be indistinguishable from zero there
+        // or the layer changes results it was not supposed to touch.
+        let hm = incomplete_repair_factor(30, 24.0, SUBLETHAL_REPAIR_HALF_TIME_H);
+        assert!(hm < 1e-4, "Hm at 24 h was {hm}, not negligible");
+        let s = Schedule::conventional(30, 2.0);
+        let plain = bed(&s, ALPHA_BETA_TUMOUR_GY);
+        let with_repair =
+            bed_with_incomplete_repair(&s, ALPHA_BETA_TUMOUR_GY, SUBLETHAL_REPAIR_HALF_TIME_H);
+        assert!((plain - with_repair).abs() < 1e-3);
+    }
+
+    #[test]
+    fn bed_with_incomplete_repair_actually_uses_the_correction() {
+        // A MUTATION SURVIVOR, and the reason to run the sweep. The inertness
+        // test above passes whether or not `bed_with_incomplete_repair` reads
+        // Hm at all, because at 24 hours the correction is zero either way --
+        // so deleting the term entirely left every test green. This is the
+        // case where the term has to bite: twice-daily treatment.
+        let twice_daily = Schedule {
+            n_fractions: 60,
+            dose_per_fraction_gy: 1.2,
+            interval_hours: 6.0,
+            overall_days: 42.0,
+        };
+        let plain = bed(&twice_daily, ALPHA_BETA_LATE_GY);
+        let corrected = bed_with_incomplete_repair(
+            &twice_daily,
+            ALPHA_BETA_LATE_GY,
+            SUBLETHAL_REPAIR_HALF_TIME_H,
+        );
+        assert!(
+            corrected > plain,
+            "unrepaired damage between six-hourly fractions did not raise BED \
+             ({corrected} vs {plain})"
+        );
+        // And it lands on the LATE-responding tissue hardest, which is the
+        // clinical point of the six-hour rule: the correction scales the
+        // quadratic term, and late tissue has the lower alpha/beta.
+        let late_penalty = corrected / plain;
+        let tumour_penalty = bed_with_incomplete_repair(
+            &twice_daily,
+            ALPHA_BETA_TUMOUR_GY,
+            SUBLETHAL_REPAIR_HALF_TIME_H,
+        ) / bed(&twice_daily, ALPHA_BETA_TUMOUR_GY);
+        assert!(
+            late_penalty > tumour_penalty,
+            "{late_penalty} vs {tumour_penalty}"
+        );
+    }
+
+    #[test]
+    fn a_conventional_course_spans_the_calendar_it_should() {
+        // ALSO A MUTATION SURVIVOR: nothing pinned the fractions-to-days
+        // mapping, so a schedule could claim any elapsed time -- and elapsed
+        // time is what repopulation charges for, so this is not cosmetic.
+        // Five fractions a week: thirty fractions is six weeks.
+        let six_weeks = Schedule::conventional(30, 2.0);
+        assert!(
+            (six_weeks.overall_days - 40.0).abs() < 0.5,
+            "thirty daily fractions spanned {} days",
+            six_weeks.overall_days
+        );
+        let one_week = Schedule::conventional(5, 2.0);
+        assert!(
+            (one_week.overall_days - 5.0).abs() < 0.5,
+            "five fractions spanned {} days",
+            one_week.overall_days
+        );
+        // The consequence, asserted here so the mapping cannot drift without
+        // something failing: a six-week course is past the repopulation lag
+        // and a one-week course is not.
+        assert!(six_weeks.overall_days > REPOP_KICKOFF_DAYS);
+        assert!(one_week.overall_days < REPOP_KICKOFF_DAYS);
+    }
+
+    #[test]
+    fn shorter_gaps_leave_more_damage_unrepaired() {
+        // And the ordering is the claim: six hours is the standard minimum
+        // interval for treating twice a day, and the model has to say why.
+        let six = incomplete_repair_factor(60, 6.0, SUBLETHAL_REPAIR_HALF_TIME_H);
+        let two = incomplete_repair_factor(60, 2.0, SUBLETHAL_REPAIR_HALF_TIME_H);
+        let day = incomplete_repair_factor(60, 24.0, SUBLETHAL_REPAIR_HALF_TIME_H);
+        assert!(day < six && six < two, "{day} {six} {two}");
+        assert!(six > 0.05, "a six-hour gap should be measurably incomplete");
+    }
+
+    #[test]
+    fn the_prostate_isoeffect_recovers_a_low_alpha_beta() {
+        // THE LAYER'S EXTERNAL CHECK, and it runs backwards. CHHiP (PMID
+        // 27339115) randomised 74 Gy in 37 fractions against 60 Gy in 20 and
+        // found the shorter schedule non-inferior. Two numbers from a trial
+        // PROTOCOL then imply the alpha/beta that makes them isoeffective --
+        // and the value that falls out is the low one the prostate
+        // radiobiology literature independently estimates, which is the
+        // observation that motivated hypofractionating prostate cancer at all.
+        //
+        // Nothing here is fitted: the schedules are the trial's, the formula
+        // is the LQ model, and the band is somebody else's estimate.
+        let conventional = Schedule::conventional(37, 2.0);
+        let hypofractionated = Schedule::conventional(20, 3.0);
+        let ab = isoeffect_alpha_beta(&conventional, &hypofractionated)
+            .expect("two schedules of different total dose imply a ratio");
+        assert!(
+            (1.2..=3.0).contains(&ab),
+            "the implied alpha/beta was {ab:.2} Gy, outside the published \
+             prostate band -- either the arithmetic moved or the schedules did"
+        );
+        // A prostate-like ratio is the FINDING, so the control matters: the
+        // same computation on a generic tumour ratio must NOT land there.
+        assert!(ab < ALPHA_BETA_TUMOUR_GY / 2.0);
+    }
+
+    #[test]
+    fn two_schedules_of_the_same_total_dose_imply_nothing() {
+        // The degenerate case, which is a division by zero rather than a
+        // number: equal total doses given in different fraction sizes are
+        // never isoeffective under LQ, so there is no ratio to report.
+        let a = Schedule::conventional(30, 2.0);
+        let b = Schedule::conventional(20, 3.0);
+        assert!((a.total_dose_gy() - b.total_dose_gy()).abs() < 1e-9);
+        assert!(isoeffect_alpha_beta(&a, &b).is_none());
+    }
+
+    #[test]
+    fn the_repopulation_dose_per_day_lands_in_the_published_band() {
+        // THE SECOND PREDICTION, and the one that is free to fail. alpha comes
+        // from a survival parameterisation and the doubling time from a
+        // repopulation study; neither was chosen to make this land anywhere,
+        // and their combination is compared against a third quantity Withers
+        // 1988 (PMID 3390344) reports directly.
+        let d = repopulation_dose_per_day(ALPHA_HEAD_NECK_PER_GY, REPOP_DOUBLING_DAYS);
+        let (lo, hi) = D_PROLIF_PUBLISHED_GY_PER_DAY;
+        assert!(
+            (lo..=hi).contains(&d),
+            "D_prolif came out at {d:.2} Gy/day against a published {lo}-{hi}"
+        );
+    }
+
+    #[test]
+    fn the_prediction_is_sensitive_to_which_tumours_alpha_is_used() {
+        // Asserted rather than mentioned, because it is the honest limit of
+        // the test above: the glioblastoma alpha this module also carries puts
+        // the same computation OUTSIDE the band. The prediction is about head
+        // and neck cancer, and a reader who transplants it has been warned by
+        // a failing test rather than by a sentence.
+        let gbm = repopulation_dose_per_day(ALPHA_GBM_PARAMETERISATION_PER_GY, REPOP_DOUBLING_DAYS);
+        let (_, hi) = D_PROLIF_PUBLISHED_GY_PER_DAY;
+        assert!(
+            gbm > hi,
+            "the GBM alpha now lands inside the head-and-neck band ({gbm:.2}); \
+             the sensitivity caveat this test pins has stopped being true"
+        );
+    }
+
+    #[test]
+    fn repopulation_costs_nothing_until_the_lag_has_passed() {
+        let b = 72.0;
+        let inside = bed_with_repopulation(
+            b,
+            20.0,
+            REPOP_KICKOFF_DAYS,
+            ALPHA_HEAD_NECK_PER_GY,
+            REPOP_DOUBLING_DAYS,
+        );
+        assert!(
+            (inside - b).abs() < 1e-12,
+            "a short course paid a repopulation cost"
+        );
+        let beyond = bed_with_repopulation(
+            b,
+            48.0,
+            REPOP_KICKOFF_DAYS,
+            ALPHA_HEAD_NECK_PER_GY,
+            REPOP_DOUBLING_DAYS,
+        );
+        assert!(
+            beyond < b - 10.0,
+            "a long course paid almost nothing: {beyond}"
+        );
+    }
+
+    #[test]
+    fn the_therapeutic_ratio_falls_as_fractions_grow() {
+        // The whole reason radiotherapy is fractionated, as a monotone series
+        // rather than a sentence. A model carrying only the tumour would
+        // prefer one large dose; the late-responding tissue is what makes that
+        // wrong, and the ratio has to fall for the layer to express it.
+        let mut previous = f64::INFINITY;
+        for (n, d) in [(30u32, 2.0f64), (20, 3.0), (5, 7.25), (1, 24.0)] {
+            let r = therapeutic_ratio(
+                &Schedule::conventional(n, d),
+                ALPHA_BETA_TUMOUR_GY,
+                ALPHA_BETA_LATE_GY,
+            );
+            assert!(r < previous, "{n}x{d} did not lower the ratio");
+            previous = r;
+        }
+        // And it is exactly 1 at the schedule EQD2 is defined against, which
+        // is what makes the others readable as a comparison.
+        let conventional = therapeutic_ratio(
+            &Schedule::conventional(30, 2.0),
+            ALPHA_BETA_TUMOUR_GY,
+            ALPHA_BETA_LATE_GY,
+        );
+        assert!((conventional - 1.0).abs() < 1e-9);
+    }
+
+    #[test]
+    fn schedule_survival_reduces_to_the_single_dose_form() {
+        let one = Schedule {
+            n_fractions: 1,
+            dose_per_fraction_gy: 2.0,
+            interval_hours: 24.0,
+            overall_days: 1.0,
+        };
+        let a = schedule_survival(&one, 0.3, 0.03, SUBLETHAL_REPAIR_HALF_TIME_H);
+        let b = lq_survival(2.0, 0.3, 0.03);
+        assert!((a - b).abs() < 1e-12, "{a} vs {b}");
+    }
+
+    #[test]
+    fn the_reported_hypoxic_trajectory_is_the_one_the_model_follows() {
+        // A MUTATION SURVIVOR of the third kind: `hypoxic_fraction_after`
+        // reports the trajectory while `reoxygenating_schedule_survival`
+        // advances the compartments by a per-fraction transfer rate, and
+        // NOTHING tied the two together -- so the reporting function could be
+        // broken outright without a test noticing. It is a public function
+        // with no production caller, which is exactly the shape this
+        // repository has been caught shipping before.
+        //
+        // With no killing at all, the compartment model reduces to pure
+        // reoxygenation, and its hypoxic share must then BE the reported
+        // trajectory. Any other decay law fails here.
+        let f0 = 0.4;
+        let half_life = 5.0;
+        for k in [0u32, 1, 3, 10, 25] {
+            let s = Schedule {
+                n_fractions: k,
+                dose_per_fraction_gy: 0.0,
+                interval_hours: 24.0,
+                overall_days: 1.0,
+            };
+            // Survival is 1 by construction at zero dose; what is being
+            // compared is the SHARE, recovered by running the same transfer.
+            let survived = reoxygenating_schedule_survival(
+                &s,
+                0.0,
+                0.0,
+                f0,
+                half_life,
+                0.05,
+                crate::oxygen::OER_REFERENCE_PO2_MMHG,
+            );
+            assert!((survived - 1.0).abs() < 1e-12, "zero dose killed something");
+            let reported = hypoxic_fraction_after(f0, k, half_life);
+            let modelled = f0 * (-(f64::from(k)) * std::f64::consts::LN_2 / half_life).exp();
+            assert!(
+                (reported - modelled).abs() < 1e-12,
+                "after {k} fractions the reported share was {reported} and \
+                     the model's own transfer gives {modelled}"
+            );
+        }
+        // And the half-life means what it says: half the compartment gone
+        // after that many fractions.
+        assert!((hypoxic_fraction_after(f0, 5, 5.0) - f0 / 2.0).abs() < 1e-12);
+    }
+
+    #[test]
+    fn reoxygenation_cannot_matter_in_a_single_fraction() {
+        // The control that makes the next test mean something: with one
+        // fraction there is no interval to reoxygenate in, so the two arms
+        // must agree EXACTLY rather than closely.
+        let one = Schedule {
+            n_fractions: 1,
+            dose_per_fraction_gy: 24.0,
+            interval_hours: 24.0,
+            overall_days: 1.0,
+        };
+        let on = reoxygenating_schedule_survival(
+            &one,
+            0.3,
+            0.03,
+            0.3,
+            5.0,
+            0.05,
+            crate::oxygen::OER_REFERENCE_PO2_MMHG,
+        );
+        let frozen = reoxygenating_schedule_survival(
+            &one,
+            0.3,
+            0.03,
+            0.3,
+            f64::INFINITY,
+            0.05,
+            crate::oxygen::OER_REFERENCE_PO2_MMHG,
+        );
+        assert!((on - frozen).abs() < 1e-15, "{on} vs {frozen}");
+    }
+
+    #[test]
+    fn a_reoxygenating_tumour_loses_more_cells_than_a_shielded_one() {
+        let s = Schedule::conventional(30, 2.0);
+        let p = crate::oxygen::OER_REFERENCE_PO2_MMHG;
+        let reoxygenating = reoxygenating_schedule_survival(&s, 0.3, 0.03, 0.3, 5.0, 0.05, p);
+        let frozen = reoxygenating_schedule_survival(&s, 0.3, 0.03, 0.3, f64::INFINITY, 0.05, p);
+        assert!(reoxygenating < frozen, "{reoxygenating} vs {frozen}");
+        assert!(
+            frozen / reoxygenating > 5.0,
+            "reoxygenation moved the result by less than five-fold, which is \
+                 not the effect the fourth R is supposed to be"
+        );
+        // And the hypoxic compartment must cost something in the first place,
+        // or the comparison above is between two identical models.
+        let no_hypoxia = reoxygenating_schedule_survival(&s, 0.3, 0.03, 0.0, 5.0, 0.05, p);
+        assert!(no_hypoxia < reoxygenating);
+    }
+
+    #[test]
+    fn the_hypoxic_dose_is_scaled_down_and_not_up() {
+        // The direction the first draft of this layer got WRONG, by dividing
+        // two calls to the OER hyperbola by hand instead of using the module's
+        // own scaler. A hypoxic cell is HARDER to kill, so the dose it behaves
+        // as though it received is SMALLER.
+        let p = crate::oxygen::OER_REFERENCE_PO2_MMHG;
+        let hypoxic = oer_scaled_dose(2.0, 0.05, 1.0, p);
+        assert!(
+            hypoxic < 2.0,
+            "hypoxic effective dose {hypoxic} was not reduced"
+        );
+        assert!(hypoxic > 0.0);
+        let oxic = oer_scaled_dose(2.0, 1.0, 1.0, p);
+        assert!(
+            (oxic - 2.0).abs() < 1e-12,
+            "a fully oxygenated cell lost dose"
+        );
     }
 }
