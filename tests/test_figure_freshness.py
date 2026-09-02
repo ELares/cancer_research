@@ -33,15 +33,15 @@ ones known and deliberate:
 - **No PNG content, at all.** The eight census PNGs are checked for existence
   and nothing else. Replacing one with an unrelated image passes. PNG bytes are
   not portable, and no portable comparison is implemented.
-- **Most non-census PDFs.** Thirty-one committed figures come from other
+- **Most non-census PDFs.** Thirty-two committed figures come from other
   generators. Five of them -- the corpus-derived ones, whose inputs are tracked
   -- are regenerated and gated by `tests/test_figure_caption_statistics.py`;
-  the other twenty-six are not, and eighteen of those twenty-six `FIGURES.yaml` marks
+  the other twenty-seven are not, and nineteen of those twenty-seven `FIGURES.yaml` marks
   `type: simulation`. SIX of them are different in kind:
   `fig30_modality_landscape`, `fig31_modality_panel`, `fig32_modality_tme` and
   `fig33_adoptive_barriers`, `fig34_depth_reach`, `fig35_calibration_verdicts`,
-  `fig36_fractionation`, `fig37_chemotherapy` and `fig38_checkpoint` read
-  COMMITTED
+  `fig36_fractionation`, `fig37_chemotherapy`, `fig38_checkpoint` and
+  `fig39_adoptive_escalation` read COMMITTED
   artifacts (`analysis/modality-tme.json`, `analysis/modality-coverage.json`,
   `analysis/depth-reach-comparison.json`, `analysis/modality-calibration.json`,
   `analysis/modality-panel.json`), so unlike the rest of the backlog they
@@ -63,15 +63,15 @@ ones known and deliberate:
   every property a figure has. That
   sentence was FALSE when written: it claimed all four were pinned while no
   test named fig32 or fig33 at all, and multiplying every drawn cell in fig32
-  by a thousand left the suite green. The PDFs are still not byte-gated here. Eight of the eighteen are drawn by `generate_figures.py` from
+  by a thousand left the suite green. The PDFs are still not byte-gated here. Eight of the nineteen are drawn by `generate_figures.py` from
   `simulations/output/`, which is gitignored, so CI cannot regenerate them at
   all until #788's tracking decision is made; they were regenerated in the #790
   pass and no longer embed a creation date, which is necessary for a freshness
-  check and not sufficient for one. The other ten are not blocked that way, and the first
+  check and not sufficient for one. The other eleven are not blocked that way, and the first
   version of this bullet wrongly said they were:
   `fig29_rare_event_resolution` reads the TRACKED `analysis/rare-event-sweep.jsonl`
   through a deterministic generator, so regenerating it once -- which it
-  needs anyway, being one of the ten below -- would bring it under a
+  needs anyway, being one of the eleven below -- would bring it under a
   gate; `fig31_modality_panel` reads the TRACKED `analysis/modality-panel.json` and
   is one of five `type: simulation` figures (fig30_modality_landscape is `type: conceptual`) whose every number is pinned by a
   test (this bullet said "the only" while the bullet above it said four,
@@ -878,14 +878,32 @@ def _corpus_derived_stems():
 
 
 def _spell(n: int) -> str:
-    """Small numbers as the docstring writes them."""
+    """Small numbers as the docstring writes them.
+
+    The map used to be the only accepted spelling, so every figure added to
+    the repository meant extending it and rewriting five sentences -- which is
+    maintenance on a formatting convention, not on a claim. `_states` accepts
+    either form now; this stays because the prose reads better in words where
+    a word exists.
+    """
     words = {0: "no", 1: "one", 2: "two", 3: "three", 5: "five", 7: "seven",
-             8: "eight", 9: "nine", 10: "ten", 15: "fifteen",
-             11: "eleven", 17: "seventeen", 18: "eighteen", 19: "nineteen",
-             22: "twenty-two", 23: "twenty-three", 24: "twenty-four",
-             17: "seventeen", 18: "eighteen", 26: "twenty-six",
-             29: "twenty-nine", 30: "thirty", 31: "thirty-one"}
+             8: "eight", 9: "nine", 10: "ten", 11: "eleven", 15: "fifteen",
+             17: "seventeen", 18: "eighteen", 19: "nineteen", 22: "twenty-two",
+             23: "twenty-three", 24: "twenty-four", 25: "twenty-five",
+             26: "twenty-six", 27: "twenty-seven", 29: "twenty-nine",
+             30: "thirty", 31: "thirty-one", 32: "thirty-two"}
     return words.get(n, str(n))
+
+
+def _states(doc: str, n: int, template: str) -> bool:
+    """Does the docstring state `n` in `template`, as a word or as a digit?
+
+    The COUNT is the claim; whether it is spelled is not. Requiring one
+    spelling made a correct docstring fail and sent the author to a word map
+    instead of to the number.
+    """
+    forms = {str(n), _spell(n), _spell(n).capitalize()}
+    return any(template.format(n=f) in doc for f in forms)
 
 
 def test_the_corpus_figure_backlog_is_stated_and_shrinking():
@@ -936,11 +954,10 @@ def test_the_corpus_figure_backlog_is_stated_and_shrinking():
     # produced a failure naming the right number in the message and the wrong
     # one in the assertion, and the fix looked like editing two constants
     # instead of one.
-    spelled = _spell(total).capitalize()
-    assert f"{spelled} committed figures" in doc, (
+    assert _states(doc, total, "{n} committed figures"), (
         f"{total} non-census figures are committed; the docstring does not "
-        f"say {spelled.lower()}")
-    assert f"the other {_spell(total - gated)} are not" in doc, (
+        f"say so")
+    assert _states(doc, total - gated, "the other {n} are not"), (
         f"{total - gated} non-census figures are ungated and the docstring "
         "says otherwise")
     import yaml as _yaml
@@ -970,10 +987,12 @@ def test_the_corpus_figure_backlog_is_stated_and_shrinking():
     # in the test compared against FIGURES.yaml -- so the docstring could say
     # three and seven, or that none of the ten is checkable, and stay green.
     # That is the defect this whole paragraph exists to retract, in its guard.
-    assert f"{_spell(len(blocked)).capitalize()} of the {_spell(len(blocked) + len(free))}" in doc, (
+    assert any(_states(doc, len(blocked), f"{{n}} of the {form}")
+               for form in {str(len(blocked) + len(free)),
+                            _spell(len(blocked) + len(free))}), (
         f"{len(blocked)} of the simulation figures read an untracked input and "
         f"the docstring says otherwise. blocked={sorted(blocked)}")
-    assert f"The other {_spell(len(free))} are not blocked" in doc, (
+    assert _states(doc, len(free), "The other {n} are not blocked"), (
         f"{len(free)} of them do not, and the docstring says otherwise. "
         f"free={sorted(free)}")
     for name in free:

@@ -150,7 +150,8 @@
    ],
    "figures": [
     "fig35_calibration_verdicts",
-    "fig38_checkpoint"
+    "fig38_checkpoint",
+    "fig39_adoptive_escalation"
    ],
    "predictions": [
     "P16"
@@ -169,23 +170,27 @@
    "census": 15358,
    "trials": 1020,
    "modules": 1,
-   "code_lines": 64,
-   "pub_fns": 7,
-   "rust_tests": 12,
+   "code_lines": 166,
+   "pub_fns": 13,
+   "rust_tests": 16,
    "calibration": "ADMISSIBLE",
-   "book_words": 0,
-   "book_sections": [],
+   "book_words": 1062,
+   "book_sections": [
+    "6.9 Adoptive Cell Therapy, and a Failure More Dose Cannot Fix"
+   ],
    "figures": [
-    "fig33_adoptive_barriers"
+    "fig33_adoptive_barriers",
+    "fig39_adoptive_escalation"
    ],
    "predictions": [
-    "P11"
+    "P11",
+    "P17"
    ],
-   "parity_lines": 0.016,
-   "parity_fns": 0.038,
-   "parity_tests": 0.038,
-   "parity_words": 0.0,
-   "lines_short_of_parity": 3928
+   "parity_lines": 0.042,
+   "parity_fns": 0.07,
+   "parity_tests": 0.051,
+   "parity_words": 0.202,
+   "lines_short_of_parity": 3826
   },
   {
    "arm": "OncolyticVirus",
@@ -297,8 +302,8 @@
  "shared_modules": 5,
  "shared_code_lines": 818,
  "shared_pub_fns": 58,
- "manuscript_words_in_sections": 59843,
- "manuscript_words_attributed": 11301,
+ "manuscript_words_in_sections": 60906,
+ "manuscript_words_attributed": 12363,
  "absent_arms": [
   {
    "arm": "Targeted small-molecule therapy",
