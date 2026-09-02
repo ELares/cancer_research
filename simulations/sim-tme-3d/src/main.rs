@@ -6023,7 +6023,7 @@ mod tests {
     /// #844 exists to empty. Written to FAIL when an arm moves tier, so
     /// `analysis/arm-parity.md` and the epic move in the same commit.
     #[test]
-    fn the_spatial_engine_expresses_four_of_the_ten_treatment_arms() {
+    fn the_spatial_engine_expresses_five_of_the_ten_treatment_arms() {
         // A BIGGER PROBE THAN THE UNIT DEFAULT, deliberately. At 10^3/20 the
         // in-vivo-tuned RSL3 switch kills nothing at all -- a documented
         // property of that parameterisation, not of the engine's ability to
@@ -6080,13 +6080,21 @@ mod tests {
              regression or an arm wired the wrong way."
         );
 
-        // ON DEMAND: the arm acts once its own override is set. The list is
-        // explicit because `scripts/arm_parity.py` READS it -- the parity
-        // table's spatial column must come from a measurement, and a parser
-        // that inferred the tier from which overrides happen to be exercised
-        // below would report whatever this test happened to try.
-        let on_demand = vec!["Radiation".to_string()];
-        assert_eq!(on_demand, vec!["Radiation".to_string()]);
+        // ON DEMAND, AND MEASURED RATHER THAN LISTED. The first version of
+        // this block asserted `on_demand == vec!["Radiation"]` against a
+        // hand-written literal, which is self-consistent and therefore always
+        // true. When the oncolytic arm was wired the test did NOT fail, the
+        // parity table went on reporting it as inert, and the header still
+        // said four of ten. A guard whose expected value is a list somebody
+        // maintains is not a measurement -- which is the mistake this whole
+        // file exists to avoid making about the engine.
+        //
+        // Each probe below ENABLES one arm's own override and requires the
+        // answer to move. `scripts/arm_parity.py` reads the resulting list, so
+        // an arm cannot appear in the parity table's spatial column without a
+        // probe here that actually demonstrates it acts.
+        let mut on_demand: Vec<String> = Vec::new();
+
         let rad = run_one_condition_full(
             &base(Treatment::Radiation),
             cfg,
@@ -6116,6 +6124,109 @@ mod tests {
         assert!(
             rad.radiation_kills.unwrap_or(0) > 0,
             "the DNA channel reported no kills at 4 Gy"
+        );
+        on_demand.push("Radiation".to_string());
+
+        let onc = {
+            let mut ocfg = OncolyticConfig::default();
+            ocfg.replication_rate = 1.0;
+            ocfg.clearance_rate = 0.0;
+            run_one_condition_full(
+                &base(Treatment::OncolyticVirus),
+                cfg,
+                None,
+                Overrides {
+                    oncolytic: Some((ocfg, 0.9)),
+                    oncolytic_seed_step: 2,
+                    ..Default::default()
+                },
+            )
+        };
+        assert!(
+            moved(&onc),
+            "the oncolytic override is set and the answer did not move"
+        );
+        assert!(
+            onc.oncolytic_kills.unwrap_or(0) > 0,
+            "the front lysed nothing"
+        );
+        on_demand.push("OncolyticVirus".to_string());
+
+        // THE TIER LIST MUST COVER EVERY ARM THAT HAS AN OVERRIDE, and the
+        // table below is COMPLETE BY CONSTRUCTION rather than by care.
+        //
+        // Forgetting a probe under-reports the campaign's own progress -- the
+        // safe direction, and still wrong -- and that is exactly what happened
+        // when the oncolytic arm landed: the tier was a hand-written literal,
+        // the test stayed green, and the parity table reported a wired arm as
+        // inert. A first fix listed the (field, arm) pairs to check, which is
+        // the same hand-maintained list one level down.
+        //
+        // So every `Treatment` variant appears here with the `Overrides` field
+        // that wires it, or `None` if nothing does, and a length check makes a
+        // new variant impossible to omit. Prefix matching was tried and is
+        // WRONG: the field `immune` is a prefix of `immunotherapy` and would
+        // report checkpoint blockade as wired, when that field is the spatial
+        // immune layer and has nothing to do with the arm.
+        let wiring: [(Treatment, Option<&str>); 10] = [
+            (Treatment::RSL3, None),
+            (Treatment::SDT, None),
+            (Treatment::PDT, None),
+            (Treatment::Radiation, Some("    radiation: Option<")),
+            (Treatment::Immunotherapy, None),
+            (Treatment::AdoptiveCell, None),
+            (Treatment::OncolyticVirus, Some("    oncolytic: Option<")),
+            (Treatment::Ablation, None),
+            (Treatment::AntibodyDrugConjugate, None),
+            (Treatment::Chemotherapy, None),
+        ];
+        assert_eq!(
+            wiring.len(),
+            all.len(),
+            "the wiring table does not cover every Treatment variant, so a new \
+             arm could be wired without anything noticing"
+        );
+        let overrides_src = include_str!("main.rs");
+        let struct_body = {
+            let start = overrides_src
+                .find("struct Overrides {")
+                .expect("Overrides struct not found");
+            let end = overrides_src[start..]
+                .find("\n}\n")
+                .expect("Overrides struct has no end")
+                + start;
+            &overrides_src[start..end]
+        };
+        for (tx, field) in wiring {
+            let name = format!("{tx:?}");
+            match field {
+                Some(f) => {
+                    assert!(
+                        struct_body.contains(f),
+                        "{name} is recorded as wired through {f:?} and \
+                         `Overrides` has no such field"
+                    );
+                    assert!(
+                        on_demand.contains(&name) || by_default.contains(&name),
+                        "`Overrides` carries {f:?} but {name} is in neither \
+                         tier, so the parity table will report it as inert \
+                         while it is wired"
+                    );
+                }
+                None => assert!(
+                    !on_demand.contains(&name),
+                    "{name} is in the ON DEMAND tier with no override field \
+                     recorded for it"
+                ),
+            }
+        }
+
+        assert_eq!(
+            on_demand,
+            vec!["Radiation".to_string(), "OncolyticVirus".to_string()],
+            "the ON DEMAND tier has changed. That is #844 progressing -- update \
+             this literal, the test's NAME, `analysis/arm-parity.md` and the \
+             epic in the same commit."
         );
 
         assert_eq!(

@@ -226,7 +226,7 @@
    "pub_fns": 11,
    "rust_tests": 14,
    "calibration": "ADMISSIBLE",
-   "spatial": null,
+   "spatial": "on demand",
    "book_words": 2000,
    "book_sections": [
     "6.10 Oncolytic Virus, and a Tension That Names Its Own Condition",
@@ -369,6 +369,7 @@
   }
  ],
  "spatial_arms": [
+  "OncolyticVirus",
   "PDT",
   "RSL3",
   "Radiation",
@@ -380,6 +381,7 @@
   "SDT"
  ],
  "spatial_on_demand": [
+  "OncolyticVirus",
   "Radiation"
  ],
  "comparator": "RSL3",
