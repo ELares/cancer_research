@@ -1,6 +1,7 @@
 {
  "analyses": {
   "ferroptosis-or-physical": [
+   "arm-parity",
    "atlas-discovery-gpx4",
    "deep-pattern-analysis",
    "depth-reach-comparison",
@@ -174,7 +175,7 @@
   "top_mechanism": "immunotherapy",
   "top_n": 2297
  },
- "n_analyses": 144,
+ "n_analyses": 145,
  "n_predictions": 13,
  "n_predictions_ferroptosis": 8,
  "n_therapy_subject": 1,
@@ -194,6 +195,7 @@
   "P9": false
  },
  "therapy_by_body": [
+  "arm-parity",
   "atlas-ingest-sensitivity",
   "atlas-landscape",
   "atlas-modality-ratio",
