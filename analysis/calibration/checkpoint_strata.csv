@@ -1,0 +1,17 @@
+# Response rates from ONE trial, ONE drug and ONE endpoint, stratified by a
+# variable that moves antigenicity and not (to first order) the brake. The
+# RATIO is the target: if the observed response rate is any linear function of
+# the model's kill, the unknown mapping constant cancels in a ratio and does
+# not cancel in either absolute value.
+#
+# KEYNOTE-158 (Marabelle et al., Lancet Oncol 2020, PMID 32919526),
+# pembrolizumab in previously treated advanced solid tumours, objective
+# response by tissue tumour mutational burden. Quoted from the abstract:
+# "Objective responses were observed in 30 (29%; 95% CI 21-39) of 102 patients
+# in the tTMB-high group and 43 (6%; 5-8) of 688 in the non-tTMB-high group".
+#
+# The band is built from the interval ENDPOINTS rather than by propagating a
+# variance: lo = 21/8, hi = 39/5. That is deliberately conservative and is
+# wider than a proper interval on the ratio would be.
+trial,pmid,drug,stratum_high,orr_high_pct,orr_high_lo,orr_high_hi,n_high,stratum_low,orr_low_pct,orr_low_lo,orr_low_hi,n_low,tmb_threshold_per_mb
+KEYNOTE-158,32919526,pembrolizumab,tTMB-high,29,21,39,102,non-tTMB-high,6,5,8,688,10

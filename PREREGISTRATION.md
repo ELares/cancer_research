@@ -130,7 +130,13 @@ thresholds are stated here.
 - *Falsification threshold:* the prediction is the SHAPE, not the numbers. It fails if a dose-density benefit is demonstrated in a setting whose regrowth kinetics place it outside the window (either a tumour with no measurable regrowth between cycles, or one whose regrowth is fast relative to the interval), or if a within-model change produces a monotone rather than an interior-peaked dependence on regrowth rate.
 - *Note:* this is NOT a reproduction of CALGB 9741 (PMID 12668651), which found a shorter interval better in early breast cancer and is the reason the question is asked. Whether breast micrometastatic disease sits inside the window is not determinable from anything in this repository, and no absolute magnitude here is defensible: the potency is a placeholder because the CTRPv2 dose-response route is access-blocked. The hypothesis is Norton and Simon's (PMID 3510732). Full accounting in `analysis/calibration/chemo-validation.md`.
 
-### Honesty clause for P9 to P15
+**P16. A checkpoint response ratio between mutational-burden strata is reproducible where the absolute response rate is not.**
+- *Quantitative model output:* `checkpoint::response_ratio` between a representative tTMB-high tumour (20 mut/Mb) and a non-high one (3 mut/Mb) returns 3.10x at the shipped shape constants, against KEYNOTE-158's measured 4.83x (PMID 32919526: 29% of 102 against 6% of 688) and a conservative 2.63-7.80x band from the interval endpoints. The ratio is independent of the brake, the occupancy and the unknown response-to-kill mapping, all of which cancel; the absolute index is not comparable to anything.
+- *Falsification threshold:* the prediction fails if a stratified response pair from a single trial, drug and endpoint, stratified by a factor this model treats as moving antigenicity alone, gives a ratio outside the model's admissible shape region -- or if a stratification is shown to move the brake as well, in which case the cancellation argument does not hold and the comparison is invalid rather than wrong.
+- *Structural companion, which is stronger than the numerical claim:* a tumour that has lost antigen presentation (B2M-null, PMID 27433843) has a response index of exactly zero at any mutational burden, and a ratio against it is undefined rather than infinite. That follows from the layer's structure and not from a fit.
+- *Note:* this constrains a SHAPE and identifies nothing. One ratio is one equation and the brake remains unidentified. The representative-burden choice -- which the trial does not make for us -- moves the model's answer from 1.5x to 7.3x, a spread comparable to the width of the target band. Full accounting in `analysis/calibration/checkpoint-validation.md`.
+
+### Honesty clause for P9 to P16
 
 **P9 to P13 are DIRECTIONAL and every barrier value behind them is an
 uncalibrated placeholder** (`CALIBRATION_STATUS.md` records each as feeding no

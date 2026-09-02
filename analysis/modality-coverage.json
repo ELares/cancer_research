@@ -43,7 +43,7 @@
   "trigger_wave",
   "tumor_pk"
  ],
- "module_count": 38,
+ "module_count": 39,
  "taxonomy_named": [
   "antibody-drug-conjugate",
   "bioelectric",
@@ -170,6 +170,7 @@
    "code_modules": [
     "biochem",
     "cell",
+    "checkpoint",
     "immune",
     "immune_spatial",
     "params",
@@ -412,6 +413,7 @@
    "code_modules": [
     "biochem",
     "cell",
+    "checkpoint",
     "immune",
     "immune_spatial",
     "params",

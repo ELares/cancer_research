@@ -28,6 +28,15 @@
    "reach": 1
   },
   {
+   "module": "checkpoint",
+   "pub_fns": 7,
+   "pub_types": 2,
+   "pub_consts": 2,
+   "code_lines": 122,
+   "serves": "Checkpoint blockade: occupancy, the PD-L1 brake, mutational-burden antigenicity and the resistance modes",
+   "reach": 1
+  },
+  {
    "module": "chemo",
    "pub_fns": 19,
    "pub_types": 4,
@@ -132,20 +141,20 @@
   "vasculature"
  ],
  "ferroptosis_engine_modules": 27,
- "total_modules": 38,
+ "total_modules": 39,
  "engine_pub_fns": 186,
  "engine_code_lines": 3992,
- "dedicated_modules": 6,
- "dedicated_pub_fns": 63,
- "dedicated_code_lines": 816,
+ "dedicated_modules": 7,
+ "dedicated_pub_fns": 70,
+ "dedicated_code_lines": 938,
  "shared_modules": 5,
  "shared_pub_fns": 58,
  "shared_code_lines": 818,
  "engine_modules_with_shared": 32,
  "engine_pub_fns_with_shared": 244,
  "engine_code_lines_with_shared": 4810,
- "line_ratio_narrow": 4.9,
- "line_ratio_wide": 5.9,
- "fn_ratio_narrow": 3.0,
- "fn_ratio_wide": 3.9
+ "line_ratio_narrow": 4.3,
+ "line_ratio_wide": 5.1,
+ "fn_ratio_narrow": 2.7,
+ "fn_ratio_wide": 3.5
 }

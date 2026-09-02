@@ -101,11 +101,13 @@ ARMS = [
      "calibration": "Radiation (DNA channel)",
      "note": "no taxonomy row; the largest literature of any arm here"},
     {"arm": "Immunotherapy", "label": "Checkpoint blockade",
-     "mechanism": "immunotherapy", "modules": [],
+     "mechanism": "immunotherapy", "modules": ["checkpoint"],
      "heading": ["checkpoint", "immune coupling"],
      "topic": ["checkpoint", "pd-1", "pd-l1", "immune coupling", "immunotherapy"],
      "calibration": "Checkpoint blockade",
-     "note": "reaches only through shared immune machinery: owns no module"},
+     "note": "the row in the panel still comes from the SHARED cascade; what "
+             "the module adds is the structure that made a ratio-based "
+             "calibration possible"},
     {"arm": "AdoptiveCell", "label": "Adoptive cell therapy (CAR-T)",
      "mechanism": "car-t", "modules": ["adoptive"], "heading": ["car-t", "adoptive"],
      "topic": ["car-t", "adoptive", "effector"],

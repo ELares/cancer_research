@@ -8,17 +8,17 @@
 |---|--:|--:|--:|
 | committed analyses (145) | 20 | **1** | 124 |
 
-| preregistered predictions | **8 of 15** |
+| preregistered predictions | **8 of 16** |
 |---|--:|
-| engine modules mentioning it anywhere | **33 of 38** |
-| engine modules mentioning it in code | **21 of 38** |
-| engine modules mentioning it in PRODUCTION code | **15 of 38** |
+| engine modules mentioning it anywhere | **34 of 39** |
+| engine modules mentioning it in code | **21 of 39** |
+| engine modules mentioning it in PRODUCTION code | **15 of 39** |
 
 The module rows used to read `N of N` -- the same number on both sides of "of", arithmetic that cannot come out any other way, produced by counting `.rs` files without opening one. They are content measurements now, and the LAST is the one to read: a module can cite ferroptosis in a doc comment while its code is about geometry, and 6 modules pass the in-code check only via their `#[cfg(test)]` block -- a field name in a byte-identity assert, a string literal in a CSV writer, a test FUNCTION NAME. That count was typed as "four" and went stale the moment a test was renamed; it is derived now.
 
 **5 modules mention neither ferroptosis nor a physical-ROS modality anywhere in their text**: `adoptive.rs`, `oncolytic.rs`, `reaction_diffusion.rs`, `spheroid.rs`, `vasculature.rs`. An earlier version of this page said every module of the engine concerns one or the other. It does not.
 
-8 of 15 preregistered predictions and 33 of 38 engine modules concern ferroptosis or the physical-ROS modalities.
+8 of 16 preregistered predictions and 34 of 39 engine modules concern ferroptosis or the physical-ROS modalities.
 
 ### The '1' is a filename marker, not a subject measurement
 
