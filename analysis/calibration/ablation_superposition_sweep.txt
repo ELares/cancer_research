@@ -1,0 +1,12 @@
+ABLATION_SUPER_META grid_dim=40 applicator_c=60 minutes=5 cooling_length_mm=2 mm_per_cell=0.25
+ABLATION_SUPER inter_vessel_um=1600 survivors_all=584 survivors_nearest=584 kills=23821 total_tumor=24405
+ABLATION_SUPER inter_vessel_um=1200 survivors_all=584 survivors_nearest=584 kills=23821 total_tumor=24405
+ABLATION_SUPER inter_vessel_um=800 survivors_all=584 survivors_nearest=584 kills=23821 total_tumor=24405
+ABLATION_SUPER inter_vessel_um=600 survivors_all=584 survivors_nearest=584 kills=23821 total_tumor=24405
+ABLATION_SUPER inter_vessel_um=400 survivors_all=6121 survivors_nearest=1863 kills=18284 total_tumor=24405
+ABLATION_SUPER inter_vessel_um=300 survivors_all=20784 survivors_nearest=4565 kills=3621 total_tumor=24405
+ABLATION_SUPER inter_vessel_um=250 survivors_all=24158 survivors_nearest=6814 kills=247 total_tumor=24405
+ABLATION_SUPER inter_vessel_um=200 survivors_all=24405 survivors_nearest=10875 kills=0 total_tumor=24405
+ABLATION_SUPER inter_vessel_um=150 survivors_all=24405 survivors_nearest=18497 kills=0 total_tumor=24405
+ABLATION_SUPER inter_vessel_um=120 survivors_all=24405 survivors_nearest=23215 kills=0 total_tumor=24405
+ABLATION_SUPER inter_vessel_um=80 survivors_all=24405 survivors_nearest=24359 kills=0 total_tumor=24405

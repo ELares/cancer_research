@@ -630,7 +630,8 @@
  ],
  "real_time_module_callers": {
   "ablation.rs": [
-   "sim-modality-panel"
+   "sim-modality-panel",
+   "sim-tme-3d"
   ],
   "adoptive.rs": [
    "sim-modality-panel",

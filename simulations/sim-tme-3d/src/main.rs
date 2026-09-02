@@ -55,6 +55,7 @@ use std::time::Instant;
 mod npy;
 mod snapshot;
 
+use ferroptosis_core::ablation;
 use ferroptosis_core::acsl4::{pufa_boost_from_status, ACSL4_NEGATIVE};
 use ferroptosis_core::adc::{self, AdcConfig, Linker};
 use ferroptosis_core::adoptive::{self, AdoptiveBarriers};
@@ -203,6 +204,14 @@ const ADC_SEED_SALT: u64 = 0x0AD0_C047_0000_0539;
 const CHEMO_SEED_SALT: u64 = 0x0CE0_3E70_0000_0539;
 // A seventh stream. Same CodeQL false positive as the six above.
 const ADOPTIVE_SEED_SALT: u64 = 0x0CA47_0E5_0000_0539 & 0xFFFF_FFFF_FFFF_FFFF;
+// An eighth stream. Same CodeQL false positive as the seven above.
+const ABLATION_SEED_SALT: u64 = 0x0AB1_A710_0000_0539;
+/// Body temperature, the floor a heat sink cannot cool below because it is the
+/// blood doing the cooling. Matches `scripts/validate_ablation.py`'s `BODY_C`.
+const BODY_TEMPERATURE_C: f64 = 37.0;
+/// The standard cumulative-equivalent-minutes threshold for coagulative
+/// necrosis, the same one `validate_ablation.py` uses.
+const CEM43_LETHAL: f64 = 240.0;
 const _: () = assert!(BIOCHEM_SEED_SALT != IMMUNE_SEED_SALT);
 // Pairwise-distinct, per the #278 layer-seed rule: two layers sharing a salt
 // draw the SAME number for the same (cell, step), so their decisions correlate
@@ -227,6 +236,9 @@ const _: () = assert!(ADOPTIVE_SEED_SALT != RADIATION_SEED_SALT);
 const _: () = assert!(ADOPTIVE_SEED_SALT != ONCOLYTIC_SEED_SALT);
 const _: () = assert!(ADOPTIVE_SEED_SALT != ADC_SEED_SALT);
 const _: () = assert!(ADOPTIVE_SEED_SALT != CHEMO_SEED_SALT);
+const _: () = assert!(ABLATION_SEED_SALT != BIOCHEM_SEED_SALT);
+const _: () = assert!(ABLATION_SEED_SALT != IMMUNE_SEED_SALT);
+const _: () = assert!(ABLATION_SEED_SALT != ADOPTIVE_SEED_SALT);
 
 /// SplitMix64 finalizer (Steele, Lea & Flood 2014, "Fast Splittable
 /// Pseudorandom Number Generators"): a fast, full-avalanche integer hash. Used
@@ -373,6 +385,17 @@ struct ConditionResult {
     /// comparison uses it.
     #[serde(skip_serializing_if = "Option::is_none")]
     adoptive_reach_mean: Option<f64>,
+    /// Cells destroyed by the ablation arm (#844).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    ablation_kills: Option<usize>,
+    /// Cells surviving when cooling from EVERY vessel is counted.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    ablation_survivors_all_vessels: Option<usize>,
+    /// Cells surviving under the analytic one-vessel model applied pointwise
+    /// to the nearest vessel. Same cells, same vessels; the two differ only in
+    /// whether the non-nearest vessels cool.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    ablation_survivors_nearest_only: Option<usize>,
     /// Farthest the infection reached from its seed, in microns. The quantity
     /// a percolation threshold is about: below the threshold this stays near
     /// zero however long the run continues.
@@ -770,6 +793,39 @@ struct Overrides {
     adoptive: Option<(AdoptiveBarriers, f64, f64)>,
     /// The step at which the product is infused.
     adoptive_step: u32,
+    /// Thermal ablation with cooling from EVERY vessel, not just the nearest (#844).
+    ///
+    /// `(applicator_c, minutes, cooling_length_mm, vasculature)`. `None` ⇒
+    /// inert ⇒ byte-identical; the production matrix never sets it.
+    ///
+    /// `ablation::perivascular_failure_radius_mm` answers a one-vessel
+    /// question: how far from A vessel does tissue survive? P20 registers that
+    /// radius as a prediction. A real vessel network is not one vessel, and
+    /// heat sinks are not exclusive -- tissue between two vessels is cooled by
+    /// BOTH, so it stays cooler than either sleeve alone would leave it.
+    ///
+    /// The surviving heat rise is therefore the PRODUCT over vessels of each
+    /// one's single-vessel survival factor: `Π (1 − exp(−dᵢ/L))`. On a vessel
+    /// one factor goes to zero and the cell is fully cooled; far from all of
+    /// them every factor goes to one and the full rise is felt. Where vessels
+    /// are far apart relative to the cooling length the non-nearest factors
+    /// are ~1 and this reduces to the analytic model -- which is the control.
+    /// `(applicator_c, minutes, cooling_length_mm, mm_per_cell, vasculature)`.
+    ///
+    /// `mm_per_cell` is NOT decoration. The default grid is a 20 um spheroid
+    /// model: at grid 40 the whole tumour is 0.72 mm across, while a
+    /// perfusion cooling length is ~2 mm. Run at that scale every cell is
+    /// deeply cooled, nothing reaches a lethal dose, and the arm reports zero
+    /// kills at every vessel density -- which is what the first version of
+    /// this sweep did. The tumour was smaller than the cooling length.
+    ///
+    /// So this arm declares the physical scale it needs, the same way
+    /// `SlabConfig` decouples a virtual tumour size from the grid for exactly
+    /// this reason. Ablation is a tissue-scale modality and cannot be asked a
+    /// question on a spheroid-scale lattice.
+    ablation: Option<(f64, f64, f64, f64, VasculatureConfig)>,
+    /// The step at which the applicator fires. One application.
+    ablation_step: u32,
     /// ESCRT-III membrane-repair brake on death execution (#465): `Some((rate,
     /// budget))` sets `params.escrt_repair_rate`/`escrt_repair_budget` so a cell
     /// whose LP crosses the death threshold can be resealed for a finite per-cell
@@ -1782,6 +1838,10 @@ fn run_one_condition_full(
     let adc_cfg = overrides.adc.clone();
     let chemo_cfg = overrides.chemo;
     let adoptive_cfg = overrides.adoptive.clone();
+    let ablation_cfg = overrides.ablation.clone();
+    let mut ablation_kills = 0usize;
+    let mut ablation_survivors_all_vessels = 0usize;
+    let mut ablation_survivors_nearest_only = 0usize;
     let mut adoptive_kills = 0usize;
     let mut adoptive_unreached = 0usize;
     let mut adoptive_antigen_negative = 0usize;
@@ -2389,6 +2449,73 @@ fn run_one_condition_full(
                     }
                 }
                 radiation_kills += killed;
+            }
+        }
+
+        // --- Thermal ablation: every vessel cools, not just the nearest (#844) ---
+        //
+        // `ablation::perivascular_failure_radius_mm` answers a ONE-VESSEL
+        // question, and P20 registers its answer. A real network is not one
+        // vessel, and heat sinks are not exclusive: tissue between two vessels
+        // is cooled by both and stays cooler than either sleeve alone implies.
+        //
+        // Both models are computed on the SAME cells and the SAME vessels, so
+        // they differ only in whether cooling from the non-nearest vessels
+        // counts. Where vessels are far apart relative to the cooling length
+        // the extra factors are ~1 and the two must agree -- the control.
+        if let Some((applicator_c, minutes, cooling_mm, mm_per_cell, _)) = ablation_cfg.as_ref() {
+            if step == overrides.ablation_step {
+                let vessels_for_ablation: &[(f64, f64, f64)] = vessels.as_deref().unwrap_or(&[]);
+                let mut killed = 0usize;
+                for idx in 0..n_cells {
+                    if !grid.cells[idx].is_tumor || grid.cells[idx].state.dead {
+                        continue;
+                    }
+                    let (r, c, l) = grid.coords(idx);
+                    let (rf, cf, lf) = (r as f64, c as f64, l as f64);
+                    // Distance to each vessel, in millimetres.
+                    let mut nearest_mm = f64::INFINITY;
+                    let mut product = 1.0f64;
+                    for &(vr, vc, vl) in vessels_for_ablation {
+                        let d_cells =
+                            ((rf - vr).powi(2) + (cf - vc).powi(2) + (lf - vl).powi(2)).sqrt();
+                        let d_mm = d_cells * mm_per_cell;
+                        nearest_mm = nearest_mm.min(d_mm);
+                        product *= ablation::perfusion_cooling(d_mm, *cooling_mm);
+                    }
+                    if vessels_for_ablation.is_empty() {
+                        nearest_mm = f64::INFINITY;
+                        product = 1.0;
+                    }
+                    // ALL vessels: the surviving heat rise is the product of
+                    // each vessel's own surviving fraction.
+                    let rise = (applicator_c - BODY_TEMPERATURE_C).max(0.0);
+                    let t_all = BODY_TEMPERATURE_C + rise * product;
+                    // NEAREST only: the analytic model applied pointwise, on
+                    // exactly the same cells and vessels.
+                    let t_near = ablation::perivascular_temperature(
+                        *applicator_c,
+                        nearest_mm,
+                        *cooling_mm,
+                        BODY_TEMPERATURE_C,
+                    );
+                    let dies_all = ablation::cem43(t_all, *minutes) >= CEM43_LETHAL;
+                    let dies_near = ablation::cem43(t_near, *minutes) >= CEM43_LETHAL;
+                    if !dies_all {
+                        ablation_survivors_all_vessels += 1;
+                    }
+                    if !dies_near {
+                        ablation_survivors_nearest_only += 1;
+                    }
+                    // The RUN follows the all-vessel model, which is the one
+                    // with the extra physics in it.
+                    if dies_all {
+                        grid.cells[idx].state.dead = true;
+                        grid.cells[idx].state.death_step = Some(step);
+                        killed += 1;
+                    }
+                }
+                ablation_kills += killed;
             }
         }
 
@@ -3254,6 +3381,13 @@ fn run_one_condition_full(
         adoptive_unreached: adoptive_cfg.as_ref().map(|_| adoptive_unreached),
         adoptive_antigen_negative: adoptive_cfg.as_ref().map(|_| adoptive_antigen_negative),
         adoptive_lost_to_both: adoptive_cfg.as_ref().map(|_| adoptive_lost_to_both),
+        ablation_kills: ablation_cfg.as_ref().map(|_| ablation_kills),
+        ablation_survivors_all_vessels: ablation_cfg
+            .as_ref()
+            .map(|_| ablation_survivors_all_vessels),
+        ablation_survivors_nearest_only: ablation_cfg
+            .as_ref()
+            .map(|_| ablation_survivors_nearest_only),
         adoptive_reach_mean: adoptive_cfg.as_ref().map(|_| {
             let (mut sum, mut n) = (0.0f64, 0usize);
             for idx in 0..n_cells {
@@ -5962,6 +6096,85 @@ fn run_spheroid_size_sweep() {
 /// reported, because counts this small are exactly where that goes wrong.
 ///
 /// Does NOT write summary.json; the matrix is untouched and byte-identical.
+/// `--ablation-superposition-sweep`: heat sinks are not exclusive (#844).
+///
+/// `ablation::perivascular_failure_radius_mm` answers a ONE-VESSEL question --
+/// how far from A vessel does tissue survive an ablation -- and P20 registers
+/// its answer as a prediction about where recurrence sits. A real vessel
+/// network is not one vessel, and heat sinks do not take turns: tissue lying
+/// between two vessels is cooled by both, and stays cooler than either sleeve
+/// alone implies.
+///
+/// Both models run on the SAME cells and the SAME vessels, differing only in
+/// whether the non-nearest vessels are allowed to cool. Where vessels are far
+/// apart relative to the cooling length their extra factors are ~1 and the two
+/// must agree -- that is the control, and without it any divergence would be
+/// indistinguishable from a bug.
+///
+/// Swept over vessel density, which is the axis that turns the control into
+/// the finding.
+///
+/// Does NOT write summary.json; the matrix is untouched and byte-identical.
+fn run_ablation_superposition_sweep() {
+    let grid_dim = 40usize;
+    let n_steps = bench_env_u32("BENCH_N_STEPS", 6);
+    let ablation_step = 2u32;
+    let applicator_c = 60.0f64;
+    let minutes = 5.0f64;
+    let cooling_mm = 2.0f64;
+    // PATIENT SCALE, declared. At 0.25 mm per cell a grid-40 tumour is ~9 mm
+    // across, comparable to the 2 mm cooling length. At the engine's default
+    // 20 um it is 0.72 mm -- smaller than the cooling length -- and nothing
+    // ablates at any vessel density.
+    let mm_per_cell = 0.25f64;
+    // Inter-vessel spacing in microns, which is the axis that turns the
+    // control into the finding: at wide spacing the non-nearest vessels
+    // contribute a factor of ~1 and the two models must agree.
+    let spacings = [
+        1600.0f64, 1200.0, 800.0, 600.0, 400.0, 300.0, 250.0, 200.0, 150.0, 120.0, 80.0,
+    ];
+    eprintln!(
+        "=== --ablation-superposition-sweep: grid {grid_dim}, applicator \
+         {applicator_c} C for {minutes} min, cooling length {cooling_mm} mm (#844) ==="
+    );
+    println!(
+        "ABLATION_SUPER_META grid_dim={grid_dim} applicator_c={applicator_c} \
+         minutes={minutes} cooling_length_mm={cooling_mm} mm_per_cell={mm_per_cell}"
+    );
+    let cfg = RunConfig { grid_dim, n_steps };
+    for &spacing in &spacings {
+        let vcfg = VasculatureConfig {
+            inter_vessel_um: spacing,
+            ..VasculatureConfig::well_vascularized()
+        };
+        let condition = Condition {
+            name: format!("abl_super_{spacing}"),
+            treatment: Treatment::Ablation,
+            treatment_name: "Ablation".to_string(),
+            o2_lambda: Some(ZONE_REF_LAMBDA),
+            immune_on: false,
+            stromal_on: false,
+            ph_on: false,
+            dose_schedule: DoseSchedule::Constant,
+        };
+        let overrides = Overrides {
+            vasculature: Some(vcfg.clone()),
+            ablation: Some((applicator_c, minutes, cooling_mm, mm_per_cell, vcfg)),
+            ablation_step,
+            ..Default::default()
+        };
+        let r = run_one_condition_full(&condition, cfg, None, overrides);
+        println!(
+            "ABLATION_SUPER inter_vessel_um={spacing} survivors_all={} \
+             survivors_nearest={} kills={} total_tumor={}",
+            r.ablation_survivors_all_vessels.unwrap_or(0),
+            r.ablation_survivors_nearest_only.unwrap_or(0),
+            r.ablation_kills.unwrap_or(0),
+            r.total_tumor
+        );
+    }
+}
+
 fn run_checkpoint_priming_sweep() {
     let grid_dim = 40usize;
     let n_steps = bench_env_u32("BENCH_N_STEPS", 150);
@@ -6460,6 +6673,10 @@ fn main() {
     // `--spheroid-size-sweep` runs RSL3 across a range of spheroid sizes, fixed vs
     // size-aware zone thresholds (#333 kill leg), emitting SPHEROID_SIZE_SWEEP lines.
     // Does NOT write summary.json; the default matrix path below is byte-identical.
+    if std::env::args().any(|a| a == "--ablation-superposition-sweep") {
+        run_ablation_superposition_sweep();
+        return;
+    }
     if std::env::args().any(|a| a == "--checkpoint-priming-sweep") {
         run_checkpoint_priming_sweep();
         return;
@@ -6545,6 +6762,114 @@ fn main() {
 
 #[cfg(test)]
 mod tests {
+    /// Heat sinks are not exclusive, and the analytic model assumes they are.
+    ///
+    /// `perivascular_failure_radius_mm` answers a ONE-VESSEL question and P20
+    /// registers its answer. Tissue between two vessels is cooled by both, so
+    /// where vessels sit within a cooling length of each other the surviving
+    /// volume is larger than that radius implies. Where they do not, the two
+    /// models must agree -- and that agreement is the control.
+    #[test]
+    fn cooling_from_every_vessel_leaves_more_alive_than_the_nearest_alone() {
+        let cfg = RunConfig {
+            grid_dim: 30,
+            n_steps: 5,
+        };
+        let run = |spacing_um: f64| {
+            let vcfg = VasculatureConfig {
+                inter_vessel_um: spacing_um,
+                ..VasculatureConfig::well_vascularized()
+            };
+            let cond = Condition {
+                name: format!("abl_t_{spacing_um}"),
+                treatment: Treatment::Ablation,
+                treatment_name: "Ablation".to_string(),
+                o2_lambda: Some(ZONE_REF_LAMBDA),
+                immune_on: false,
+                stromal_on: false,
+                ph_on: false,
+                dose_schedule: DoseSchedule::Constant,
+            };
+            run_one_condition_full(
+                &cond,
+                cfg,
+                None,
+                Overrides {
+                    vasculature: Some(vcfg.clone()),
+                    // 0.25 mm per cell: PATIENT scale. At the engine's default
+                    // 20 um the tumour is smaller than the 2 mm cooling length
+                    // and nothing ablates at any density, which is what the
+                    // first version of this arm reported.
+                    ablation: Some((60.0, 5.0, 2.0, 0.25, vcfg)),
+                    ablation_step: 2,
+                    ..Default::default()
+                },
+            )
+        };
+        // THE CONTROL: vessels far apart relative to the cooling length, so
+        // the non-nearest factors are ~1 and the analytic model is right.
+        let wide = run(1600.0);
+        assert_eq!(
+            wide.ablation_survivors_all_vessels.unwrap(),
+            wide.ablation_survivors_nearest_only.unwrap(),
+            "the two models disagree where the extra cooling factors should be \
+             negligible, which is a bug rather than physics"
+        );
+        assert!(
+            wide.ablation_kills.unwrap() > 0,
+            "the wide-spacing control ablates nothing, so it compares two \
+             failures rather than two models"
+        );
+
+        // AND THE FINDING: closer vessels, and the one-vessel model
+        // under-states what survives.
+        let close = run(300.0);
+        let all = close.ablation_survivors_all_vessels.unwrap();
+        let near = close.ablation_survivors_nearest_only.unwrap();
+        assert!(
+            all > near,
+            "cooling from every vessel left no more alive ({all}) than the \
+             nearest alone ({near})"
+        );
+        assert!(
+            all as f64 > near as f64 * 1.5,
+            "the under-statement is only {:.2}x, too small to qualify P20",
+            all as f64 / near as f64
+        );
+        // It must not be TOTAL failure at this spacing, or the ratio is not a
+        // comparison -- the degenerate regime the page marks and excludes.
+        assert!(
+            all < close.total_tumor,
+            "the ablation failed everywhere at this spacing, so the ratio is \
+             not a comparison"
+        );
+    }
+
+    /// The arm is off without its override.
+    #[test]
+    fn the_ablation_arm_is_inert_without_its_override() {
+        let cond = Condition {
+            name: "abl_default".to_string(),
+            treatment: Treatment::Ablation,
+            treatment_name: "Ablation".to_string(),
+            o2_lambda: Some(50.0),
+            immune_on: false,
+            stromal_on: false,
+            ph_on: false,
+            dose_schedule: DoseSchedule::Constant,
+        };
+        let r = run_one_condition_full(
+            &cond,
+            RunConfig {
+                grid_dim: 20,
+                n_steps: 20,
+            },
+            None,
+            Overrides::default(),
+        );
+        assert!(r.ablation_kills.is_none());
+        assert!(r.ablation_survivors_all_vessels.is_none());
+    }
 
     /// Multiplying the barrier fractions is right only when they are
     /// independent, and in a tumour two of them are not.
@@ -7216,7 +7541,7 @@ mod tests {
     /// #844 exists to empty. Written to FAIL when an arm moves tier, so
     /// `analysis/arm-parity.md` and the epic move in the same commit.
     #[test]
-    fn the_spatial_engine_expresses_eight_of_the_ten_treatment_arms() {
+    fn the_spatial_engine_expresses_ten_of_the_ten_treatment_arms() {
         // A BIGGER PROBE THAN THE UNIT DEFAULT, deliberately. At 10^3/20 the
         // in-vivo-tuned RSL3 switch kills nothing at all -- a documented
         // property of that parameterisation, not of the engine's ability to
@@ -7407,6 +7732,30 @@ mod tests {
         assert!(cart_probe.adoptive_kills.unwrap_or(0) > 0);
         on_demand.push("AdoptiveCell".to_string());
 
+        let abl_probe = {
+            let vcfg = VasculatureConfig {
+                inter_vessel_um: 300.0,
+                ..VasculatureConfig::well_vascularized()
+            };
+            run_one_condition_full(
+                &base(Treatment::Ablation),
+                cfg,
+                None,
+                Overrides {
+                    vasculature: Some(vcfg.clone()),
+                    ablation: Some((60.0, 5.0, 2.0, 0.25, vcfg)),
+                    ablation_step: 5,
+                    ..Default::default()
+                },
+            )
+        };
+        assert!(
+            moved(&abl_probe),
+            "the ablation override is set and nothing moved"
+        );
+        assert!(abl_probe.ablation_kills.unwrap_or(0) > 0);
+        on_demand.push("Ablation".to_string());
+
         // A THIRD TIER, because forcing checkpoint blockade into the second
         // one would be false. Its mechanism needs no wiring -- the panel was
         // already an `Overrides` field and the spatial immune layer already
@@ -7490,7 +7839,7 @@ mod tests {
             (Treatment::Immunotherapy, None),
             (Treatment::AdoptiveCell, Some("    adoptive: Option<")),
             (Treatment::OncolyticVirus, Some("    oncolytic: Option<")),
-            (Treatment::Ablation, None),
+            (Treatment::Ablation, Some("    ablation: Option<")),
             (Treatment::AntibodyDrugConjugate, Some("    adc: Option<")),
             (Treatment::Chemotherapy, Some("    chemo: Option<")),
         ];
@@ -7542,7 +7891,8 @@ mod tests {
                 "OncolyticVirus".to_string(),
                 "AntibodyDrugConjugate".to_string(),
                 "Chemotherapy".to_string(),
-                "AdoptiveCell".to_string()
+                "AdoptiveCell".to_string(),
+                "Ablation".to_string()
             ],
             "the ON DEMAND tier has changed. That is #844 progressing -- update \
              this literal, the test's NAME, `analysis/arm-parity.md` and the \
