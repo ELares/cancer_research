@@ -130,7 +130,7 @@ jobs:
           fi
 
       - name: Upload the PDF as a build artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: manuscript-pdf
           path: article/drafts/v1.pdf
