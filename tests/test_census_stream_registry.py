@@ -61,6 +61,24 @@ _PATTERN = re.compile(
 
 # module -> (streams it reads, why that set is the right one)
 REGISTRY = {
+    "corpus_identity_index.py": (
+        {"records", "records_unindexed", "records_updates"},
+        "Deliberately ALL THREE, and this is the one script where the frozen "
+        "indexed stream would be the wrong choice. Its job is to answer 'do we "
+        "already hold this article?' before a crawl downloads it, so a stream "
+        "left out is not a narrower denominator -- it is a set of articles the "
+        "crawl will re-download and store a second time. records_unindexed and "
+        "records_updates hold real articles this project already has; omitting "
+        "either makes the dedup silently incomplete in exactly the direction "
+        "that costs bandwidth and storage."),
+    "corpus_expand_report.py": (
+        {"records"},
+        "Reads the frozen indexed stream only, and only to report how the "
+        "crawl's yield compares against the census as a denominator. It is a "
+        "descriptive report over shards, not a dedup decision -- the decision "
+        "is made by corpus_identity_index.py, which reads all three streams. "
+        "Using the comparable frozen denominator here keeps this report's "
+        "percentages comparable with every other census report."),
     "census_evidence_design.py": (
         {"records"},
         "Study design is read from NLM publication types and MeSH check tags, "

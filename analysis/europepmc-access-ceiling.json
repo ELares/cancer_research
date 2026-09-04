@@ -1,0 +1,38 @@
+{
+  "all_cancer": {
+    "count": 5573982,
+    "query": "cancer",
+    "means": "Every Europe PMC record matching cancer. The denominator.",
+    "pct_of_all": 100.0
+  },
+  "in_pmc_oa": {
+    "count": 2206554,
+    "query": "cancer AND OPEN_ACCESS:Y",
+    "means": "In Europe PMC's open-access subset. This is the figure MISSION.md quoted.",
+    "pct_of_all": 39.59
+  },
+  "readable": {
+    "count": 3227686,
+    "query": "cancer AND (IN_EPMC:Y OR OPEN_ACCESS:Y)",
+    "means": "Europe PMC holds the full text. Free to read; says nothing about reuse.",
+    "pct_of_all": 57.91
+  },
+  "open_licence": {
+    "count": 1185810,
+    "query": "cancer AND (LICENSE:cc0 OR LICENSE:'cc by' OR LICENSE:'cc-by' OR LICENSE:'cc by-sa' OR LICENSE:'public domain')",
+    "means": "Carries a licence permitting redistribution with attribution.",
+    "pct_of_all": 21.27
+  },
+  "open_licence_not_oa_flagged": {
+    "count": 118307,
+    "query": "cancer AND (LICENSE:'cc by' OR LICENSE:'cc-by' OR LICENSE:cc0) AND OPEN_ACCESS:N",
+    "means": "Openly licensed BUT flagged OPEN_ACCESS:N -- collectable, and invisible to any filter that trusts the flag alone.",
+    "pct_of_all": 2.12
+  },
+  "readable_not_in_pmc_oa": {
+    "count": 1021132,
+    "query": "cancer AND IN_EPMC:Y AND OPEN_ACCESS:N",
+    "means": "Readable in Europe PMC yet outside the OA subset. The concrete counterexample to 'the remainder is paywalled'.",
+    "pct_of_all": 18.32
+  }
+}
