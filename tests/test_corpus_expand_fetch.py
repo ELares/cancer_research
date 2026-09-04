@@ -153,15 +153,32 @@ def test_the_host_guard_actually_catches_a_publisher_fetch():
         assert found and found != {"www.ebi.ac.uk"}, f"guard blind to {url}"
 
 
+EPMC_HOST = "www.ebi.ac.uk"
+
+# Every URL here CONTAINS the Europe PMC host and is served by someone else, so
+# the substring form of the check passed all of them. They are built by
+# interpolating the host rather than typed out, which makes that containment a
+# property of the construction instead of something a second assertion has to
+# state -- and that second assertion was itself a substring test against a URL,
+# so CodeQL flagged the demonstration exactly as it flagged the original.
+# Deriving it is better than suppressing it: the property is now impossible to
+# get wrong rather than merely checked.
+LOOKALIKE_URLS = (
+    f"https://{EPMC_HOST}.attacker.test/x",   # host is a longer domain
+    f"https://evil.example/?ref={EPMC_HOST}",  # host appears in the query
+    f"https://{EPMC_HOST}@evil.example/x",     # host is userinfo, not the host
+    f"https://not{EPMC_HOST}.co/x",            # host is a suffix of another
+)
+
+
 def test_a_lookalike_host_is_not_mistaken_for_europe_pmc():
-    """The substring form of this check accepted every one of these. A host
-    test that a lookalike domain passes is not a host test."""
-    for url in ("https://www.ebi.ac.uk.attacker.test/x",
-                "https://evil.example/?ref=www.ebi.ac.uk",
-                "https://www.ebi.ac.uk@evil.example/x",
-                "https://notwww.ebi.ac.uk.co/x"):
-        assert _fetch_hosts(f'x = "{url}"') != {"www.ebi.ac.uk"}, url
-        assert "www.ebi.ac.uk" in url, "the substring check would have passed this"
+    """A host test that a lookalike domain passes is not a host test."""
+    for url in LOOKALIKE_URLS:
+        # No `EPMC_HOST in url` assertion: the f-strings above interpolate the
+        # host, so containment is guaranteed by construction. Asserting it
+        # would be a substring test against a URL -- the very pattern under
+        # test -- and would be flagged for being exactly what it demonstrates.
+        assert _fetch_hosts(f'x = "{url}"') != {EPMC_HOST}, url
 
 
 def test_a_record_with_no_identifier_is_refused():
