@@ -314,3 +314,133 @@ def test_genuinely_open_licences_still_qualify():
 def test_an_absent_or_unknown_licence_is_not_assumed_open():
     for lic in ("", None, "none", "unknown", "all rights reserved", "copyright"):
         assert not _R(lic), f"{lic!r} treated as redistributable"
+
+
+def test_a_clause_after_a_version_number_is_still_seen():
+    """The old tokeniser split on `" 4."` and DISCARDED the rest, so a
+    restrictive clause written after the version vanished and the licence was
+    published as redistributable."""
+    for lic in ("cc by 4.0 nd", "cc by 3.0 nd", "cc by 2.0 nc",
+                "CC BY-NonCommercial 4.0", "CC BY-NoDerivatives 4.0"):
+        assert not _R(lic), f"{lic} counted as redistributable"
+
+
+def test_a_licence_url_is_read_rather_than_truncated():
+    """Splitting on `/` reduced every CC URL to `https:`, which classified as
+    nothing at all -- safe, but it meant the field was simply not read."""
+    assert _R("https://creativecommons.org/licenses/by/4.0/")
+    assert _R("https://creativecommons.org/licenses/by-sa/4.0/")
+    assert _R("https://creativecommons.org/publicdomain/zero/1.0/")
+    assert not _R("https://creativecommons.org/licenses/by-nc/4.0/")
+    assert not _R("https://creativecommons.org/licenses/by-nc-nd/4.0/")
+
+
+def test_a_bare_attribution_word_is_not_a_licence():
+    """`by` on its own is the English word, not CC BY."""
+    assert not _R("by")
+    assert not _R("published by elsevier")
+
+
+# --- --repair must not be able to empty the index ---------------------------
+
+def test_repair_refuses_when_the_shard_directory_is_empty(tmp_path, capsys):
+    """THE HAZARD THE REPAIR TOOL INTRODUCED, which was worse than the defect
+    it fixes.
+
+    `stored_keys` globs a directory. A directory that is missing, unmounted or
+    simply not the one the crawl wrote to yields zero records WITHOUT raising,
+    and every stored row then looks orphaned. The first version had no check:
+    pointed at an empty directory it deleted the entire `expand-*` index --
+    40,814 rows on the live index -- printed a success line and exited 0. And
+    the resulting re-downloads are invisible to the duplicate audit, which
+    ignores `expand-*` provenance by design.
+    """
+    from corpus_expand_verify import repair
+    idx = _index(tmp_path, [("pmid", str(i), "expand-MED", 0) for i in range(1, 51)])
+    empty = tmp_path / "no-shards"
+    empty.mkdir()
+
+    assert repair(idx, empty) == 2
+    # The EMPTY-read message specifically, not just any refusal. Asserting
+    # "REFUSING" alone let the ceiling check satisfy this test, so deleting
+    # the empty check outright left it green -- verified by mutation. Two
+    # guards covering one case are only two guards if the test can tell them
+    # apart, and the empty read is the case that needs its own diagnosis:
+    # the ceiling is skipped entirely when the index has no crawl rows yet.
+    out = capsys.readouterr().out
+    assert "no records were read from the shard directory" in out, out
+
+    c = sqlite3.connect(idx)
+    assert c.execute("SELECT COUNT(*) FROM held").fetchone()[0] == 50, (
+        "rows were deleted despite the refusal")
+    c.close()
+
+
+def test_repair_refuses_when_the_shard_directory_is_missing(tmp_path):
+    from corpus_expand_verify import repair
+    idx = _index(tmp_path, [("pmid", "1", "expand-MED", 0)])
+    assert repair(idx, tmp_path / "nope") == 2
+
+
+def test_repair_refuses_when_almost_everything_looks_orphaned(tmp_path, capsys):
+    """A real repair touches a small fraction (374 of 40,814 in the incident
+    this was written for). A wrong directory touches nearly all of them, so
+    the SHAPE of the damage is the signal, not just an empty read."""
+    from corpus_expand_verify import repair
+    idx = _index(tmp_path, [("pmid", str(i), "expand-MED", 0) for i in range(50)])
+    sd = tmp_path / "shards"
+    _shard_file(sd, "expanded-00000.jsonl.gz", [{"pmid": "1"}])  # 1 of 50 stored
+    assert repair(idx, sd) == 2
+    assert "ceiling" in capsys.readouterr().out
+
+
+def test_repair_proceeds_on_a_genuine_small_repair(tmp_path):
+    """The refusals must not block the case the tool exists for."""
+    from corpus_expand_verify import repair
+    idx = _index(tmp_path, [("pmid", str(i), "expand-MED", 0) for i in range(1, 51)])
+    sd = tmp_path / "shards"
+    _shard_file(sd, "expanded-00000.jsonl.gz",
+                [{"pmid": str(i)} for i in range(1, 49)])  # 2 orphans of 50 = 4%
+    assert repair(idx, sd) == 0
+    c = sqlite3.connect(idx)
+    assert c.execute("SELECT COUNT(*) FROM held").fetchone()[0] == 48
+    c.close()
+
+
+def test_repair_dry_run_deletes_nothing(tmp_path):
+    from corpus_expand_verify import repair
+    idx = _index(tmp_path, [("pmid", str(i), "expand-MED", 0) for i in range(1, 51)])
+    sd = tmp_path / "shards"
+    _shard_file(sd, "expanded-00000.jsonl.gz", [{"pmid": str(i)} for i in range(1, 49)])
+    assert repair(idx, sd, dry_run=True) == 0
+    c = sqlite3.connect(idx)
+    assert c.execute("SELECT COUNT(*) FROM held").fetchone()[0] == 50
+    c.close()
+
+
+def test_the_shard_path_follows_the_same_env_var_as_the_crawl(monkeypatch):
+    """The one tool that can DELETE data was the only one that could not
+    follow a relocation, so pointing the crawl elsewhere armed the wipe."""
+    import importlib
+    import corpus_expand_verify as v
+    monkeypatch.setenv("FERRO_EXPAND_OUT", "/tmp/somewhere-else")
+    importlib.reload(v)
+    try:
+        assert str(v.DEFAULT_SHARDS).startswith("/tmp/somewhere-else")
+    finally:
+        monkeypatch.delenv("FERRO_EXPAND_OUT", raising=False)
+        importlib.reload(v)
+
+
+def test_repair_refuses_an_empty_read_even_with_no_rows_to_compare_against():
+    """The ceiling check is skipped when there are no crawl rows (`if total
+    and ...`), so the empty-read refusal is the only thing standing between a
+    wrong --shards path and a silent no-op that reports success."""
+    import tempfile
+    from corpus_expand_verify import repair
+    with tempfile.TemporaryDirectory() as d:
+        d = Path(d)
+        idx = _index(d, [("pmid", "1", "census-mesh", 0)])  # no expand-* rows
+        empty = d / "no-shards"
+        empty.mkdir()
+        assert repair(idx, empty) == 2

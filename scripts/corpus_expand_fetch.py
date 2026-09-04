@@ -121,7 +121,17 @@ def state() -> sqlite3.Connection:
     return c
 
 
-def _get(url: str, tries: int = 4, timeout: int = 120):
+# Statuses that mean "this item, no" rather than "try again later". Passed in
+# per call site, because the right answer differs between them: for ONE
+# article a refusal is the expected answer and the whole design leans on it,
+# while for the SEARCH endpoint the same status means a page of results was
+# not delivered, and treating that as "no results" silently discards a slice.
+REFUSE_ITEM = (401, 403, 404, 410)
+REFUSE_SEARCH = (404,)
+
+
+def _get(url: str, tries: int = 4, timeout: int = 120,
+         refuse: tuple = REFUSE_ITEM):
     """Retry on transient failure, give up loudly on a persistent one.
 
     A silent give-up here would look exactly like a slice with no new records,
@@ -134,14 +144,20 @@ def _get(url: str, tries: int = 4, timeout: int = 120):
             with urllib.request.urlopen(req, timeout=timeout) as r:
                 return r.read()
         except urllib.error.HTTPError as e:
-            # A REFUSAL IS AN ANSWER, and 404 is not the only way to say no.
-            # 401/403 are the server declining to serve this item, which is
-            # exactly the boundary this crawl relies on the source to draw --
-            # retrying them twice and then raising turned a normal refusal
-            # into a crash that stopped the whole run, while MISSION.md said
-            # refusals are accepted. 410 Gone is a refusal too. None of these
-            # is transient, so retrying cannot help.
-            if e.code in (401, 403, 404, 410):
+            # A REFUSAL IS AN ANSWER, and 404 is not the only way to say no:
+            # 401/403/410 are the server declining to serve this ITEM, which is
+            # the boundary this crawl leans on rather than deciding for itself.
+            #
+            # WHICH statuses count is the caller's decision, and getting that
+            # wrong is expensive in a way that leaves no trace. Applied to the
+            # search endpoint, a 403 -- the single most likely TRANSIENT status
+            # here, since that is what a rate limiter or WAF returns -- made
+            # `search` hand back an empty result, which the caller read as "no
+            # more pages" and recorded as `done=1`. The whole source-year slice
+            # was then skipped forever with seen=0, which is exactly the
+            # confusion this function's docstring says the ledger must never
+            # make. So search retries them and gives up loudly instead.
+            if e.code in refuse:
                 return None
             last = e
         except Exception as e:  # noqa: BLE001
@@ -154,8 +170,14 @@ def search(src: str, year: int, cursor: str):
     q = f"SRC:{src} AND PUB_YEAR:{year} AND cancer"
     url = (f"{SEARCH}?format=json&pageSize={PAGE}&resultType=core"
            f"&cursorMark={urllib.parse.quote(cursor)}&query={urllib.parse.quote(q)}")
-    raw = _get(url)
-    return json.loads(raw) if raw else {}
+    raw = _get(url, refuse=REFUSE_SEARCH)
+    if raw is None:
+        # Only a 404 reaches here, and the search endpoint does not 404 on an
+        # empty result set -- it returns hitCount 0. So this is the endpoint
+        # itself being wrong, not a slice being empty, and it must not be
+        # recorded as one.
+        raise RuntimeError(f"search endpoint refused: SRC:{src} PUB_YEAR:{year}")
+    return json.loads(raw)
 
 
 # Licences under which Europe PMC may be ASKED for the text. Deliberately
@@ -387,8 +409,23 @@ def run(years, sources, limit_new=None, verbose=True) -> dict:
 
 
 def _finish(shards, st, ident, totals):
-    shards.close()
-    st.commit(); ident.commit(); st.close(); ident.close()
+    """Close the shard and commit both ledgers. Safe to call twice.
+
+    The exception path calls this and then re-raises, and the limit-new path
+    calls it before returning -- so if the FIRST call fails part-way, the
+    handler calls it again on already-closed connections and the resulting
+    ProgrammingError replaces the original exception, hiding why the run
+    actually stopped. Each step is therefore independently guarded: this
+    function's job is to salvage what it can on the way out, not to be the
+    thing that reports a problem.
+    """
+    for step in (shards.close,
+                 st.commit, ident.commit,
+                 st.close, ident.close):
+        try:
+            step()
+        except Exception:  # noqa: BLE001 - a close failure must not mask the cause
+            pass
     return totals
 
 

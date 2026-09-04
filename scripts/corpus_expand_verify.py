@@ -30,14 +30,22 @@ import argparse
 import glob
 import gzip
 import json
+import os
 import sqlite3
+import subprocess
 import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from corpus_identity_index import norm_doi, norm_pmcid, norm_pmid  # noqa: E402
 
-DEFAULT_SHARDS = Path.home() / "nas/cancer-atlas/expanded/expanded"
+# The SAME env var the fetcher and the reporter read. Hardcoding this path
+# meant the one tool in the trio that can DELETE data was the only one that
+# could not follow a relocation -- point FERRO_EXPAND_OUT elsewhere and
+# --repair would find no shards and call every stored record an orphan.
+DEFAULT_SHARDS = Path(os.getenv(
+    "FERRO_EXPAND_OUT",
+    str(Path.home() / "nas" / "cancer-atlas" / "expanded"))) / "expanded"
 DEFAULT_INDEX = Path(__file__).resolve().parent.parent / "corpus/atlas/identity.sqlite"
 
 # Rows written by the crawl itself. Excluded from the "did we already have it?"
@@ -108,6 +116,22 @@ def stored_keys(shard_dir: Path) -> tuple[set, list]:
     return keys, truncated
 
 
+def live_shard(shard_dir: Path) -> str | None:
+    """The shard a RUNNING crawl is writing, or None if nothing is running.
+
+    Asked of the OS rather than inferred from the filenames: with no crawl
+    running there is no open shard, and every truncated file is real damage.
+    The name is taken as the last in sorted order rather than a numeric max so
+    a second shard prefix in the same directory cannot pick the wrong file.
+    """
+    running = subprocess.run(["pgrep", "-f", "corpus_expand_fetch.py"],
+                             capture_output=True, text=True).stdout.strip()
+    if not running:
+        return None
+    names = sorted(Path(x).name for x in glob.glob(str(shard_dir / "*.jsonl.gz")))
+    return names[-1] if names else None
+
+
 def orphaned_index_rows(index: Path, shard_dir: Path) -> tuple[list, list]:
     """Index rows this crawl wrote for records that are NOT on disk.
 
@@ -152,6 +176,7 @@ def verify(shard_dir: Path, index: Path, sample: int = 500) -> dict:
         orphans, _ = orphaned_index_rows(index, shard_dir)
         return {
             "truncated_shards": truncated,
+            "live_shard": live_shard(shard_dir),
             "orphaned_index_rows": len(orphans),
             "orphan_examples": orphans[:10],
             "written": written,
@@ -165,6 +190,84 @@ def verify(shard_dir: Path, index: Path, sample: int = 500) -> dict:
         idx.close()
 
 
+# A repair may delete at most this share of the crawl's index rows before it
+# refuses and asks to be looked at. Chosen because the failure it guards is
+# ALL-OR-NOTHING -- an absent or relocated shard directory orphans 100% of the
+# rows, not 30% of them -- so any threshold well under 1.0 catches it, while a
+# genuine repair after a kill touches a tiny fraction (374 rows of 40,814, or
+# 0.9%, in the incident this tool was written for).
+REPAIR_MAX_FRACTION = 0.10
+
+
+def repair(index: Path, shard_dir: Path, force: bool = False,
+           dry_run: bool = False) -> int:
+    """Drop index rows describing records that are not on disk.
+
+    THIS FUNCTION DELETES DATA AND ITS INPUT CAN BE SILENTLY EMPTY, which is
+    the whole reason for the refusals below. `stored_keys` globs a directory;
+    a directory that is missing, unmounted, or simply not the one the crawl
+    wrote to yields zero records WITHOUT raising, and every stored row then
+    looks like an orphan. The first version had no check at all: pointed at an
+    empty directory it deleted the entire `expand-*` index -- 40,814 rows on
+    the live index -- printed a cheerful success line and exited 0.
+
+    That is worse than the defect it repairs. A dropped row means the article
+    is fetched and written AGAIN, and because the duplicate audit deliberately
+    ignores `expand-*` provenance, those duplicates are invisible to it. The
+    tool built to fix silent, audit-proof loss would have caused a bigger one.
+    """
+    orphans, truncated = orphaned_index_rows(index, shard_dir)
+    for name, n, err in truncated:
+        print(f"  truncated {name}: {n:,} records recovered ({err})")
+
+    stored, _ = stored_keys(shard_dir)
+    c = sqlite3.connect(f"file:{index}?mode=ro", uri=True)
+    try:
+        total = c.execute("SELECT COUNT(*) FROM held WHERE source LIKE ?",
+                          (OWN_SOURCE_PREFIX + "%",)).fetchone()[0]
+    finally:
+        c.close()
+
+    print(f"shard dir       : {shard_dir}")
+    print(f"stored keys     : {len(stored):,}")
+    print(f"crawl index rows: {total:,}")
+    print(f"orphans         : {len(orphans):,}")
+
+    if not force:
+        if not shard_dir.is_dir():
+            print(f"REFUSING: {shard_dir} is not a directory. If the crawl wrote "
+                  "elsewhere, set FERRO_EXPAND_OUT or pass --shards.")
+            return 2
+        if not stored:
+            print("REFUSING: no records were read from the shard directory, so "
+                  "EVERY crawl row looks orphaned. That is what an unmounted or "
+                  "wrong directory looks like, not what a repair looks like.")
+            return 2
+        if total and len(orphans) / total > REPAIR_MAX_FRACTION:
+            print(f"REFUSING: {len(orphans)/total:.1%} of crawl rows look "
+                  f"orphaned, over the {REPAIR_MAX_FRACTION:.0%} ceiling. A real "
+                  "repair touches a small fraction; a wrong shard directory "
+                  "touches nearly all of them. Check the path, then --force.")
+            return 2
+
+    if dry_run:
+        print(f"dry run: would drop {len(orphans):,} rows")
+        return 0
+    if not orphans:
+        print("nothing to repair")
+        return 0
+
+    c = sqlite3.connect(index, timeout=120)
+    try:
+        c.executemany("DELETE FROM held WHERE kind=? AND key=? AND source LIKE ?",
+                      [(k, v, OWN_SOURCE_PREFIX + "%") for k, v in orphans])
+        c.commit()
+    finally:
+        c.close()
+    print(f"repaired: dropped {len(orphans):,} index rows with no stored record")
+    return 0
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -174,25 +277,22 @@ def main() -> int:
     ap.add_argument("--repair", action="store_true",
                     help="delete index rows this crawl wrote for records that "
                          "are not on disk, so the next run fetches them again")
+    ap.add_argument("--dry-run", action="store_true",
+                    help="with --repair: report what would be deleted, delete nothing")
+    ap.add_argument("--force", action="store_true",
+                    help="with --repair: proceed past the safety refusals. Only "
+                         "when you have confirmed the shard directory is the "
+                         "right one and really is that empty.")
     a = ap.parse_args()
 
-    if a.repair:
-        orphans, truncated = orphaned_index_rows(a.index, a.shards)
-        for name, n, err in truncated:
-            print(f"  truncated {name}: {n:,} records recovered ({err})")
-        c = sqlite3.connect(a.index, timeout=120)
-        try:
-            c.executemany("DELETE FROM held WHERE kind=? AND key=? AND source LIKE ?",
-                          [(k, v, OWN_SOURCE_PREFIX + "%") for k, v in orphans])
-            c.commit()
-        finally:
-            c.close()
-        print(f"repaired: dropped {len(orphans):,} index rows with no stored record")
-        return 0
-
+    # Checked BEFORE --repair, not after: a missing index used to reach
+    # sqlite3 directly and raise, instead of the message written for it.
     if not a.index.exists():
         print(f"no identity index at {a.index}; build it with corpus_identity_index.py")
         return 2
+
+    if a.repair:
+        return repair(a.index, a.shards, force=a.force, dry_run=a.dry_run)
 
     r = verify(a.shards, a.index, a.sample)
     pct = 100 * r["duplicates"] / r["written"] if r["written"] else 0.0
@@ -202,14 +302,19 @@ def main() -> int:
         print(f"  e.g. {r['duplicate_examples']}")
     print(f"control         : {r['control_hits']}/{r['control_checked']} known-held report HELD")
     if r["truncated_shards"]:
-        # The HIGHEST-numbered shard is the one currently being written, and an
-        # open gzip has no trailer, so it always reads as truncated during a
-        # run. Saying so matters: an operator who learns to ignore a truncation
-        # line because one is always there will ignore a real one too.
-        newest = max(n for n, _, _ in r["truncated_shards"])
+        # An open gzip has no trailer, so the shard being written always reads
+        # as truncated DURING a run. Labelling it keeps a real truncation from
+        # being lost among the expected ones -- but only if the label is
+        # conditional. The first version tagged the highest-numbered truncated
+        # shard unconditionally, so with NO crawl running (the state after a
+        # kill, which is exactly when you audit) it stamped "open, being
+        # written" on the shard most likely to be genuinely damaged. A guard
+        # that reassures you about the thing it was built to flag is worse
+        # than none.
+        live = r["live_shard"]
         print(f"truncated shards: {len(r['truncated_shards'])}")
         for name, n, err in r["truncated_shards"]:
-            tag = "  <- open, being written" if name == newest else ""
+            tag = "  <- open, being written" if name == live else ""
             print(f"  {name}  {n:,} records recovered  ({err}){tag}")
     print(f"orphaned rows   : {r['orphaned_index_rows']:,}"
           + ("  (index claims articles whose bytes are not on disk)"

@@ -166,3 +166,53 @@ def test_the_live_index_actually_covers_the_census():
     assert s["pmcid"] > 500_000
     assert s["files_scanned"] > 2_000
     c.close()
+
+
+def test_a_pmid_must_be_ascii_digits():
+    """`str.isdigit()` is True for fullwidth, superscript and Arabic-Indic
+    digits. None is a PMID, and each would enter the index as a key nothing
+    can ever match -- so the real article reads as unheld forever."""
+    for junk in ("１２３", "12²", "١٢٣", "1٢3"):
+        assert ix.norm_pmid(junk) is None, junk
+    assert ix.norm_pmid("123") == "123"
+
+
+def test_a_zero_padded_pmid_is_the_same_article():
+    """A source that zero-pads would otherwise make every one of its records
+    look new. PMIDs have no significant leading zero."""
+    assert ix.norm_pmid("0123") == ix.norm_pmid("123") == "123"
+    assert ix.norm_pmid("0") is None, "0 is not a PMID"
+    assert ix.norm_pmid("000") is None
+
+
+def test_every_resolver_form_of_one_doi_is_one_key():
+    """The same DOI arrives bare from PubMed and as a URL from elsewhere. The
+    `www.` and bracketed forms used to fail the `10.` structure test and be
+    DROPPED, so a record carrying only a DOI read as new every time."""
+    want = "10.1234/abc"
+    for form in ("10.1234/abc", "10.1234/ABC", "doi:10.1234/abc",
+                 "DOI: 10.1234/abc", "https://doi.org/10.1234/abc",
+                 "http://dx.doi.org/10.1234/abc",
+                 "https://www.doi.org/10.1234/abc",
+                 "<https://doi.org/10.1234/abc>", "10.1234/abc.",
+                 "  10.1234/abc  "):
+        assert ix.norm_doi(form) == want, form
+
+
+def test_a_versioned_doi_is_kept_distinct():
+    """DELIBERATE, and the asymmetry is the reason. A revised preprint is new
+    content -- exactly what a discovery crawl is for. Collapsing versions
+    would make the dedup refuse a version we do not hold, and a false 'already
+    held' is silent and permanent, where a false 'new' costs one re-download
+    the audit can see."""
+    assert ix.norm_doi("10.1234/abc.v2") != ix.norm_doi("10.1234/abc")
+    assert ix.norm_doi("10.1234/abc.v2") == "10.1234/abc.v2"
+
+
+def test_normalising_never_merges_two_different_articles():
+    """The dangerous direction. Two distinct identifiers must never collapse
+    onto one key, whatever spelling they arrive in."""
+    distinct = ["10.1234/abc", "10.1234/abd", "10.1234/abc.v2", "10.5678/abc"]
+    keys = [ix.norm_doi(d) for d in distinct]
+    assert len(set(keys)) == len(distinct), keys
+    assert len({ix.norm_pmid(p) for p in ("1", "10", "100", "101")}) == 4

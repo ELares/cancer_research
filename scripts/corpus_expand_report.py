@@ -17,6 +17,7 @@ import collections
 import gzip
 import json
 import os
+import re
 import sqlite3
 import subprocess
 from datetime import datetime, timezone
@@ -52,32 +53,68 @@ REDISTRIBUTABLE = ("cc0", "cc by", "cc-by", "cc by-sa", "cc-by-sa",
 RESTRICTIVE_CLAUSES = ("nc", "nd")
 
 
-def _licence_tokens(lic: str) -> list[str]:
-    """Split a licence string into comparable clause tokens.
+def _licence_tokens(lic: str) -> set:
+    """A licence string reduced to comparable clause tokens.
 
-    Licences arrive as `cc by`, `cc-by-nc-nd`, `CC BY-ND 4.0`, `cc by-nc/4.0`
-    and worse. Version numbers and URLs carry no clause information, so they
-    are dropped rather than pattern-matched around.
+    EVERY separator becomes whitespace, including `/`, so a licence URL is
+    tokenised rather than truncated. The previous version split on `/` and on
+    version separators (`" 4."` and friends) and DISCARDED everything after
+    the match -- which threw away clauses:
+
+        "cc by 4.0 nd"              -> "cc by"   -> redistributable  (WRONG)
+        "cc by 2.0 nc"              -> "cc by"   -> redistributable  (WRONG)
+        ".../licenses/by-nc/4.0/"   -> "https:"  -> nothing at all
+
+    Dropping the version-strip entirely also costs nothing: a mutation that
+    removed only those separators left all tests green, so the code was
+    carrying the hole without buying anything. Version numbers are filtered
+    out as TOKENS instead, which cannot hide a clause behind them.
     """
     s = (lic or "").strip().lower()
-    for sep in ("/", " 1.", " 2.", " 3.", " 4."):
-        s = s.split(sep)[0]
-    return [t for t in s.replace("-", " ").replace("_", " ").split() if t]
+    for ch in "-_/,;()":
+        s = s.replace(ch, " ")
+    out = set()
+    for t in s.split():
+        t = t.strip(".:")
+        if not t or t in _NOISE or _VERSION.match(t):
+            continue
+        # The Creative Commons host IS the "cc" in "cc by": dropping it as URL
+        # noise left `.../licenses/by/4.0/` with the bare token `by`, which the
+        # rule below rightly refuses to read as a licence.
+        out.add("cc" if t in _CC_HOST else t)
+    return out
+
+
+# Tokens that carry no licence information: URL scheme and host fragments, and
+# the word "licenses" from a Creative Commons path.
+_NOISE = {"http", "https", "www", "licenses", "license", "licence",
+          "org", "int", "deed", "en"}
+_CC_HOST = {"creativecommons.org", "creativecommons"}
+_VERSION = re.compile(r"^v?\d+(\.\d+)*$")
 
 
 def _redistributable(lic: str) -> bool:
+    """May this article be REPUBLISHED, not merely read.
+
+    Restrictive clauses are checked FIRST and independently of how the licence
+    was spelled, because that is the direction where being wrong publishes an
+    overclaim.
+    """
     toks = _licence_tokens(lic)
     if not toks:
         return False
-    if any(c in toks for c in RESTRICTIVE_CLAUSES):
+    if toks & _RESTRICTIVE:
         return False
-    joined = " ".join(toks)
-    return any(joined == _norm(x) or joined.startswith(_norm(x) + " ")
-               for x in REDISTRIBUTABLE)
+    if toks & {"cc0", "zero"}:
+        return True
+    if "publicdomain" in toks or {"public", "domain"} <= toks:
+        return True
+    # CC BY and CC BY-SA. `by` alone is not enough -- it has to be a Creative
+    # Commons licence, not the word "by" from an attribution string.
+    return "by" in toks and bool(toks & {"cc", "publicdomain"})
 
 
-def _norm(x: str) -> str:
-    return " ".join(x.replace("-", " ").split())
+_RESTRICTIVE = {"nc", "nd", "noncommercial", "noderivatives", "noderivs"}
 
 
 def scan() -> dict:

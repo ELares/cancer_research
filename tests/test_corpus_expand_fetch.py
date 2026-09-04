@@ -277,6 +277,43 @@ def test_every_refusal_status_is_accepted_as_an_answer(monkeypatch):
         assert len(calls) == 1, f"status {code} was retried; it is not transient"
 
 
+def test_a_search_refusal_is_not_read_as_an_empty_slice(monkeypatch):
+    """THE HAZARD OF WIDENING THE REFUSAL SET, and it is not symmetric.
+
+    For one ARTICLE a 403 is the expected answer. For the SEARCH endpoint it
+    means a page of results was not delivered -- and the caller reads an empty
+    result as "no more pages" and writes `done=1`, so the whole source-year
+    slice is skipped forever with seen=0. That is precisely the confusion
+    `_get`'s own docstring says this ledger must never make, and applying the
+    item rule at the shared layer introduced it.
+    """
+    import urllib.error
+
+    calls = []
+
+    def boom(url, *a, **k):
+        calls.append(url)
+        raise urllib.error.HTTPError(url, 403, "rate limited", {}, None)
+
+    monkeypatch.setattr(fx.urllib.request, "urlopen", boom)
+    monkeypatch.setattr(fx.time, "sleep", lambda *_: None)
+    try:
+        fx.search("MED", 2026, "*")
+    except RuntimeError:
+        pass
+    else:
+        raise AssertionError(
+            "a 403 on search returned quietly; the caller will record the "
+            "slice as done and never walk it again")
+    assert len(calls) > 1, "a 403 on search is transient and must be retried"
+
+
+def test_the_item_and_search_refusal_sets_are_not_the_same():
+    """If they are ever collapsed back into one, the slice-loss bug returns."""
+    assert 403 in fx.REFUSE_ITEM and 403 not in fx.REFUSE_SEARCH
+    assert 404 in fx.REFUSE_ITEM and 404 in fx.REFUSE_SEARCH
+
+
 def test_a_transient_status_is_still_retried_and_then_loud(monkeypatch):
     """The counterpart: widening the refusal set must not swallow a real
     outage, which would be recorded as 'no new records'."""
@@ -297,3 +334,37 @@ def test_a_transient_status_is_still_retried_and_then_loud(monkeypatch):
     else:
         raise AssertionError("a persistent 503 must raise, not return None")
     assert len(calls) == 3, "a transient status must still be retried"
+
+
+def test_a_partly_examined_page_does_not_advance_the_cursor():
+    """`--limit-new` broke out of a page mid-way and then stored the NEXT
+    page's cursor, so the unexamined tail was skipped forever on resume --
+    silently, because `seen` had been credited the whole page."""
+    src = Path(fx.__file__).read_text()
+    body = src[src.index("stopped_early = False"):src.index("st.commit()")]
+    assert "stopped_early = True" in body, "the early exit is not recorded"
+    assert "cursor if stopped_early else" in body, (
+        "the cursor advances even when the page was abandoned part-way")
+    assert "len(hits)" not in body.split("UPDATE slice SET cursor")[1], (
+        "the whole page is still credited as seen after a partial pass")
+
+
+def test_the_run_closes_its_shard_on_the_way_out():
+    """`finally: pass` was dead, so any exception -- including the RuntimeError
+    _get raises by design -- skipped _finish and abandoned an open shard."""
+    src = Path(fx.__file__).read_text()
+    assert "finally:\n        pass" not in src, "the dead finally block is back"
+    assert "except BaseException:" in src and "_finish(shards, st, ident, totals)\n        raise" in src
+
+
+def test_finish_is_safe_to_call_twice():
+    """The exception path calls it and re-raises; a second call on closed
+    connections must not replace the original exception with its own."""
+    import sqlite3 as s3
+
+    class _S:
+        def close(self): pass
+
+    a, b = s3.connect(":memory:"), s3.connect(":memory:")
+    fx._finish(_S(), a, b, {"seen": 0})
+    fx._finish(_S(), a, b, {"seen": 0})  # must not raise
