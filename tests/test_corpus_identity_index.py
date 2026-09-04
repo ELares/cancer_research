@@ -115,8 +115,19 @@ def test_a_rescan_is_skipped_only_while_the_file_has_not_moved(tmp_path):
 
 
 def test_a_corrupt_line_does_not_abort_the_shard(tmp_path):
-    """One bad line in a million-line shard must cost one record, not the
-    shard -- and must not mark the shard scanned, which would hide the loss."""
+    """One bad line in a million-line shard must cost one record, not the shard.
+
+    The docstring here used to add "and must not mark the shard scanned, which
+    would hide the loss". That was FALSE -- the scan `continue`s past the bad
+    line, exits the loop normally and records the shard unconditionally -- and
+    the test never checked it, so a sentence describing behaviour the code did
+    not have sat directly above assertions that could not detect the
+    difference.
+
+    Not marking it would also be the wrong fix: the same corrupt file would be
+    rescanned on every run forever. The loss is COUNTED instead, so it is
+    visible without being re-suffered.
+    """
     c = _mem()
     p = tmp_path / "s.jsonl.gz"
     with gzip.open(p, "wt") as f:
@@ -125,6 +136,22 @@ def test_a_corrupt_line_does_not_abort_the_shard(tmp_path):
         f.write(json.dumps({"pmid": "2"}) + "\n")
     assert ix.scan_jsonl_gz(c, p, "t", fulltext=False, verbose=False) == 2
     assert ix.is_held(c, pmid="1") and ix.is_held(c, pmid="2")
+
+    row = c.execute("SELECT records, bad FROM scanned WHERE path=?",
+                    (str(p),)).fetchone()
+    assert row is not None, "the shard was not marked scanned, so it will be rescanned forever"
+    assert row == (2, 1), (
+        f"expected 2 records and 1 unparseable line recorded, got {row}; an "
+        "uncounted bad line is a loss nothing can find later")
+
+    # And a clean shard must record ZERO, or the column would be satisfied by
+    # any constant and could not distinguish a loss from no loss.
+    q = tmp_path / "clean.jsonl.gz"
+    with gzip.open(q, "wt") as f:
+        f.write(json.dumps({"pmid": "3"}) + "\n")
+    ix.scan_jsonl_gz(c, q, "t", fulltext=False, verbose=False)
+    assert c.execute("SELECT bad FROM scanned WHERE path=?",
+                     (str(q),)).fetchone() == (0,)
 
 
 def test_the_live_index_actually_covers_the_census():

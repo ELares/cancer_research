@@ -151,8 +151,18 @@ def _report_fixture():
         "fulltext_by_source": {"MED": 8, "PMC": 4},
         "licences": {"cc by": 25, "cc0": 25, "unknown": 10},
         "years": {"2026": 40, "2025": 20},
-        "slices": [{"src": "MED", "year": 2026, "seen": 40, "kept": 30,
-                    "fulltext": 8, "done": 1, "slices": 1}],
+        # THREE slices, two of them TIED on every ranked quantity. One slice
+        # made the shuffle test vacuous for this table: _shuffled preserves
+        # list order, so a single-element list can hide any ordering defect,
+        # and a tie is the case a count alone cannot resolve.
+        "slices": [
+            {"src": "MED", "year": 2026, "seen": 40, "kept": 30, "fulltext": 8,
+             "done": 1, "slices": 1},
+            {"src": "PMC", "year": 2026, "seen": 20, "kept": 10, "fulltext": 2,
+             "done": 1, "slices": 1},
+            {"src": "PPR", "year": 2026, "seen": 20, "kept": 10, "fulltext": 2,
+             "done": 1, "slices": 1},
+        ],
     }
 
 
@@ -184,3 +194,123 @@ def test_equal_counts_still_have_one_published_order():
     rng = random.Random(7)
     for _ in range(20):
         assert m.render(_shuffled(d, rng)) == base
+
+
+# --- The index must not claim articles whose bytes are absent ---------------
+#
+# The failure these pin actually happened to real data: the fetcher indexed a
+# record while its bytes sat in an unflushed gzip buffer, two kills discarded
+# the buffers, and 374 index rows were left describing articles that are not on
+# disk. Such a row is worse than a missing one -- it says "held", so every
+# later run skips the article forever, silently and permanently.
+
+def _shard_file(d: Path, name: str, records, truncate: bool = False):
+    d.mkdir(parents=True, exist_ok=True)
+    raw = b"".join((json.dumps(r) + "\n").encode() for r in records)
+    import io
+    buf = io.BytesIO()
+    with gzip.GzipFile(fileobj=buf, mode="wb") as g:
+        g.write(raw)
+    data = buf.getvalue()
+    if truncate:
+        data = data[:-8]  # drop the gzip trailer, as an unclosed writer does
+    (d / name).write_bytes(data)
+
+
+def test_an_index_row_with_no_stored_record_is_reported(tmp_path):
+    from corpus_expand_verify import orphaned_index_rows
+    idx = _index(tmp_path, [
+        ("pmid", "111", "expand-MED", 0),   # stored below
+        ("pmid", "222", "expand-MED", 0),   # NOT stored -> orphan
+        ("pmid", "333", "census-mesh", 0),  # not ours; never an orphan
+    ])
+    sd = tmp_path / "shards"
+    _shard_file(sd, "expanded-00000.jsonl.gz", [{"pmid": "111"}])
+    orphans, truncated = orphaned_index_rows(idx, sd)
+    assert orphans == [("pmid", "222")], orphans
+    assert truncated == []
+
+
+def test_a_truncated_shard_is_named_rather_than_skipped(tmp_path):
+    """Silently reading the readable prefix is how three truncated shards sat
+    unnoticed while the index vouched for their lost tails."""
+    from corpus_expand_verify import stored_keys
+    sd = tmp_path / "shards"
+    _shard_file(sd, "expanded-00000.jsonl.gz",
+                [{"pmid": str(i)} for i in range(1, 6)], truncate=True)
+    keys, truncated = stored_keys(sd)
+    assert ("pmid", "1") in keys, "recoverable records must still be read"
+    assert len(truncated) == 1 and truncated[0][0] == "expanded-00000.jsonl.gz"
+    assert truncated[0][1] >= 1, "the count of what WAS recovered is part of the report"
+
+
+def test_verify_fails_when_the_index_overclaims(tmp_path):
+    idx = _index(tmp_path, [
+        ("pmid", "30000001", "census-mesh", 0),   # control fodder
+        ("pmid", "222", "expand-MED", 0),         # orphan
+    ])
+    sd = tmp_path / "shards"
+    _shard_file(sd, "expanded-00000.jsonl.gz", [{"pmid": "111"}])
+    r = verify(sd, idx)
+    assert r["orphaned_index_rows"] == 1
+    assert r["duplicates"] == 0, "an overclaim is not a duplicate; they are different faults"
+
+
+def test_the_slice_table_order_survives_a_reordered_list():
+    """Shuffling a LIST is not what `_shuffled` does, so this reverses it
+    explicitly -- the one transformation that exposes an order inherited from
+    the query rather than established by the renderer."""
+    import sys as _s
+    _s.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
+    import corpus_expand_report as m
+
+    d = _report_fixture()
+    base = m.render(d)
+    rev = _report_fixture()
+    rev["slices"] = list(reversed(rev["slices"]))
+    assert m.render(rev) == base, (
+        "the slice table's order comes from the stored list, so two tied "
+        "sources swap places whenever the query plan changes")
+
+
+# --- What may be REPUBLISHED is narrower than what may be READ --------------
+
+def _R(lic):
+    import sys as _s
+    _s.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
+    from corpus_expand_report import _redistributable
+    return _redistributable(lic)
+
+
+def test_a_noncommercial_licence_is_not_redistributable():
+    """The defect this pins shipped a wrong number into a published column.
+
+    `_redistributable` tested `startswith`, and `"cc by-nc".startswith("cc by")`
+    is True, so every NC licence counted as redistributable -- 237 records
+    inside a reported 2,102 on the live crawl, in the very column the page
+    tells readers to use INSTEAD of the total.
+    """
+    for lic in ("cc by-nc", "cc by-nc-sa", "cc by-nc-nd", "CC BY-NC 4.0",
+                "cc by-nc/4.0"):
+        assert not _R(lic), f"{lic} counted as redistributable"
+
+
+def test_no_derivatives_is_caught_in_every_spelling():
+    """The old ND guard fired only when the string ended exactly in `-nd`, so a
+    version suffix or a space walked straight past it."""
+    for lic in ("cc by-nd", "cc by-nd/4.0", "CC BY-ND 4.0", "cc-by-nd",
+                "cc by-nc-nd/4.0"):
+        assert not _R(lic), f"{lic} counted as redistributable"
+
+
+def test_genuinely_open_licences_still_qualify():
+    """A filter that rejects everything would pass both tests above, so the
+    permissive direction is checked too."""
+    for lic in ("cc by", "cc-by", "CC BY 4.0", "cc0", "CC0 1.0", "cc by-sa",
+                "public domain"):
+        assert _R(lic), f"{lic} wrongly excluded"
+
+
+def test_an_absent_or_unknown_licence_is_not_assumed_open():
+    for lic in ("", None, "none", "unknown", "all rights reserved", "copyright"):
+        assert not _R(lic), f"{lic!r} treated as redistributable"

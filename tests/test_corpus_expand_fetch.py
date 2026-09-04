@@ -6,6 +6,7 @@ content. The first is enforced by asking the identity index before fetching
 and updating it in the same pass; the second by asking a source that refuses,
 rather than by this code deciding what is free.
 """
+import ast
 import gzip
 import json
 import sqlite3
@@ -81,21 +82,61 @@ def test_the_source_is_what_refuses_paywalled_text(monkeypatch):
     assert "ebi.ac.uk" in calls[0], "text is fetched from somewhere other than Europe PMC"
 
 
+def _fetch_hosts(src: str) -> set:
+    """Every host named by a string literal in the module, however quoted.
+
+    Parsed with `ast` rather than split on `"`. The first version of this guard
+    tokenised on the double-quote character alone, so a single-quoted URL was
+    invisible to it -- planting
+
+        return _get('https://www.sciencedirect.com/science/article/pii/' + doi)
+
+    left the whole file GREEN. A guard against scraping that a scraper walks
+    straight through is worse than no guard, because it is quoted as evidence.
+    Walking the AST also sees f-string prefixes, concatenations and multi-line
+    strings, none of which the character split could reach.
+    """
+    hosts = set()
+    for node in ast.walk(ast.parse(src)):
+        parts = []
+        if isinstance(node, ast.Constant) and isinstance(node.value, str):
+            parts = [node.value]
+        elif isinstance(node, ast.JoinedStr):  # f-string: check its literal parts
+            parts = [v.value for v in node.values
+                     if isinstance(v, ast.Constant) and isinstance(v.value, str)]
+        for s in parts:
+            if s.startswith(("http://", "https://")):
+                rest = s.split("//", 1)[1]
+                host = rest.split("/")[0].split("?")[0]
+                if host:
+                    hosts.add(host)
+    return hosts
+
+
 def test_only_europe_pmc_is_ever_fetched_from():
     """A publisher-page fetch would be scraping, which MISSION.md rules out.
 
-    Checked against the SOURCE rather than trusted: no other host may appear
-    as a fetch target anywhere in the module.
+    EQUALITY, not a subset. `hosts <= {"www.ebi.ac.uk"}` is satisfied by the
+    EMPTY set, so any rewrite that assembled URLs from a variable would leave
+    the guard green while proving nothing. Requiring the host to actually be
+    present means the guard fails if it stops being able to see the URLs.
     """
-    src = Path(fx.__file__).read_text()
-    hosts = set()
-    for line in src.splitlines():
-        if "http" not in line or line.strip().startswith(("#", "*", '"')):
-            continue
-        for tok in line.split('"'):
-            if tok.startswith("http"):
-                hosts.add(tok.split("/")[2])
-    assert hosts <= {"www.ebi.ac.uk"}, f"fetches from unexpected hosts: {hosts}"
+    hosts = _fetch_hosts(Path(fx.__file__).read_text())
+    assert hosts == {"www.ebi.ac.uk"}, (
+        f"expected exactly the Europe PMC host, found {sorted(hosts)}")
+
+
+def test_the_host_guard_actually_catches_a_publisher_fetch():
+    """The guard is exercised on a scraping module rather than assumed to work.
+
+    Both quote styles, because the defect this replaces was a quote-style blind
+    spot and a fix for one style would look identical to a fix for both.
+    """
+    for url in ('"https://www.sciencedirect.com/science/article/pii/X"',
+                "'https://www.sciencedirect.com/science/article/pii/X'",
+                'f"https://link.springer.com/article/{doi}"'):
+        found = _fetch_hosts(f"def scrape(doi):\n    return _get({url})\n")
+        assert found and found != {"www.ebi.ac.uk"}, f"guard blind to {url}"
 
 
 def test_a_record_with_no_identifier_is_refused():
@@ -117,20 +158,76 @@ def test_every_written_record_is_indexed_in_the_same_pass():
     assert "MAX(held.has_fulltext" in body
 
 
-def test_shards_rotate_into_complete_files(tmp_path):
-    """An interrupted run must leave readable shards, not one truncated file."""
-    fx.SHARD_RECORDS = 3
+def _read_shards(d: Path) -> list:
+    """Every record readable from the shards, tolerating an unclosed one.
+
+    APPENDED ONE AT A TIME, not built as a comprehension. A comprehension over
+    a stream that raises part-way through discards everything it had already
+    produced, so `seen += [... for x in fh]` returned the EMPTY list for a
+    shard with five perfectly readable records followed by a missing gzip
+    trailer -- and this helper then reported total data loss where there was
+    none. It cost a false failure here; in a reporting script it would have
+    been a published zero.
+    """
+    seen = []
+    for f in sorted(d.glob("*.jsonl.gz")):
+        try:
+            with gzip.open(f, "rt") as fh:
+                for x in fh:
+                    seen.append(json.loads(x)["i"])
+        except EOFError:
+            pass  # a shard the writer never closed; keep what landed
+    return sorted(seen)
+
+
+def test_shards_rotate_into_complete_files(tmp_path, monkeypatch):
+    """Records must survive a rotation.
+
+    `monkeypatch` rather than `fx.SHARD_RECORDS = 3`: the bare assignment
+    mutated the shared module for every test that ran afterwards in the same
+    session and was never restored.
+    """
+    monkeypatch.setattr(fx, "SHARD_RECORDS", 3)
     s = fx.Shards(tmp_path, "t")
     for i in range(7):
         s.write({"i": i})
     s.close()
     files = sorted(tmp_path.joinpath("t").glob("*.jsonl.gz"))
     assert len(files) >= 2
-    seen = []
-    for f in files:
-        with gzip.open(f, "rt") as fh:
-            seen += [json.loads(l)["i"] for l in fh]
-    assert sorted(seen) == list(range(7)), "records were lost across a rotation"
+    assert _read_shards(tmp_path / "t") == list(range(7)), (
+        "records were lost across a rotation")
+
+
+def test_an_interrupted_run_loses_no_record_that_was_written(tmp_path, monkeypatch):
+    """THE FAILURE THAT ACTUALLY HAPPENED, reproduced.
+
+    The old version of this test claimed to check an interrupted run and only
+    ever called `close()`, which is the clean path -- so it passed on an
+    implementation with no crash-safety at all. Two `pkill`s during development
+    then left shards of 392 and 2,831 records against a 4,000-record rotation,
+    and every record in the lost tails had already been marked held in the
+    identity index: permanently invisible to every later run.
+
+    Here the writer is ABANDONED without close(), the way a killed process
+    abandons it. Every record written must still be readable, which is what
+    the Z_SYNC_FLUSH in Shards.write buys.
+    """
+    monkeypatch.setattr(fx, "SHARD_RECORDS", 1000)  # no rotation; one open shard
+    s = fx.Shards(tmp_path, "t")
+    for i in range(5):
+        s.write({"i": i})
+
+    # Read while `s` is still OPEN and unclosed. `del s` does not simulate a
+    # kill: CPython finalises the object, GzipFile.__del__ closes the stream
+    # and the buffer is flushed after all -- so the deleting version of this
+    # test passed with the flush REMOVED, and was verified by mutation to be
+    # measuring the finaliser rather than the write path. A killed process runs
+    # no finaliser, and this is the state its file is left in.
+    assert _read_shards(tmp_path / "t") == list(range(5)), (
+        "a record was written and acknowledged but its bytes are not yet on "
+        "disk; a kill here would leave the identity index claiming we hold an "
+        "article whose bytes never landed")
+    s.close()
 
 
 def test_a_resumed_run_continues_rather_than_restarting(tmp_path, monkeypatch):
@@ -156,3 +253,47 @@ def test_a_persistent_http_failure_is_loud():
     assert "raise RuntimeError" in src, (
         "_get swallows a persistent failure, so a network outage would be "
         "recorded as 'no new records'")
+
+
+def test_every_refusal_status_is_accepted_as_an_answer(monkeypatch):
+    """MISSION.md says a refusal is accepted, and 404 is not the only refusal.
+
+    401/403/410 are the server declining to serve an item -- the same boundary
+    this crawl leans on rather than deciding for itself. They used to be
+    treated as transient: retried twice, then raised, which stopped the entire
+    run on a single article the source simply would not hand over.
+    """
+    import urllib.error
+
+    for code in (401, 403, 404, 410):
+        calls = []
+
+        def boom(url, *a, **k):
+            calls.append(url)
+            raise urllib.error.HTTPError(url, code, "no", {}, None)
+
+        monkeypatch.setattr(fx.urllib.request, "urlopen", boom)
+        assert fx._get("https://www.ebi.ac.uk/x", tries=3, timeout=1) is None, code
+        assert len(calls) == 1, f"status {code} was retried; it is not transient"
+
+
+def test_a_transient_status_is_still_retried_and_then_loud(monkeypatch):
+    """The counterpart: widening the refusal set must not swallow a real
+    outage, which would be recorded as 'no new records'."""
+    import urllib.error
+
+    calls = []
+
+    def boom(url, *a, **k):
+        calls.append(url)
+        raise urllib.error.HTTPError(url, 503, "later", {}, None)
+
+    monkeypatch.setattr(fx.urllib.request, "urlopen", boom)
+    monkeypatch.setattr(fx.time, "sleep", lambda *_: None)
+    try:
+        fx._get("https://www.ebi.ac.uk/x", tries=3, timeout=1)
+    except RuntimeError:
+        pass
+    else:
+        raise AssertionError("a persistent 503 must raise, not return None")
+    assert len(calls) == 3, "a transient status must still be retried"

@@ -11,9 +11,9 @@ for current absolute counts.
 | bucket | records | share of all cancer records | what it means |
 |---|---:|---:|---|
 | `all_cancer` | 5,573,982 | 100.0% | Every Europe PMC record matching cancer. The denominator. |
-| `in_pmc_oa` | 2,206,554 | 39.59% | In Europe PMC's open-access subset. This is the figure MISSION.md quoted. |
-| `readable` | 3,227,686 | 57.91% | Europe PMC holds the full text. Free to read; says nothing about reuse. |
-| `open_licence` | 1,185,810 | 21.27% | Carries a licence permitting redistribution with attribution. |
+| `in_pmc_oa` | 2,206,555 | 39.59% | In Europe PMC's open-access subset. This is the figure MISSION.md quoted. |
+| `readable` | 3,227,687 | 57.91% | Europe PMC holds the full text. Free to read; says nothing about reuse. |
+| `open_licence` | 1,185,811 | 21.27% | Carries a licence permitting redistribution with attribution. |
 | `open_licence_not_oa_flagged` | 118,307 | 2.12% | Openly licensed BUT flagged OPEN_ACCESS:N -- collectable, and invisible to any filter that trusts the flag alone. |
 | `readable_not_in_pmc_oa` | 1,021,132 | 18.32% | Readable in Europe PMC yet outside the OA subset. The concrete counterexample to 'the remainder is paywalled'. |
 
@@ -49,12 +49,26 @@ supersedes the other.
 ## Which denominator these percentages use
 
 All shares above are of Europe PMC's own free-text `cancer` set (5,573,982
-records). That is NOT this project's census, which is defined by the MeSH
-C04 neoplasms tree and counts ~5.19M. The two sets overlap heavily but are
-built by different rules -- a free-text match catches papers that merely
-mention cancer, and misses indexed papers that never use the word. So these
-percentages describe Europe PMC, and are not interchangeable with a
-percentage computed over the census.
+records). That is NOT this project's census, and the census is itself two
+streams rather than one:
+
+| stream | records | how membership is decided |
+|---|---:|---|
+| MeSH-indexed | 4,403,994 | the MeSH C04 neoplasms tree, plus nine adjacent descriptors |
+| text-recovered | 783,271 | a text match, for records MeSH has not indexed yet |
+| **census total** | **5,187,265** | |
+
+Saying the census is "defined by the MeSH C04 tree and counts ~5.19M"
+silently welds the definition of one stream to the size of both -- the
+C04-defined stream is 4.40M, and the 783,271 text-recovered records are by
+definition NOT MeSH-indexed. That matters here because the ~21% quoted in
+MISSION.md is computed over the 4,403,994; against 5,187,265 the same
+count is 18.1%, so the denominator has to travel with the number.
+
+Europe PMC's set is built by yet a third rule -- a free-text match catches
+papers that merely mention cancer and misses indexed papers that never use
+the word -- so these percentages describe Europe PMC and are not
+interchangeable with a percentage computed over either census stream.
 
 ## What this corrects
 

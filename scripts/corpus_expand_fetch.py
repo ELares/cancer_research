@@ -8,22 +8,37 @@ endpoint returns text for the open-access subset and refuses the rest, so the
 paywall boundary is enforced by the source rather than by this script guessing.
 Publisher pages are never fetched.
 
-That line matters more than "is it free to read". This project's own survey
-found that of census records with a DOI and no PMC id, ~22% are readable by
-some route but only ~6% carry a licence permitting redistribution -- the
-difference is mostly BRONZE, free on the publisher's site with no licence at
-all. MISSION.md says neither scraping nor redistributing that is intended, and
-a bronze article is exactly the case where "free" and "ours to keep" come
-apart. Every record stores the licence Europe PMC reports, so what was taken
-under what terms stays answerable.
+That line matters more than "is it free to read". Readable and redistributable
+are different sets, and the gap between them is measured in
+`analysis/europepmc-access-ceiling.md`: 57.9% of Europe PMC's cancer records
+are readable there against 21.3% carrying a licence that permits
+republication. The difference is largely BRONZE -- free on the publisher's
+site with no licence at all -- which is exactly the case where "free" and
+"ours to keep" come apart. MISSION.md says neither scraping nor redistributing
+that is intended. Every record stores the licence Europe PMC reports, so what
+was taken under what terms stays answerable.
+
+(An earlier version of this docstring quoted ~22% readable and ~6%
+redistributable "of census records with a DOI and no PMC id", attributed to a
+survey by this project. No such analysis exists in this repository, and the
+two figures were not consistent with each other. They are replaced above by
+numbers a committed artifact derives.)
 
 NOTHING IS FETCHED TWICE
 ------------------------
 Every candidate is checked against `corpus_identity_index` on all three of
 PMID, PMC id and DOI before anything is downloaded, and every item written is
-added to that index in the same transaction. A re-run therefore skips what it
-already has, and an interrupted run resumes from its stored cursor rather than
-from the beginning.
+added to that index. A re-run therefore skips what it already has, and an
+interrupted run resumes from its stored cursor rather than from the beginning.
+
+The ORDER of those two writes is load-bearing and is not a transaction. A
+gzip buffer and a SQLite transaction cannot be made atomic with each other, so
+the record's bytes are flushed to disk BEFORE the index is told the record is
+held (see `Shards`). Getting this backwards -- as an earlier version did --
+means a kill leaves the index claiming articles whose bytes never landed, and
+those articles are then skipped forever. Ordered this way the residual failure
+is a re-fetch, which `corpus_expand_verify.py` reports as a duplicate rather
+than hiding as silence.
 
 WHY THE SEARCH IS PER-SOURCE AND PER-YEAR
 -----------------------------------------
@@ -119,7 +134,14 @@ def _get(url: str, tries: int = 4, timeout: int = 120):
             with urllib.request.urlopen(req, timeout=timeout) as r:
                 return r.read()
         except urllib.error.HTTPError as e:
-            if e.code == 404:
+            # A REFUSAL IS AN ANSWER, and 404 is not the only way to say no.
+            # 401/403 are the server declining to serve this item, which is
+            # exactly the boundary this crawl relies on the source to draw --
+            # retrying them twice and then raising turned a normal refusal
+            # into a crash that stopped the whole run, while MISSION.md said
+            # refusals are accepted. 410 Gone is a refusal too. None of these
+            # is transient, so retrying cannot help.
+            if e.code in (401, 403, 404, 410):
                 return None
             last = e
         except Exception as e:  # noqa: BLE001
@@ -136,6 +158,13 @@ def search(src: str, year: int, cursor: str):
     return json.loads(raw) if raw else {}
 
 
+# Licences under which Europe PMC may be ASKED for the text. Deliberately
+# wider than the set this project may REPUBLISH -- an NC or ND licence permits
+# reading and analysis while forbidding redistribution, and this project's use
+# is analysis. `corpus_expand_report.REDISTRIBUTABLE` is the narrower set, and
+# the two must not be conflated: reporting an NC record as redistributable
+# overstates what may be passed on. Every record stores its own licence, so the
+# narrower question stays answerable per record rather than per crawl.
 OPEN_LICENCES = ("cc0", "cc by", "cc-by", "cc by-nc", "cc by-sa", "cc by-nd",
                  "cc by-nc-sa", "cc by-nc-nd", "public domain")
 
@@ -156,10 +185,23 @@ def _text_permitted(rec) -> bool:
     """Are we allowed to take it?
 
     Separate from whether it is there. `isOpenAccess` means "in Europe PMC's
-    open-access subset", NOT "openly licensed" -- about 118,000 cancer records
-    are CC-BY while flagged `OPEN_ACCESS:N`, and gating on the flag alone
-    silently skipped every one. The endpoint still refuses anything it should
-    not serve, so this widens what is ASKED and cannot widen what is taken.
+    open-access subset", NOT "openly licensed": 118,307 cancer records carry
+    CC BY or CC0 while flagged `OPEN_ACCESS:N` (measured, see
+    analysis/europepmc-access-ceiling.md), and gating on the flag alone skipped
+    every one of them without a word.
+
+    WHAT WIDENING THIS BUYS, stated honestly rather than both ways. An earlier
+    version of this docstring said the change "cannot widen what is taken",
+    which contradicts the reason for making it: either the endpoint serves
+    those records, in which case more IS taken, or it refuses them, in which
+    case the change buys only extra 404s. Both cannot be true. What is
+    actually guaranteed is narrower and worth stating on its own: asking more
+    often cannot make the endpoint serve something it would otherwise refuse,
+    so widening the ASK cannot widen what we are PERMITTED to take. Whether it
+    yields anything is an empirical question the ledger answers per source.
+
+    The licence set here is the read-and-analyse set, not the republish set --
+    see OPEN_LICENCES.
     """
     if rec.get("isOpenAccess") == "Y":
         return True
@@ -189,8 +231,25 @@ def fetch_fulltext(rec) -> str | None:
 
 
 class Shards:
-    """Rotating gzip shards, flushed and closed on every rotation so an
-    interrupted run leaves complete files rather than one truncated one."""
+    """Rotating gzip shards whose bytes are readable as soon as write() returns.
+
+    THE FLUSH IS THE WHOLE POINT, and it was missing. A record used to sit in
+    the gzip object's compression buffer while the identity index was told the
+    record was held. Kill the process and the index keeps the row while the
+    bytes are gone -- so the article is permanently invisible to every later
+    run, which is the exact failure the dedup exists to prevent, inverted. It
+    is not hypothetical: two `pkill`s during development left shards of 392 and
+    2,831 records against a 4,000-record rotation, and every record in the lost
+    tails was already marked held.
+
+    So write() ends with a Z_SYNC_FLUSH, which closes the deflate block and
+    pushes the bytes to the OS. A killed process then loses nothing; only a
+    machine crash can, and `os.fsync` is deliberately NOT called because this
+    writes to a network mount where a per-record fsync costs more than the
+    failure it would prevent. The residual window is one record wide, and it
+    fails in the SAFE direction -- a re-fetch, which the audit reports as a
+    duplicate rather than silence.
+    """
 
     def __init__(self, root: Path, name: str):
         self.dir = root / name
@@ -207,6 +266,9 @@ class Shards:
             self.fh = gzip.open(self.dir / f"{self.name}-{self.idx:05d}.jsonl.gz", "wt",
                                 encoding="utf-8")
         self.fh.write(json.dumps(obj, ensure_ascii=False) + "\n")
+        # Durable BEFORE the caller is allowed to index it. Ordering, not
+        # speed, is what makes the index trustworthy.
+        self.fh.flush()
         self.n += 1
         if self.n % SHARD_RECORDS == 0:
             self.close()
@@ -239,8 +301,11 @@ def run(years, sources, limit_new=None, verbose=True) -> dict:
                     nxt = d.get("nextCursorMark")
                     st.execute("UPDATE slice SET hits=? WHERE src=? AND year=? AND hits<0",
                                (d.get("hitCount", 0), src, year))
+                    stopped_early = False
+                    examined = 0
                     for rec in hits:
                         seen += 1
+                        examined += 1
                         pmid = norm_pmid(rec.get("pmid"))
                         pmcid = norm_pmcid(rec.get("pmcid"))
                         doi = norm_doi(rec.get("doi"))
@@ -264,11 +329,14 @@ def run(years, sources, limit_new=None, verbose=True) -> dict:
                             "has_text": bool(text), "text": text,
                             "fetched": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
                         }
+                        # WRITE THEN INDEX, never the reverse. write() returns
+                        # only once the bytes are flushed, so the index never
+                        # claims a record whose bytes could still be lost. The
+                        # earlier order made a kill produce permanently
+                        # invisible articles; see the Shards docstring.
                         shards.write(out)
                         kept += 1
                         ft += bool(text)
-                        # Indexed IMMEDIATELY: a crash after writing but before
-                        # indexing would re-fetch this record on the next run.
                         for kind, key in (("pmid", pmid), ("pmcid", pmcid), ("doi", doi)):
                             if key:
                                 ident.execute(
@@ -277,13 +345,20 @@ def run(years, sources, limit_new=None, verbose=True) -> dict:
                                     "has_fulltext=MAX(held.has_fulltext, excluded.has_fulltext)",
                                     (kind, key, f"expand-{src}", 1 if text else 0))
                         if limit_new and totals["new"] + kept >= limit_new:
+                            stopped_early = True
                             break
+                    # A page abandoned part-way by --limit-new must NOT advance
+                    # the cursor: the unexamined tail would be skipped forever
+                    # on resume, silently, because `seen` had been credited the
+                    # whole page. Staying on `cursor` re-reads the page next
+                    # time, which costs one request and loses nothing.
                     st.execute("UPDATE slice SET cursor=?, seen=seen+?, kept=kept+?, "
                                "fulltext=fulltext+?, updated=? WHERE src=? AND year=?",
-                               (nxt or cursor, len(hits), kept, ft, time.time(), src, year))
+                               (cursor if stopped_early else (nxt or cursor),
+                                examined, kept, ft, time.time(), src, year))
                     st.commit()
                     ident.commit()
-                    totals["seen"] += len(hits)
+                    totals["seen"] += examined
                     totals["new"] += kept
                     totals["fulltext"] += ft
                     kept = ft = 0
@@ -299,8 +374,15 @@ def run(years, sources, limit_new=None, verbose=True) -> dict:
                 if verbose and seen:
                     print(f"  {src:4} {year}  seen {seen:>6,}  new {totals['new']:>7,}  "
                           f"text {totals['fulltext']:>7,}", flush=True)
-    finally:
-        pass
+    except BaseException:
+        # `_get` raises deliberately on a persistent HTTP failure, and a run
+        # this long will also meet Ctrl-C. Either way the shard must be closed
+        # and both databases committed: the previous `finally: pass` was dead,
+        # so any exception skipped _finish entirely and abandoned the open
+        # shard mid-record. Re-raised, because a crawl that stopped early must
+        # not look like one that finished.
+        _finish(shards, st, ident, totals)
+        raise
     return _finish(shards, st, ident, totals)
 
 

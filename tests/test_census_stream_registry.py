@@ -72,13 +72,19 @@ REGISTRY = {
         "either makes the dedup silently incomplete in exactly the direction "
         "that costs bandwidth and storage."),
     "corpus_expand_report.py": (
-        {"records"},
-        "Reads the frozen indexed stream only, and only to report how the "
-        "crawl's yield compares against the census as a denominator. It is a "
-        "descriptive report over shards, not a dedup decision -- the decision "
-        "is made by corpus_identity_index.py, which reads all three streams. "
-        "Using the comparable frozen denominator here keeps this report's "
-        "percentages comparable with every other census report."),
+        set(),
+        "READS NO CENSUS STREAM AT ALL, and is listed to say so. Its inputs "
+        "are the crawl's gzipped shards on external storage and "
+        "corpus/atlas/expand_state.sqlite; it computes no census denominator "
+        "and publishes no percentage against one. The detector flags it "
+        "because `records` is also an ordinary JSON key in its own output "
+        "(`\"records\": n`, `d['records']`), and the detector cannot tell a "
+        "dict key from a directory name -- nor should it be narrowed to try, "
+        "since a bare quoted stream name in a tuple is a real read this file "
+        "must keep catching. An earlier version of this entry declared "
+        "{records} and justified it with a census denominator that does not "
+        "exist, which is exactly the invented-justification failure this "
+        "registry exists to prevent, committed inside the registry itself."),
     "census_evidence_design.py": (
         {"records"},
         "Study design is read from NLM publication types and MeSH check tags, "

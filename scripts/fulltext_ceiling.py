@@ -2,22 +2,32 @@
 """Measure how much cancer full text is obtainable, and under what terms.
 
 MISSION.md said "roughly 21% of cancer articles are in PMC open access; the
-remainder is paywalled". The first half is right. The second half is not: a
-substantial slice of the remainder is freely readable without being in PMC, and
--- separately -- a slice of it is openly licensed while flagged OPEN_ACCESS:N.
+remainder is paywalled". THE SECOND HALF IS WHAT THIS REFUTES: a large slice of
+that remainder is freely readable without being in the OA subset, and --
+separately -- a slice is openly licensed while flagged OPEN_ACCESS:N.
+
+The first half is NOT endorsed here, and saying "the first half is right" (as
+an earlier version of this docstring did) would be endorsing a sentence this
+same change rewrites. The 21% is a share of census records carrying a PMC
+IDENTIFIER, which is not the same claim as being in PMC open access, and it is
+computed over a different and smaller population than anything below. The
+nearest quantity this script measures is `in_pmc_oa`, which comes out near 40%
+over Europe PMC's set -- quoting that as confirmation of the 21% would be
+comparing two different questions, and the report says so rather than doing it.
 
 Three DIFFERENT questions get three different numbers, and the reason to
 compute them separately is that the honest ceiling depends on which one you
 mean:
 
-  IN PMC OA      -- in the PMC open-access subset. The old 21%.
+  IN PMC OA      -- in Europe PMC's open-access subset.
   READABLE       -- Europe PMC holds the text (inEPMC=Y) or flags it OA. What
                     a reader can reach without paying.
   REDISTRIBUTABLE-- carries an explicitly open licence. What this project may
                     republish. Strictly the smallest of the three.
 
 Counts come from Europe PMC's own hitCount, so each is that service's answer to
-a stated query rather than an estimate of ours. Output: analysis/fulltext-ceiling.{md,json}
+a stated query rather than an estimate of ours.
+Output: analysis/europepmc-access-ceiling.{md,json}
 """
 from __future__ import annotations
 
@@ -140,12 +150,26 @@ def render(out: dict) -> str:
         "## Which denominator these percentages use",
         "",
         f"All shares above are of Europe PMC's own free-text `cancer` set ({total:,}",
-        "records). That is NOT this project's census, which is defined by the MeSH",
-        "C04 neoplasms tree and counts ~5.19M. The two sets overlap heavily but are",
-        "built by different rules -- a free-text match catches papers that merely",
-        "mention cancer, and misses indexed papers that never use the word. So these",
-        "percentages describe Europe PMC, and are not interchangeable with a",
-        "percentage computed over the census.",
+        "records). That is NOT this project's census, and the census is itself two",
+        "streams rather than one:",
+        "",
+        "| stream | records | how membership is decided |",
+        "|---|---:|---|",
+        "| MeSH-indexed | 4,403,994 | the MeSH C04 neoplasms tree, plus nine adjacent descriptors |",
+        "| text-recovered | 783,271 | a text match, for records MeSH has not indexed yet |",
+        "| **census total** | **5,187,265** | |",
+        "",
+        "Saying the census is \"defined by the MeSH C04 tree and counts ~5.19M\"",
+        "silently welds the definition of one stream to the size of both -- the",
+        "C04-defined stream is 4.40M, and the 783,271 text-recovered records are by",
+        "definition NOT MeSH-indexed. That matters here because the ~21% quoted in",
+        "MISSION.md is computed over the 4,403,994; against 5,187,265 the same",
+        "count is 18.1%, so the denominator has to travel with the number.",
+        "",
+        "Europe PMC's set is built by yet a third rule -- a free-text match catches",
+        "papers that merely mention cancer and misses indexed papers that never use",
+        "the word -- so these percentages describe Europe PMC and are not",
+        "interchangeable with a percentage computed over either census stream.",
         "",
         "## What this corrects",
         "",

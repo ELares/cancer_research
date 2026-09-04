@@ -6,19 +6,19 @@
     "pct_of_all": 100.0
   },
   "in_pmc_oa": {
-    "count": 2206554,
+    "count": 2206555,
     "query": "cancer AND OPEN_ACCESS:Y",
     "means": "In Europe PMC's open-access subset. This is the figure MISSION.md quoted.",
     "pct_of_all": 39.59
   },
   "readable": {
-    "count": 3227686,
+    "count": 3227687,
     "query": "cancer AND (IN_EPMC:Y OR OPEN_ACCESS:Y)",
     "means": "Europe PMC holds the full text. Free to read; says nothing about reuse.",
     "pct_of_all": 57.91
   },
   "open_licence": {
-    "count": 1185810,
+    "count": 1185811,
     "query": "cancer AND (LICENSE:cc0 OR LICENSE:'cc by' OR LICENSE:'cc-by' OR LICENSE:'cc by-sa' OR LICENSE:'public domain')",
     "means": "Carries a licence permitting redistribution with attribution.",
     "pct_of_all": 21.27

@@ -29,15 +29,55 @@ STATE_DB = REPO / "corpus" / "atlas" / "expand_state.sqlite"
 OUT_MD = REPO / "analysis" / "corpus-expansion.md"
 OUT_JSON = REPO / "analysis" / "corpus-expansion.json"
 
-# Licences permitting redistribution, which is a narrower question than
-# whether an article was free to read. The distinction is the one MISSION.md
-# turns on and it is kept in the data rather than in a footnote.
-REDISTRIBUTABLE = ("cc0", "cc by", "cc-by", "cc by-sa", "public domain")
+# Licences permitting redistribution, which is a narrower question than whether
+# an article was free to read. The distinction is the one MISSION.md turns on,
+# so it is kept in the data rather than in a footnote.
+#
+# MATCHED AS WHOLE TOKENS, not by prefix, because a prefix test cannot express
+# this set. `"cc by-nc".startswith("cc by")` is True, so the obvious version
+# counted every NonCommercial licence as redistributable -- 237 records of a
+# reported 2,102 on the live crawl, inside the column the page tells readers to
+# use INSTEAD of the total. Its ND guard did not save it either: the guard
+# fired only when the string ended exactly in `-nd`, so `cc by-nd/4.0` and
+# `CC BY-ND 4.0` both passed, and only the bare spellings this crawl happens to
+# see were caught.
+#
+# The excluded clauses and why each one excludes:
+#   nc  -- NonCommercial forbids redistribution in a commercial context, and
+#          this project cannot bind who reads a public repository.
+#   nd  -- NoDerivatives forbids redistributing a modified form, and stored
+#          text is extracted, re-encoded and re-chunked.
+REDISTRIBUTABLE = ("cc0", "cc by", "cc-by", "cc by-sa", "cc-by-sa",
+                   "public domain", "cc pd")
+RESTRICTIVE_CLAUSES = ("nc", "nd")
+
+
+def _licence_tokens(lic: str) -> list[str]:
+    """Split a licence string into comparable clause tokens.
+
+    Licences arrive as `cc by`, `cc-by-nc-nd`, `CC BY-ND 4.0`, `cc by-nc/4.0`
+    and worse. Version numbers and URLs carry no clause information, so they
+    are dropped rather than pattern-matched around.
+    """
+    s = (lic or "").strip().lower()
+    for sep in ("/", " 1.", " 2.", " 3.", " 4."):
+        s = s.split(sep)[0]
+    return [t for t in s.replace("-", " ").replace("_", " ").split() if t]
 
 
 def _redistributable(lic: str) -> bool:
-    l = (lic or "").strip().lower()
-    return any(l.startswith(x) for x in REDISTRIBUTABLE) and "nd" not in l.split("-")[-1:]
+    toks = _licence_tokens(lic)
+    if not toks:
+        return False
+    if any(c in toks for c in RESTRICTIVE_CLAUSES):
+        return False
+    joined = " ".join(toks)
+    return any(joined == _norm(x) or joined.startswith(_norm(x) + " ")
+               for x in REDISTRIBUTABLE)
+
+
+def _norm(x: str) -> str:
+    return " ".join(x.replace("-", " ").split())
 
 
 def scan() -> dict:
@@ -178,7 +218,13 @@ def render(d: dict) -> str:
         "| source | pages seen | new | full text | slices done |",
         "|---|--:|--:|--:|--:|",
     ]
-    for s in d["slices"]:
+    # Ranked HERE, like the other two tables. The stored list arrives from
+    # SQL whose ORDER BY leaves ties unspecified, so two equal sources could
+    # swap places between runs -- an order-dependence a list cannot be
+    # shuffle-tested for, since shuffling a list preserves it. Sorting on the
+    # ranked quantity with a label tie-break is what makes the published order
+    # a property of the renderer rather than of the query plan.
+    for s in sorted(d["slices"], key=lambda r: (-r["kept"], -r["seen"], r["src"])):
         L.append(f"| {s['src']} | {s['seen']:,} | {s['kept']:,} | "
                  f"{s['fulltext']:,} | {s['done']}/{s['slices']} |")
     L += [
@@ -190,8 +236,13 @@ def render(d: dict) -> str:
         "returns 404 otherwise. The boundary is enforced by the source, not by "
         "a judgement made here.",
         "- **Bronze content.** Free to read on a publisher's own page, no "
-        "licence, and not served by an open API. This project measured it at "
-        "roughly 12% of census records that have a DOI and no PMC id.",
+        "licence attached, and not served by an open API. Its size is NOT "
+        "measured here and the figure this line used to carry (\"roughly 12% "
+        "of census records that have a DOI and no PMC id\") rested on no "
+        "analysis in this repository. What IS measured, in "
+        "`analysis/europepmc-access-ceiling.md`, is the gap bronze sits "
+        "inside: 57.9% of Europe PMC's cancer records are readable there "
+        "against 21.3% openly licensed.",
         "- **Anything already held.** Checked on three identifiers before "
         "fetching, not after.",
         "",

@@ -49,7 +49,13 @@ NAS_FULLTEXT = Path(
     os.getenv("FERRO_ATLAS_FULLTEXT", str(Path.home() / "nas" / "cancer-atlas" / "fulltext"))
 )
 
-_DOI_PREFIX = re.compile(r"^\s*(?:https?://(?:dx\.)?doi\.org/|doi:)\s*", re.I)
+# Every resolver form seen in the wild. `www.` and the `doi.org/doi:` double
+# prefix were missing, so `https://www.doi.org/10.1/x` failed the `10.`
+# structure test and was DROPPED -- the article kept its PMID key but lost
+# its DOI one, which is how a record that only ever carries a DOI (a
+# preprint, a dataset) reads as new every time.
+_DOI_PREFIX = re.compile(
+    r"^\s*<?\s*(?:(?:https?://)?(?:dx\.|www\.)*doi\.org/|doi:\s*)*", re.I)
 
 
 def norm_doi(v) -> str | None:
@@ -58,7 +64,7 @@ def norm_doi(v) -> str | None:
     indexing both forms would report a held article as new."""
     if not v:
         return None
-    s = _DOI_PREFIX.sub("", str(v)).strip().rstrip(".").lower()
+    s = _DOI_PREFIX.sub("", str(v)).strip().rstrip(">").rstrip(".").lower()
     # STRUCTURE, not length. The first version required more than six
     # characters, which is a guess at what a DOI looks like and rejects the
     # short-but-valid `10.1/x` shape. A DOI is `10.<registrant>/<suffix>`, so
@@ -67,25 +73,53 @@ def norm_doi(v) -> str | None:
     if not s.startswith("10.") or "/" not in s:
         return None
     registrant, _, suffix = s.partition("/")
-    return s if len(registrant) > 3 and suffix else None
+    if not (len(registrant) > 3 and suffix):
+        return None
+    # A VERSION SUFFIX IS DELIBERATELY KEPT, not collapsed. `10.x/y.v2` and
+    # `10.x/y` are different DOIs and often different documents -- a revised
+    # preprint is new content, which is exactly what this crawl is for.
+    # Collapsing them would make the dedup refuse a version we do not hold,
+    # and a false "already held" is silent and permanent, where a false "new"
+    # costs one re-download the audit can see. The asymmetry decides it.
+    return s
 
 
 def norm_pmid(v) -> str | None:
+    """A PubMed identifier as ASCII decimal digits, without leading zeros.
+
+    Two things `str.isdigit()` gets wrong here, and both let a duplicate in
+    rather than keeping one out -- the direction that costs a re-download:
+
+    ASCII ONLY. `isdigit()` is True for the fullwidth `１２３`, the superscript
+    `12²` and the Arabic-Indic `١٢٣`. None of those is a PMID, and each would
+    enter the index as a key nothing can ever match, so the real article looks
+    unheld forever. `str.isascii()` is what excludes them.
+
+    LEADING ZEROS STRIPPED. `0123` and `123` are the same PubMed record, and a
+    source that zero-pads would otherwise make every one of its records look
+    new. Stripping is safe because PMIDs have no significant leading zero.
+    """
     if not v:
         return None
     s = str(v).strip()
-    return s if s.isdigit() and s != "0" else None
+    if not (s.isascii() and s.isdigit()):
+        return None
+    s = s.lstrip("0")
+    return s or None
 
 
 def norm_pmcid(v) -> str | None:
     """`PMC` + digits, uppercased. Sources emit `PMC123`, `pmc123` and a bare
     `123`; the bare form is REFUSED rather than guessed, because a bare number
-    is indistinguishable from a PMID and guessing would collide two namespaces."""
+    is indistinguishable from a PMID and guessing would collide two namespaces.
+
+    Digits are held to ASCII for the same reason as `norm_pmid`.
+    """
     if not v:
         return None
     s = str(v).strip().upper()
-    if s.startswith("PMC") and s[3:].isdigit():
-        return s
+    if s.startswith("PMC") and s[3:].isascii() and s[3:].isdigit():
+        return "PMC" + (s[3:].lstrip("0") or "0")
     return None
 
 
@@ -103,7 +137,12 @@ CREATE TABLE IF NOT EXISTS scanned (
     mtime     REAL NOT NULL,
     size      INTEGER NOT NULL,
     records   INTEGER NOT NULL,
-    finished  REAL NOT NULL
+    finished  REAL NOT NULL,
+    -- Lines this scan could not parse. Recorded because a shard IS marked
+    -- scanned even when some of it was unreadable -- refusing to mark it
+    -- would rescan the same corrupt file on every run forever -- and a loss
+    -- nothing counts is a loss nobody finds.
+    bad       INTEGER NOT NULL DEFAULT 0
 );
 """
 
@@ -114,6 +153,20 @@ def connect() -> sqlite3.Connection:
     c.executescript(SCHEMA)
     c.execute("PRAGMA journal_mode=WAL")
     c.execute("PRAGMA synchronous=NORMAL")
+    # CREATE TABLE IF NOT EXISTS does not add a column to a table that already
+    # exists, so an index built before `bad` was introduced needs it grafted on
+    # rather than silently running without it.
+    # Best-effort, because this same function opens the index for READERS too
+    # -- an audit, a coverage check, a run while the crawl holds the write
+    # lock. Those must not fail on a migration they neither need nor can
+    # perform, so a refusal here is left for the next writer to complete.
+    try:
+        cols = {r[1] for r in c.execute("PRAGMA table_info(scanned)")}
+        if "bad" not in cols:
+            c.execute("ALTER TABLE scanned ADD COLUMN bad INTEGER NOT NULL DEFAULT 0")
+            c.commit()
+    except sqlite3.OperationalError:
+        pass
     return c
 
 
@@ -130,11 +183,12 @@ def _already(c, path: Path) -> bool:
     return bool(row and abs(row[0] - st.st_mtime) < 1e-6 and row[1] == st.st_size)
 
 
-def _record(c, path: Path, n: int) -> None:
+def _record(c, path: Path, n: int, bad: int = 0) -> None:
     st = path.stat()
     c.execute(
-        "INSERT OR REPLACE INTO scanned(path, mtime, size, records, finished) VALUES (?,?,?,?,?)",
-        (str(path), st.st_mtime, st.st_size, n, time.time()),
+        "INSERT OR REPLACE INTO scanned(path, mtime, size, records, finished, bad) "
+        "VALUES (?,?,?,?,?,?)",
+        (str(path), st.st_mtime, st.st_size, n, time.time(), bad),
     )
 
 
@@ -159,13 +213,14 @@ def _flush(c, rows):
 def scan_jsonl_gz(c, path: Path, source: str, fulltext: bool, verbose=True) -> int:
     if _already(c, path):
         return 0
-    rows, n = [], 0
+    rows, n, bad = [], 0, 0
     try:
         with gzip.open(path, "rt", encoding="utf-8", errors="replace") as fh:
             for ln in fh:
                 try:
                     r = json.loads(ln)
                 except Exception:
+                    bad += 1
                     continue
                 n += 1
                 has_text = fulltext and bool(r.get("text"))
@@ -178,10 +233,13 @@ def scan_jsonl_gz(c, path: Path, source: str, fulltext: bool, verbose=True) -> i
         print(f"  ! unreadable {path.name}: {e}", file=sys.stderr)
         return 0
     _flush(c, rows)
-    _record(c, path, n)
+    _record(c, path, n, bad)
     c.commit()
+    if bad:
+        print(f"  ! {path.name}: {bad} unparseable line(s) skipped", file=sys.stderr)
     if verbose:
-        print(f"  {source:22s} {path.name[:44]:44s} {n:>8,}")
+        print(f"  {source:22s} {path.name[:44]:44s} {n:>8,}"
+              + (f"  ({bad} bad)" if bad else ""))
     return n
 
 

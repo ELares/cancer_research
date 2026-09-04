@@ -66,6 +66,7 @@ import ast
 import importlib
 import inspect
 import json
+import re
 import sys
 import textwrap
 from pathlib import Path
@@ -247,6 +248,19 @@ def test_every_ungated_generator_is_ungated_for_a_checked_reason():
     for name, reason in EXEMPT.items():
         assert name in names, f"exemption {name!r} names no generator"
         assert reason.strip(), f"exemption {name!r} has no reason"
+        # AND THE REASON'S OWN CLAIMS ARE CHECKED, which is what this file's
+        # header promises. An exemption that points at a guard elsewhere is
+        # only as good as that guard existing: rename or delete the test and
+        # the exemption silently becomes a claim about nothing, while every
+        # test here stays green. Cheap to check, so it is checked.
+        for ref in re.findall(r"(test_[A-Za-z0-9_]+\.py)::(test_[A-Za-z0-9_]+)",
+                              reason):
+            f = Path(__file__).resolve().parent / ref[0]
+            assert f.exists(), (
+                f"exemption {name!r} points at {ref[0]}, which does not exist")
+            assert f"def {ref[1]}(" in f.read_text(encoding="utf-8"), (
+                f"exemption {name!r} points at {ref[0]}::{ref[1]}, which does "
+                "not exist -- the exemption's stated compensating guard is gone")
 
 
 def _render_only_reassembles(name: str) -> bool:

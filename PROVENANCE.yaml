@@ -117,13 +117,26 @@ corpus:
 
   expanded_corpus:
     description: >
-      A breadth crawl of Europe PMC covering every source it indexes (MEDLINE,
-      PMC, preprint servers, patents, theses, agricultural and biological
-      abstracts, Chinese biomedical literature, and clinical trial texts),
-      run by scripts/corpus_expand_fetch.py. Stored OUTSIDE this repository on
-      external storage; nothing from this crawl is committed or redistributed
-      here. Counts are measured, not asserted -- see analysis/corpus-expansion.md,
-      which is regenerated from the stored shards by corpus_expand_report.py.
+      A breadth crawl of Europe PMC run by scripts/corpus_expand_fetch.py,
+      covering the nine sources listed in that script's SOURCES constant:
+      MEDLINE/PubMed (MED), PubMed Central (PMC), preprint servers (PPR),
+      patents (PAT), theses via EThOS (ETH), Agricola (AGR), Chinese
+      Biological Abstracts (CBA), NHS Evidence (HIR) and CiteXplore (CTX).
+
+      NOT "every source Europe PMC indexes": NCBI Bookshelf (NBK) is indexed
+      there and is not crawled here, and the earlier wording claimed
+      completeness this crawl does not have. CTX is CiteXplore, a
+      bibliographic source -- an earlier version of this entry called it
+      "clinical trial texts", which it is not -- and HIR was missing from the
+      prose entirely.
+
+      Stored OUTSIDE this repository on external storage; nothing from this
+      crawl is committed or redistributed here. Counts are measured, not
+      asserted: regenerate them with `python3 scripts/corpus_expand_report.py`,
+      which reads the stored shards. That report is deliberately NOT committed
+      (it is gitignored) because it is a running total that changes on every
+      refresh, so this entry points at the command rather than at a file no
+      clone contains.
     location: "external storage (not in git); see scripts/corpus_expand_fetch.py --help"
     rights_model: >
       Two questions are asked separately, because conflating them is how a
