@@ -11,6 +11,7 @@ import gzip
 import json
 import sqlite3
 import sys
+import urllib.parse
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent
@@ -79,7 +80,17 @@ def test_the_source_is_what_refuses_paywalled_text(monkeypatch):
     monkeypatch.setattr(fx, "_get", fake_get)
     assert fx.fetch_fulltext({"pmcid": "PMC1", "source": "MED"}) is None
     assert calls and calls[0].endswith("/PMC1/fullTextXML")
-    assert "ebi.ac.uk" in calls[0], "text is fetched from somewhere other than Europe PMC"
+
+    # THE HOST IS PARSED, not searched for. `"ebi.ac.uk" in url` is satisfied by
+    # https://evil.example/?ref=ebi.ac.uk and by https://ebi.ac.uk.attacker.test/
+    # -- a substring standing in for a host check, which is the same shape as
+    # the quote-splitting scan that let a planted publisher fetch through. Here
+    # it would have passed a URL pointing anywhere at all, in the one test whose
+    # stated job is that text comes only from Europe PMC. CodeQL flagged it as
+    # py/incomplete-url-substring-sanitization and was right.
+    host = urllib.parse.urlsplit(calls[0]).hostname
+    assert host == "www.ebi.ac.uk", (
+        f"text is fetched from {host!r}, not Europe PMC")
 
 
 def _fetch_hosts(src: str) -> set:
@@ -106,8 +117,11 @@ def _fetch_hosts(src: str) -> set:
                      if isinstance(v, ast.Constant) and isinstance(v.value, str)]
         for s in parts:
             if s.startswith(("http://", "https://")):
-                rest = s.split("//", 1)[1]
-                host = rest.split("/")[0].split("?")[0]
+                # urlsplit, not hand-rolled splitting: userinfo, ports and
+                # query strings all move where the host appears to be, and a
+                # hand-rolled parser is how a lookalike domain gets read as
+                # the real one.
+                host = urllib.parse.urlsplit(s).hostname
                 if host:
                     hosts.add(host)
     return hosts
@@ -137,6 +151,17 @@ def test_the_host_guard_actually_catches_a_publisher_fetch():
                 'f"https://link.springer.com/article/{doi}"'):
         found = _fetch_hosts(f"def scrape(doi):\n    return _get({url})\n")
         assert found and found != {"www.ebi.ac.uk"}, f"guard blind to {url}"
+
+
+def test_a_lookalike_host_is_not_mistaken_for_europe_pmc():
+    """The substring form of this check accepted every one of these. A host
+    test that a lookalike domain passes is not a host test."""
+    for url in ("https://www.ebi.ac.uk.attacker.test/x",
+                "https://evil.example/?ref=www.ebi.ac.uk",
+                "https://www.ebi.ac.uk@evil.example/x",
+                "https://notwww.ebi.ac.uk.co/x"):
+        assert _fetch_hosts(f'x = "{url}"') != {"www.ebi.ac.uk"}, url
+        assert "www.ebi.ac.uk" in url, "the substring check would have passed this"
 
 
 def test_a_record_with_no_identifier_is_refused():
