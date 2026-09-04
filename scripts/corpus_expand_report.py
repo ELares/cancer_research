@@ -30,45 +30,27 @@ STATE_DB = REPO / "corpus" / "atlas" / "expand_state.sqlite"
 OUT_MD = REPO / "analysis" / "corpus-expansion.md"
 OUT_JSON = REPO / "analysis" / "corpus-expansion.json"
 
-# Licences permitting redistribution, which is a narrower question than whether
-# an article was free to read. The distinction is the one MISSION.md turns on,
-# so it is kept in the data rather than in a footnote.
-#
-# MATCHED AS WHOLE TOKENS, not by prefix, because a prefix test cannot express
-# this set. `"cc by-nc".startswith("cc by")` is True, so the obvious version
-# counted every NonCommercial licence as redistributable -- 237 records of a
-# reported 2,102 on the live crawl, inside the column the page tells readers to
-# use INSTEAD of the total. Its ND guard did not save it either: the guard
-# fired only when the string ended exactly in `-nd`, so `cc by-nd/4.0` and
-# `CC BY-ND 4.0` both passed, and only the bare spellings this crawl happens to
-# see were caught.
-#
-# The excluded clauses and why each one excludes:
-#   nc  -- NonCommercial forbids redistribution in a commercial context, and
-#          this project cannot bind who reads a public repository.
-#   nd  -- NoDerivatives forbids redistributing a modified form, and stored
-#          text is extracted, re-encoded and re-chunked.
-REDISTRIBUTABLE = ("cc0", "cc by", "cc-by", "cc by-sa", "cc-by-sa",
-                   "public domain", "cc pd")
-RESTRICTIVE_CLAUSES = ("nc", "nd")
-
-
+# Which licences permit REDISTRIBUTION is decided by `_redistributable` below,
+# from decomposed clause tokens. Two module constants used to hold the answer
+# as literal strings; they were left behind by the tokeniser rewrite, referenced
+# by nothing, and had drifted out of agreement with the code (`"cc pd"` was
+# listed as redistributable while the function refused it). A constant that no
+# longer describes the behaviour beside it is worse than no constant, so the
+# rule lives in one place now.
 def _licence_tokens(lic: str) -> set:
     """A licence string reduced to comparable clause tokens.
 
     EVERY separator becomes whitespace, including `/`, so a licence URL is
-    tokenised rather than truncated. The previous version split on `/` and on
-    version separators (`" 4."` and friends) and DISCARDED everything after
-    the match -- which threw away clauses:
+    tokenised rather than truncated. An earlier version split on `/` and on
+    version separators and DISCARDED everything after the match, which threw
+    clauses away: `"cc by 4.0 nd"` became `"cc by"` and classified as
+    redistributable, and every CC URL collapsed to `https:`.
 
-        "cc by 4.0 nd"              -> "cc by"   -> redistributable  (WRONG)
-        "cc by 2.0 nc"              -> "cc by"   -> redistributable  (WRONG)
-        ".../licenses/by-nc/4.0/"   -> "https:"  -> nothing at all
-
-    Dropping the version-strip entirely also costs nothing: a mutation that
-    removed only those separators left all tests green, so the code was
-    carrying the hole without buying anything. Version numbers are filtered
-    out as TOKENS instead, which cannot hide a clause behind them.
+    Tokens are then DECOMPOSED, because a clause can arrive glued to its
+    neighbours. `cc by-nd4.0` and `CC BY-NCND` both reach an exact-token test
+    as one opaque word (`nd4.0`, `ncnd`) and sail past a check for `nd`, which
+    is how a NoDerivatives licence was still classified redistributable after
+    the tokeniser was supposedly fixed.
     """
     s = (lic or "").strip().lower()
     for ch in "-_/,;()":
@@ -79,42 +61,80 @@ def _licence_tokens(lic: str) -> set:
         if not t or t in _NOISE or _VERSION.match(t):
             continue
         # The Creative Commons host IS the "cc" in "cc by": dropping it as URL
-        # noise left `.../licenses/by/4.0/` with the bare token `by`, which the
-        # rule below rightly refuses to read as a licence.
-        out.add("cc" if t in _CC_HOST else t)
+        # noise left `.../licenses/by/4.0/` with the bare token `by`.
+        if t in _CC_HOST:
+            out.add("cc")
+            continue
+        out |= _decompose(t)
     return out
 
 
-# Tokens that carry no licence information: URL scheme and host fragments, and
-# the word "licenses" from a Creative Commons path.
+def _decompose(tok: str) -> set:
+    """One token to the clause codes it actually contains.
+
+    `nd4.0` -> {nd}; `ncnd` -> {nc, nd}; `cc0` -> {cc0} (NOT {cc, 0}, which is
+    why the version strip is applied after the cc0 check). Anything that is not
+    a recognised concatenation is returned unchanged, so an unknown publisher
+    string is never invented into a clause.
+    """
+    if tok in _ATOMIC:
+        return {tok}
+    glued = _GLUED_VERSION.match(tok)
+    if glued:
+        tok = glued.group(1)
+        if tok in _ATOMIC:
+            return {tok}
+    if _CLAUSE_RUN.fullmatch(tok):
+        return set(_CLAUSE_CODE.findall(tok))
+    return {tok}
+
+
 _NOISE = {"http", "https", "www", "licenses", "license", "licence",
           "org", "int", "deed", "en"}
 _CC_HOST = {"creativecommons.org", "creativecommons"}
 _VERSION = re.compile(r"^v?\d+(\.\d+)*$")
+# A clause with a version glued straight onto it: `nd4.0`, `by4`, `sa3.0`.
+_GLUED_VERSION = re.compile(r"^([a-z]+?)v?\d+(?:\.\d+)*$")
+# Two or more clause codes run together: `ncnd`, `bync`, `bysa`.
+_CLAUSE_RUN = re.compile(r"(?:nc|nd|sa|by){2,}")
+_CLAUSE_CODE = re.compile(r"nc|nd|sa|by")
+_ATOMIC = {"cc0"}
+
+# Words that mean the opposite of an open licence wherever they appear. Without
+# these, "Zero rights granted, all rights reserved" matched on `zero` and
+# "not in the public domain" matched on `public domain` -- both classified as
+# redistributable by a rule looking only for a positive marker.
+_DISQUALIFYING = {"not", "no", "none", "reserved", "copyright", "restricted",
+                  "subscription", "proprietary", "except", "unless"}
+
+_RESTRICTIVE = {"nc", "nd", "noncommercial", "noderivatives", "noderivs",
+                "noderiv"}
 
 
 def _redistributable(lic: str) -> bool:
     """May this article be REPUBLISHED, not merely read.
 
-    Restrictive clauses are checked FIRST and independently of how the licence
-    was spelled, because that is the direction where being wrong publishes an
-    overclaim.
+    Restrictive clauses and disqualifying words are checked FIRST and before
+    any positive marker, because that is the direction where being wrong
+    publishes an overclaim. Reordering these -- putting the `cc0`/`zero`
+    shortcut above the restrictive check -- is a mutation the tests catch.
     """
     toks = _licence_tokens(lic)
     if not toks:
         return False
-    if toks & _RESTRICTIVE:
+    if toks & _RESTRICTIVE or toks & _DISQUALIFYING:
         return False
-    if toks & {"cc0", "zero"}:
+    if "cc0" in toks:
+        return True
+    # `zero` and `publicdomain` only count as Creative Commons markers, not as
+    # ordinary English words appearing in a sentence.
+    cc = bool(toks & {"cc", "publicdomain"})
+    if cc and "zero" in toks:
         return True
     if "publicdomain" in toks or {"public", "domain"} <= toks:
         return True
-    # CC BY and CC BY-SA. `by` alone is not enough -- it has to be a Creative
-    # Commons licence, not the word "by" from an attribution string.
-    return "by" in toks and bool(toks & {"cc", "publicdomain"})
-
-
-_RESTRICTIVE = {"nc", "nd", "noncommercial", "noderivatives", "noderivs"}
+    # CC BY and CC BY-SA. `by` alone is the English word, not a licence.
+    return "by" in toks and cc
 
 
 def scan() -> dict:

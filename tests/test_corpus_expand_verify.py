@@ -444,3 +444,115 @@ def test_repair_refuses_an_empty_read_even_with_no_rows_to_compare_against():
         empty = d / "no-shards"
         empty.mkdir()
         assert repair(idx, empty) == 2
+
+
+# --- Guards for the mutations that survived round 3 -------------------------
+#
+# A third review ran nine mutations against these files and SEVEN survived, so
+# the previous commit's claim that every new guard was mutation-tested was
+# false: the guards that were tested were the ones chosen for testing. Each
+# test below exists because a specific mutation stayed green.
+
+def test_a_clause_glued_to_its_version_is_still_a_clause():
+    """`cc by-nd4.0` reaches an exact-token test as the opaque word `nd4.0`
+    and sails past a check for `nd`."""
+    for lic in ("cc by-nd4.0", "CC BY-ND4.0", "cc by-nc4.0", "cc by sa4.0 nd"):
+        assert not _R(lic), f"{lic} counted as redistributable"
+
+
+def test_concatenated_clause_codes_are_decomposed():
+    """`CC BY-NCND` is one token to a naive splitter and two clauses in fact."""
+    for lic in ("CC BY-NCND", "cc bync", "cc by-ncnd"):
+        assert not _R(lic), f"{lic} counted as redistributable"
+
+
+def test_an_open_word_inside_a_closed_sentence_is_not_a_licence():
+    """A positive marker is not enough on its own: these both matched a rule
+    that only looked for `zero` or `public domain`."""
+    assert not _R("Zero rights granted, all rights reserved")
+    assert not _R("not in the public domain")
+    assert not _R("no reuse permitted")
+
+
+def test_the_version_filter_is_load_bearing():
+    """Removing `_VERSION` was a surviving mutation. Without it a bare version
+    token stays in the set, and `4.0` is not a clause -- the failure it causes
+    is that a decomposed clause can no longer be told from a number."""
+    import sys as _s
+    _s.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
+    import corpus_expand_report as m
+    assert m._licence_tokens("cc by 4.0") == {"cc", "by"}, (
+        "a bare version number is being kept as a licence clause")
+    assert m._licence_tokens("cc0 1.0") == {"cc0"}
+
+
+def test_the_noise_filter_is_load_bearing():
+    """Removing `_NOISE` was a surviving mutation: URL scheme and path words
+    would enter the clause set, where `license` and `https` are not clauses."""
+    import sys as _s
+    _s.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
+    import corpus_expand_report as m
+    assert m._licence_tokens("https://creativecommons.org/licenses/by/4.0/") == {
+        "cc", "by"}, "URL scaffolding is leaking into the clause set"
+
+
+def test_the_restrictive_check_runs_before_any_positive_marker():
+    """Moving the cc0/zero shortcut above the restrictive check was a
+    surviving mutation. A string carrying BOTH must resolve to refusal."""
+    assert not _R("cc0 nc")
+    assert not _R("publicdomain zero nd")
+    assert not _R("cc by-sa nc")
+
+
+def test_the_repair_ceiling_actually_bounds_what_can_be_deleted(tmp_path):
+    """REPAIR_MAX_FRACTION's VALUE was untested: the two existing tests bound
+    it only to (0.04, 0.98), so setting it to 0.90 -- permitting deletion of
+    ninety per cent of the crawl index -- passed the entire suite."""
+    import corpus_expand_verify as v
+    assert v.REPAIR_MAX_FRACTION <= 0.25, (
+        f"a ceiling of {v.REPAIR_MAX_FRACTION:.0%} permits deleting most of the "
+        "index; the incident this tool was built for orphaned 0.9%")
+    assert v.REPAIR_MAX_FRACTION > 0.02, (
+        "a ceiling this tight refuses the repair the tool exists to perform")
+
+    # And the boundary is exercised, not just asserted: 15% must refuse.
+    idx = _index(tmp_path, [("pmid", str(i), "expand-MED", 0) for i in range(1, 101)])
+    sd = tmp_path / "shards"
+    _shard_file(sd, "expanded-00000.jsonl.gz",
+                [{"pmid": str(i)} for i in range(1, 86)])  # 15 orphans of 100
+    assert v.repair(idx, sd) == 2
+
+
+def test_a_missing_shard_directory_is_refused_for_being_missing(tmp_path, capsys):
+    """Asserting only `== 2` let the empty-read refusal satisfy this, so
+    deleting the is_dir check left it green -- the same vacuity the previous
+    commit claimed to have fixed one function up."""
+    import corpus_expand_verify as v
+    idx = _index(tmp_path, [("pmid", "1", "expand-MED", 0)])
+    assert v.repair(idx, tmp_path / "nope") == 2
+    assert "is not a directory" in capsys.readouterr().out
+
+
+def test_force_cannot_delete_against_a_path_that_does_not_exist(tmp_path, capsys):
+    """--force restored the round-2 full-wipe: all three refusals sat inside
+    one `if not force`, so a typo'd --shards with --force emptied the index
+    and exited 0. A path that does not exist cannot be a considered override."""
+    import corpus_expand_verify as v
+    idx = _index(tmp_path, [("pmid", str(i), "expand-MED", 0) for i in range(1, 51)])
+    assert v.repair(idx, tmp_path / "typo", force=True) == 2
+    assert "not overridable by --force" in capsys.readouterr().out
+    c = sqlite3.connect(idx)
+    assert c.execute("SELECT COUNT(*) FROM held").fetchone()[0] == 50
+    c.close()
+
+
+def test_live_shard_survives_a_missing_pgrep(monkeypatch, tmp_path):
+    """It used to raise FileNotFoundError and take the whole audit down on an
+    image without procps -- for a cosmetic label."""
+    import corpus_expand_verify as v
+
+    def boom(*a, **k):
+        raise FileNotFoundError("pgrep")
+
+    monkeypatch.setattr(v.subprocess, "run", boom)
+    assert v.live_shard(tmp_path) is None

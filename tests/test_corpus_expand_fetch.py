@@ -357,6 +357,27 @@ def test_the_run_closes_its_shard_on_the_way_out():
     assert "except BaseException:" in src and "_finish(shards, st, ident, totals)\n        raise" in src
 
 
+def test_finish_actually_closes_and_commits():
+    """Emptying `_finish` to `return totals` was a SURVIVING mutation: nothing
+    anywhere asserted it does its job, only that calling it twice is safe. A
+    salvage function that salvages nothing passes a safety test perfectly."""
+    import sqlite3 as s3
+
+    calls = []
+
+    class _S:
+        def close(self): calls.append("shard")
+
+    class _DB:
+        def commit(self): calls.append("commit")
+        def close(self): calls.append("close")
+
+    fx._finish(_S(), _DB(), _DB(), {"seen": 0})
+    assert calls.count("shard") == 1, "the open shard was not closed"
+    assert calls.count("commit") == 2, "both ledgers must be committed"
+    assert calls.count("close") == 2, "both connections must be closed"
+
+
 def test_finish_is_safe_to_call_twice():
     """The exception path calls it and re-raises; a second call on closed
     connections must not replace the original exception with its own."""

@@ -121,12 +121,27 @@ def live_shard(shard_dir: Path) -> str | None:
 
     Asked of the OS rather than inferred from the filenames: with no crawl
     running there is no open shard, and every truncated file is real damage.
-    The name is taken as the last in sorted order rather than a numeric max so
-    a second shard prefix in the same directory cannot pick the wrong file.
+    That gate is the whole change -- an earlier docstring claimed the switch
+    from `max(...)` to `sorted(...)[-1]` guarded against a second shard prefix,
+    which is false twice over: the old code already compared name STRINGS, so
+    the semantics are identical, and with two prefixes sorted-last picks the
+    LATER prefix, not the newest shard. Returns None when nothing is running.
     """
-    running = subprocess.run(["pgrep", "-f", "corpus_expand_fetch.py"],
-                             capture_output=True, text=True).stdout.strip()
-    if not running:
+    # Guarded, and narrower than a bare filename match. `pgrep -f
+    # corpus_expand_fetch.py` matches ANY command line containing that string
+    # -- an editor, a grep, or `pytest tests/test_corpus_expand_fetch.py` --
+    # and a false positive here stamps "open, being written" on a shard that
+    # is genuinely truncated, which is the reassurance this label exists to
+    # avoid giving. A missing pgrep is worse still: it used to raise
+    # FileNotFoundError and take the whole audit down, on an image without
+    # procps, for a cosmetic label.
+    try:
+        out = subprocess.run(
+            ["pgrep", "-f", r"python[^ ]* .*scripts/corpus_expand_fetch\.py"],
+            capture_output=True, text=True).stdout.strip()
+    except (OSError, ValueError):
+        return None
+    if not out:
         return None
     names = sorted(Path(x).name for x in glob.glob(str(shard_dir / "*.jsonl.gz")))
     return names[-1] if names else None
@@ -233,11 +248,20 @@ def repair(index: Path, shard_dir: Path, force: bool = False,
     print(f"crawl index rows: {total:,}")
     print(f"orphans         : {len(orphans):,}")
 
+    # NOT behind --force. The other two refusals describe a directory that
+    # exists and is genuinely empty or genuinely mostly-orphaned, which an
+    # operator can legitimately overrule. A path that does not exist cannot be
+    # any of those: forcing it deletes the whole crawl index on a typo, which
+    # is the round-2 hazard restored by a single flag. --force's own help text
+    # presupposes a directory ("really is that empty"), so this check is
+    # outside its scope by construction.
+    if not shard_dir.is_dir():
+        print(f"REFUSING: {shard_dir} is not a directory. If the crawl wrote "
+              "elsewhere, set FERRO_EXPAND_OUT or pass --shards. This refusal "
+              "is not overridable by --force.")
+        return 2
+
     if not force:
-        if not shard_dir.is_dir():
-            print(f"REFUSING: {shard_dir} is not a directory. If the crawl wrote "
-                  "elsewhere, set FERRO_EXPAND_OUT or pass --shards.")
-            return 2
         if not stored:
             print("REFUSING: no records were read from the shard directory, so "
                   "EVERY crawl row looks orphaned. That is what an unmounted or "

@@ -183,10 +183,10 @@ def search(src: str, year: int, cursor: str):
 # Licences under which Europe PMC may be ASKED for the text. Deliberately
 # wider than the set this project may REPUBLISH -- an NC or ND licence permits
 # reading and analysis while forbidding redistribution, and this project's use
-# is analysis. `corpus_expand_report.REDISTRIBUTABLE` is the narrower set, and
-# the two must not be conflated: reporting an NC record as redistributable
-# overstates what may be passed on. Every record stores its own licence, so the
-# narrower question stays answerable per record rather than per crawl.
+# is analysis. `corpus_expand_report._redistributable` decides the narrower
+# question, and the two must not be conflated: reporting an NC record as
+# redistributable overstates what may be passed on. Every record stores its
+# own licence, so the narrower question stays answerable per record.
 OPEN_LICENCES = ("cc0", "cc by", "cc-by", "cc by-nc", "cc by-sa", "cc by-nd",
                  "cc by-nc-sa", "cc by-nc-nd", "public domain")
 
