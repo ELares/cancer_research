@@ -206,11 +206,17 @@ def test_the_artifact_is_fresh_against_a_live_classification():
         "the headline row did.\n"
         f"  only live      = {sorted(set(live_body) - set(committed_body))[:6]}\n"
         f"  only committed = {sorted(set(committed_body) - set(live_body))[:6]}")
-    n = len(list((REPO_ROOT / "analysis").glob("*.md")))
+    # Counted through the generator's own discovery, not a fresh disk glob.
+    # A committed inventory describes what is IN THE REPOSITORY, so an
+    # untracked or gitignored page sitting in analysis/ must not be expected in
+    # it -- and reimplementing the rule here is how the two drift apart. The
+    # concrete case is the expansion crawl's progress dashboard: gitignored
+    # deliberately, present on a developer's disk, absent in CI.
+    n = len(m._tracked_analyses())
     tot = sum(len(committed.get(b, [])) for b in
               ("ferroptosis-or-physical", "therapy-subject", "method"))
     assert tot == n, (
-        f"the artifact classifies {tot} analyses and analysis/ holds {n}")
+        f"the artifact classifies {tot} analyses and the repository tracks {n}")
 
 
 def test_the_engine_module_row_measures_content():

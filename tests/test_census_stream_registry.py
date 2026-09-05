@@ -61,6 +61,30 @@ _PATTERN = re.compile(
 
 # module -> (streams it reads, why that set is the right one)
 REGISTRY = {
+    "corpus_identity_index.py": (
+        {"records", "records_unindexed", "records_updates"},
+        "Deliberately ALL THREE, and this is the one script where the frozen "
+        "indexed stream would be the wrong choice. Its job is to answer 'do we "
+        "already hold this article?' before a crawl downloads it, so a stream "
+        "left out is not a narrower denominator -- it is a set of articles the "
+        "crawl will re-download and store a second time. records_unindexed and "
+        "records_updates hold real articles this project already has; omitting "
+        "either makes the dedup silently incomplete in exactly the direction "
+        "that costs bandwidth and storage."),
+    "corpus_expand_report.py": (
+        set(),
+        "READS NO CENSUS STREAM AT ALL, and is listed to say so. Its inputs "
+        "are the crawl's gzipped shards on external storage and "
+        "corpus/atlas/expand_state.sqlite; it computes no census denominator "
+        "and publishes no percentage against one. The detector flags it "
+        "because `records` is also an ordinary JSON key in its own output "
+        "(`\"records\": n`, `d['records']`), and the detector cannot tell a "
+        "dict key from a directory name -- nor should it be narrowed to try, "
+        "since a bare quoted stream name in a tuple is a real read this file "
+        "must keep catching. An earlier version of this entry declared "
+        "{records} and justified it with a census denominator that does not "
+        "exist, which is exactly the invented-justification failure this "
+        "registry exists to prevent, committed inside the registry itself."),
     "census_evidence_design.py": (
         {"records"},
         "Study design is read from NLM publication types and MeSH check tags, "

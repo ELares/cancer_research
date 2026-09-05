@@ -66,6 +66,7 @@ import ast
 import importlib
 import inspect
 import json
+import re
 import sys
 import textwrap
 from pathlib import Path
@@ -114,7 +115,35 @@ NO_RENDERER = {
     "validate_rd_vs_biofvm", "validate_spheroid_kill",
     "validate_spheroid_structure", "validate_trigger_wave",
 }
-EXEMPT: dict = {}
+# Exempt from regenerate-and-diff, with the reason stated and checked below.
+# The bar is NOT "this generator is inconvenient to run": it is that the
+# generator's INPUT is not in the repository, so regenerating it here cannot
+# reproduce the committed artifact even in principle. A generator that reads
+# committed data belongs in the gate no matter how slow it is.
+EXEMPT: dict = {
+    "corpus_expand_report": (
+        "Reads the expansion crawl's shards, which live on external storage and "
+        "are never committed -- the corpus itself is far too large for git and is "
+        "not redistributable besides. Regenerating here finds zero shards and "
+        "renders an empty report, so a diff against a committed artifact would "
+        "compare a real crawl to nothing. Its output is gitignored for the same "
+        "reason and rebuilt on demand. What CAN be checked about this generator "
+        "is checked, but NOT from this file -- exemption removes it from "
+        "LIVE, which is what the order gate below iterates. Its "
+        "order-independence is pinned instead by "
+        "test_corpus_expand_verify.py::"
+        "test_the_crawl_report_order_is_established_by_the_renderer, which "
+        "builds a synthetic report dict and so needs neither shards nor a "
+        "committed artifact."
+    ),
+    "fulltext_ceiling": (
+        "Every number is a live hitCount from Europe PMC, which grows daily, so "
+        "the artifact is a dated reading rather than a function of committed "
+        "inputs. Regenerating it tomorrow legitimately produces different counts "
+        "and the diff would fail on a correct artifact. It is listed here rather "
+        "than left undiscovered so that the exemption is a reviewed decision."
+    ),
+}
 
 
 def _generators():
@@ -150,7 +179,7 @@ LIVE = [g[0] for g in GENERATORS
 # Pinned EXACTLY, not as a floor. A floor with slack lets a generator drop out
 # of the gate silently: at `>= 25` against 26, deleting the marker from one
 # script left the suite green with two parametrised cases quietly gone.
-EXPECTED_GENERATORS = 75
+EXPECTED_GENERATORS = 77
 
 
 def test_the_generator_list_is_discovered_not_listed():
@@ -219,6 +248,19 @@ def test_every_ungated_generator_is_ungated_for_a_checked_reason():
     for name, reason in EXEMPT.items():
         assert name in names, f"exemption {name!r} names no generator"
         assert reason.strip(), f"exemption {name!r} has no reason"
+        # AND THE REASON'S OWN CLAIMS ARE CHECKED, which is what this file's
+        # header promises. An exemption that points at a guard elsewhere is
+        # only as good as that guard existing: rename or delete the test and
+        # the exemption silently becomes a claim about nothing, while every
+        # test here stays green. Cheap to check, so it is checked.
+        for ref in re.findall(r"(test_[A-Za-z0-9_]+\.py)::(test_[A-Za-z0-9_]+)",
+                              reason):
+            f = Path(__file__).resolve().parent / ref[0]
+            assert f.exists(), (
+                f"exemption {name!r} points at {ref[0]}, which does not exist")
+            assert f"def {ref[1]}(" in f.read_text(encoding="utf-8"), (
+                f"exemption {name!r} points at {ref[0]}::{ref[1]}, which does "
+                "not exist -- the exemption's stated compensating guard is gone")
 
 
 def _render_only_reassembles(name: str) -> bool:

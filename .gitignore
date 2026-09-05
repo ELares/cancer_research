@@ -52,3 +52,21 @@ corpus/atlas/manifest.json
 corpus/atlas/manifest-c04only.json
 corpus/atlas/unindexed-manifest.json
 corpus/atlas/records_updates/
+
+# Corpus expansion working state (#corpus-expand).
+# The identity index is ~780 MB of identifiers derived entirely from data this
+# repo already points at, and the fetch state is a resumable cursor. Both are
+# REBUILDABLE from `scripts/corpus_identity_index.py` and carry no information
+# a reader needs, so they are generated rather than committed. The downloaded
+# corpus itself never enters the repo at all -- it goes to external storage.
+corpus/atlas/identity.sqlite*
+corpus/atlas/expand_state.sqlite*
+
+# The expansion crawl's live progress report. Regenerated on demand from the
+# stored shards and stamped with the moment it was taken, so its hash changes
+# every time it is refreshed -- committing it would make MANIFEST.sha256 stale
+# on each regeneration and fail manifest-check on unrelated PRs. It is a
+# dashboard, not a result: `python3 scripts/corpus_expand_report.py` rebuilds it
+# in seconds. The final report is committed once the crawl is finished.
+analysis/corpus-expansion.md
+analysis/corpus-expansion.json

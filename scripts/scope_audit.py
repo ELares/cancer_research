@@ -101,10 +101,42 @@ THERAPY_NAMES = (
 )
 
 
+def _tracked_analyses() -> list:
+    """Analysis pages that are IN THE REPOSITORY, not merely on this disk.
+
+    A plain glob walks the working directory, so any untracked or gitignored
+    page sitting in analysis/ enters the committed inventory -- and then CI,
+    which has no such file, reads the artifact back as stale and fails a gate
+    on a file it cannot see. The expansion crawl's progress dashboard is
+    exactly that case: gitignored on purpose, regenerated constantly, present
+    locally and absent everywhere else.
+
+    Falling back to the glob when git is unavailable keeps the script runnable
+    outside a checkout; inside one, tracked status is what decides.
+    """
+    import subprocess
+    try:
+        r = subprocess.run(
+            ["git", "ls-files", "-z", "--", "analysis/*.md"],
+            cwd=PROJECT_ROOT, capture_output=True, text=True, check=True)
+        # Git pathspec globs cross directory separators, so "analysis/*.md"
+        # also matches analysis/sub/dir/page.md -- 182 paths where the
+        # Path.glob this replaced saw 147. Keeping only direct children
+        # preserves the original scope; widening it here would silently
+        # change every count this audit publishes.
+        names = [n for n in r.stdout.split("\0")
+                 if n and n.count("/") == 1]
+        if names:
+            return sorted(PROJECT_ROOT / n for n in names)
+    except (OSError, subprocess.CalledProcessError):
+        pass
+    return sorted((PROJECT_ROOT / "analysis").glob("*.md"))
+
+
 def classify_analyses() -> dict:
     buckets = {"ferroptosis-or-physical": [], "therapy-subject": [], "method": []}
     body_therapy = []
-    for p in sorted((PROJECT_ROOT / "analysis").glob("*.md")):
+    for p in _tracked_analyses():
         stem = p.stem.lower()
         text = p.read_text(errors="ignore")
         # BLOCKQUOTE BANNERS ARE NOT CONTENT. The window is 40 lines of a

@@ -51,11 +51,22 @@ can carry the weight put on it.
 
 This section is not modesty. It is the part that makes the rest credible.
 
-**We cannot obtain all full text.** Roughly 21% of cancer articles are in PMC
-open access. The remainder is paywalled, and neither scraping it nor
-redistributing it is legal or intended. Full-text analyses therefore run on an
-open-access subset whose bias must be measured and reported every time, not
-waved at. Abstracts and MeSH indexing, by contrast, we can have completely.
+**We cannot obtain all full text, and "free to read" is not "ours to
+republish".** Roughly 21% of census records carry a PMC identifier, which is an
+optimistic upper bound on how much full text is reachable at all
+([measured](analysis/census-fulltext-ceiling.md)). The remainder is *not*
+uniformly paywalled -- over a million cancer records are readable in Europe PMC
+while sitting outside its open-access subset -- but readable and
+redistributable are different sets, and the gap between them is the larger
+constraint: about 58% of Europe PMC's cancer records can be read there and only
+21% carry a licence permitting republication, so roughly two thirds of what we
+can read we cannot republish
+([measured](analysis/europepmc-access-ceiling.md)). We scrape no publisher page
+and circumvent no paywall; full text is requested only from an endpoint that
+refuses what it may not serve, and a refusal is accepted as the answer.
+Full-text analyses therefore run on an open subset whose bias must be measured
+and reported every time, not waved at. Abstracts and MeSH indexing, by
+contrast, we can have completely.
 
 **A literature census does not cure anything.** It finds what has been missed,
 what has been contradicted, what was never replicated, and what has never been
