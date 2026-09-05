@@ -96,6 +96,15 @@ PAGE = 1000
 # "this article is briefly unavailable". One 503 must never stop a crawl; a
 # hundred in a row must, or the run quietly degrades into a metadata-only pass.
 MAX_CONSECUTIVE_DEFERRALS = 100
+# Ceiling on a backoff we chose ourselves. Reachable: at tries=4 the schedule
+# is 2/4/8, and a longer `tries` walks into it -- the previous cap of 60.0 was
+# unreachable at every value this code uses, so it bounded nothing.
+BACKOFF_CAP = 30.0
+# A server-supplied wait is obeyed within these bounds. The floor exists
+# because `Retry-After: 0` is an instruction to hammer; the cap because a
+# 300-second wait on one article is worse than deferring it.
+RETRY_AFTER_FLOOR = 1.0
+RETRY_AFTER_CAP = 60.0
 
 
 def _should_abort(consecutive: int) -> bool:
@@ -128,6 +137,10 @@ CREATE TABLE IF NOT EXISTS slice (
     fulltext INTEGER NOT NULL DEFAULT 0,
     hits INTEGER NOT NULL DEFAULT -1,
     done INTEGER NOT NULL DEFAULT 0,
+    -- Records this slice could not fetch text for. A slice with a non-zero
+    -- count is NOT finished and must not be marked done: the deferral is the
+    -- record of an article we walked past and did not store.
+    deferred INTEGER NOT NULL DEFAULT 0,
     updated REAL NOT NULL DEFAULT 0,
     PRIMARY KEY (src, year)
 );
@@ -139,6 +152,11 @@ def state() -> sqlite3.Connection:
     c = sqlite3.connect(STATE_DB, timeout=60)
     c.executescript(STATE_SCHEMA)
     c.execute("PRAGMA journal_mode=WAL")
+    # CREATE TABLE IF NOT EXISTS does not add a column to an existing table.
+    cols = {r[1] for r in c.execute("PRAGMA table_info(slice)")}
+    if "deferred" not in cols:
+        c.execute("ALTER TABLE slice ADD COLUMN deferred INTEGER NOT NULL DEFAULT 0")
+        c.commit()
     return c
 
 
@@ -200,18 +218,30 @@ def _get(url: str, tries: int = 4, timeout: int = 120,
             last = e
             wait = None
         if attempt + 1 < tries:
-            # Exponential, not linear: a server returning 503 is asking for
-            # room, and 1.5s/3s/4.5s does not give it any.
-            time.sleep(wait if wait is not None else min(60.0, 2.0 ** attempt))
+            # MEASURED against what it replaced, because the first version of
+            # this comment claimed exponential beat the old linear schedule and
+            # the arithmetic said otherwise: 2**attempt gives 1+2+4 = 7.0s over
+            # four tries, while the linear 1.5*(n+1) it replaced gave
+            # 1.5+3+4.5 = 9.0s. Every individual wait was shorter too. Starting
+            # at 2 makes it 2+4+8 = 14.0s, which is actually more room.
+            time.sleep(wait if wait is not None
+                       else min(BACKOFF_CAP, 2.0 ** (attempt + 1)))
     raise TransientFetchError(f"giving up after {tries}: {url[:110]} :: {last}")
 
 
 def _retry_after(e) -> float | None:
-    """The server's own answer to "how long should I wait?", when it gives one."""
-    # `is None`, not truthiness. A headers object can be legitimately present
-    # and empty, and an empty mapping is falsy -- so `(e.headers or {})`
-    # discarded a real headers object and always returned None. My own test
-    # caught it, using a dict subclass exactly the way a caller might.
+    """The server's own answer to "how long should I wait?", when it gives one.
+
+    RFC 7231 allows TWO forms and the first version handled one: `Retry-After`
+    may be delay-seconds OR an HTTP-date, and the date form is what CDNs and
+    WAFs in front of an origin commonly send on a 503. `float()` raised on it
+    and the instruction was silently thrown away.
+
+    FLOORED, not just clamped. `max(0.0, ...)` turned `Retry-After: 0` and any
+    negative value into a zero-second wait, so a proxy emitting `Retry-After: 0`
+    got four back-to-back requests -- strictly worse than the fixed backoff it
+    was overriding. Zero is not a useful instruction to obey literally.
+    """
     h = getattr(e, "headers", None)
     if h is None:
         return None
@@ -219,11 +249,37 @@ def _retry_after(e) -> float | None:
         v = h.get("Retry-After")
     except Exception:  # noqa: BLE001
         return None
-    if v is None or v == "":
+    if v is None or (isinstance(v, str) and not v.strip()):
+        return None
+    if isinstance(v, bytes):
+        v = v.decode("ascii", "replace")
+    try:
+        secs = float(v)
+    except (TypeError, ValueError):
+        secs = _http_date_delay(v)
+        if secs is None:
+            return None
+    if secs != secs:  # NaN
+        return None
+    return min(RETRY_AFTER_CAP, max(RETRY_AFTER_FLOOR, secs))
+
+
+def _http_date_delay(v) -> float | None:
+    """Seconds until an RFC 7231 HTTP-date, or None if it is not one."""
+    try:
+        import email.utils
+        parsed = email.utils.parsedate_to_datetime(str(v))
+    except Exception:  # noqa: BLE001
+        return None
+    if parsed is None:
         return None
     try:
-        return max(0.0, min(300.0, float(v)))
-    except (TypeError, ValueError):
+        import datetime as _dt
+        now = _dt.datetime.now(_dt.timezone.utc)
+        if parsed.tzinfo is None:
+            parsed = parsed.replace(tzinfo=_dt.timezone.utc)
+        return max(0.0, (parsed - now).total_seconds())
+    except Exception:  # noqa: BLE001
         return None
 
 
@@ -383,6 +439,7 @@ def run(years, sources, limit_new=None, verbose=True) -> dict:
                 cursor = row[0] if row else "*"
                 st.execute("INSERT OR IGNORE INTO slice(src,year) VALUES (?,?)", (src, year))
                 seen = kept = ft = 0
+                slice_deferred = 0
                 while True:
                     d = search(src, year, cursor)
                     hits = d.get("resultList", {}).get("result", [])
@@ -406,13 +463,27 @@ def run(years, sources, limit_new=None, verbose=True) -> dict:
                             try:
                                 text = fetch_fulltext(rec)
                             except TransientFetchError as e:
-                                # SKIP THE RECORD ENTIRELY -- do not write it,
-                                # do not index it. Storing it now would mark it
-                                # held with no text and we would never come
-                                # back for the text; skipping leaves it NEW, so
-                                # a later pass fetches it properly. The safe
-                                # direction is the one that costs a re-read.
+                                # SKIP THE RECORD, AND RECORD THAT WE DID.
+                                #
+                                # An earlier version of this handler said
+                                # "skipping leaves it NEW, so a later pass
+                                # fetches it properly". THERE WAS NO LATER
+                                # PASS: the page's cursor advanced anyway and
+                                # the slice was then marked done=1, so the
+                                # record was skipped forever -- silently, and
+                                # while `seen` certified the slice as fully
+                                # walked. That is the identical defect the
+                                # comment forty lines below describes for
+                                # --limit-new, reintroduced one branch away
+                                # from it.
+                                #
+                                # The deferral is persisted on the slice now.
+                                # A slice with deferrals is NOT done and its
+                                # cursor is rewound, so the next run re-walks
+                                # it -- cheap, because every record already
+                                # stored is skipped without a fetch.
                                 deferred += 1
+                                slice_deferred += 1
                                 consecutive_deferred += 1
                                 if _should_abort(consecutive_deferred):
                                     raise RuntimeError(
@@ -422,6 +493,16 @@ def run(years, sources, limit_new=None, verbose=True) -> dict:
                                 if verbose and deferred % 25 == 1:
                                     print(f"  ! deferred {deferred} "
                                           f"(latest: {e})", flush=True)
+                                # NOT counted as examined: `seen == hits` is
+                                # what certifies a slice as fully walked, and
+                                # a record we walked past without storing has
+                                # not been examined in any useful sense.
+                                examined -= 1
+                                # Pause anyway. `continue` used to jump over
+                                # the politeness sleep, so the crawler removed
+                                # its own rate limit at exactly the moment the
+                                # server was asking for room.
+                                time.sleep(SLEEP)
                                 continue
                             consecutive_deferred = 0
                             time.sleep(SLEEP)
@@ -461,9 +542,11 @@ def run(years, sources, limit_new=None, verbose=True) -> dict:
                     # whole page. Staying on `cursor` re-reads the page next
                     # time, which costs one request and loses nothing.
                     st.execute("UPDATE slice SET cursor=?, seen=seen+?, kept=kept+?, "
-                               "fulltext=fulltext+?, updated=? WHERE src=? AND year=?",
+                               "fulltext=fulltext+?, deferred=?, updated=? "
+                               "WHERE src=? AND year=?",
                                (cursor if stopped_early else (nxt or cursor),
-                                examined, kept, ft, time.time(), src, year))
+                                examined, kept, ft, slice_deferred,
+                                time.time(), src, year))
                     st.commit()
                     ident.commit()
                     totals["seen"] += examined
@@ -477,7 +560,18 @@ def run(years, sources, limit_new=None, verbose=True) -> dict:
                         break
                     cursor = nxt
                     time.sleep(SLEEP)
-                st.execute("UPDATE slice SET done=1 WHERE src=? AND year=?", (src, year))
+                if slice_deferred:
+                    # NOT done, and rewound. Leaving the cursor where it
+                    # stopped would mean the re-walk starts after the records
+                    # it needs to recover.
+                    st.execute("UPDATE slice SET done=0, cursor='*' "
+                               "WHERE src=? AND year=?", (src, year))
+                    if verbose:
+                        print(f"  {src:4} {year}  NOT done: {slice_deferred:,} "
+                              f"deferred, will re-walk", flush=True)
+                else:
+                    st.execute("UPDATE slice SET done=1 WHERE src=? AND year=?",
+                               (src, year))
                 st.commit()
                 totals["slices"] += 1
                 if verbose and seen:

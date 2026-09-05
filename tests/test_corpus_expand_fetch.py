@@ -509,10 +509,13 @@ def test_the_server_is_obeyed_when_it_says_how_long_to_wait(monkeypatch):
     e = urllib.error.HTTPError("u", 503, "busy", H(), None)
     assert fx._retry_after(e) == 7.0
     assert fx._retry_after(urllib.error.HTTPError("u", 503, "b", {}, None)) is None
-    # Absurd values are clamped rather than trusted.
+    # Absurd values are clamped rather than trusted, and the cap is 60s not
+    # 300s: a five-minute wait on ONE article is worse than deferring it and
+    # moving on, since the deferral is now recorded and re-walked.
     class H2(dict):
         def get(self, k, d=None): return "99999" if k == "Retry-After" else d
-    assert fx._retry_after(urllib.error.HTTPError("u", 503, "b", H2(), None)) == 300.0
+    assert fx._retry_after(urllib.error.HTTPError("u", 503, "b", H2(), None)) == \
+        fx.RETRY_AFTER_CAP == 60.0
 
 
 def test_get_actually_waits_the_time_the_server_asked_for(monkeypatch):
@@ -538,8 +541,45 @@ def test_get_actually_waits_the_time_the_server_asked_for(monkeypatch):
         f"server asked for 9s between tries; slept {slept}")
 
 
-def test_backoff_is_exponential_when_the_server_says_nothing(monkeypatch):
-    """1.5/3/4.5 does not give a struggling server room; 1/2/4 does."""
+def test_a_zero_or_negative_retry_after_is_floored_not_obeyed(monkeypatch):
+    """`Retry-After: 0` is an instruction to hammer. `max(0.0, ...)` obeyed it
+    literally and issued four back-to-back requests -- worse than the fixed
+    backoff it was overriding."""
+    import urllib.error
+
+    for raw in ("0", "-5", "0.0"):
+        class H(dict):
+            def get(self, k, d=None): return raw if k == "Retry-After" else d
+        got = fx._retry_after(urllib.error.HTTPError("u", 503, "b", H(), None))
+        assert got >= 1.0, f"Retry-After {raw!r} produced a {got}s wait"
+
+
+def test_an_http_date_retry_after_is_understood(monkeypatch):
+    """RFC 7231 allows delay-seconds OR an HTTP-date, and the date form is what
+    CDNs in front of an origin send. `float()` raised on it and the server's
+    instruction was silently discarded."""
+    import datetime
+    import email.utils
+    import urllib.error
+
+    when = email.utils.format_datetime(
+        datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(seconds=40))
+
+    class H(dict):
+        def get(self, k, d=None): return when if k == "Retry-After" else d
+
+    got = fx._retry_after(urllib.error.HTTPError("u", 503, "b", H(), None))
+    assert got is not None and 30 <= got <= 50, got
+
+
+def test_backoff_gives_more_room_than_the_schedule_it_replaced(monkeypatch):
+    """MEASURED against the old schedule, not asserted to be better.
+
+    The first version claimed exponential beat the linear 1.5*(n+1) it
+    replaced, and the arithmetic said otherwise: 1+2+4 = 7.0s against
+    1.5+3+4.5 = 9.0s, with every individual wait shorter too. Starting the
+    exponent at 1 gives 2+4+8 = 14.0s, which actually is more room.
+    """
     import urllib.error
 
     slept = []
@@ -551,4 +591,259 @@ def test_backoff_is_exponential_when_the_server_says_nothing(monkeypatch):
         fx._get("https://www.ebi.ac.uk/x", tries=4, timeout=1)
     except fx.TransientFetchError:
         pass
-    assert slept == [1.0, 2.0, 4.0], slept
+    assert slept == [2.0, 4.0, 8.0], slept
+    old_linear = [1.5 * (n + 1) for n in range(3)]
+    assert sum(slept) > sum(old_linear), (
+        f"new schedule {slept} (total {sum(slept)}s) gives the server LESS "
+        f"room than the linear one it replaced ({old_linear}, "
+        f"total {sum(old_linear)}s)")
+    assert all(a > b for a, b in zip(slept, old_linear)), (
+        "some individual waits got shorter")
+
+
+# --- End-to-end: what a deferral does to the LEDGER and the SHARDS ----------
+#
+# Every other test in this file about deferrals reads the source text. None
+# drove `run()`, which is why all of them passed while a deferred record was
+# being lost forever: the cursor advanced past its page and the slice was then
+# marked done=1, so no later pass could ever reach it. Source greps cannot see
+# a cursor. This drives the real loop against a fake endpoint.
+
+def _drive(tmp_path, monkeypatch, pages, fail_ids=(), sources=(("MED", True),)):
+    """Run the real `run()` over canned search pages, isolated from live data."""
+    import corpus_identity_index as _ix
+
+    monkeypatch.setattr(fx, "STATE_DB", tmp_path / "state.sqlite")
+    monkeypatch.setattr(fx, "OUT_ROOT", tmp_path / "out")
+    monkeypatch.setattr(_ix, "DB", tmp_path / "id.sqlite")
+    monkeypatch.setattr(fx, "SLEEP", 0)
+    monkeypatch.setattr(fx.time, "sleep", lambda *_: None)
+
+    seq = list(pages)
+
+    def fake_search(src, year, cursor):
+        return seq.pop(0) if seq else {"resultList": {"result": []}}
+
+    def fake_fulltext(rec):
+        if rec.get("id") in fail_ids:
+            raise fx.TransientFetchError(f"503 on {rec['id']}")
+        return f"TEXT-{rec['id']}"
+
+    monkeypatch.setattr(fx, "search", fake_search)
+    monkeypatch.setattr(fx, "fetch_fulltext", fake_fulltext)
+    totals = fx.run([2026], list(sources), verbose=False)
+
+    import sqlite3 as _s3
+    c = _s3.connect(tmp_path / "state.sqlite")
+    row = c.execute("SELECT cursor, seen, kept, fulltext, deferred, done "
+                    "FROM slice").fetchone()
+    c.close()
+
+    import glob as _g
+    import gzip as _gz
+    import json as _j
+    stored = []
+    for f in sorted(_g.glob(str(tmp_path / "out" / "**" / "*.jsonl.gz"), recursive=True)):
+        try:
+            with _gz.open(f, "rt") as fh:
+                for ln in fh:
+                    stored.append(_j.loads(ln)["epmc_id"])
+        except EOFError:
+            pass
+    return totals, dict(zip(("cursor", "seen", "kept", "fulltext",
+                             "deferred", "done"), row)), stored
+
+
+def _page(ids, nxt):
+    return {"resultList": {"result": [
+        {"id": i, "pmid": None, "pmcid": f"PMC{i}", "doi": None,
+         "inEPMC": "Y", "isOpenAccess": "Y", "license": "cc by",
+         "title": i, "pubYear": "2026"} for i in ids]},
+        "nextCursorMark": nxt, "hitCount": len(ids)}
+
+
+def test_a_slice_that_deferred_a_record_is_not_marked_done(tmp_path, monkeypatch):
+    """THE DEFECT, end to end.
+
+    Reproduced before the fix: pass 1 deferred one record, advanced the cursor
+    and set done=1; pass 2 skipped the slice entirely and the record was gone
+    permanently, while the ledger read seen=3 kept=2 done=1 -- a healthy-looking
+    slice over lost content.
+    """
+    totals, slice_row, stored = _drive(
+        tmp_path, monkeypatch,
+        pages=[_page(["R0", "R1", "R2"], "PAGE2")],
+        fail_ids={"R1"})
+
+    assert stored == ["R0", "R2"], stored
+    assert totals["deferred"] == 1
+    assert slice_row["deferred"] == 1, "the loss is not recorded anywhere"
+    assert slice_row["done"] == 0, (
+        "a slice that walked past a record it could not store was retired; "
+        "no later pass can ever reach that record")
+    assert slice_row["cursor"] == "*", (
+        "the cursor was left past the deferred record, so the re-walk starts "
+        "after the thing it needs to recover")
+    assert slice_row["seen"] == 2, (
+        f"seen={slice_row['seen']} counts the deferred record as examined, so "
+        "seen==hits would certify a slice that dropped content")
+
+
+def test_a_clean_slice_is_still_retired(tmp_path, monkeypatch):
+    """The refusal must not block the normal case: with nothing deferred the
+    slice completes, or the crawl re-walks everything forever."""
+    totals, slice_row, stored = _drive(
+        tmp_path, monkeypatch,
+        pages=[_page(["A", "B"], None)])
+    assert stored == ["A", "B"]
+    assert (slice_row["deferred"], slice_row["done"]) == (0, 1)
+
+
+def test_a_partial_outage_does_not_silently_lose_half_a_slice(tmp_path, monkeypatch):
+    """`_should_abort` only fires on CONSECUTIVE failures, so an interleaved
+    50% failure rate never trips it. Before the fix that completed with exit 0,
+    slice done=1, and half the records gone."""
+    ids = [f"R{i}" for i in range(20)]
+    totals, slice_row, stored = _drive(
+        tmp_path, monkeypatch,
+        pages=[_page(ids, None)],
+        fail_ids={i for n, i in enumerate(ids) if n % 2})
+    assert len(stored) == 10
+    assert slice_row["deferred"] == 10
+    assert slice_row["done"] == 0, (
+        "half the slice was lost and the slice was still retired")
+
+
+def test_a_deferral_still_pauses_between_requests(tmp_path, monkeypatch):
+    """`continue` used to jump over the politeness sleep, so the crawler
+    removed its own rate limit exactly when the server asked for room."""
+    slept = []
+    import corpus_identity_index as _ix
+    monkeypatch.setattr(fx, "STATE_DB", tmp_path / "s.sqlite")
+    monkeypatch.setattr(fx, "OUT_ROOT", tmp_path / "o")
+    monkeypatch.setattr(_ix, "DB", tmp_path / "i.sqlite")
+    monkeypatch.setattr(fx, "SLEEP", 0.25)
+    monkeypatch.setattr(fx.time, "sleep", lambda s: slept.append(s))
+    ids = [f"R{i}" for i in range(6)]
+    monkeypatch.setattr(fx, "search",
+                        lambda *a: _page(ids, None) if not slept or True else {})
+    seq = {"n": 0}
+
+    def once(src, year, cursor):
+        seq["n"] += 1
+        return _page(ids, None) if seq["n"] == 1 else {"resultList": {"result": []}}
+
+    monkeypatch.setattr(fx, "search", once)
+    monkeypatch.setattr(fx, "fetch_fulltext",
+                        lambda rec: (_ for _ in ()).throw(
+                            fx.TransientFetchError("503")))
+    fx.run([2026], [("MED", True)], verbose=False)
+    assert len([s for s in slept if s == 0.25]) >= len(ids), (
+        f"only {len([s for s in slept if s == 0.25])} pauses for {len(ids)} "
+        "deferred records; the rate limit vanishes during an outage")
+
+
+def test_a_sustained_outage_aborts_the_run_end_to_end(tmp_path, monkeypatch):
+    """Drives `run()` rather than unit-testing the predicate beside it.
+
+    Three surviving mutations hid here: `consecutive_deferred += 0` (the
+    counter never moves, so the abort is dead), moving the reset out of the
+    open-access block (it fires after every record, so a run never
+    accumulates), and a threshold too loose to reach. None is visible to a
+    test of `_should_abort` in isolation, because each breaks the WIRING
+    rather than the predicate.
+    """
+    n = fx.MAX_CONSECUTIVE_DEFERRALS + 5
+    ids = [f"R{i}" for i in range(n)]
+    try:
+        _drive(tmp_path, monkeypatch, pages=[_page(ids, None)], fail_ids=set(ids))
+    except RuntimeError as e:
+        assert "consecutive" in str(e).lower(), e
+    else:
+        raise AssertionError(
+            f"{n} consecutive full-text failures did not stop the run; the "
+            "crawl would walk the whole corpus storing nothing")
+
+
+def test_a_run_of_failures_below_the_threshold_does_not_abort(tmp_path, monkeypatch):
+    """The other side of the boundary: transient failures must be survivable,
+    which is the entire point of the change."""
+    n = fx.MAX_CONSECUTIVE_DEFERRALS - 1
+    ids = [f"R{i}" for i in range(n)]
+    totals, row, stored = _drive(
+        tmp_path, monkeypatch, pages=[_page(ids, None)], fail_ids=set(ids))
+    assert totals["deferred"] == n and row["done"] == 0
+
+
+def test_the_abort_threshold_is_a_reachable_number():
+    """A threshold nobody can reach is not a guard. 100 consecutive failures
+    at ~1s each is under two minutes of a dead service; 500 would be eight."""
+    assert 10 <= fx.MAX_CONSECUTIVE_DEFERRALS <= 200, fx.MAX_CONSECUTIVE_DEFERRALS
+
+
+def test_a_network_error_is_never_a_silent_give_up(monkeypatch):
+    """`_get` returning None means THE SERVER REFUSED. A timeout or DNS
+    failure returning None instead would make the caller store the record with
+    no text and index it as held -- permanently, and looking exactly like a
+    paywalled article. Every existing give-up test used HTTPError, so this
+    whole branch was untested."""
+    import socket
+
+    for exc in (socket.timeout("timed out"),
+                OSError("dns"),
+                ConnectionResetError("reset")):
+        monkeypatch.setattr(fx.time, "sleep", lambda *_: None)
+        monkeypatch.setattr(fx.urllib.request, "urlopen",
+                            lambda url, *a, **k: (_ for _ in ()).throw(exc))
+        try:
+            got = fx._get("https://www.ebi.ac.uk/x", tries=2, timeout=1)
+        except fx.TransientFetchError:
+            continue
+        raise AssertionError(
+            f"{type(exc).__name__} returned {got!r} instead of raising; a "
+            "network failure is being recorded as 'the server said no'")
+
+
+def test_full_text_is_retried_more_than_twice():
+    """The crawl died because one 503 exhausted two attempts. The retry count
+    is part of the fix, so a silent revert to 2 must fail."""
+    src = Path(fx.__file__).read_text()
+    body = src[src.index("def fetch_fulltext("):src.index("class Shards")]
+    tries = [int(t) for t in __import__("re").findall(r"tries=(\d+)", body)]
+    assert tries, "fetch_fulltext no longer passes an explicit retry count"
+    assert all(t >= 4 for t in tries), f"full text retried only {tries} times"
+
+
+def test_the_failure_counter_survives_records_that_need_no_full_text(tmp_path, monkeypatch):
+    """A run is a MIX, and the counter must only be reset by a SUCCESS.
+
+    Moving the reset out of the open-access block survived every other test,
+    because those runs are uniformly open-access and a deferred record
+    `continue`s before reaching it. Interleave records that need no text --
+    which is most of a real crawl -- and the reset fires on each one, zeroing
+    the counter forever: the service can be down for the entire run and the
+    abort never trips.
+    """
+    n = fx.MAX_CONSECUTIVE_DEFERRALS + 5
+    recs = []
+    for i in range(n):
+        recs.append({"id": f"OA{i}", "pmid": None, "pmcid": f"PMC{i}",
+                     "doi": None, "inEPMC": "Y", "isOpenAccess": "Y",
+                     "license": "cc by", "title": "t", "pubYear": "2026"})
+        # A record with no text to fetch at all: not open access, no licence.
+        recs.append({"id": f"NO{i}", "pmid": None, "pmcid": None,
+                     "doi": f"10.1/{i}", "inEPMC": "N", "isOpenAccess": "N",
+                     "license": None, "title": "t", "pubYear": "2026"})
+
+    page = {"resultList": {"result": recs}, "nextCursorMark": None,
+            "hitCount": len(recs)}
+    try:
+        _drive(tmp_path, monkeypatch, pages=[page],
+               fail_ids={f"OA{i}" for i in range(n)})
+    except RuntimeError as e:
+        assert "consecutive" in str(e).lower(), e
+    else:
+        raise AssertionError(
+            "the service failed on every full text for the whole run and the "
+            "crawl never aborted, because records needing no text reset the "
+            "failure counter")
