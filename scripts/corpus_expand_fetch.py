@@ -116,12 +116,22 @@ def _should_abort(consecutive: int) -> bool:
     was extracted.
     """
     return consecutive >= MAX_CONSECUTIVE_DEFERRALS
-# Pause after each full-text fetch. MEASURED, not guessed: dropping it to 0.10
-# bought 12% throughput (4,830 -> 5,400 records/hour) and the crawl then died
-# on a 503 from the rate limiter. The bottleneck is Europe PMC's response
-# latency, not this pause -- the process sits at 0.4% CPU -- so shortening it
-# trades a real outage risk for almost nothing. Concurrency is the lever;
-# impatience is not.
+# Pause after each full-text fetch.
+#
+# Lowering it to 0.10 was followed by a 503 that ended the run. That is
+# EVIDENCE, not a measurement, and the difference matters: nothing here
+# establishes the pause caused the 503, only that one preceded the other.
+#
+# The throughput figures this comment used to carry ("4,830 -> 5,400
+# records/hour") are RETRACTED. 4,830 is this repository's frozen-corpus
+# article count, quoted a dozen times in MISSION.md and CLAUDE.md -- I matched
+# a familiar number instead of reading a measurement. The live ledger gives at
+# least 6,967 records/hour at this setting. The companion claim that 0.4% CPU
+# proves the crawler is latency-bound is also void: `time.sleep` burns no CPU
+# either, so that figure cannot tell the two apart.
+#
+# What survives: the pause is cheap insurance against a rate limiter, and
+# concurrency rather than impatience is the lever if this needs to be faster.
 SLEEP = float(os.getenv("FERRO_EXPAND_SLEEP", "0.34"))
 # Small enough that an in-progress run is visible and a hard kill costs
 # little, large enough that shard count stays manageable over millions of
