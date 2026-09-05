@@ -101,12 +101,13 @@ MAX_CONSECUTIVE_DEFERRALS = 100
 # is 2/4/8, and a longer `tries` walks into it -- the previous cap of 60.0 was
 # unreachable at every value this code uses, so it bounded nothing.
 BACKOFF_CAP = 30.0
-# Full-text fetches running at once. The crawler is latency-bound, so this is
-# the only lever that materially changes how long a full pass takes.
-# Deliberately modest: Europe PMC asks for reasonable use, and a request rate
-# is workers/latency -- at ~0.6s per fetch, 4 workers is under 7 requests a
-# second. Set FERRO_EXPAND_WORKERS=1 to get the old strictly-serial behaviour.
-FETCH_WORKERS = max(1, int(os.getenv("FERRO_EXPAND_WORKERS", "4")))
+# Full-text fetches running at once. The crawler is latency-bound -- median
+# fetch 1.52s, measured, with a long tail (one sampled request took 16.9s) --
+# so this is the only lever that materially changes how long a full pass takes.
+# The rate never exceeds SLEEP's ceiling however high this goes, so raising it
+# buys utilisation, not requests. FERRO_EXPAND_WORKERS=1 restores the strictly
+# serial behaviour.
+FETCH_WORKERS = max(1, int(os.getenv("FERRO_EXPAND_WORKERS", "8")))
 # A server-supplied wait is obeyed within these bounds. The floor exists
 # because `Retry-After: 0` is an instruction to hammer; the cap because a
 # 300-second wait on one article is worse than deferring it.
@@ -123,23 +124,32 @@ def _should_abort(consecutive: int) -> bool:
     was extracted.
     """
     return consecutive >= MAX_CONSECUTIVE_DEFERRALS
-# Pause after each full-text fetch.
+# Minimum interval between full-text request STARTS, shared across workers.
 #
-# Lowering it to 0.10 was followed by a 503 that ended the run. That is
-# EVIDENCE, not a measurement, and the difference matters: nothing here
-# establishes the pause caused the 503, only that one preceded the other.
+# THE EARLIER RATIONALE HERE WAS WRONG AND IS WITHDRAWN. It said lowering this
+# to 0.10 was followed by a 503 and treated that as a reason to keep it high.
+# Measured afterwards, the median full-text latency is 1.52s -- not the ~0.6s
+# assumed -- so a SERIAL crawler at sleep=0.10 was issuing about 0.6 requests
+# per second. No rate limiter fires at 0.6 req/s. The 503 was Europe PMC
+# having a moment, and the crawl died because one 503 was fatal, which is
+# fixed. I blamed my own change for someone else's blip and reasoned from it.
 #
-# The throughput figures this comment used to carry ("4,830 -> 5,400
-# records/hour") are RETRACTED. 4,830 is this repository's frozen-corpus
-# article count, quoted a dozen times in MISSION.md and CLAUDE.md -- I matched
-# a familiar number instead of reading a measurement. The live ledger gives at
-# least 6,967 records/hour at this setting. The companion claim that 0.4% CPU
-# proves the crawler is latency-bound is also void: `time.sleep` burns no CPU
-# either, so that figure cannot tell the two apart.
+# WHAT IS MEASURED: median full-text latency 1.52s over a sample, with a long
+# tail (one request took 16.9s). WHAT IS ARITHMETIC: the request rate is
+# min(workers/latency, 1/interval), so 8 workers at 0.25s is capped at 4/s and
+# reaches about 4/s. That is an order of magnitude under what a single client
+# could extract from this API, and it cannot rise however high the worker count
+# goes -- the cap is the point of the shared limiter.
 #
-# What survives: the pause is cheap insurance against a rate limiter, and
-# concurrency rather than impatience is the lever if this needs to be faster.
-SLEEP = float(os.getenv("FERRO_EXPAND_SLEEP", "0.34"))
+# WHAT IS NOT MEASURED, and I am not going to imply otherwise: a clean
+# throughput A/B between (4, 0.34) and (8, 0.25). Three attempts were each
+# contaminated -- two harnesses died mid-run and the third had the crawler
+# restarted underneath it by a stray child -- and the obvious metric,
+# records-written per hour, depends on how dense new records are in whatever
+# region the cursor happens to be in, which is why two early readings
+# contradicted each other. The change rests on the latency measurement and the
+# rate ceiling, not on a speedup number.
+SLEEP = float(os.getenv("FERRO_EXPAND_SLEEP", "0.25"))
 # Small enough that an in-progress run is visible and a hard kill costs
 # little, large enough that shard count stays manageable over millions of
 # records. A finished shard is a complete gzip file; a buffered one is not.
