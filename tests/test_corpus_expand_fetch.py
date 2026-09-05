@@ -431,3 +431,124 @@ def test_finish_is_safe_to_call_twice():
     a, b = s3.connect(":memory:"), s3.connect(":memory:")
     fx._finish(_S(), a, b, {"seen": 0})
     fx._finish(_S(), a, b, {"seen": 0})  # must not raise
+
+
+def test_one_unavailable_article_does_not_stop_the_crawl(monkeypatch):
+    """THE FAILURE THAT ACTUALLY HAPPENED, and it cost a running crawl.
+
+    Every give-up raised the same RuntimeError, so a single 503 on one
+    full-text URL propagated out of `run()` and ended the whole thing. The
+    article served a 154 KB document on the next request. Transient per-item
+    failures are their own type now, and the record loop skips the record
+    instead of dying.
+    """
+    import urllib.error
+
+    def boom(url, *a, **k):
+        raise urllib.error.HTTPError(url, 503, "busy", {}, None)
+
+    monkeypatch.setattr(fx.urllib.request, "urlopen", boom)
+    monkeypatch.setattr(fx.time, "sleep", lambda *_: None)
+    try:
+        fx._get("https://www.ebi.ac.uk/x", tries=2, timeout=1)
+    except fx.TransientFetchError:
+        pass
+    else:
+        raise AssertionError("a 503 must raise TransientFetchError")
+
+    # DISTINCT from RuntimeError, not merely a subclass of it. Aliasing
+    # `TransientFetchError = RuntimeError` passed the subclass check (every
+    # class is a subclass of itself) while making every fatal error catchable
+    # as transient -- a surviving mutation. The type must be its own.
+    assert fx.TransientFetchError is not RuntimeError
+    assert issubclass(fx.TransientFetchError, RuntimeError)
+    assert not isinstance(RuntimeError("x"), fx.TransientFetchError)
+    src = Path(fx.__file__).read_text()
+    assert "except TransientFetchError as e:" in src, (
+        "the record loop does not catch a per-article failure, so one "
+        "unavailable article still ends the crawl")
+
+
+def test_a_deferred_record_is_not_written_or_indexed():
+    """Storing it now would mark it held with no text and we would never come
+    back for it. Skipping leaves it NEW, so a later pass fetches it properly."""
+    src = Path(fx.__file__).read_text()
+    i = src.index("except TransientFetchError as e:")
+    block = src[i:src.index("consecutive_deferred = 0", i)]
+    assert block.strip(), "the handler block could not be located"
+    assert "continue" in block, "a deferred record falls through to being written"
+    assert "shards.write" not in block and "INSERT INTO held" not in block
+
+
+def test_a_sustained_outage_still_stops_the_run():
+    """The other direction: skipping every record forever would walk the whole
+    corpus storing metadata and call it a crawl."""
+    src = Path(fx.__file__).read_text()
+    assert fx.MAX_CONSECUTIVE_DEFERRALS <= 500, "the abort threshold is too loose to fire"
+    # BEHAVIOURAL, not a grep. The previous version searched the handler for
+    # the string "raise RuntimeError", which is still present when the
+    # comparison guarding it is replaced by `if False:` -- exactly the
+    # mutation that survived.
+    assert fx._should_abort(fx.MAX_CONSECUTIVE_DEFERRALS) is True
+    assert fx._should_abort(fx.MAX_CONSECUTIVE_DEFERRALS + 1) is True
+    assert fx._should_abort(fx.MAX_CONSECUTIVE_DEFERRALS - 1) is False
+    assert fx._should_abort(0) is False
+    i = src.index("except TransientFetchError as e:")
+    block = src[i:src.index("consecutive_deferred = 0", i)]
+    assert "_should_abort(" in block, "the handler no longer consults the threshold"
+
+
+def test_the_server_is_obeyed_when_it_says_how_long_to_wait(monkeypatch):
+    """Guessing a backoff while being told the answer is how a rate limiter
+    becomes an outage."""
+    import urllib.error
+
+    class H(dict):
+        def get(self, k, d=None): return "7" if k == "Retry-After" else d
+
+    e = urllib.error.HTTPError("u", 503, "busy", H(), None)
+    assert fx._retry_after(e) == 7.0
+    assert fx._retry_after(urllib.error.HTTPError("u", 503, "b", {}, None)) is None
+    # Absurd values are clamped rather than trusted.
+    class H2(dict):
+        def get(self, k, d=None): return "99999" if k == "Retry-After" else d
+    assert fx._retry_after(urllib.error.HTTPError("u", 503, "b", H2(), None)) == 300.0
+
+
+def test_get_actually_waits_the_time_the_server_asked_for(monkeypatch):
+    """`_retry_after` being correct is not the same as `_get` USING it --
+    replacing the call with `wait = None` left every test green."""
+    import urllib.error
+
+    class H(dict):
+        def get(self, k, d=None): return "9" if k == "Retry-After" else d
+
+    slept = []
+    monkeypatch.setattr(fx.time, "sleep", lambda s: slept.append(s))
+
+    def boom(url, *a, **k):
+        raise urllib.error.HTTPError(url, 503, "busy", H(), None)
+
+    monkeypatch.setattr(fx.urllib.request, "urlopen", boom)
+    try:
+        fx._get("https://www.ebi.ac.uk/x", tries=3, timeout=1)
+    except fx.TransientFetchError:
+        pass
+    assert slept and all(s == 9.0 for s in slept), (
+        f"server asked for 9s between tries; slept {slept}")
+
+
+def test_backoff_is_exponential_when_the_server_says_nothing(monkeypatch):
+    """1.5/3/4.5 does not give a struggling server room; 1/2/4 does."""
+    import urllib.error
+
+    slept = []
+    monkeypatch.setattr(fx.time, "sleep", lambda s: slept.append(s))
+    monkeypatch.setattr(fx.urllib.request, "urlopen",
+                        lambda url, *a, **k: (_ for _ in ()).throw(
+                            urllib.error.HTTPError(url, 503, "busy", {}, None)))
+    try:
+        fx._get("https://www.ebi.ac.uk/x", tries=4, timeout=1)
+    except fx.TransientFetchError:
+        pass
+    assert slept == [1.0, 2.0, 4.0], slept

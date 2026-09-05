@@ -92,6 +92,27 @@ SOURCES = [
     ("CBA", False), ("HIR", False), ("CTX", False),
 ]
 PAGE = 1000
+# Consecutive per-article failures that mean "the service is down" rather than
+# "this article is briefly unavailable". One 503 must never stop a crawl; a
+# hundred in a row must, or the run quietly degrades into a metadata-only pass.
+MAX_CONSECUTIVE_DEFERRALS = 100
+
+
+def _should_abort(consecutive: int) -> bool:
+    """Is a run of per-article failures an outage rather than bad luck?
+
+    A function, not an inline comparison, because a guard written inline can
+    only be checked by grepping the source for it -- and a grep passes while
+    the comparison sits behind `if False:`. That mutation survived until this
+    was extracted.
+    """
+    return consecutive >= MAX_CONSECUTIVE_DEFERRALS
+# Pause after each full-text fetch. MEASURED, not guessed: dropping it to 0.10
+# bought 12% throughput (4,830 -> 5,400 records/hour) and the crawl then died
+# on a 503 from the rate limiter. The bottleneck is Europe PMC's response
+# latency, not this pause -- the process sits at 0.4% CPU -- so shortening it
+# trades a real outage risk for almost nothing. Concurrency is the lever;
+# impatience is not.
 SLEEP = float(os.getenv("FERRO_EXPAND_SLEEP", "0.34"))
 # Small enough that an in-progress run is visible and a hard kill costs
 # little, large enough that shard count stays manageable over millions of
@@ -130,15 +151,36 @@ REFUSE_ITEM = (401, 403, 404, 410)
 REFUSE_SEARCH = (404,)
 
 
+class TransientFetchError(RuntimeError):
+    """One item could not be fetched right now. NOT a reason to stop.
+
+    A crawl measured in weeks died on a single 503, because every give-up
+    raised the same RuntimeError and nothing distinguished "this article is
+    briefly unavailable" from "the service is gone". The article served a
+    154 KB document on the very next request. A crawl that cannot survive one
+    bad response from one URL is not a crawl.
+    """
+
+
 def _get(url: str, tries: int = 4, timeout: int = 120,
          refuse: tuple = REFUSE_ITEM):
-    """Retry on transient failure, give up loudly on a persistent one.
+    """Fetch, retrying transient failures with exponential backoff.
 
-    A silent give-up here would look exactly like a slice with no new records,
-    which is the one thing this ledger must never confuse.
+    Returns bytes on success, None when the server REFUSES (see `refuse`), and
+    raises TransientFetchError when it kept failing for a reason that may pass.
+
+    A silent give-up would look exactly like a slice with no new records, which
+    is the one thing this ledger must never confuse -- so giving up is loud.
+    But loud must not mean fatal for the whole crawl: the caller decides
+    whether one unavailable article is worth stopping for, and for a single
+    full text it never is.
+
+    `Retry-After` is honoured when the server sends it, because guessing a
+    backoff while being told the answer is how a rate limiter turns into an
+    outage.
     """
     last = None
-    for a in range(tries):
+    for attempt in range(tries):
         try:
             req = urllib.request.Request(url, headers={"User-Agent": UA})
             with urllib.request.urlopen(req, timeout=timeout) as r:
@@ -147,23 +189,42 @@ def _get(url: str, tries: int = 4, timeout: int = 120,
             # A REFUSAL IS AN ANSWER, and 404 is not the only way to say no:
             # 401/403/410 are the server declining to serve this ITEM, which is
             # the boundary this crawl leans on rather than deciding for itself.
-            #
-            # WHICH statuses count is the caller's decision, and getting that
-            # wrong is expensive in a way that leaves no trace. Applied to the
-            # search endpoint, a 403 -- the single most likely TRANSIENT status
-            # here, since that is what a rate limiter or WAF returns -- made
-            # `search` hand back an empty result, which the caller read as "no
-            # more pages" and recorded as `done=1`. The whole source-year slice
-            # was then skipped forever with seen=0, which is exactly the
-            # confusion this function's docstring says the ledger must never
-            # make. So search retries them and gives up loudly instead.
+            # WHICH statuses count is the caller's decision: applied to the
+            # SEARCH endpoint a 403 would make an empty page look like the end
+            # of a slice, retiring a whole source-year with seen=0.
             if e.code in refuse:
                 return None
             last = e
-        except Exception as e:  # noqa: BLE001
+            wait = _retry_after(e)
+        except Exception as e:  # noqa: BLE001 - network, DNS, timeouts, resets
             last = e
-        time.sleep(1.5 * (a + 1))
-    raise RuntimeError(f"giving up after {tries}: {url[:110]} :: {last}")
+            wait = None
+        if attempt + 1 < tries:
+            # Exponential, not linear: a server returning 503 is asking for
+            # room, and 1.5s/3s/4.5s does not give it any.
+            time.sleep(wait if wait is not None else min(60.0, 2.0 ** attempt))
+    raise TransientFetchError(f"giving up after {tries}: {url[:110]} :: {last}")
+
+
+def _retry_after(e) -> float | None:
+    """The server's own answer to "how long should I wait?", when it gives one."""
+    # `is None`, not truthiness. A headers object can be legitimately present
+    # and empty, and an empty mapping is falsy -- so `(e.headers or {})`
+    # discarded a real headers object and always returned None. My own test
+    # caught it, using a dict subclass exactly the way a caller might.
+    h = getattr(e, "headers", None)
+    if h is None:
+        return None
+    try:
+        v = h.get("Retry-After")
+    except Exception:  # noqa: BLE001
+        return None
+    if v is None or v == "":
+        return None
+    try:
+        return max(0.0, min(300.0, float(v)))
+    except (TypeError, ValueError):
+        return None
 
 
 def search(src: str, year: int, cursor: str):
@@ -177,6 +238,7 @@ def search(src: str, year: int, cursor: str):
         # itself being wrong, not a slice being empty, and it must not be
         # recorded as one.
         raise RuntimeError(f"search endpoint refused: SRC:{src} PUB_YEAR:{year}")
+
     return json.loads(raw)
 
 
@@ -241,12 +303,12 @@ def fetch_fulltext(rec) -> str | None:
     pmcid = norm_pmcid(rec.get("pmcid"))
     if pmcid:
         raw = _get(f"https://www.ebi.ac.uk/europepmc/webservices/rest/{pmcid}/fullTextXML",
-                   tries=2, timeout=120)
+                   tries=4, timeout=120)
         if raw:
             return raw.decode("utf-8", "replace")
     if rec.get("source") == "PPR" and rec.get("id"):
         raw = _get(f"https://www.ebi.ac.uk/europepmc/webservices/rest/PPR/{rec['id']}/fullTextXML",
-                   tries=2, timeout=120)
+                   tries=4, timeout=120)
         if raw:
             return raw.decode("utf-8", "replace")
     return None
@@ -304,9 +366,13 @@ class Shards:
 
 def run(years, sources, limit_new=None, verbose=True) -> dict:
     st, ident = state(), id_connect()
+    # A run this long meets transient failures. One is nothing; a run of them
+    # means the service is gone and continuing would walk the whole corpus
+    # storing metadata and calling it a crawl.
+    deferred = consecutive_deferred = 0
     OUT_ROOT.mkdir(parents=True, exist_ok=True)
     shards = Shards(OUT_ROOT, "expanded")
-    totals = {"seen": 0, "new": 0, "fulltext": 0, "slices": 0}
+    totals = {"seen": 0, "new": 0, "fulltext": 0, "slices": 0, "deferred": 0}
     try:
         for src, oa_possible in sources:
             for year in years:
@@ -337,7 +403,27 @@ def run(years, sources, limit_new=None, verbose=True) -> dict:
                             continue  # nothing to dedup on later; refuse it
                         text = None
                         if oa_possible and _text_available(rec) and _text_permitted(rec):
-                            text = fetch_fulltext(rec)
+                            try:
+                                text = fetch_fulltext(rec)
+                            except TransientFetchError as e:
+                                # SKIP THE RECORD ENTIRELY -- do not write it,
+                                # do not index it. Storing it now would mark it
+                                # held with no text and we would never come
+                                # back for the text; skipping leaves it NEW, so
+                                # a later pass fetches it properly. The safe
+                                # direction is the one that costs a re-read.
+                                deferred += 1
+                                consecutive_deferred += 1
+                                if _should_abort(consecutive_deferred):
+                                    raise RuntimeError(
+                                        f"{consecutive_deferred} consecutive "
+                                        f"full-text failures; the service looks "
+                                        f"down rather than busy: {e}") from e
+                                if verbose and deferred % 25 == 1:
+                                    print(f"  ! deferred {deferred} "
+                                          f"(latest: {e})", flush=True)
+                                continue
+                            consecutive_deferred = 0
                             time.sleep(SLEEP)
                         out = {
                             "source": src, "epmc_id": rec.get("id"),
@@ -383,6 +469,7 @@ def run(years, sources, limit_new=None, verbose=True) -> dict:
                     totals["seen"] += examined
                     totals["new"] += kept
                     totals["fulltext"] += ft
+                    totals["deferred"] = deferred
                     kept = ft = 0
                     if limit_new and totals["new"] >= limit_new:
                         return _finish(shards, st, ident, totals)
