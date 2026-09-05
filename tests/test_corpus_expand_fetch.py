@@ -53,7 +53,7 @@ def test_availability_and_permission_are_asked_separately():
         "a record Europe PMC does not hold is still being asked for, which is "
         "a guaranteed 404 per record")
     src = Path(fx.__file__).read_text()
-    assert "_text_available(rec) and _text_permitted(rec)" in src, (
+    assert "_text_available(c[0])" in src and "_text_permitted(c[0])" in src, (
         "the fetch is gated on only one of the two questions")
 
 
@@ -189,15 +189,37 @@ def test_a_record_with_no_identifier_is_refused():
     assert "continue  # nothing to dedup on later; refuse it" in src
 
 
-def test_every_written_record_is_indexed_in_the_same_pass():
-    """A crash between writing and indexing would re-fetch the record. The
-    index write must sit inside the same loop as the shard write."""
-    src = Path(fx.__file__).read_text()
-    body = src[src.index("shards.write(out)"):src.index("if limit_new and totals")]
-    assert "INSERT INTO held" in body, (
-        "a record is written to a shard without being added to the index in "
-        "the same pass, so an interrupted run will re-download it")
-    assert "MAX(held.has_fulltext" in body
+def test_every_written_record_is_indexed(tmp_path, monkeypatch):
+    """BEHAVIOURAL. This was a source grep for `INSERT INTO held` appearing
+    between two string anchors, which broke the moment the loop was
+    restructured -- and would have passed just as happily on a loop that
+    indexed the wrong record. It now runs the loop and asks the index.
+    """
+    import corpus_identity_index as _ix
+    import sqlite3 as _s3
+
+    _drive(tmp_path, monkeypatch, pages=[_page(["A", "B"], None)])
+    c = _s3.connect(tmp_path / "id.sqlite")
+    held = {k for (k,) in c.execute("SELECT key FROM held WHERE kind='doi'")}
+    c.close()
+    assert held == {"10.1234/a", "10.1234/b"}, (
+        f"records were written but the index holds {held}; an interrupted run "
+        "would re-download them")
+
+
+def test_a_record_is_never_indexed_without_being_written(tmp_path, monkeypatch):
+    """The ordering that makes the index trustworthy. A deferred record must
+    appear in NEITHER, or the index vouches for bytes that do not exist."""
+    import sqlite3 as _s3
+
+    totals, row, stored = _drive(
+        tmp_path, monkeypatch, pages=[_page(["A", "B"], None)], fail_ids={"B"})
+    assert stored == ["A"]
+    c = _s3.connect(tmp_path / "id.sqlite")
+    held = {k for (k,) in c.execute("SELECT key FROM held WHERE kind='doi'")}
+    c.close()
+    assert held == {"10.1234/a"}, (
+        f"index holds {held} but only {stored} were written")
 
 
 def _read_shards(d: Path) -> list:
@@ -469,35 +491,6 @@ def test_one_unavailable_article_does_not_stop_the_crawl(monkeypatch):
         "unavailable article still ends the crawl")
 
 
-def test_a_deferred_record_is_not_written_or_indexed():
-    """Storing it now would mark it held with no text and we would never come
-    back for it. Skipping leaves it NEW, so a later pass fetches it properly."""
-    src = Path(fx.__file__).read_text()
-    i = src.index("except TransientFetchError as e:")
-    block = src[i:src.index("consecutive_deferred = 0", i)]
-    assert block.strip(), "the handler block could not be located"
-    assert "continue" in block, "a deferred record falls through to being written"
-    assert "shards.write" not in block and "INSERT INTO held" not in block
-
-
-def test_a_sustained_outage_still_stops_the_run():
-    """The other direction: skipping every record forever would walk the whole
-    corpus storing metadata and call it a crawl."""
-    src = Path(fx.__file__).read_text()
-    assert fx.MAX_CONSECUTIVE_DEFERRALS <= 500, "the abort threshold is too loose to fire"
-    # BEHAVIOURAL, not a grep. The previous version searched the handler for
-    # the string "raise RuntimeError", which is still present when the
-    # comparison guarding it is replaced by `if False:` -- exactly the
-    # mutation that survived.
-    assert fx._should_abort(fx.MAX_CONSECUTIVE_DEFERRALS) is True
-    assert fx._should_abort(fx.MAX_CONSECUTIVE_DEFERRALS + 1) is True
-    assert fx._should_abort(fx.MAX_CONSECUTIVE_DEFERRALS - 1) is False
-    assert fx._should_abort(0) is False
-    i = src.index("except TransientFetchError as e:")
-    block = src[i:src.index("consecutive_deferred = 0", i)]
-    assert "_should_abort(" in block, "the handler no longer consults the threshold"
-
-
 def test_the_server_is_obeyed_when_it_says_how_long_to_wait(monkeypatch):
     """Guessing a backoff while being told the answer is how a rate limiter
     becomes an outage."""
@@ -656,7 +649,8 @@ def _drive(tmp_path, monkeypatch, pages, fail_ids=(), sources=(("MED", True),)):
 
 def _page(ids, nxt):
     return {"resultList": {"result": [
-        {"id": i, "pmid": None, "pmcid": f"PMC{i}", "doi": None,
+        {"id": i, "pmid": None, "pmcid": f"PMC{abs(hash(i)) % 10**7}",
+         "doi": f"10.1234/{i}",
          "inEPMC": "Y", "isOpenAccess": "Y", "license": "cc by",
          "title": i, "pubYear": "2026"} for i in ids]},
         "nextCursorMark": nxt, "hitCount": len(ids)}
@@ -714,33 +708,32 @@ def test_a_partial_outage_does_not_silently_lose_half_a_slice(tmp_path, monkeypa
         "half the slice was lost and the slice was still retired")
 
 
-def test_a_deferral_still_pauses_between_requests(tmp_path, monkeypatch):
-    """`continue` used to jump over the politeness sleep, so the crawler
-    removed its own rate limit exactly when the server asked for room."""
-    slept = []
-    import corpus_identity_index as _ix
-    monkeypatch.setattr(fx, "STATE_DB", tmp_path / "s.sqlite")
-    monkeypatch.setattr(fx, "OUT_ROOT", tmp_path / "o")
-    monkeypatch.setattr(_ix, "DB", tmp_path / "i.sqlite")
-    monkeypatch.setattr(fx, "SLEEP", 0.25)
-    monkeypatch.setattr(fx.time, "sleep", lambda s: slept.append(s))
-    ids = [f"R{i}" for i in range(6)]
-    monkeypatch.setattr(fx, "search",
-                        lambda *a: _page(ids, None) if not slept or True else {})
-    seq = {"n": 0}
+def test_a_failing_fetch_is_still_rate_limited(monkeypatch):
+    """`continue` used to jump over the politeness pause, so the crawler
+    removed its own rate limit exactly when the server asked for room.
 
-    def once(src, year, cursor):
-        seq["n"] += 1
-        return _page(ids, None) if seq["n"] == 1 else {"resultList": {"result": []}}
+    The pause lives in the shared limiter now, so the property is that a
+    record whose fetch FAILS still passes through it -- an outage must not
+    become a burst.
+    """
+    calls = []
 
-    monkeypatch.setattr(fx, "search", once)
+    class Spy(fx._RateLimit):
+        def wait(self):
+            calls.append(1)
+            super().wait()
+
+    monkeypatch.setattr(fx, "FETCH_WORKERS", 1)
     monkeypatch.setattr(fx, "fetch_fulltext",
                         lambda rec: (_ for _ in ()).throw(
                             fx.TransientFetchError("503")))
-    fx.run([2026], [("MED", True)], verbose=False)
-    assert len([s for s in slept if s == 0.25]) >= len(ids), (
-        f"only {len([s for s in slept if s == 0.25])} pauses for {len(ids)} "
-        "deferred records; the rate limit vanishes during an outage")
+    recs = [({"id": f"R{i}"}, None, None, None) for i in range(6)]
+    got = fx._fetch_texts(recs, limiter=Spy(0))
+    assert len(got) == 6 and all(isinstance(v, fx.TransientFetchError)
+                                 for v in got.values())
+    assert len(calls) == 6, (
+        f"only {len(calls)} of 6 failing fetches were rate limited; an outage "
+        "turns into a burst")
 
 
 def test_a_sustained_outage_aborts_the_run_end_to_end(tmp_path, monkeypatch):
@@ -847,3 +840,109 @@ def test_the_failure_counter_survives_records_that_need_no_full_text(tmp_path, m
             "the service failed on every full text for the whole run and the "
             "crawl never aborted, because records needing no text reset the "
             "failure counter")
+
+
+def test_a_record_with_only_a_europe_pmc_id_is_still_dedupable(tmp_path, monkeypatch):
+    """The admission test accepts a record on `rec["id"]` alone, so the index
+    must be able to hold it by that key -- otherwise it is written, indexed
+    under nothing, and re-downloaded on every future run forever.
+
+    Latent on MEDLINE and preprints, which always carry a DOI or a PMID. The
+    patent, thesis and abstract sources are where records with none of the
+    three live.
+    """
+    import sqlite3 as _s3
+
+    page = {"resultList": {"result": [
+        {"id": "PPR999", "pmid": None, "pmcid": None, "doi": None,
+         "inEPMC": "N", "isOpenAccess": "N", "license": None,
+         "title": "t", "pubYear": "2026"}]},
+        "nextCursorMark": None, "hitCount": 1}
+    totals, row, stored = _drive(tmp_path, monkeypatch, pages=[page])
+    assert stored == ["PPR999"], stored
+
+    c = _s3.connect(tmp_path / "id.sqlite")
+    held = c.execute("SELECT kind, key FROM held").fetchall()
+    c.close()
+    assert ("epmc", "PPR999") in held, (
+        f"the record was stored but indexed under {held}; the next run would "
+        "download it again")
+
+
+def test_a_page_containing_the_same_article_twice_stores_it_once(tmp_path, monkeypatch):
+    """Batching the fetches removed the guarantee that made this work.
+
+    The serial loop indexed each record before testing the next, so a repeat
+    inside one page was caught by the normal dedup. With selection and writing
+    split apart, the batch has to dedup against itself.
+    """
+    rec = {"id": "X", "pmid": None, "pmcid": None, "doi": "10.1/dup",
+           "inEPMC": "N", "isOpenAccess": "N", "license": None,
+           "title": "t", "pubYear": "2026"}
+    page = {"resultList": {"result": [dict(rec), dict(rec)]},
+            "nextCursorMark": None, "hitCount": 2}
+    totals, row, stored = _drive(tmp_path, monkeypatch, pages=[page])
+    assert stored == ["X"], f"the same article was stored twice: {stored}"
+    assert totals["new"] == 1
+
+
+def test_adding_workers_does_not_raise_the_request_rate(monkeypatch):
+    """CONCURRENCY MUST HIDE LATENCY, NOT DELETE THE RATE LIMIT.
+
+    The serial path slept `SLEEP` after each fetch and the first pooled version
+    slept not at all, so adding workers quietly multiplied the request rate as
+    well as overlapping the waits -- a measured 6.5x on four workers that was
+    partly concurrency and partly the politeness pause going away. That is the
+    same mistake as shortening the pause, made larger and harder to see, and
+    shortening the pause preceded a 503 that ended a run.
+    """
+    import time as _t
+
+    starts = []
+    monkeypatch.setattr(fx, "SLEEP", 0.02)
+    monkeypatch.setattr(fx, "fetch_fulltext",
+                        lambda rec: (starts.append(_t.monotonic()), "x")[1])
+    recs = [({"id": f"R{i}"}, None, None, None) for i in range(12)]
+
+    rates = {}
+    for w in (1, 4, 8):
+        starts.clear()
+        monkeypatch.setattr(fx, "FETCH_WORKERS", w)
+        fx._fetch_texts(recs)
+        span = max(starts) - min(starts)
+        rates[w] = len(starts) / span if span > 0 else float("inf")
+
+    ceiling = 1.0 / 0.02
+    for w, r in rates.items():
+        assert r <= ceiling * 1.6, (
+            f"{w} workers issued {r:.0f} requests/s against a {ceiling:.0f}/s "
+            f"ceiling; the pool is a rate multiplier, not a latency hider")
+
+
+def test_the_rate_limiter_spaces_requests_from_every_worker(monkeypatch):
+    """Gated on request STARTS, so the rate is the same whatever the latency
+    does -- workers overlap their waiting, not their requests."""
+    import time as _t
+
+    lim = fx._RateLimit(0.05)
+    stamps = []
+
+    def hit():
+        lim.wait()
+        stamps.append(_t.monotonic())
+
+    threads = [__import__("threading").Thread(target=hit) for _ in range(6)]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
+    stamps.sort()
+    gaps = [b - a for a, b in zip(stamps, stamps[1:])]
+    assert all(g >= 0.04 for g in gaps), f"requests bunched: {gaps}"
+
+
+def test_a_zero_interval_limiter_does_not_deadlock():
+    """SLEEP can legitimately be 0 in tests and dry runs."""
+    lim = fx._RateLimit(0)
+    for _ in range(5):
+        lim.wait()

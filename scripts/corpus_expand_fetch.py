@@ -56,6 +56,7 @@ import json
 import os
 import sqlite3
 import sys
+import threading
 import time
 import urllib.error
 import urllib.parse
@@ -100,6 +101,12 @@ MAX_CONSECUTIVE_DEFERRALS = 100
 # is 2/4/8, and a longer `tries` walks into it -- the previous cap of 60.0 was
 # unreachable at every value this code uses, so it bounded nothing.
 BACKOFF_CAP = 30.0
+# Full-text fetches running at once. The crawler is latency-bound, so this is
+# the only lever that materially changes how long a full pass takes.
+# Deliberately modest: Europe PMC asks for reasonable use, and a request rate
+# is workers/latency -- at ~0.6s per fetch, 4 workers is under 7 requests a
+# second. Set FERRO_EXPAND_WORKERS=1 to get the old strictly-serial behaviour.
+FETCH_WORKERS = max(1, int(os.getenv("FERRO_EXPAND_WORKERS", "4")))
 # A server-supplied wait is obeyed within these bounds. The floor exists
 # because `Retry-After: 0` is an instruction to hammer; the cap because a
 # 300-second wait on one article is worse than deferring it.
@@ -380,6 +387,89 @@ def fetch_fulltext(rec) -> str | None:
     return None
 
 
+class _RateLimit:
+    """A minimum interval between request STARTS, shared by every worker.
+
+    WITHOUT THIS, ADDING WORKERS DELETES THE RATE LIMIT. The serial path slept
+    `SLEEP` after each fetch, so the pool -- which slept not at all -- was
+    quietly a request-rate multiplier as well as a latency-hider. A measured
+    6.5x on four workers was partly concurrency and partly the politeness pause
+    going away, which is the same mistake as shortening it, made larger and
+    less visibly. Lowering that pause preceded a 503 that ended a run.
+
+    Gating on start times rather than on completions keeps the rate the same
+    whatever the latency does: N workers overlap their WAITING, not their
+    requests.
+    """
+
+    def __init__(self, interval: float):
+        self.interval = interval
+        self._lock = threading.Lock()
+        self._next = 0.0
+
+    def wait(self) -> None:
+        if self.interval <= 0:
+            return
+        with self._lock:
+            now = time.monotonic()
+            due = max(now, self._next)
+            self._next = due + self.interval
+        delay = due - now
+        if delay > 0:
+            time.sleep(delay)
+
+
+def _fetch_texts(wanted, limiter=None) -> dict:
+    """Fetch full text for a page's records, several at a time.
+
+    THE ONLY CONCURRENT PART OF THIS CRAWLER, and deliberately the smallest one
+    that helps. The process sits near-idle waiting on Europe PMC, so
+    overlapping the waits is the lever; shortening the politeness pause is not,
+    and trying that preceded a 503 that ended a run.
+
+    Nothing here touches a shard, the identity index or the ledger. Every
+    guarantee that makes this crawler trustworthy -- flush-before-index, the
+    dedup lookup, the deferral bookkeeping -- stays on the single writer
+    thread, in page order. This function returns data and raises nothing.
+
+    Keyed by `id(rec)` rather than by any field: a record may carry only a
+    Europe PMC id, and two records in a page can legitimately share a null.
+    Object identity is the one key every record has, and the dict never
+    outlives the page.
+
+    Failures are RETURNED, not raised, so the caller decides per record. A
+    worker that raised would abandon the rest of the page mid-flight.
+    """
+    if not wanted:
+        return {}
+    limiter = limiter or _RateLimit(SLEEP)
+    out = {}
+
+    def one(rec):
+        limiter.wait()
+        try:
+            return fetch_fulltext(rec)
+        except TransientFetchError as e:
+            return e
+
+    workers = max(1, min(FETCH_WORKERS, len(wanted)))
+    if workers == 1:
+        for rec, *_ in wanted:
+            out[id(rec)] = one(rec)
+        return out
+
+    import concurrent.futures as _cf
+    with _cf.ThreadPoolExecutor(max_workers=workers) as pool:
+        futures = {pool.submit(one, rec): rec for rec, *_ in wanted}
+        for fut in _cf.as_completed(futures):
+            rec = futures[fut]
+            try:
+                out[id(rec)] = fut.result()
+            except Exception as e:  # noqa: BLE001 - one record never kills a page
+                out[id(rec)] = TransientFetchError(str(e))
+    return out
+
+
 class Shards:
     """Rotating gzip shards whose bytes are readable as soon as write() returns.
 
@@ -458,6 +548,12 @@ def run(years, sources, limit_new=None, verbose=True) -> dict:
                                (d.get("hitCount", 0), src, year))
                     stopped_early = False
                     examined = 0
+
+                    # PHASE 1 -- SELECT, serially. The dedup lookup is a
+                    # SQLite read and the decision to fetch depends on it, so
+                    # this stays single-threaded and in order.
+                    candidates = []
+                    page_keys = set()
                     for rec in hits:
                         seen += 1
                         examined += 1
@@ -468,30 +564,46 @@ def run(years, sources, limit_new=None, verbose=True) -> dict:
                             continue
                         if not (pmid or pmcid or doi or rec.get("id")):
                             continue  # nothing to dedup on later; refuse it
+                        # A page can contain the same article twice. The
+                        # serial version caught that because each record was
+                        # indexed before the next was tested; batching removes
+                        # that, so the batch dedups against itself.
+                        keys = {("pmid", pmid), ("pmcid", pmcid), ("doi", doi)}
+                        keys = {k for k in keys if k[1]}
+                        if keys & page_keys:
+                            continue
+                        page_keys |= keys
+                        candidates.append((rec, pmid, pmcid, doi))
+                        if limit_new and totals["new"] + len(candidates) >= limit_new:
+                            stopped_early = True
+                            break
+
+                    # PHASE 2 -- FETCH, concurrently. Only the HTTP GETs run in
+                    # parallel; nothing here touches a shard, the index or the
+                    # ledger. That is the whole reason this is safe: the
+                    # write-then-index ordering that makes the index
+                    # trustworthy lives entirely in phase 3, on one thread.
+                    wanted = [c for c in candidates
+                              if oa_possible and _text_available(c[0])
+                              and _text_permitted(c[0])]
+                    texts = _fetch_texts(wanted)
+
+                    # PHASE 3 -- WRITE, serially, in page order.
+                    for rec, pmid, pmcid, doi in candidates:
                         text = None
-                        if oa_possible and _text_available(rec) and _text_permitted(rec):
-                            try:
-                                text = fetch_fulltext(rec)
-                            except TransientFetchError as e:
+                        if id(rec) in texts:
+                            got = texts[id(rec)]
+                            if isinstance(got, TransientFetchError):
                                 # SKIP THE RECORD, AND RECORD THAT WE DID.
-                                #
-                                # An earlier version of this handler said
-                                # "skipping leaves it NEW, so a later pass
-                                # fetches it properly". THERE WAS NO LATER
-                                # PASS: the page's cursor advanced anyway and
-                                # the slice was then marked done=1, so the
-                                # record was skipped forever -- silently, and
-                                # while `seen` certified the slice as fully
-                                # walked. That is the identical defect the
-                                # comment forty lines below describes for
-                                # --limit-new, reintroduced one branch away
-                                # from it.
-                                #
-                                # The deferral is persisted on the slice now.
-                                # A slice with deferrals is NOT done and its
-                                # cursor is rewound, so the next run re-walks
-                                # it -- cheap, because every record already
-                                # stored is skipped without a fetch.
+                                # An earlier version said "skipping leaves it
+                                # NEW, so a later pass fetches it properly".
+                                # There was no later pass: the cursor advanced
+                                # and the slice was marked done=1, so the
+                                # record was skipped forever while `seen`
+                                # certified the slice as fully walked. The
+                                # deferral is persisted on the slice now, the
+                                # slice is not retired, and its cursor is
+                                # rewound so the next run re-walks it.
                                 deferred += 1
                                 slice_deferred += 1
                                 consecutive_deferred += 1
@@ -499,23 +611,16 @@ def run(years, sources, limit_new=None, verbose=True) -> dict:
                                     raise RuntimeError(
                                         f"{consecutive_deferred} consecutive "
                                         f"full-text failures; the service looks "
-                                        f"down rather than busy: {e}") from e
+                                        f"down rather than busy: {got}") from got
                                 if verbose and deferred % 25 == 1:
                                     print(f"  ! deferred {deferred} "
-                                          f"(latest: {e})", flush=True)
+                                          f"(latest: {got})", flush=True)
                                 # NOT counted as examined: `seen == hits` is
-                                # what certifies a slice as fully walked, and
-                                # a record we walked past without storing has
-                                # not been examined in any useful sense.
+                                # what certifies a slice as fully walked.
                                 examined -= 1
-                                # Pause anyway. `continue` used to jump over
-                                # the politeness sleep, so the crawler removed
-                                # its own rate limit at exactly the moment the
-                                # server was asking for room.
-                                time.sleep(SLEEP)
                                 continue
+                            text = got
                             consecutive_deferred = 0
-                            time.sleep(SLEEP)
                         out = {
                             "source": src, "epmc_id": rec.get("id"),
                             "pmid": pmid, "pmcid": pmcid, "doi": doi,
@@ -530,22 +635,27 @@ def run(years, sources, limit_new=None, verbose=True) -> dict:
                         }
                         # WRITE THEN INDEX, never the reverse. write() returns
                         # only once the bytes are flushed, so the index never
-                        # claims a record whose bytes could still be lost. The
-                        # earlier order made a kill produce permanently
-                        # invisible articles; see the Shards docstring.
+                        # claims a record whose bytes could still be lost.
                         shards.write(out)
                         kept += 1
                         ft += bool(text)
-                        for kind, key in (("pmid", pmid), ("pmcid", pmcid), ("doi", doi)):
+                        # THE EPMC ID IS INDEXED TOO, and it has to be: the
+                        # admission test above accepts a record on the strength
+                        # of `rec["id"]` alone, so a record carrying only that
+                        # was written and then indexed under nothing -- and
+                        # would be re-downloaded on every future run, forever.
+                        # Latent on MED and PPR, which always carry a DOI or a
+                        # PMID; the patent, thesis and abstract sources are
+                        # where records with none of the three live, and they
+                        # have not been crawled yet.
+                        for kind, key in (("pmid", pmid), ("pmcid", pmcid),
+                                          ("doi", doi), ("epmc", rec.get("id"))):
                             if key:
                                 ident.execute(
                                     "INSERT INTO held(kind,key,source,has_fulltext) VALUES (?,?,?,?) "
                                     "ON CONFLICT(kind,key) DO UPDATE SET "
                                     "has_fulltext=MAX(held.has_fulltext, excluded.has_fulltext)",
                                     (kind, key, f"expand-{src}", 1 if text else 0))
-                        if limit_new and totals["new"] + kept >= limit_new:
-                            stopped_early = True
-                            break
                     # A page abandoned part-way by --limit-new must NOT advance
                     # the cursor: the unexamined tail would be skipped forever
                     # on resume, silently, because `seen` had been credited the
