@@ -110,7 +110,13 @@ def stored_keys(shard_dir: Path) -> tuple[set, list]:
     for rec in iter_records(shard_dir, truncated):
         for kind, key in (("pmid", norm_pmid(rec.get("pmid"))),
                           ("pmcid", norm_pmcid(rec.get("pmcid"))),
-                          ("doi", norm_doi(rec.get("doi")))):
+                          ("doi", norm_doi(rec.get("doi"))),
+                          # The crawl indexes the Europe PMC id as a fourth
+                          # key for records carrying none of the other three.
+                          # Omitting it here would make every such row look
+                          # orphaned, and --repair would delete rows that
+                          # describe records sitting on disk.
+                          ("epmc", rec.get("epmc_id"))):
             if key:
                 keys.add((kind, key))
     return keys, truncated
