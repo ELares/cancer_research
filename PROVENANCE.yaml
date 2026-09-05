@@ -115,6 +115,33 @@ corpus:
       metadata and abstracts are generally not copyrightable under US law
       (Feist Publications v. Rural Telephone Service).
 
+  clinical_trials:
+    description: >
+      Cancer clinical trial registrations from ClinicalTrials.gov, fetched by
+      scripts/trials_fetch.py through the v2 API (123,069 studies match the
+      cancer condition). Stored OUTSIDE this repository on external storage.
+    source: "ClinicalTrials.gov (U.S. National Library of Medicine)"
+    url: "https://clinicaltrials.gov/"
+    license: "Public domain (U.S. Government work)"
+    redistributable: true
+    note: >
+      THE ONE SOURCE IN THIS PROJECT WITH NO REDISTRIBUTION QUESTION. A work of
+      the United States government is not subject to domestic copyright, and
+      ClinicalTrials.gov's terms explicitly permit reuse. Everywhere else this
+      project has to keep "readable" and "republishable" apart; here they are
+      the same set, so the licence column that governs the article corpus does
+      not apply.
+    why_this_source: >
+      A registry entry is the study AS REGISTERED -- planned arms, endpoints
+      and status -- which exists whether or not anyone published the result.
+      Publication bias is precisely the gap a literature census cannot see
+      from the literature.
+    limits: >
+      A registration is a statement of intent, not evidence: many trials never
+      report, some report elsewhere, and a status field is not an outcome. The
+      corpus stores what the registry says and nothing more. Linked PMIDs are
+      kept because they are the join to the article corpus.
+
   expanded_corpus:
     description: >
       A breadth crawl of Europe PMC run by scripts/corpus_expand_fetch.py,

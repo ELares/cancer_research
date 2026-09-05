@@ -70,3 +70,8 @@ corpus/atlas/expand_state.sqlite*
 # in seconds. The final report is committed once the crawl is finished.
 analysis/corpus-expansion.md
 analysis/corpus-expansion.json
+
+# Clinical-trial shards, if FERRO_TRIALS_OUT is unset on a machine without the
+# external store. Same reasoning as the expansion crawl: the corpus is far too
+# large for git, and it is fetched rather than authored.
+corpus/atlas/trials/
