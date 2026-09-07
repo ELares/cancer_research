@@ -75,3 +75,7 @@ analysis/corpus-expansion.json
 # external store. Same reasoning as the expansion crawl: the corpus is far too
 # large for git, and it is fetched rather than authored.
 corpus/atlas/trials/
+
+# OpenAlex shards, if FERRO_OPENALEX_OUT is unset on a machine without the
+# external store. Fetched, not authored, and far too large for git.
+corpus/atlas/openalex/
