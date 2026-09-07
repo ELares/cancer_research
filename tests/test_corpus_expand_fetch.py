@@ -946,3 +946,80 @@ def test_a_zero_interval_limiter_does_not_deadlock():
     lim = fx._RateLimit(0)
     for _ in range(5):
         lim.wait()
+
+
+def test_a_briefly_unavailable_search_page_is_retried_not_fatal(monkeypatch):
+    """THE FAILURE THAT KILLED A 302,973-RECORD CRAWL.
+
+    `search` raises rather than returning an empty page, which is right -- an
+    empty page reads as "no more results" and would retire the slice with
+    seen=0. But letting it raise all the way out of `run()` is a different
+    mistake: one 503 on one search page ended a two-day run. The item path was
+    made survivable and this one was left fatal, which is the asymmetry a
+    reviewer flagged and I did not act on.
+    """
+    calls = {"n": 0}
+
+    def flaky(src, year, cursor):
+        calls["n"] += 1
+        if calls["n"] < 3:
+            raise fx.TransientFetchError("503")
+        return {"resultList": {"result": []}, "hitCount": 0}
+
+    monkeypatch.setattr(fx, "search", flaky)
+    monkeypatch.setattr(fx.time, "sleep", lambda *_: None)
+    d = fx._search_with_retry("MED", 2026, "*", verbose=False)
+    assert d == {"resultList": {"result": []}, "hitCount": 0}
+    assert calls["n"] == 3, "the page was not retried"
+
+
+def test_a_sustained_search_outage_still_stops_the_run(monkeypatch):
+    """The other direction: a service that is genuinely gone must stop the
+    crawl, because the ledger must never record an outage as an empty slice."""
+    monkeypatch.setattr(fx, "search",
+                        lambda *a: (_ for _ in ()).throw(fx.TransientFetchError("503")))
+    monkeypatch.setattr(fx.time, "sleep", lambda *_: None)
+    try:
+        fx._search_with_retry("MED", 2026, "*", verbose=False)
+    except RuntimeError as e:
+        assert "looks down" in str(e)
+        assert not isinstance(e, fx.TransientFetchError), (
+            "a sustained search outage must not be catchable as a transient "
+            "per-item failure")
+        return
+    raise AssertionError("a permanently failing search returned quietly")
+
+
+def test_a_retried_search_page_does_not_advance_the_cursor(tmp_path, monkeypatch):
+    """Retrying the SAME cursor is what makes this safe: a retry re-reads a
+    page rather than skipping one. If the retry advanced, a 503 would silently
+    drop up to a thousand records."""
+    src_text = Path(fx.__file__).read_text()
+    i = src_text.index("d = _search_with_retry(")
+    j = src_text.index("UPDATE slice SET cursor=?", i)
+    between = src_text[i:j]
+    assert "cursor = nxt" not in between, (
+        "the cursor is advanced between the search and the page being "
+        "processed, so a retry would skip records")
+
+    calls = []
+
+    def flaky(src, year, cursor):
+        calls.append(cursor)
+        if len(calls) < 3:
+            raise fx.TransientFetchError("503")
+        return {"resultList": {"result": []}, "hitCount": 0}
+
+    monkeypatch.setattr(fx, "search", flaky)
+    monkeypatch.setattr(fx.time, "sleep", lambda *_: None)
+    fx._search_with_retry("MED", 2026, "CURSOR-A", verbose=False)
+    assert calls == ["CURSOR-A"] * 3, f"retries moved the cursor: {calls}"
+
+
+def test_the_search_retry_schedule_covers_a_real_outage():
+    """A schedule too short to outlast a restart is decoration. `_get` already
+    spends ~14s of its own retries per attempt."""
+    assert fx.SEARCH_PAGE_ATTEMPTS >= 3
+    assert sum(fx.SEARCH_PAGE_BACKOFF) >= 120, (
+        f"total backoff {sum(fx.SEARCH_PAGE_BACKOFF)}s will not outlast a "
+        "brief service interruption")

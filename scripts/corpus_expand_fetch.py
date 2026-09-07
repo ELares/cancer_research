@@ -115,6 +115,42 @@ RETRY_AFTER_FLOOR = 1.0
 RETRY_AFTER_CAP = 60.0
 
 
+# How long to keep trying one search page before giving up on the whole run.
+# Generous, because the alternative is a stopped crawl that nobody notices:
+# `_get` already spends about 14s on its own retries, so five attempts with
+# this backoff covers roughly ten minutes of the service being unavailable.
+SEARCH_PAGE_ATTEMPTS = 5
+SEARCH_PAGE_BACKOFF = (15.0, 45.0, 90.0, 180.0)
+
+
+def _search_with_retry(src: str, year: int, cursor: str, verbose: bool = True):
+    """Fetch one search page, surviving a service that is briefly unavailable.
+
+    Raises only when the service stays unavailable across the whole schedule,
+    which is a genuine outage rather than a blip -- and by then stopping is the
+    right answer, because the ledger must never record an outage as an empty
+    slice.
+    """
+    last = None
+    for attempt in range(SEARCH_PAGE_ATTEMPTS):
+        try:
+            return search(src, year, cursor)
+        except TransientFetchError as e:
+            last = e
+            if attempt + 1 >= SEARCH_PAGE_ATTEMPTS:
+                break
+            wait = SEARCH_PAGE_BACKOFF[min(attempt, len(SEARCH_PAGE_BACKOFF) - 1)]
+            if verbose:
+                print(f"  ! search {src} {year} unavailable "
+                      f"(attempt {attempt + 1}/{SEARCH_PAGE_ATTEMPTS}), "
+                      f"waiting {wait:.0f}s", flush=True)
+            time.sleep(wait)
+    raise RuntimeError(
+        f"search for {src} {year} failed {SEARCH_PAGE_ATTEMPTS} times over "
+        f"~{sum(SEARCH_PAGE_BACKOFF):.0f}s of backoff; the service looks down "
+        f"rather than busy: {last}") from last
+
+
 def _should_abort(consecutive: int) -> bool:
     """Is a run of per-article failures an outage rather than bad luck?
 
@@ -551,7 +587,23 @@ def run(years, sources, limit_new=None, verbose=True) -> dict:
                 seen = kept = ft = 0
                 slice_deferred = 0
                 while True:
-                    d = search(src, year, cursor)
+                    # A SEARCH FAILURE MUST NOT END A CRAWL MEASURED IN WEEKS.
+                    #
+                    # `search` raises rather than returning an empty page, and
+                    # that is right: an empty page reads as "no more results"
+                    # and would retire the slice with seen=0. But raising all
+                    # the way out of run() is a different mistake, and it cost
+                    # a two-day crawl at 302,973 records -- one 503 on one
+                    # search page, after four retries, and the process was
+                    # gone. The item path was made survivable and this one was
+                    # left fatal, which is exactly the asymmetry a reviewer
+                    # flagged and I did not act on.
+                    #
+                    # Retrying the SAME cursor is safe: the cursor is only
+                    # advanced after a page is fully processed, so a retry
+                    # re-reads a page rather than skipping one. Nothing is
+                    # written and nothing is indexed in between.
+                    d = _search_with_retry(src, year, cursor, verbose=verbose)
                     hits = d.get("resultList", {}).get("result", [])
                     nxt = d.get("nextCursorMark")
                     st.execute("UPDATE slice SET hits=? WHERE src=? AND year=? AND hits<0",
