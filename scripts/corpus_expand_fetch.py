@@ -92,6 +92,58 @@ SOURCES = [
     ("PAT", False), ("ETH", False), ("AGR", False),
     ("CBA", False), ("HIR", False), ("CTX", False),
 ]
+# WHAT COUNTS AS A CANCER PAPER, for the purpose of asking Europe PMC.
+#
+# The crawler asked for the literal word `cancer` and nothing else, which
+# sounds complete and is not: measured against this set, a one-word query sees
+# 5,575,342 records where the set sees 9,872,234. FOUR MILLION of the
+# difference say `carcinoma`, `leukemia`, `melanoma` or `glioblastoma` and
+# never once say `cancer` -- 593,583 for carcinoma alone -- and 1,702,738 of
+# the missed pile have full text available. The crawl was structurally blind to
+# 44% of its own subject, and no amount of paging or concurrency reaches a
+# record the query never asks for.
+#
+# GROUNDED IN THE CENSUS DEFINITION rather than invented beside it: these stems
+# are checked against the 704 MeSH C04 descriptor names this project already
+# commits as its definition of cancer, and cover 79.5% of them
+# (tests/test_corpus_expand_fetch.py measures it, so the figure cannot drift).
+# The residue is mostly named entities -- astrocytoma, apudoma, angiokeratoma --
+# which is why the `-oma` stem is included despite catching glaucoma and
+# trachoma too. Recall is the priority here and the cost of a false positive is
+# one stored record, while the cost of a false negative is a paper this project
+# can never see.
+#
+# MeSH was tried first and rejected on measurement, not preference: Europe PMC's
+# `MESH:` field matches exact descriptors, and OR-ing 25 of them returned FEWER
+# hits than OR-ing 5, so the field does not behave like the tree the census uses.
+CANCER_TERMS = (
+    "cancer", "neoplasm", "neoplasms", "neoplastic", "tumor", "tumour",
+    "tumors", "tumours", "carcinoma", "carcinomas", "sarcoma", "leukemia",
+    "leukaemia", "lymphoma", "melanoma", "myeloma", "glioma", "glioblastoma",
+    "blastoma", "adenocarcinoma", "adenoma", "oncology", "oncological",
+    "malignancy", "malignant", "metastasis", "metastatic", "mesothelioma",
+    "teratoma", "thymoma", "chordoma", "papilloma",
+)
+
+
+def cancer_clause() -> str:
+    """The subject half of every search, as one parenthesised OR."""
+    return "(" + " OR ".join(CANCER_TERMS) + ")"
+
+
+def query_fingerprint() -> str:
+    """Identifies WHICH question a slice was walked with.
+
+    A slice marked done under a narrower query is not done under a wider one --
+    it was fully walked for a question nobody is asking any more. Without this,
+    widening the subject clause would leave every completed slice permanently
+    holding its old, smaller answer, and the 44% blind spot would be fixed for
+    future slices and invisible in past ones.
+    """
+    import hashlib
+    return hashlib.sha256("|".join(sorted(CANCER_TERMS)).encode()).hexdigest()[:12]
+
+
 PAGE = 1000
 # Consecutive per-article failures that mean "the service is down" rather than
 # "this article is briefly unavailable". One 503 must never stop a crawl; a
@@ -204,6 +256,11 @@ CREATE TABLE IF NOT EXISTS slice (
     -- count is NOT finished and must not be marked done: the deferral is the
     -- record of an article we walked past and did not store.
     deferred INTEGER NOT NULL DEFAULT 0,
+    -- WHICH question this slice was walked with. A slice fully walked for a
+    -- narrower subject clause is not finished for a wider one; without this
+    -- column, widening the query fixes the future and leaves every completed
+    -- slice holding its old, smaller answer forever.
+    query_id TEXT NOT NULL DEFAULT '',
     updated REAL NOT NULL DEFAULT 0,
     PRIMARY KEY (src, year)
 );
@@ -219,8 +276,34 @@ def state() -> sqlite3.Connection:
     cols = {r[1] for r in c.execute("PRAGMA table_info(slice)")}
     if "deferred" not in cols:
         c.execute("ALTER TABLE slice ADD COLUMN deferred INTEGER NOT NULL DEFAULT 0")
-        c.commit()
+    if "query_id" not in cols:
+        c.execute("ALTER TABLE slice ADD COLUMN query_id TEXT NOT NULL DEFAULT ''")
+    c.commit()
     return c
+
+
+def reopen_stale_slices(st, verbose: bool = True) -> int:
+    """Re-open every slice walked with a different subject clause.
+
+    Called once per run. A slice carrying an older fingerprint was walked to
+    completion for a question this crawl no longer asks, so `done` is a claim
+    about the wrong thing -- it must be withdrawn and the slice re-walked. That
+    is cheap: every record already stored is skipped without a fetch, so the
+    re-walk costs paging and finds only what the wider query adds.
+    """
+    fp = query_fingerprint()
+    rows = st.execute(
+        "SELECT COUNT(*) FROM slice WHERE query_id != ? AND (done=1 OR seen>0)",
+        (fp,)).fetchone()[0]
+    if rows:
+        st.execute(
+            "UPDATE slice SET done=0, cursor='*', query_id=? WHERE query_id != ?",
+            (fp, fp))
+        st.commit()
+        if verbose:
+            print(f"  subject clause changed ({fp}): re-opening {rows:,} slice(s) "
+                  f"walked with an older question", flush=True)
+    return rows
 
 
 # Statuses that mean "this item, no" rather than "try again later". Passed in
@@ -347,7 +430,7 @@ def _http_date_delay(v) -> float | None:
 
 
 def search(src: str, year: int, cursor: str):
-    q = f"SRC:{src} AND PUB_YEAR:{year} AND cancer"
+    q = f"SRC:{src} AND PUB_YEAR:{year} AND {cancer_clause()}"
     url = (f"{SEARCH}?format=json&pageSize={PAGE}&resultType=core"
            f"&cursorMark={urllib.parse.quote(cursor)}&query={urllib.parse.quote(q)}")
     raw = _get(url, refuse=REFUSE_SEARCH)
@@ -572,6 +655,7 @@ def run(years, sources, limit_new=None, verbose=True) -> dict:
     # means the service is gone and continuing would walk the whole corpus
     # storing metadata and calling it a crawl.
     deferred = consecutive_deferred = 0
+    reopen_stale_slices(st, verbose=verbose)
     OUT_ROOT.mkdir(parents=True, exist_ok=True)
     shards = Shards(OUT_ROOT, "expanded")
     totals = {"seen": 0, "new": 0, "fulltext": 0, "slices": 0, "deferred": 0}
@@ -583,7 +667,8 @@ def run(years, sources, limit_new=None, verbose=True) -> dict:
                 if row and row[1]:
                     continue
                 cursor = row[0] if row else "*"
-                st.execute("INSERT OR IGNORE INTO slice(src,year) VALUES (?,?)", (src, year))
+                st.execute("INSERT OR IGNORE INTO slice(src,year,query_id) "
+                           "VALUES (?,?,?)", (src, year, query_fingerprint()))
                 seen = kept = ft = 0
                 slice_deferred = 0
                 while True:
@@ -606,7 +691,12 @@ def run(years, sources, limit_new=None, verbose=True) -> dict:
                     d = _search_with_retry(src, year, cursor, verbose=verbose)
                     hits = d.get("resultList", {}).get("result", [])
                     nxt = d.get("nextCursorMark")
-                    st.execute("UPDATE slice SET hits=? WHERE src=? AND year=? AND hits<0",
+                    # Recorded unconditionally, not only when unset: `hits` is
+                    # the size of THIS question's answer, and a slice re-walked
+                    # under a wider clause has a larger one. Keeping the old
+                    # value would make seen/hits read as complete while the
+                    # slice was only complete for a question nobody asks.
+                    st.execute("UPDATE slice SET hits=? WHERE src=? AND year=?",
                                (d.get("hitCount", 0), src, year))
                     stopped_early = False
                     examined = 0

@@ -405,7 +405,14 @@ def test_a_partly_examined_page_does_not_advance_the_cursor():
     page's cursor, so the unexamined tail was skipped forever on resume --
     silently, because `seen` had been credited the whole page."""
     src = Path(fx.__file__).read_text()
-    body = src[src.index("stopped_early = False"):src.index("st.commit()")]
+    # Bounded FORWARD from the start marker. `src.index(end)` searches from the
+    # top of the file, so any earlier occurrence of the end marker -- one
+    # appeared when the query migration added a commit -- makes the slice run
+    # backwards and produce an empty string that satisfies every assertion
+    # about it. Third time this shape has bitten in this file.
+    i = src.index("stopped_early = False")
+    body = src[i:src.index("st.commit()", i)]
+    assert body.strip(), "the page-update block could not be located"
     assert "stopped_early = True" in body, "the early exit is not recorded"
     assert "cursor if stopped_early else" in body, (
         "the cursor advances even when the page was abandoned part-way")
@@ -628,8 +635,8 @@ def _drive(tmp_path, monkeypatch, pages, fail_ids=(), sources=(("MED", True),)):
 
     import sqlite3 as _s3
     c = _s3.connect(tmp_path / "state.sqlite")
-    row = c.execute("SELECT cursor, seen, kept, fulltext, deferred, done "
-                    "FROM slice").fetchone()
+    row = c.execute("SELECT cursor, seen, kept, fulltext, deferred, done, "
+                    "query_id, hits FROM slice").fetchone()
     c.close()
 
     import glob as _g
@@ -644,7 +651,8 @@ def _drive(tmp_path, monkeypatch, pages, fail_ids=(), sources=(("MED", True),)):
         except EOFError:
             pass
     return totals, dict(zip(("cursor", "seen", "kept", "fulltext",
-                             "deferred", "done"), row)), stored
+                             "deferred", "done", "query_id", "hits"),
+                            row)), stored
 
 
 def _page(ids, nxt):
@@ -1023,3 +1031,142 @@ def test_the_search_retry_schedule_covers_a_real_outage():
     assert sum(fx.SEARCH_PAGE_BACKOFF) >= 120, (
         f"total backoff {sum(fx.SEARCH_PAGE_BACKOFF)}s will not outlast a "
         "brief service interruption")
+
+
+# --- What the query can ever see ------------------------------------------
+#
+# The crawler asked for the literal word `cancer`. Measured against the term
+# set, that sees 5,575,342 records where the set sees 9,872,234 -- and 593,583
+# records say `carcinoma` while never saying `cancer`. No amount of paging,
+# concurrency or retrying reaches a record the query never asks for, which
+# makes this the one defect in this crawler that all the others could not have
+# compensated for.
+
+def test_the_subject_clause_covers_the_projects_own_cancer_definition():
+    """GROUNDED, not invented. The census defines cancer as the MeSH C04 tree,
+    and this repository commits those 704 descriptor names. A term set that
+    replaces a one-word query has to cover that definition, and the coverage is
+    MEASURED here so it cannot drift downward unnoticed.
+    """
+    import re
+    tsv = REPO / "corpus" / "atlas" / "mesh" / "c04-descriptors.tsv"
+    if not tsv.exists():
+        import pytest
+        pytest.skip("C04 definition not present in this checkout")
+    names = []
+    for ln in tsv.read_text(encoding="utf-8").split("\n"):
+        if ln.strip() and not ln.startswith("#"):
+            parts = ln.split("\t")
+            if len(parts) >= 2:
+                names.append(parts[1].strip().lower())
+    assert len(names) > 600, f"only {len(names)} descriptors read"
+
+    stems = tuple(t.lower() for t in fx.CANCER_TERMS) + ("oma",)
+    covered = sum(1 for n in names if any(s in n for s in stems))
+    share = covered / len(names)
+    assert share >= 0.75, (
+        f"the subject clause covers only {share:.1%} of the {len(names)} C04 "
+        "descriptor names; the crawl cannot see what it does not ask for")
+
+
+def test_the_clause_is_wider_than_the_single_word_it_replaced():
+    """The specific regression that matters: quietly reverting to `cancer`
+    alone would restore a 44% blind spot and change nothing else observable."""
+    assert len(fx.CANCER_TERMS) > 10
+    for essential in ("carcinoma", "leukemia", "lymphoma", "melanoma",
+                      "sarcoma", "neoplasm", "glioma"):
+        assert essential in fx.CANCER_TERMS, (
+            f"{essential!r} is absent; papers using that word and never "
+            "'cancer' are invisible to this crawl")
+    clause = fx.cancer_clause()
+    assert clause.startswith("(") and clause.endswith(")")
+    assert " OR " in clause
+
+
+def test_the_search_query_uses_the_clause_not_a_bare_word(monkeypatch):
+    seen = {}
+    monkeypatch.setattr(fx, "_get", lambda url, **k: seen.setdefault("u", url) and None)
+    try:
+        fx.search("MED", 2026, "*")
+    except Exception:
+        pass
+    import urllib.parse
+    q = urllib.parse.unquote(seen.get("u", ""))
+    assert "carcinoma" in q and "leukemia" in q, f"query is still narrow: {q[:200]}"
+
+
+def test_a_slice_walked_with_an_older_question_is_reopened(tmp_path, monkeypatch):
+    """A slice marked done under a NARROWER clause is not done under a wider
+    one -- it was fully walked for a question nobody asks any more. Without
+    this, widening the query fixes future slices and leaves every completed one
+    holding its old, smaller answer forever.
+    """
+    monkeypatch.setattr(fx, "STATE_DB", tmp_path / "state.sqlite")
+    st = fx.state()
+    st.execute("INSERT INTO slice(src,year,cursor,seen,kept,done,query_id) "
+               "VALUES ('MED',2026,'ABC',1000,900,1,'oldfingerprint')")
+    st.commit()
+
+    n = fx.reopen_stale_slices(st, verbose=False)
+    assert n == 1, "the stale slice was not re-opened"
+    row = st.execute("SELECT cursor, done, query_id FROM slice").fetchone()
+    assert row[0] == "*", "the cursor was left past records the wider query adds"
+    assert row[1] == 0, "a slice walked for a different question is still marked done"
+    assert row[2] == fx.query_fingerprint()
+
+    # And a second call must be a no-op, or every run re-walks everything.
+    assert fx.reopen_stale_slices(st, verbose=False) == 0
+    st.close()
+
+
+def test_the_fingerprint_changes_with_the_terms(monkeypatch):
+    """If it did not, a widened clause would look identical to the old one and
+    no slice would ever be re-opened."""
+    a = fx.query_fingerprint()
+    monkeypatch.setattr(fx, "CANCER_TERMS", fx.CANCER_TERMS + ("chondrosarcoma",))
+    assert fx.query_fingerprint() != a
+    # ...and it must not depend on the ORDER the terms happen to be written in.
+    monkeypatch.setattr(fx, "CANCER_TERMS", tuple(reversed(fx.CANCER_TERMS)))
+    monkeypatch.setattr(fx, "CANCER_TERMS", tuple(sorted(fx.CANCER_TERMS)))
+    b = fx.query_fingerprint()
+    monkeypatch.setattr(fx, "CANCER_TERMS", tuple(reversed(sorted(fx.CANCER_TERMS))))
+    assert fx.query_fingerprint() == b, "reordering the terms re-walks the corpus"
+
+
+def test_run_reopens_stale_slices_before_walking(tmp_path, monkeypatch):
+    """Calling `reopen_stale_slices` directly proves the function works, not
+    that `run()` calls it -- removing the call left every test green while a
+    completed slice kept its old, narrower answer forever."""
+    monkeypatch.setattr(fx, "STATE_DB", tmp_path / "state.sqlite")
+    st = fx.state()
+    st.execute("INSERT INTO slice(src,year,cursor,seen,kept,done,query_id) "
+               "VALUES ('MED',2026,'OLDCURSOR',1000,900,1,'oldfingerprint')")
+    st.commit()
+    st.close()
+
+    totals, row, stored = _drive(
+        tmp_path, monkeypatch, pages=[_page(["N1", "N2"], None)])
+
+    assert stored == ["N1", "N2"], (
+        "the slice was skipped as done, so what the wider query adds is never "
+        "fetched")
+    assert row["query_id"] == fx.query_fingerprint()
+
+
+def test_a_reopened_slice_records_the_new_questions_total(tmp_path, monkeypatch):
+    """`hits` is the size of THIS question's answer. Keeping the old value
+    makes seen/hits read as complete while the slice is complete only for a
+    question nobody asks."""
+    monkeypatch.setattr(fx, "STATE_DB", tmp_path / "state.sqlite")
+    st = fx.state()
+    st.execute("INSERT INTO slice(src,year,cursor,seen,kept,hits,done,query_id) "
+               "VALUES ('MED',2026,'*',0,0,111,0,'oldfingerprint')")
+    st.commit()
+    st.close()
+
+    page = _page(["A"], None)
+    page["hitCount"] = 999
+    totals, row, stored = _drive(tmp_path, monkeypatch, pages=[page])
+    assert row["hits"] == 999, (
+        f"hits is {row['hits']}, still the old question's total; a wider "
+        "query has a larger answer")
