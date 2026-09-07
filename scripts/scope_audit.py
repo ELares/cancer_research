@@ -113,6 +113,14 @@ def _tracked_analyses() -> list:
 
     Falling back to the glob when git is unavailable keeps the script runnable
     outside a checkout; inside one, tracked status is what decides.
+
+    ORDERING TRAP, and it cost a CI failure: `git ls-files` lists what is in
+    the INDEX, so a newly created page is invisible here until it is `git
+    add`ed. Regenerate this artifact AFTER staging, never before -- otherwise
+    the committed audit counts one fewer page than the commit contains, passes
+    locally against the same stale pair, and fails in CI where the file is
+    tracked. Same shape as staging a manifest before the last edit it
+    describes.
     """
     import subprocess
     try:

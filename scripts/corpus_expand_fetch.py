@@ -101,17 +101,54 @@ MAX_CONSECUTIVE_DEFERRALS = 100
 # is 2/4/8, and a longer `tries` walks into it -- the previous cap of 60.0 was
 # unreachable at every value this code uses, so it bounded nothing.
 BACKOFF_CAP = 30.0
-# Full-text fetches running at once. The crawler is latency-bound, so this is
-# the only lever that materially changes how long a full pass takes.
-# Deliberately modest: Europe PMC asks for reasonable use, and a request rate
-# is workers/latency -- at ~0.6s per fetch, 4 workers is under 7 requests a
-# second. Set FERRO_EXPAND_WORKERS=1 to get the old strictly-serial behaviour.
-FETCH_WORKERS = max(1, int(os.getenv("FERRO_EXPAND_WORKERS", "4")))
+# Full-text fetches running at once. The crawler is latency-bound -- median
+# fetch 1.52s, measured, with a long tail (one sampled request took 16.9s) --
+# so this is the only lever that materially changes how long a full pass takes.
+# The rate never exceeds SLEEP's ceiling however high this goes, so raising it
+# buys utilisation, not requests. FERRO_EXPAND_WORKERS=1 restores the strictly
+# serial behaviour.
+FETCH_WORKERS = max(1, int(os.getenv("FERRO_EXPAND_WORKERS", "8")))
 # A server-supplied wait is obeyed within these bounds. The floor exists
 # because `Retry-After: 0` is an instruction to hammer; the cap because a
 # 300-second wait on one article is worse than deferring it.
 RETRY_AFTER_FLOOR = 1.0
 RETRY_AFTER_CAP = 60.0
+
+
+# How long to keep trying one search page before giving up on the whole run.
+# Generous, because the alternative is a stopped crawl that nobody notices:
+# `_get` already spends about 14s on its own retries, so five attempts with
+# this backoff covers roughly ten minutes of the service being unavailable.
+SEARCH_PAGE_ATTEMPTS = 5
+SEARCH_PAGE_BACKOFF = (15.0, 45.0, 90.0, 180.0)
+
+
+def _search_with_retry(src: str, year: int, cursor: str, verbose: bool = True):
+    """Fetch one search page, surviving a service that is briefly unavailable.
+
+    Raises only when the service stays unavailable across the whole schedule,
+    which is a genuine outage rather than a blip -- and by then stopping is the
+    right answer, because the ledger must never record an outage as an empty
+    slice.
+    """
+    last = None
+    for attempt in range(SEARCH_PAGE_ATTEMPTS):
+        try:
+            return search(src, year, cursor)
+        except TransientFetchError as e:
+            last = e
+            if attempt + 1 >= SEARCH_PAGE_ATTEMPTS:
+                break
+            wait = SEARCH_PAGE_BACKOFF[min(attempt, len(SEARCH_PAGE_BACKOFF) - 1)]
+            if verbose:
+                print(f"  ! search {src} {year} unavailable "
+                      f"(attempt {attempt + 1}/{SEARCH_PAGE_ATTEMPTS}), "
+                      f"waiting {wait:.0f}s", flush=True)
+            time.sleep(wait)
+    raise RuntimeError(
+        f"search for {src} {year} failed {SEARCH_PAGE_ATTEMPTS} times over "
+        f"~{sum(SEARCH_PAGE_BACKOFF):.0f}s of backoff; the service looks down "
+        f"rather than busy: {last}") from last
 
 
 def _should_abort(consecutive: int) -> bool:
@@ -123,23 +160,32 @@ def _should_abort(consecutive: int) -> bool:
     was extracted.
     """
     return consecutive >= MAX_CONSECUTIVE_DEFERRALS
-# Pause after each full-text fetch.
+# Minimum interval between full-text request STARTS, shared across workers.
 #
-# Lowering it to 0.10 was followed by a 503 that ended the run. That is
-# EVIDENCE, not a measurement, and the difference matters: nothing here
-# establishes the pause caused the 503, only that one preceded the other.
+# THE EARLIER RATIONALE HERE WAS WRONG AND IS WITHDRAWN. It said lowering this
+# to 0.10 was followed by a 503 and treated that as a reason to keep it high.
+# Measured afterwards, the median full-text latency is 1.52s -- not the ~0.6s
+# assumed -- so a SERIAL crawler at sleep=0.10 was issuing about 0.6 requests
+# per second. No rate limiter fires at 0.6 req/s. The 503 was Europe PMC
+# having a moment, and the crawl died because one 503 was fatal, which is
+# fixed. I blamed my own change for someone else's blip and reasoned from it.
 #
-# The throughput figures this comment used to carry ("4,830 -> 5,400
-# records/hour") are RETRACTED. 4,830 is this repository's frozen-corpus
-# article count, quoted a dozen times in MISSION.md and CLAUDE.md -- I matched
-# a familiar number instead of reading a measurement. The live ledger gives at
-# least 6,967 records/hour at this setting. The companion claim that 0.4% CPU
-# proves the crawler is latency-bound is also void: `time.sleep` burns no CPU
-# either, so that figure cannot tell the two apart.
+# WHAT IS MEASURED: median full-text latency 1.52s over a sample, with a long
+# tail (one request took 16.9s). WHAT IS ARITHMETIC: the request rate is
+# min(workers/latency, 1/interval), so 8 workers at 0.25s is capped at 4/s and
+# reaches about 4/s. That is an order of magnitude under what a single client
+# could extract from this API, and it cannot rise however high the worker count
+# goes -- the cap is the point of the shared limiter.
 #
-# What survives: the pause is cheap insurance against a rate limiter, and
-# concurrency rather than impatience is the lever if this needs to be faster.
-SLEEP = float(os.getenv("FERRO_EXPAND_SLEEP", "0.34"))
+# WHAT IS NOT MEASURED, and I am not going to imply otherwise: a clean
+# throughput A/B between (4, 0.34) and (8, 0.25). Three attempts were each
+# contaminated -- two harnesses died mid-run and the third had the crawler
+# restarted underneath it by a stray child -- and the obvious metric,
+# records-written per hour, depends on how dense new records are in whatever
+# region the cursor happens to be in, which is why two early readings
+# contradicted each other. The change rests on the latency measurement and the
+# rate ceiling, not on a speedup number.
+SLEEP = float(os.getenv("FERRO_EXPAND_SLEEP", "0.25"))
 # Small enough that an in-progress run is visible and a hard kill costs
 # little, large enough that shard count stays manageable over millions of
 # records. A finished shard is a complete gzip file; a buffered one is not.
@@ -541,7 +587,23 @@ def run(years, sources, limit_new=None, verbose=True) -> dict:
                 seen = kept = ft = 0
                 slice_deferred = 0
                 while True:
-                    d = search(src, year, cursor)
+                    # A SEARCH FAILURE MUST NOT END A CRAWL MEASURED IN WEEKS.
+                    #
+                    # `search` raises rather than returning an empty page, and
+                    # that is right: an empty page reads as "no more results"
+                    # and would retire the slice with seen=0. But raising all
+                    # the way out of run() is a different mistake, and it cost
+                    # a two-day crawl at 302,973 records -- one 503 on one
+                    # search page, after four retries, and the process was
+                    # gone. The item path was made survivable and this one was
+                    # left fatal, which is exactly the asymmetry a reviewer
+                    # flagged and I did not act on.
+                    #
+                    # Retrying the SAME cursor is safe: the cursor is only
+                    # advanced after a page is fully processed, so a retry
+                    # re-reads a page rather than skipping one. Nothing is
+                    # written and nothing is indexed in between.
+                    d = _search_with_retry(src, year, cursor, verbose=verbose)
                     hits = d.get("resultList", {}).get("result", [])
                     nxt = d.get("nextCursorMark")
                     st.execute("UPDATE slice SET hits=? WHERE src=? AND year=? AND hits<0",

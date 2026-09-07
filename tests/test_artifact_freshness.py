@@ -136,6 +136,17 @@ EXEMPT: dict = {
         "builds a synthetic report dict and so needs neither shards nor a "
         "committed artifact."
     ),
+    "preprint_access_check": (
+        "Every figure is a live count from Europe PMC plus one probe of a "
+        "third-party endpoint, so the artifact is a dated reading rather than "
+        "a function of committed inputs -- and the probe's ANSWER is the "
+        "finding, which means regenerating it in CI would either depend on "
+        "bioRxiv's bot protection behaving identically or fail on a correct "
+        "page. Listed rather than left undiscovered so the exemption is a "
+        "reviewed decision. What CAN be checked offline is checked: "
+        "test_preprint_access_check.py pins render() against both the blocked "
+        "and the reachable case, so the page cannot silently keep saying "
+        "'blocked' after the block is lifted."),
     "fulltext_ceiling": (
         "Every number is a live hitCount from Europe PMC, which grows daily, so "
         "the artifact is a dated reading rather than a function of committed "
@@ -179,7 +190,7 @@ LIVE = [g[0] for g in GENERATORS
 # Pinned EXACTLY, not as a floor. A floor with slack lets a generator drop out
 # of the gate silently: at `>= 25` against 26, deleting the marker from one
 # script left the suite green with two parametrised cases quietly gone.
-EXPECTED_GENERATORS = 77
+EXPECTED_GENERATORS = 78
 
 
 def test_the_generator_list_is_discovered_not_listed():

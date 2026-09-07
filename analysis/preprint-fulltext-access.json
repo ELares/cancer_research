@@ -1,0 +1,11 @@
+{
+  "preprints_indexed": 108400,
+  "fulltext_in_epmc": 16436,
+  "share_pct": 15.2,
+  "unread": 91964,
+  "biorxiv": {
+    "metadata_api": "ok",
+    "fulltext": "HTTP 429",
+    "reachable": false
+  }
+}
