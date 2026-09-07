@@ -115,6 +115,39 @@ corpus:
       metadata and abstracts are generally not copyrightable under US law
       (Feist Publications v. Rural Telephone Service).
 
+  openalex:
+    description: >
+      Cancer literature OpenAlex indexes that Europe PMC cannot reach, fetched
+      by scripts/openalex_fetch.py. Metadata and abstracts only; stored OUTSIDE
+      this repository on external storage.
+    source: "OpenAlex (OurResearch)"
+    url: "https://openalex.org/"
+    license: "CC0 1.0 (public domain dedication)"
+    redistributable: true
+    why_this_source: >
+      OpenAlex indexes 5,709,238 works whose TITLE OR ABSTRACT is about cancer,
+      and 2,894,767 of them carry no PMID -- outside PubMed, and so outside the
+      Europe PMC crawler. Conference abstracts are the point: in oncology an
+      ASCO or AACR abstract often reports a trial result years before any
+      paper, and PubMed does not index them. A census assembled only from
+      indexed journals cannot see that literature EXISTS, which is a different
+      and worse problem than not being able to read it.
+    subject_filter: >
+      `title_and_abstract.search:cancer`, NOT `default.search`. The first
+      measurement used default.search, which reads full text and reported 4.9M
+      PMID-less works; sampling them returned hop powdery mildew, AIDS
+      activism and a paper titled "PEOPLE". A full-text search matches anything
+      that mentions cancer once. Restricting to title and abstract is what
+      makes the claim defensible, and a sample of THAT set is genuinely
+      oncology.
+    limits: >
+      Metadata and abstracts, no full text -- OpenAlex holds none to give, and
+      this fetcher does not go looking elsewhere. Works that DO carry a PMID
+      are skipped by default: Europe PMC can reach those and can also supply
+      their text, so fetching them here spends requests to arrive at a worse
+      copy. Abstracts are stored as an inverted index upstream and
+      reconstructed exactly.
+
   clinical_trials:
     description: >
       Cancer clinical trial registrations from ClinicalTrials.gov, fetched by
