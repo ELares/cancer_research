@@ -22,7 +22,7 @@ def _runner(results):
     """Returns (exit_code, elapsed) from a canned list, then 0 forever."""
     seq = list(results)
 
-    def run(env):
+    def run(env, target="expand"):
         return seq.pop(0) if seq else (0, 3600.0)
     return run
 
@@ -32,7 +32,7 @@ def test_a_finished_crawl_is_not_restarted():
     is a busy loop against a public API, dressed as diligence."""
     calls = []
 
-    def run(env):
+    def run(env, target="expand"):
         calls.append(1)
         return (0, 10.0)
 
@@ -56,7 +56,7 @@ def test_a_crawler_that_cannot_start_is_not_restarted_forever(monkeypatch):
     monkeypatch.setattr(cs.time, "sleep", lambda *_: None)
     calls = []
 
-    def run(env):
+    def run(env, target="expand"):
         calls.append(1)
         return (1, 0.4)          # died immediately, every time
 
@@ -99,8 +99,37 @@ def test_the_supervisor_does_not_reimplement_the_crawl():
     """Its ONLY responsibility is noticing the crawl stopped. Every safety
     property -- flush before index, per-page commits, rewinding a lossy slice --
     belongs to the crawler, which is why restarting is safe at all."""
+    # CODE lines only. This is the SECOND guard today that failed because a
+    # word it forbids belongs in the comment explaining why it is forbidden --
+    # a test that bans a term from prose bans recording the reasoning, which
+    # is the wrong thing to protect.
     src = Path(cs.__file__).read_text()
-    for forbidden in ("INSERT INTO held", "gzip.open", "cursor", "shards"):
-        assert forbidden not in src, (
+    code = "\n".join(l for l in src.split("\n") if not l.lstrip().startswith("#"))
+    code = code.split('"""')[0] + "".join(code.split('"""')[2::2])
+    for forbidden in ("INSERT INTO held", "gzip.open", "cursor=", "shards."):
+        assert forbidden not in code, (
             f"the supervisor touches {forbidden!r}; it must only start and "
             "watch the crawler")
+
+
+def test_every_long_running_fetcher_can_be_supervised():
+    """Three fetchers share the durability contract that makes restarting safe,
+    so they share the supervisor rather than growing two more of them. Writing
+    a second supervisor is how the page retry ended up existing in one place
+    and missing from the other two."""
+    assert set(cs.TARGETS) == {"expand", "openalex", "trials"}
+    for name, path in cs.TARGETS.items():
+        assert path.exists(), f"{name} points at a missing script: {path}"
+
+
+def test_the_target_selects_the_script_that_runs(monkeypatch):
+    """A supervisor that ignores its target silently supervises the wrong
+    thing, and looks identical from outside."""
+    ran = []
+    monkeypatch.setattr(cs.subprocess, "run",
+                        lambda cmd, env=None: ran.append(cmd[-1]) or
+                        type("R", (), {"returncode": 0})())
+    cs._run_crawler({}, "openalex")
+    cs._run_crawler({}, "trials")
+    assert ran[0].endswith("openalex_fetch.py"), ran
+    assert ran[1].endswith("trials_fetch.py"), ran

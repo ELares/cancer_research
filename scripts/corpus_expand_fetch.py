@@ -175,32 +175,51 @@ SEARCH_PAGE_ATTEMPTS = 5
 SEARCH_PAGE_BACKOFF = (15.0, 45.0, 90.0, 180.0)
 
 
-def _search_with_retry(src: str, year: int, cursor: str, verbose: bool = True):
-    """Fetch one search page, surviving a service that is briefly unavailable.
+def retry_page(fetch, *args, label: str = "page", verbose: bool = True,
+               **kwargs):
+    """Fetch ONE page of a paged search, surviving a briefly unavailable service.
 
-    Raises only when the service stays unavailable across the whole schedule,
-    which is a genuine outage rather than a blip -- and by then stopping is the
-    right answer, because the ledger must never record an outage as an empty
-    slice.
+    SHARED BY EVERY FETCHER IN THIS PROJECT, and it exists because the same
+    defect appeared three times. A paged search that raises on a transient
+    failure ends the whole crawl: it cost a two-day Europe PMC run at 302,973
+    records (one 503), and then -- after that was fixed HERE and not carried
+    across -- it killed the OpenAlex fetcher on its first 429. Writing the fix
+    once in a place all three import is the only version of it that stays
+    fixed.
+
+    Why a page failure cannot simply be swallowed: an empty page reads as "no
+    more results", so returning one would retire the slice, or end the walk,
+    with the ledger recording an outage as a completed pass. Raising is right;
+    raising IMMEDIATELY is what was wrong.
+
+    Retrying the same cursor is safe because a cursor is only advanced after
+    its page is fully processed, so a retry re-reads a page rather than
+    skipping one.
     """
     last = None
     for attempt in range(SEARCH_PAGE_ATTEMPTS):
         try:
-            return search(src, year, cursor)
+            return fetch(*args, **kwargs)
         except TransientFetchError as e:
             last = e
             if attempt + 1 >= SEARCH_PAGE_ATTEMPTS:
                 break
             wait = SEARCH_PAGE_BACKOFF[min(attempt, len(SEARCH_PAGE_BACKOFF) - 1)]
             if verbose:
-                print(f"  ! search {src} {year} unavailable "
+                print(f"  ! {label} unavailable "
                       f"(attempt {attempt + 1}/{SEARCH_PAGE_ATTEMPTS}), "
                       f"waiting {wait:.0f}s", flush=True)
             time.sleep(wait)
     raise RuntimeError(
-        f"search for {src} {year} failed {SEARCH_PAGE_ATTEMPTS} times over "
+        f"{label} failed {SEARCH_PAGE_ATTEMPTS} times over "
         f"~{sum(SEARCH_PAGE_BACKOFF):.0f}s of backoff; the service looks down "
         f"rather than busy: {last}") from last
+
+
+def _search_with_retry(src: str, year: int, cursor: str, verbose: bool = True):
+    """The Europe PMC search, through the shared page retry."""
+    return retry_page(search, src, year, cursor,
+                      label=f"search {src} {year}", verbose=verbose)
 
 
 def _should_abort(consecutive: int) -> bool:
