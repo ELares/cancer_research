@@ -136,6 +136,22 @@ EXEMPT: dict = {
         "builds a synthetic report dict and so needs neither shards nor a "
         "committed artifact."
     ),
+    "trial_publication_gap": (
+        "Its input is a 600-trial sample queried LIVE against Europe PMC -- "
+        "about six minutes of requests -- over trial shards that live on "
+        "external storage and are absent from CI. Regenerating here would "
+        "either hammer a public API on every run or find no trials and render "
+        "an empty page, so a diff against a committed artifact compares a real "
+        "measurement to nothing. Its output is committed, unlike the crawl "
+        "report, because the sample is SEEDED: the figure reproduces exactly "
+        "on re-run, which is what makes a claim about missing evidence a "
+        "measurement rather than a reading. Order-independence is NOT gated from "
+        "here -- exemption removes it from LIVE, which is what the order gate "
+        "below iterates -- and it is pinned instead by "
+        "test_trial_publication_gap.py::"
+        "test_the_page_order_is_established_by_the_renderer, over synthetic "
+        "rows. I have written the claim that this file still gates an exempt "
+        "generator three times now; it has never been true."),
     "preprint_access_check": (
         "Every figure is a live count from Europe PMC plus one probe of a "
         "third-party endpoint, so the artifact is a dated reading rather than "
@@ -190,7 +206,7 @@ LIVE = [g[0] for g in GENERATORS
 # Pinned EXACTLY, not as a floor. A floor with slack lets a generator drop out
 # of the gate silently: at `>= 25` against 26, deleting the marker from one
 # script left the suite green with two parametrised cases quietly gone.
-EXPECTED_GENERATORS = 78
+EXPECTED_GENERATORS = 79
 
 
 def test_the_generator_list_is_discovered_not_listed():
