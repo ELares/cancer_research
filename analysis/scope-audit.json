@@ -145,6 +145,7 @@
    "taxonomy-sensitivity-results",
    "tissue-evidence-summary",
    "tissue-mechanism-summary",
+   "trial-publication-gap",
    "uncertainty-intervals-report",
    "weight-sensitivity-preregistration",
    "weight-sensitivity-results",
@@ -176,7 +177,7 @@
   "top_mechanism": "immunotherapy",
   "top_n": 2297
  },
- "n_analyses": 147,
+ "n_analyses": 148,
  "n_predictions": 29,
  "n_predictions_ferroptosis": 10,
  "n_therapy_subject": 1,

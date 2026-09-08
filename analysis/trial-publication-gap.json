@@ -1,0 +1,6113 @@
+{
+  "eligible": 40192,
+  "rows": [
+    {
+      "enrollment": 120,
+      "epmc_mentions": 0,
+      "nct": "NCT00001237",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 3,
+      "year": 2000
+    },
+    {
+      "enrollment": 18,
+      "epmc_mentions": 0,
+      "nct": "NCT00001116",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 2,
+      "year": 2000
+    },
+    {
+      "enrollment": 44,
+      "epmc_mentions": 0,
+      "nct": "NCT05188755",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 0,
+      "year": 2022
+    },
+    {
+      "enrollment": 67,
+      "epmc_mentions": 20,
+      "nct": "NCT03472365",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 1,
+      "year": 2020
+    },
+    {
+      "enrollment": 181,
+      "epmc_mentions": 103,
+      "nct": "NCT02927301",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 2,
+      "year": 2023
+    },
+    {
+      "enrollment": null,
+      "epmc_mentions": 0,
+      "nct": "NCT00015860",
+      "phases": [
+        "PHASE1",
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2003
+    },
+    {
+      "enrollment": 162,
+      "epmc_mentions": 2,
+      "nct": "NCT03832985",
+      "phases": [
+        "EARLY_PHASE1"
+      ],
+      "registry_pmids": 22,
+      "year": 2024
+    },
+    {
+      "enrollment": 125,
+      "epmc_mentions": 2,
+      "nct": "NCT01360541",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 1,
+      "year": 2018
+    },
+    {
+      "enrollment": 121,
+      "epmc_mentions": 1,
+      "nct": "NCT05797727",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 0,
+      "year": 2023
+    },
+    {
+      "enrollment": 24,
+      "epmc_mentions": 0,
+      "nct": "NCT06411093",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 1,
+      "year": 2023
+    },
+    {
+      "enrollment": 16,
+      "epmc_mentions": 0,
+      "nct": "NCT00722605",
+      "phases": [
+        "PHASE1",
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2013
+    },
+    {
+      "enrollment": 81,
+      "epmc_mentions": 15,
+      "nct": "NCT04154189",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 3,
+      "year": 2023
+    },
+    {
+      "enrollment": 5,
+      "epmc_mentions": 1,
+      "nct": "NCT00304291",
+      "phases": [
+        "PHASE4"
+      ],
+      "registry_pmids": 1,
+      "year": 2004
+    },
+    {
+      "enrollment": 504,
+      "epmc_mentions": 1,
+      "nct": "NCT02035098",
+      "phases": [
+        "PHASE2",
+        "PHASE3"
+      ],
+      "registry_pmids": 1,
+      "year": 2012
+    },
+    {
+      "enrollment": 27,
+      "epmc_mentions": 13,
+      "nct": "NCT01590160",
+      "phases": [
+        "PHASE1",
+        "PHASE2"
+      ],
+      "registry_pmids": 1,
+      "year": 2019
+    },
+    {
+      "enrollment": 519,
+      "epmc_mentions": 6,
+      "nct": "NCT00716391",
+      "phases": [
+        "PHASE3"
+      ],
+      "registry_pmids": 0,
+      "year": 2017
+    },
+    {
+      "enrollment": 444,
+      "epmc_mentions": 34,
+      "nct": "NCT02131064",
+      "phases": [
+        "PHASE3"
+      ],
+      "registry_pmids": 3,
+      "year": 2018
+    },
+    {
+      "enrollment": 42,
+      "epmc_mentions": 5,
+      "nct": "NCT00095160",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 0,
+      "year": 2006
+    },
+    {
+      "enrollment": 80,
+      "epmc_mentions": 1,
+      "nct": "NCT02970344",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 1,
+      "year": 2021
+    },
+    {
+      "enrollment": 49,
+      "epmc_mentions": 3,
+      "nct": "NCT00743509",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2012
+    },
+    {
+      "enrollment": 30,
+      "epmc_mentions": 2,
+      "nct": "NCT00004048",
+      "phases": [
+        "PHASE1",
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2002
+    },
+    {
+      "enrollment": 52,
+      "epmc_mentions": 26,
+      "nct": "NCT05027139",
+      "phases": [
+        "PHASE1",
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2025
+    },
+    {
+      "enrollment": 26,
+      "epmc_mentions": 7,
+      "nct": "NCT05159778",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2023
+    },
+    {
+      "enrollment": 66,
+      "epmc_mentions": 1,
+      "nct": "NCT01926678",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2016
+    },
+    {
+      "enrollment": 8,
+      "epmc_mentions": 0,
+      "nct": "NCT03923998",
+      "phases": [
+        "EARLY_PHASE1"
+      ],
+      "registry_pmids": 0,
+      "year": 2019
+    },
+    {
+      "enrollment": 847,
+      "epmc_mentions": 1,
+      "nct": "NCT00911170",
+      "phases": [
+        "PHASE3"
+      ],
+      "registry_pmids": 1,
+      "year": 2015
+    },
+    {
+      "enrollment": 44,
+      "epmc_mentions": 0,
+      "nct": "NCT00003834",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 1,
+      "year": 2005
+    },
+    {
+      "enrollment": 32,
+      "epmc_mentions": 1,
+      "nct": "NCT00749320",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 1,
+      "year": 2019
+    },
+    {
+      "enrollment": 206,
+      "epmc_mentions": 28,
+      "nct": "NCT00648648",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 1,
+      "year": 2014
+    },
+    {
+      "enrollment": 14,
+      "epmc_mentions": 5,
+      "nct": "NCT05227651",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2024
+    },
+    {
+      "enrollment": 4936,
+      "epmc_mentions": 3,
+      "nct": "NCT01781338",
+      "phases": [
+        "PHASE2",
+        "PHASE3"
+      ],
+      "registry_pmids": 1,
+      "year": 2025
+    },
+    {
+      "enrollment": 49,
+      "epmc_mentions": 6,
+      "nct": "NCT00581425",
+      "phases": [
+        "PHASE4"
+      ],
+      "registry_pmids": 0,
+      "year": 2011
+    },
+    {
+      "enrollment": 29,
+      "epmc_mentions": 0,
+      "nct": "NCT02867423",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 1,
+      "year": 2018
+    },
+    {
+      "enrollment": 89,
+      "epmc_mentions": 0,
+      "nct": "NCT03240562",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 6,
+      "year": 2017
+    },
+    {
+      "enrollment": 34,
+      "epmc_mentions": 1,
+      "nct": "NCT03653988",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 16,
+      "year": 2021
+    },
+    {
+      "enrollment": 40,
+      "epmc_mentions": 0,
+      "nct": "NCT04647006",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 0,
+      "year": 2020
+    },
+    {
+      "enrollment": 20,
+      "epmc_mentions": 1,
+      "nct": "NCT02921984",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 0,
+      "year": 2017
+    },
+    {
+      "enrollment": null,
+      "epmc_mentions": 29,
+      "nct": "NCT00019084",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2003
+    },
+    {
+      "enrollment": 34,
+      "epmc_mentions": 0,
+      "nct": "NCT04449679",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 0,
+      "year": 2022
+    },
+    {
+      "enrollment": 110,
+      "epmc_mentions": 13,
+      "nct": "NCT04735432",
+      "phases": [
+        "PHASE3"
+      ],
+      "registry_pmids": 0,
+      "year": 2021
+    },
+    {
+      "enrollment": 6,
+      "epmc_mentions": 4,
+      "nct": "NCT01713036",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 2,
+      "year": 2014
+    },
+    {
+      "enrollment": 47,
+      "epmc_mentions": 0,
+      "nct": "NCT00880022",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 2,
+      "year": 2010
+    },
+    {
+      "enrollment": 54,
+      "epmc_mentions": 1,
+      "nct": "NCT00049439",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2008
+    },
+    {
+      "enrollment": 132,
+      "epmc_mentions": 0,
+      "nct": "NCT01172548",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2014
+    },
+    {
+      "enrollment": 10,
+      "epmc_mentions": 4,
+      "nct": "NCT02300298",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 1,
+      "year": 2017
+    },
+    {
+      "enrollment": 32,
+      "epmc_mentions": 0,
+      "nct": "NCT00215462",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2005
+    },
+    {
+      "enrollment": 18,
+      "epmc_mentions": 6,
+      "nct": "NCT04374240",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 1,
+      "year": 2021
+    },
+    {
+      "enrollment": 20,
+      "epmc_mentions": 13,
+      "nct": "NCT05052099",
+      "phases": [
+        "PHASE1",
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2024
+    },
+    {
+      "enrollment": 60,
+      "epmc_mentions": 1,
+      "nct": "NCT05417529",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 12,
+      "year": 2021
+    },
+    {
+      "enrollment": 60,
+      "epmc_mentions": 1,
+      "nct": "NCT03205969",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 8,
+      "year": 2015
+    },
+    {
+      "enrollment": 179,
+      "epmc_mentions": 0,
+      "nct": "NCT00104104",
+      "phases": [
+        "PHASE4"
+      ],
+      "registry_pmids": 0,
+      "year": 2007
+    },
+    {
+      "enrollment": 43,
+      "epmc_mentions": 5,
+      "nct": "NCT01240629",
+      "phases": [
+        "PHASE1",
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2017
+    },
+    {
+      "enrollment": 21,
+      "epmc_mentions": 0,
+      "nct": "NCT06954532",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 1,
+      "year": 2026
+    },
+    {
+      "enrollment": 651,
+      "epmc_mentions": 2,
+      "nct": "NCT03329911",
+      "phases": [
+        "PHASE3"
+      ],
+      "registry_pmids": 0,
+      "year": 2021
+    },
+    {
+      "enrollment": 150,
+      "epmc_mentions": 1,
+      "nct": "NCT03447483",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 2,
+      "year": 2020
+    },
+    {
+      "enrollment": 24,
+      "epmc_mentions": 20,
+      "nct": "NCT01308944",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 0,
+      "year": 2015
+    },
+    {
+      "enrollment": 163,
+      "epmc_mentions": 2,
+      "nct": "NCT01415960",
+      "phases": [
+        "PHASE3"
+      ],
+      "registry_pmids": 1,
+      "year": 2013
+    },
+    {
+      "enrollment": 1,
+      "epmc_mentions": 21,
+      "nct": "NCT02013492",
+      "phases": [
+        "EARLY_PHASE1"
+      ],
+      "registry_pmids": 0,
+      "year": 2015
+    },
+    {
+      "enrollment": 112,
+      "epmc_mentions": 2,
+      "nct": "NCT01643824",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 0,
+      "year": 2017
+    },
+    {
+      "enrollment": 344,
+      "epmc_mentions": 4,
+      "nct": "NCT00677443",
+      "phases": [
+        "PHASE3"
+      ],
+      "registry_pmids": 2,
+      "year": 2011
+    },
+    {
+      "enrollment": 32,
+      "epmc_mentions": 3,
+      "nct": "NCT02332226",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 4,
+      "year": 2020
+    },
+    {
+      "enrollment": 78,
+      "epmc_mentions": 1,
+      "nct": "NCT02420405",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 5,
+      "year": 2016
+    },
+    {
+      "enrollment": 30,
+      "epmc_mentions": 0,
+      "nct": "NCT06380361",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 0,
+      "year": 2025
+    },
+    {
+      "enrollment": 50,
+      "epmc_mentions": 0,
+      "nct": "NCT00466258",
+      "phases": [
+        "PHASE4"
+      ],
+      "registry_pmids": 24,
+      "year": 2009
+    },
+    {
+      "enrollment": 62,
+      "epmc_mentions": 9,
+      "nct": "NCT00532389",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 0,
+      "year": 2013
+    },
+    {
+      "enrollment": 105,
+      "epmc_mentions": 1,
+      "nct": "NCT03981822",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 1,
+      "year": 2020
+    },
+    {
+      "enrollment": 60,
+      "epmc_mentions": 0,
+      "nct": "NCT00001835",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 3,
+      "year": 2001
+    },
+    {
+      "enrollment": 31301,
+      "epmc_mentions": 2,
+      "nct": "NCT04949776",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 7,
+      "year": 2024
+    },
+    {
+      "enrollment": 1001,
+      "epmc_mentions": 2,
+      "nct": "NCT03460483",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 0,
+      "year": 2025
+    },
+    {
+      "enrollment": 754,
+      "epmc_mentions": 3,
+      "nct": "NCT02970136",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 1,
+      "year": 2020
+    },
+    {
+      "enrollment": 17,
+      "epmc_mentions": 1,
+      "nct": "NCT03117101",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 0,
+      "year": 2016
+    },
+    {
+      "enrollment": 30,
+      "epmc_mentions": 0,
+      "nct": "NCT02255916",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 0,
+      "year": 2014
+    },
+    {
+      "enrollment": 207,
+      "epmc_mentions": 5,
+      "nct": "NCT00937456",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 3,
+      "year": 2015
+    },
+    {
+      "enrollment": 24,
+      "epmc_mentions": 1,
+      "nct": "NCT00399126",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 0,
+      "year": 2011
+    },
+    {
+      "enrollment": 9,
+      "epmc_mentions": 32,
+      "nct": "NCT01834248",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 0,
+      "year": 2016
+    },
+    {
+      "enrollment": 80,
+      "epmc_mentions": 0,
+      "nct": "NCT05777499",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 5,
+      "year": 2026
+    },
+    {
+      "enrollment": 14,
+      "epmc_mentions": 20,
+      "nct": "NCT02514382",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 1,
+      "year": 2022
+    },
+    {
+      "enrollment": 50,
+      "epmc_mentions": 2,
+      "nct": "NCT02309658",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 15,
+      "year": 2015
+    },
+    {
+      "enrollment": 24,
+      "epmc_mentions": 10,
+      "nct": "NCT02181660",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 0,
+      "year": 2016
+    },
+    {
+      "enrollment": 102,
+      "epmc_mentions": 55,
+      "nct": "NCT03438396",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 3,
+      "year": 2022
+    },
+    {
+      "enrollment": 8,
+      "epmc_mentions": 1,
+      "nct": "NCT04266548",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 12,
+      "year": 2020
+    },
+    {
+      "enrollment": 60,
+      "epmc_mentions": 2,
+      "nct": "NCT01648517",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 1,
+      "year": 2015
+    },
+    {
+      "enrollment": 111,
+      "epmc_mentions": 18,
+      "nct": "NCT02127710",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2020
+    },
+    {
+      "enrollment": 135,
+      "epmc_mentions": 2,
+      "nct": "NCT03527225",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 0,
+      "year": 2020
+    },
+    {
+      "enrollment": 116,
+      "epmc_mentions": 0,
+      "nct": "NCT01127373",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 1,
+      "year": 2019
+    },
+    {
+      "enrollment": 42,
+      "epmc_mentions": 0,
+      "nct": "NCT00965289",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2009
+    },
+    {
+      "enrollment": 35,
+      "epmc_mentions": 4,
+      "nct": "NCT05919069",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 0,
+      "year": 2024
+    },
+    {
+      "enrollment": 6,
+      "epmc_mentions": 3,
+      "nct": "NCT01931761",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 1,
+      "year": 2013
+    },
+    {
+      "enrollment": 196,
+      "epmc_mentions": 169,
+      "nct": "NCT01587703",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 4,
+      "year": 2019
+    },
+    {
+      "enrollment": 88,
+      "epmc_mentions": 4,
+      "nct": "NCT00811135",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 1,
+      "year": 2015
+    },
+    {
+      "enrollment": 48,
+      "epmc_mentions": 0,
+      "nct": "NCT02991456",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2022
+    },
+    {
+      "enrollment": 29,
+      "epmc_mentions": 0,
+      "nct": "NCT00625573",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2009
+    },
+    {
+      "enrollment": 150,
+      "epmc_mentions": 2,
+      "nct": "NCT00506922",
+      "phases": [
+        "PHASE1",
+        "PHASE2"
+      ],
+      "registry_pmids": 1,
+      "year": 2009
+    },
+    {
+      "enrollment": 55,
+      "epmc_mentions": 42,
+      "nct": "NCT03728361",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 1,
+      "year": 2025
+    },
+    {
+      "enrollment": 10,
+      "epmc_mentions": 1,
+      "nct": "NCT04575831",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 1,
+      "year": 2020
+    },
+    {
+      "enrollment": 17,
+      "epmc_mentions": 6,
+      "nct": "NCT01851096",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 0,
+      "year": 2016
+    },
+    {
+      "enrollment": 43,
+      "epmc_mentions": 2,
+      "nct": "NCT03928938",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 2,
+      "year": 2022
+    },
+    {
+      "enrollment": 16,
+      "epmc_mentions": 19,
+      "nct": "NCT04059588",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 1,
+      "year": 2023
+    },
+    {
+      "enrollment": 12,
+      "epmc_mentions": 1,
+      "nct": "NCT00471679",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 0,
+      "year": 2010
+    },
+    {
+      "enrollment": null,
+      "epmc_mentions": 1,
+      "nct": "NCT00045279",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 2,
+      "year": 2005
+    },
+    {
+      "enrollment": 48,
+      "epmc_mentions": 0,
+      "nct": "NCT00472420",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2011
+    },
+    {
+      "enrollment": 10,
+      "epmc_mentions": 2,
+      "nct": "NCT00559026",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 0,
+      "year": 2006
+    },
+    {
+      "enrollment": 24,
+      "epmc_mentions": 2,
+      "nct": "NCT02916719",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 0,
+      "year": 2022
+    },
+    {
+      "enrollment": 519,
+      "epmc_mentions": 30,
+      "nct": "NCT00938652",
+      "phases": [
+        "PHASE3"
+      ],
+      "registry_pmids": 1,
+      "year": 2012
+    },
+    {
+      "enrollment": 51,
+      "epmc_mentions": 35,
+      "nct": "NCT02773238",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 4,
+      "year": 2023
+    },
+    {
+      "enrollment": 118,
+      "epmc_mentions": 2,
+      "nct": "NCT01161563",
+      "phases": [
+        "PHASE4"
+      ],
+      "registry_pmids": 1,
+      "year": 2011
+    },
+    {
+      "enrollment": null,
+      "epmc_mentions": 3,
+      "nct": "NCT00003649",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 1,
+      "year": 2007
+    },
+    {
+      "enrollment": 246,
+      "epmc_mentions": 2,
+      "nct": "NCT02117674",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 3,
+      "year": 2015
+    },
+    {
+      "enrollment": 39,
+      "epmc_mentions": 18,
+      "nct": "NCT00909402",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 0,
+      "year": 2012
+    },
+    {
+      "enrollment": 114,
+      "epmc_mentions": 35,
+      "nct": "NCT02783625",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 1,
+      "year": 2026
+    },
+    {
+      "enrollment": 55,
+      "epmc_mentions": 3,
+      "nct": "NCT02106806",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 0,
+      "year": 2012
+    },
+    {
+      "enrollment": 17,
+      "epmc_mentions": 2,
+      "nct": "NCT06366451",
+      "phases": [
+        "EARLY_PHASE1"
+      ],
+      "registry_pmids": 6,
+      "year": 2026
+    },
+    {
+      "enrollment": 12,
+      "epmc_mentions": 0,
+      "nct": "NCT02793076",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 0,
+      "year": 2016
+    },
+    {
+      "enrollment": 92,
+      "epmc_mentions": 0,
+      "nct": "NCT03564587",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 0,
+      "year": 2020
+    },
+    {
+      "enrollment": 40,
+      "epmc_mentions": 0,
+      "nct": "NCT01605630",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 0,
+      "year": 2017
+    },
+    {
+      "enrollment": 130,
+      "epmc_mentions": 0,
+      "nct": "NCT07354178",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 0,
+      "year": 2025
+    },
+    {
+      "enrollment": 12,
+      "epmc_mentions": 4,
+      "nct": "NCT03955627",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 1,
+      "year": 2025
+    },
+    {
+      "enrollment": 358,
+      "epmc_mentions": 0,
+      "nct": "NCT00315484",
+      "phases": [
+        "PHASE4"
+      ],
+      "registry_pmids": 1,
+      "year": 2004
+    },
+    {
+      "enrollment": 1101,
+      "epmc_mentions": 72,
+      "nct": "NCT03072238",
+      "phases": [
+        "PHASE3"
+      ],
+      "registry_pmids": 3,
+      "year": 2024
+    },
+    {
+      "enrollment": 25,
+      "epmc_mentions": 0,
+      "nct": "NCT03232268",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 0,
+      "year": 2026
+    },
+    {
+      "enrollment": 28,
+      "epmc_mentions": 0,
+      "nct": "NCT00186303",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 0,
+      "year": 2010
+    },
+    {
+      "enrollment": 207,
+      "epmc_mentions": 0,
+      "nct": "NCT00979680",
+      "phases": [
+        "PHASE3"
+      ],
+      "registry_pmids": 0,
+      "year": 2007
+    },
+    {
+      "enrollment": 136,
+      "epmc_mentions": 29,
+      "nct": "NCT02463032",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 1,
+      "year": 2019
+    },
+    {
+      "enrollment": 26,
+      "epmc_mentions": 0,
+      "nct": "NCT00006456",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2004
+    },
+    {
+      "enrollment": 57,
+      "epmc_mentions": 17,
+      "nct": "NCT00962611",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 2,
+      "year": 2016
+    },
+    {
+      "enrollment": null,
+      "epmc_mentions": 1,
+      "nct": "NCT00245076",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 1,
+      "year": 2007
+    },
+    {
+      "enrollment": 18,
+      "epmc_mentions": 0,
+      "nct": "NCT04351165",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 0,
+      "year": 2021
+    },
+    {
+      "enrollment": 3,
+      "epmc_mentions": 18,
+      "nct": "NCT04631029",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 1,
+      "year": 2023
+    },
+    {
+      "enrollment": 30,
+      "epmc_mentions": 0,
+      "nct": "NCT04694820",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 0,
+      "year": 2022
+    },
+    {
+      "enrollment": 192,
+      "epmc_mentions": 1,
+      "nct": "NCT03622229",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 1,
+      "year": 2020
+    },
+    {
+      "enrollment": 103,
+      "epmc_mentions": 4,
+      "nct": "NCT02135445",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2015
+    },
+    {
+      "enrollment": 24,
+      "epmc_mentions": 1,
+      "nct": "NCT04993040",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 0,
+      "year": 2020
+    },
+    {
+      "enrollment": 8,
+      "epmc_mentions": 7,
+      "nct": "NCT01298401",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 0,
+      "year": 2013
+    },
+    {
+      "enrollment": 24,
+      "epmc_mentions": 14,
+      "nct": "NCT04207190",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 0,
+      "year": 2024
+    },
+    {
+      "enrollment": null,
+      "epmc_mentions": 25,
+      "nct": "NCT00006254",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 0,
+      "year": 2008
+    },
+    {
+      "enrollment": 343,
+      "epmc_mentions": 5,
+      "nct": "NCT00543504",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 2,
+      "year": 2020
+    },
+    {
+      "enrollment": 289,
+      "epmc_mentions": 81,
+      "nct": "NCT02854436",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 2,
+      "year": 2023
+    },
+    {
+      "enrollment": 58,
+      "epmc_mentions": 21,
+      "nct": "NCT01737450",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 5,
+      "year": 2019
+    },
+    {
+      "enrollment": 36,
+      "epmc_mentions": 30,
+      "nct": "NCT02029573",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2016
+    },
+    {
+      "enrollment": 226,
+      "epmc_mentions": 10,
+      "nct": "NCT02514681",
+      "phases": [
+        "PHASE3"
+      ],
+      "registry_pmids": 5,
+      "year": 2022
+    },
+    {
+      "enrollment": 80,
+      "epmc_mentions": 2,
+      "nct": "NCT01620710",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 2,
+      "year": 2017
+    },
+    {
+      "enrollment": 30,
+      "epmc_mentions": 0,
+      "nct": "NCT00608803",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 0,
+      "year": 2009
+    },
+    {
+      "enrollment": 324,
+      "epmc_mentions": 37,
+      "nct": "NCT02659059",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 1,
+      "year": 2022
+    },
+    {
+      "enrollment": 300,
+      "epmc_mentions": 2,
+      "nct": "NCT00221221",
+      "phases": [
+        "PHASE2",
+        "PHASE3"
+      ],
+      "registry_pmids": 1,
+      "year": 2006
+    },
+    {
+      "enrollment": 20,
+      "epmc_mentions": 19,
+      "nct": "NCT02325401",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 1,
+      "year": 2020
+    },
+    {
+      "enrollment": 8,
+      "epmc_mentions": 1,
+      "nct": "NCT04674852",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 1,
+      "year": 2022
+    },
+    {
+      "enrollment": 29,
+      "epmc_mentions": 32,
+      "nct": "NCT02789345",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 1,
+      "year": 2022
+    },
+    {
+      "enrollment": 27,
+      "epmc_mentions": 25,
+      "nct": "NCT02659943",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 1,
+      "year": 2022
+    },
+    {
+      "enrollment": 48,
+      "epmc_mentions": 0,
+      "nct": "NCT06071806",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 0,
+      "year": 2024
+    },
+    {
+      "enrollment": 30,
+      "epmc_mentions": 1,
+      "nct": "NCT00293696",
+      "phases": [
+        "PHASE4"
+      ],
+      "registry_pmids": 0,
+      "year": 2006
+    },
+    {
+      "enrollment": 6,
+      "epmc_mentions": 1,
+      "nct": "NCT00726752",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 0,
+      "year": 2010
+    },
+    {
+      "enrollment": 13,
+      "epmc_mentions": 2,
+      "nct": "NCT02891590",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 0,
+      "year": 2019
+    },
+    {
+      "enrollment": 216,
+      "epmc_mentions": 1,
+      "nct": "NCT00054418",
+      "phases": [
+        "PHASE3"
+      ],
+      "registry_pmids": 2,
+      "year": 2008
+    },
+    {
+      "enrollment": 13,
+      "epmc_mentions": 3,
+      "nct": "NCT03623373",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2025
+    },
+    {
+      "enrollment": 130,
+      "epmc_mentions": 6,
+      "nct": "NCT01483612",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 2,
+      "year": 2018
+    },
+    {
+      "enrollment": 29,
+      "epmc_mentions": 19,
+      "nct": "NCT00112229",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 2,
+      "year": 2012
+    },
+    {
+      "enrollment": 128,
+      "epmc_mentions": 2,
+      "nct": "NCT00630188",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 1,
+      "year": 2006
+    },
+    {
+      "enrollment": 46,
+      "epmc_mentions": 9,
+      "nct": "NCT02047474",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 1,
+      "year": 2024
+    },
+    {
+      "enrollment": 66,
+      "epmc_mentions": 7,
+      "nct": "NCT04436107",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 1,
+      "year": 2024
+    },
+    {
+      "enrollment": 6,
+      "epmc_mentions": 3,
+      "nct": "NCT05054062",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 1,
+      "year": 2021
+    },
+    {
+      "enrollment": 15,
+      "epmc_mentions": 1,
+      "nct": "NCT05311527",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 0,
+      "year": 2025
+    },
+    {
+      "enrollment": 282,
+      "epmc_mentions": 42,
+      "nct": "NCT02571036",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 1,
+      "year": 2022
+    },
+    {
+      "enrollment": 20,
+      "epmc_mentions": 20,
+      "nct": "NCT02838823",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 3,
+      "year": 2019
+    },
+    {
+      "enrollment": 29,
+      "epmc_mentions": 11,
+      "nct": "NCT00708292",
+      "phases": [
+        "PHASE1",
+        "PHASE2"
+      ],
+      "registry_pmids": 1,
+      "year": 2011
+    },
+    {
+      "enrollment": 23,
+      "epmc_mentions": 0,
+      "nct": "NCT04076033",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 0,
+      "year": 2021
+    },
+    {
+      "enrollment": 83,
+      "epmc_mentions": 6,
+      "nct": "NCT01256359",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2020
+    },
+    {
+      "enrollment": 146,
+      "epmc_mentions": 0,
+      "nct": "NCT01793480",
+      "phases": [
+        "PHASE3"
+      ],
+      "registry_pmids": 0,
+      "year": 2014
+    },
+    {
+      "enrollment": 40,
+      "epmc_mentions": 12,
+      "nct": "NCT01489826",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 0,
+      "year": 2015
+    },
+    {
+      "enrollment": 37,
+      "epmc_mentions": 0,
+      "nct": "NCT06281379",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 4,
+      "year": 2024
+    },
+    {
+      "enrollment": 12,
+      "epmc_mentions": 7,
+      "nct": "NCT04007081",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 0,
+      "year": 2021
+    },
+    {
+      "enrollment": 314,
+      "epmc_mentions": 0,
+      "nct": "NCT00049010",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 0,
+      "year": 2009
+    },
+    {
+      "enrollment": 11980,
+      "epmc_mentions": 7,
+      "nct": "NCT03979495",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 3,
+      "year": 2022
+    },
+    {
+      "enrollment": null,
+      "epmc_mentions": 0,
+      "nct": "NCT00004911",
+      "phases": [
+        "PHASE1",
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2003
+    },
+    {
+      "enrollment": 40,
+      "epmc_mentions": 2,
+      "nct": "NCT00098345",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 1,
+      "year": 2017
+    },
+    {
+      "enrollment": 38,
+      "epmc_mentions": 15,
+      "nct": "NCT01118611",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 0,
+      "year": 2013
+    },
+    {
+      "enrollment": 123,
+      "epmc_mentions": 26,
+      "nct": "NCT02316106",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 3,
+      "year": 2024
+    },
+    {
+      "enrollment": 41,
+      "epmc_mentions": 0,
+      "nct": "NCT05396781",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2022
+    },
+    {
+      "enrollment": 1781,
+      "epmc_mentions": 13,
+      "nct": "NCT00092547",
+      "phases": [
+        "PHASE3"
+      ],
+      "registry_pmids": 5,
+      "year": 2015
+    },
+    {
+      "enrollment": 45,
+      "epmc_mentions": 0,
+      "nct": "NCT04266522",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 0,
+      "year": 2021
+    },
+    {
+      "enrollment": 177,
+      "epmc_mentions": 0,
+      "nct": "NCT00949598",
+      "phases": [
+        "PHASE3"
+      ],
+      "registry_pmids": 0,
+      "year": 2010
+    },
+    {
+      "enrollment": 6,
+      "epmc_mentions": 2,
+      "nct": "NCT02210065",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2019
+    },
+    {
+      "enrollment": 99,
+      "epmc_mentions": 4,
+      "nct": "NCT01739218",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 1,
+      "year": 2016
+    },
+    {
+      "enrollment": 32,
+      "epmc_mentions": 52,
+      "nct": "NCT03895970",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 25,
+      "year": 2021
+    },
+    {
+      "enrollment": 120,
+      "epmc_mentions": 2,
+      "nct": "NCT00392171",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 1,
+      "year": 2009
+    },
+    {
+      "enrollment": 61,
+      "epmc_mentions": 0,
+      "nct": "NCT00590031",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2009
+    },
+    {
+      "enrollment": 179,
+      "epmc_mentions": 0,
+      "nct": "NCT00003650",
+      "phases": [
+        "PHASE3"
+      ],
+      "registry_pmids": 1,
+      "year": 2013
+    },
+    {
+      "enrollment": 105,
+      "epmc_mentions": 0,
+      "nct": "NCT02193477",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 0,
+      "year": 2015
+    },
+    {
+      "enrollment": 140,
+      "epmc_mentions": 33,
+      "nct": "NCT02180867",
+      "phases": [
+        "PHASE2",
+        "PHASE3"
+      ],
+      "registry_pmids": 4,
+      "year": 2026
+    },
+    {
+      "enrollment": 480,
+      "epmc_mentions": 1,
+      "nct": "NCT01289288",
+      "phases": [
+        "PHASE1",
+        "PHASE2"
+      ],
+      "registry_pmids": 4,
+      "year": 2012
+    },
+    {
+      "enrollment": 11,
+      "epmc_mentions": 2,
+      "nct": "NCT01167244",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2011
+    },
+    {
+      "enrollment": 20,
+      "epmc_mentions": 7,
+      "nct": "NCT00642031",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 1,
+      "year": 2012
+    },
+    {
+      "enrollment": 20,
+      "epmc_mentions": 0,
+      "nct": "NCT00139191",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 0,
+      "year": 2006
+    },
+    {
+      "enrollment": 71,
+      "epmc_mentions": 0,
+      "nct": "NCT00770393",
+      "phases": [
+        "PHASE2",
+        "PHASE3"
+      ],
+      "registry_pmids": 0,
+      "year": 2007
+    },
+    {
+      "enrollment": 32,
+      "epmc_mentions": 0,
+      "nct": "NCT00657995",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 0,
+      "year": 2007
+    },
+    {
+      "enrollment": 310,
+      "epmc_mentions": 10,
+      "nct": "NCT02659020",
+      "phases": [
+        "PHASE1",
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2021
+    },
+    {
+      "enrollment": 40,
+      "epmc_mentions": 8,
+      "nct": "NCT00742131",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 1,
+      "year": 2011
+    },
+    {
+      "enrollment": 58,
+      "epmc_mentions": 34,
+      "nct": "NCT05396300",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 2,
+      "year": 2026
+    },
+    {
+      "enrollment": 18,
+      "epmc_mentions": 13,
+      "nct": "NCT02385110",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2023
+    },
+    {
+      "enrollment": 14,
+      "epmc_mentions": 0,
+      "nct": "NCT06636591",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 0,
+      "year": 2026
+    },
+    {
+      "enrollment": 20,
+      "epmc_mentions": 2,
+      "nct": "NCT03836768",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 0,
+      "year": 2021
+    },
+    {
+      "enrollment": 124,
+      "epmc_mentions": 12,
+      "nct": "NCT03455504",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 1,
+      "year": 2026
+    },
+    {
+      "enrollment": 96,
+      "epmc_mentions": 18,
+      "nct": "NCT02860000",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 1,
+      "year": 2025
+    },
+    {
+      "enrollment": 95,
+      "epmc_mentions": 1,
+      "nct": "NCT00482391",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 1,
+      "year": 2011
+    },
+    {
+      "enrollment": 108,
+      "epmc_mentions": 0,
+      "nct": "NCT06542354",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 0,
+      "year": 2024
+    },
+    {
+      "enrollment": 8,
+      "epmc_mentions": 0,
+      "nct": "NCT06648967",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 0,
+      "year": 2026
+    },
+    {
+      "enrollment": 400,
+      "epmc_mentions": 1,
+      "nct": "NCT00127465",
+      "phases": [
+        "PHASE1",
+        "PHASE2"
+      ],
+      "registry_pmids": 1,
+      "year": 2003
+    },
+    {
+      "enrollment": 453,
+      "epmc_mentions": 4,
+      "nct": "NCT04936308",
+      "phases": [
+        "PHASE3"
+      ],
+      "registry_pmids": 1,
+      "year": 2026
+    },
+    {
+      "enrollment": 21,
+      "epmc_mentions": 5,
+      "nct": "NCT02921893",
+      "phases": [
+        "EARLY_PHASE1"
+      ],
+      "registry_pmids": 0,
+      "year": 2024
+    },
+    {
+      "enrollment": 124,
+      "epmc_mentions": 1,
+      "nct": "NCT00208260",
+      "phases": [
+        "PHASE2",
+        "PHASE3"
+      ],
+      "registry_pmids": 1,
+      "year": 2007
+    },
+    {
+      "enrollment": 24,
+      "epmc_mentions": 0,
+      "nct": "NCT06304805",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 0,
+      "year": 2024
+    },
+    {
+      "enrollment": 23,
+      "epmc_mentions": 12,
+      "nct": "NCT01830010",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 1,
+      "year": 2018
+    },
+    {
+      "enrollment": 83,
+      "epmc_mentions": 43,
+      "nct": "NCT03875079",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 0,
+      "year": 2022
+    },
+    {
+      "enrollment": 10,
+      "epmc_mentions": 23,
+      "nct": "NCT03344536",
+      "phases": [
+        "PHASE1",
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2021
+    },
+    {
+      "enrollment": 21,
+      "epmc_mentions": 0,
+      "nct": "NCT07755566",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 0,
+      "year": 2024
+    },
+    {
+      "enrollment": 69,
+      "epmc_mentions": 47,
+      "nct": "NCT03775850",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 1,
+      "year": 2021
+    },
+    {
+      "enrollment": 32,
+      "epmc_mentions": 35,
+      "nct": "NCT04242238",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 0,
+      "year": 2025
+    },
+    {
+      "enrollment": null,
+      "epmc_mentions": 6,
+      "nct": "NCT00023985",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 0,
+      "year": 2003
+    },
+    {
+      "enrollment": 664,
+      "epmc_mentions": 15,
+      "nct": "NCT01630733",
+      "phases": [
+        "PHASE3"
+      ],
+      "registry_pmids": 0,
+      "year": 2016
+    },
+    {
+      "enrollment": 16,
+      "epmc_mentions": 14,
+      "nct": "NCT05586516",
+      "phases": [
+        "PHASE1",
+        "PHASE2"
+      ],
+      "registry_pmids": 1,
+      "year": 2025
+    },
+    {
+      "enrollment": 136,
+      "epmc_mentions": 1,
+      "nct": "NCT04811378",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 0,
+      "year": 2021
+    },
+    {
+      "enrollment": 30,
+      "epmc_mentions": 6,
+      "nct": "NCT01161888",
+      "phases": [
+        "PHASE4"
+      ],
+      "registry_pmids": 0,
+      "year": 2012
+    },
+    {
+      "enrollment": 14,
+      "epmc_mentions": 23,
+      "nct": "NCT00984464",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2014
+    },
+    {
+      "enrollment": 50,
+      "epmc_mentions": 0,
+      "nct": "NCT00101920",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2004
+    },
+    {
+      "enrollment": 1382,
+      "epmc_mentions": 0,
+      "nct": "NCT01998009",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 0,
+      "year": 2014
+    },
+    {
+      "enrollment": 15,
+      "epmc_mentions": 7,
+      "nct": "NCT02882282",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2025
+    },
+    {
+      "enrollment": 58,
+      "epmc_mentions": 5,
+      "nct": "NCT00826241",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2018
+    },
+    {
+      "enrollment": 2,
+      "epmc_mentions": 24,
+      "nct": "NCT03941743",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 0,
+      "year": 2021
+    },
+    {
+      "enrollment": 256,
+      "epmc_mentions": 0,
+      "nct": "NCT05269186",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 0,
+      "year": 2024
+    },
+    {
+      "enrollment": 30,
+      "epmc_mentions": 3,
+      "nct": "NCT04437030",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 0,
+      "year": 2023
+    },
+    {
+      "enrollment": null,
+      "epmc_mentions": 2,
+      "nct": "NCT00014391",
+      "phases": [
+        "PHASE3"
+      ],
+      "registry_pmids": 0,
+      "year": 2001
+    },
+    {
+      "enrollment": 134,
+      "epmc_mentions": 2,
+      "nct": "NCT01379898",
+      "phases": [
+        "PHASE4"
+      ],
+      "registry_pmids": 24,
+      "year": 2018
+    },
+    {
+      "enrollment": 105,
+      "epmc_mentions": 0,
+      "nct": "NCT00146614",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2003
+    },
+    {
+      "enrollment": 16,
+      "epmc_mentions": 0,
+      "nct": "NCT00498407",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2008
+    },
+    {
+      "enrollment": 90,
+      "epmc_mentions": 1,
+      "nct": "NCT06111872",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 6,
+      "year": 2024
+    },
+    {
+      "enrollment": 44,
+      "epmc_mentions": 1,
+      "nct": "NCT01867879",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 1,
+      "year": 2015
+    },
+    {
+      "enrollment": 90,
+      "epmc_mentions": 0,
+      "nct": "NCT02462681",
+      "phases": [
+        "PHASE1",
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2017
+    },
+    {
+      "enrollment": 8,
+      "epmc_mentions": 4,
+      "nct": "NCT05507775",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 0,
+      "year": 2024
+    },
+    {
+      "enrollment": 19,
+      "epmc_mentions": 2,
+      "nct": "NCT04444427",
+      "phases": [
+        "PHASE1",
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2022
+    },
+    {
+      "enrollment": 39,
+      "epmc_mentions": 1,
+      "nct": "NCT06373614",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 5,
+      "year": 2024
+    },
+    {
+      "enrollment": 5,
+      "epmc_mentions": 2,
+      "nct": "NCT01529684",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 0,
+      "year": 2013
+    },
+    {
+      "enrollment": 57,
+      "epmc_mentions": 0,
+      "nct": "NCT00026221",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2013
+    },
+    {
+      "enrollment": 39,
+      "epmc_mentions": 0,
+      "nct": "NCT00652054",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2007
+    },
+    {
+      "enrollment": 18,
+      "epmc_mentions": 1,
+      "nct": "NCT00398112",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2011
+    },
+    {
+      "enrollment": 57,
+      "epmc_mentions": 47,
+      "nct": "NCT01227551",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 1,
+      "year": 2016
+    },
+    {
+      "enrollment": 20,
+      "epmc_mentions": 8,
+      "nct": "NCT01420146",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 0,
+      "year": 2015
+    },
+    {
+      "enrollment": 164,
+      "epmc_mentions": 13,
+      "nct": "NCT01867710",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 3,
+      "year": 2018
+    },
+    {
+      "enrollment": 42,
+      "epmc_mentions": 1,
+      "nct": "NCT01136031",
+      "phases": [
+        "PHASE1",
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2011
+    },
+    {
+      "enrollment": 255,
+      "epmc_mentions": 0,
+      "nct": "NCT02063438",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 8,
+      "year": 2020
+    },
+    {
+      "enrollment": 82,
+      "epmc_mentions": 1,
+      "nct": "NCT00251498",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2007
+    },
+    {
+      "enrollment": 200,
+      "epmc_mentions": 0,
+      "nct": "NCT03583944",
+      "phases": [
+        "PHASE4"
+      ],
+      "registry_pmids": 0,
+      "year": 2019
+    },
+    {
+      "enrollment": 23,
+      "epmc_mentions": 31,
+      "nct": "NCT01356628",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 3,
+      "year": 2023
+    },
+    {
+      "enrollment": 48,
+      "epmc_mentions": 0,
+      "nct": "NCT00807391",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 6,
+      "year": 2010
+    },
+    {
+      "enrollment": 91,
+      "epmc_mentions": 20,
+      "nct": "NCT01399372",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2022
+    },
+    {
+      "enrollment": 50,
+      "epmc_mentions": 3,
+      "nct": "NCT01357525",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 0,
+      "year": 2018
+    },
+    {
+      "enrollment": 803,
+      "epmc_mentions": 101,
+      "nct": "NCT03740529",
+      "phases": [
+        "PHASE1",
+        "PHASE2"
+      ],
+      "registry_pmids": 13,
+      "year": 2025
+    },
+    {
+      "enrollment": 28,
+      "epmc_mentions": 2,
+      "nct": "NCT02729701",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 1,
+      "year": 2019
+    },
+    {
+      "enrollment": 58,
+      "epmc_mentions": 109,
+      "nct": "NCT02643303",
+      "phases": [
+        "PHASE1",
+        "PHASE2"
+      ],
+      "registry_pmids": 1,
+      "year": 2022
+    },
+    {
+      "enrollment": 60,
+      "epmc_mentions": 23,
+      "nct": "NCT03439462",
+      "phases": [
+        "PHASE1",
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2022
+    },
+    {
+      "enrollment": 111,
+      "epmc_mentions": 0,
+      "nct": "NCT06837896",
+      "phases": [
+        "PHASE3"
+      ],
+      "registry_pmids": 0,
+      "year": 2026
+    },
+    {
+      "enrollment": 20,
+      "epmc_mentions": 1,
+      "nct": "NCT04594096",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 1,
+      "year": 2023
+    },
+    {
+      "enrollment": 1,
+      "epmc_mentions": 4,
+      "nct": "NCT05739409",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 0,
+      "year": 2023
+    },
+    {
+      "enrollment": 93,
+      "epmc_mentions": 2,
+      "nct": "NCT02083861",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 1,
+      "year": 2014
+    },
+    {
+      "enrollment": 5,
+      "epmc_mentions": 0,
+      "nct": "NCT05674851",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 0,
+      "year": 2023
+    },
+    {
+      "enrollment": 44,
+      "epmc_mentions": 0,
+      "nct": "NCT00512681",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2009
+    },
+    {
+      "enrollment": 18,
+      "epmc_mentions": 80,
+      "nct": "NCT01522820",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 1,
+      "year": 2016
+    },
+    {
+      "enrollment": null,
+      "epmc_mentions": 1,
+      "nct": "NCT00019500",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 2,
+      "year": 2005
+    },
+    {
+      "enrollment": 110,
+      "epmc_mentions": 0,
+      "nct": "NCT00913068",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 0,
+      "year": 2011
+    },
+    {
+      "enrollment": 35,
+      "epmc_mentions": 2,
+      "nct": "NCT02324023",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 2,
+      "year": 2016
+    },
+    {
+      "enrollment": 44,
+      "epmc_mentions": 134,
+      "nct": "NCT01413022",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 1,
+      "year": 2016
+    },
+    {
+      "enrollment": 120,
+      "epmc_mentions": 0,
+      "nct": "NCT00049452",
+      "phases": [
+        "PHASE3"
+      ],
+      "registry_pmids": 3,
+      "year": 2008
+    },
+    {
+      "enrollment": 145,
+      "epmc_mentions": 0,
+      "nct": "NCT03197077",
+      "phases": [
+        "PHASE3"
+      ],
+      "registry_pmids": 0,
+      "year": 2022
+    },
+    {
+      "enrollment": 60,
+      "epmc_mentions": 0,
+      "nct": "NCT05531331",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 11,
+      "year": 2022
+    },
+    {
+      "enrollment": 9,
+      "epmc_mentions": 56,
+      "nct": "NCT01567891",
+      "phases": [
+        "PHASE1",
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2017
+    },
+    {
+      "enrollment": 600,
+      "epmc_mentions": 1,
+      "nct": "NCT03310892",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 1,
+      "year": 2023
+    },
+    {
+      "enrollment": 124,
+      "epmc_mentions": 0,
+      "nct": "NCT05153785",
+      "phases": [
+        "PHASE2",
+        "PHASE3"
+      ],
+      "registry_pmids": 29,
+      "year": 2025
+    },
+    {
+      "enrollment": 74,
+      "epmc_mentions": 0,
+      "nct": "NCT02192918",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 0,
+      "year": 2015
+    },
+    {
+      "enrollment": 70,
+      "epmc_mentions": 3,
+      "nct": "NCT00757172",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 1,
+      "year": 2014
+    },
+    {
+      "enrollment": 67,
+      "epmc_mentions": 3,
+      "nct": "NCT02653976",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 1,
+      "year": 2021
+    },
+    {
+      "enrollment": 162,
+      "epmc_mentions": 0,
+      "nct": "NCT00191490",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2005
+    },
+    {
+      "enrollment": 33,
+      "epmc_mentions": 52,
+      "nct": "NCT03003637",
+      "phases": [
+        "PHASE1",
+        "PHASE2"
+      ],
+      "registry_pmids": 2,
+      "year": 2021
+    },
+    {
+      "enrollment": 60,
+      "epmc_mentions": 5,
+      "nct": "NCT00557037",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2009
+    },
+    {
+      "enrollment": 10,
+      "epmc_mentions": 27,
+      "nct": "NCT03203876",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 0,
+      "year": 2020
+    },
+    {
+      "enrollment": 40,
+      "epmc_mentions": 2,
+      "nct": "NCT05269940",
+      "phases": [
+        "PHASE1",
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2024
+    },
+    {
+      "enrollment": 26,
+      "epmc_mentions": 1,
+      "nct": "NCT00359359",
+      "phases": [
+        "PHASE1",
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2009
+    },
+    {
+      "enrollment": 26,
+      "epmc_mentions": 3,
+      "nct": "NCT06072833",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 8,
+      "year": 2025
+    },
+    {
+      "enrollment": 95,
+      "epmc_mentions": 6,
+      "nct": "NCT01870947",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 1,
+      "year": 2019
+    },
+    {
+      "enrollment": 40,
+      "epmc_mentions": 0,
+      "nct": "NCT01888523",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 0,
+      "year": 2016
+    },
+    {
+      "enrollment": 45,
+      "epmc_mentions": 3,
+      "nct": "NCT02144649",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 0,
+      "year": 2016
+    },
+    {
+      "enrollment": 160,
+      "epmc_mentions": 3,
+      "nct": "NCT04477616",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 1,
+      "year": 2022
+    },
+    {
+      "enrollment": 270,
+      "epmc_mentions": 4,
+      "nct": "NCT01810588",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 2,
+      "year": 2026
+    },
+    {
+      "enrollment": 74,
+      "epmc_mentions": 0,
+      "nct": "NCT00068341",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2013
+    },
+    {
+      "enrollment": 3,
+      "epmc_mentions": 2,
+      "nct": "NCT04813653",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 0,
+      "year": 2025
+    },
+    {
+      "enrollment": 50,
+      "epmc_mentions": 0,
+      "nct": "NCT00334997",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2006
+    },
+    {
+      "enrollment": 10,
+      "epmc_mentions": 1,
+      "nct": "NCT01699269",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 0,
+      "year": 2013
+    },
+    {
+      "enrollment": 54,
+      "epmc_mentions": 1,
+      "nct": "NCT00864227",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 2,
+      "year": 2013
+    },
+    {
+      "enrollment": null,
+      "epmc_mentions": 0,
+      "nct": "NCT00014092",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 1,
+      "year": 2003
+    },
+    {
+      "enrollment": 50,
+      "epmc_mentions": 3,
+      "nct": "NCT01539317",
+      "phases": [
+        "PHASE3"
+      ],
+      "registry_pmids": 2,
+      "year": 2013
+    },
+    {
+      "enrollment": 17,
+      "epmc_mentions": 1,
+      "nct": "NCT01183494",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 0,
+      "year": 2017
+    },
+    {
+      "enrollment": 78,
+      "epmc_mentions": 5,
+      "nct": "NCT00795002",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2012
+    },
+    {
+      "enrollment": 100,
+      "epmc_mentions": 0,
+      "nct": "NCT00400426",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2012
+    },
+    {
+      "enrollment": 29,
+      "epmc_mentions": 7,
+      "nct": "NCT01395121",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2016
+    },
+    {
+      "enrollment": 45,
+      "epmc_mentions": 15,
+      "nct": "NCT00430846",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 2,
+      "year": 2009
+    },
+    {
+      "enrollment": 150,
+      "epmc_mentions": 9,
+      "nct": "NCT00586339",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 1,
+      "year": 2011
+    },
+    {
+      "enrollment": 41,
+      "epmc_mentions": 55,
+      "nct": "NCT00882180",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 0,
+      "year": 2011
+    },
+    {
+      "enrollment": 16,
+      "epmc_mentions": 17,
+      "nct": "NCT00258349",
+      "phases": [
+        "PHASE1",
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2010
+    },
+    {
+      "enrollment": 50,
+      "epmc_mentions": 0,
+      "nct": "NCT02049255",
+      "phases": [
+        "PHASE4"
+      ],
+      "registry_pmids": 0,
+      "year": 2014
+    },
+    {
+      "enrollment": 14,
+      "epmc_mentions": 0,
+      "nct": "NCT04601948",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 0,
+      "year": 2020
+    },
+    {
+      "enrollment": 148,
+      "epmc_mentions": 0,
+      "nct": "NCT02498899",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 0,
+      "year": 2018
+    },
+    {
+      "enrollment": 701,
+      "epmc_mentions": 50,
+      "nct": "NCT00617981",
+      "phases": [
+        "PHASE3"
+      ],
+      "registry_pmids": 0,
+      "year": 2016
+    },
+    {
+      "enrollment": 40,
+      "epmc_mentions": 2,
+      "nct": "NCT03934060",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 0,
+      "year": 2021
+    },
+    {
+      "enrollment": 46,
+      "epmc_mentions": 5,
+      "nct": "NCT00705653",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 1,
+      "year": 2009
+    },
+    {
+      "enrollment": 75,
+      "epmc_mentions": 5,
+      "nct": "NCT01523457",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 1,
+      "year": 2015
+    },
+    {
+      "enrollment": 60,
+      "epmc_mentions": 0,
+      "nct": "NCT00025220",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2008
+    },
+    {
+      "enrollment": 107,
+      "epmc_mentions": 39,
+      "nct": "NCT03455270",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 0,
+      "year": 2022
+    },
+    {
+      "enrollment": 70,
+      "epmc_mentions": 1,
+      "nct": "NCT01404520",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 2,
+      "year": 2015
+    },
+    {
+      "enrollment": 32,
+      "epmc_mentions": 0,
+      "nct": "NCT03747276",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 0,
+      "year": 2018
+    },
+    {
+      "enrollment": 89,
+      "epmc_mentions": 84,
+      "nct": "NCT03311412",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 0,
+      "year": 2022
+    },
+    {
+      "enrollment": 24,
+      "epmc_mentions": 27,
+      "nct": "NCT02631590",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 1,
+      "year": 2021
+    },
+    {
+      "enrollment": 155,
+      "epmc_mentions": 0,
+      "nct": "NCT04450264",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 15,
+      "year": 2023
+    },
+    {
+      "enrollment": 60,
+      "epmc_mentions": 1,
+      "nct": "NCT02784652",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2017
+    },
+    {
+      "enrollment": 48,
+      "epmc_mentions": 5,
+      "nct": "NCT01403948",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 1,
+      "year": 2018
+    },
+    {
+      "enrollment": 315,
+      "epmc_mentions": 2,
+      "nct": "NCT02973685",
+      "phases": [
+        "PHASE3"
+      ],
+      "registry_pmids": 2,
+      "year": 2020
+    },
+    {
+      "enrollment": 6,
+      "epmc_mentions": 19,
+      "nct": "NCT04185220",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 2,
+      "year": 2022
+    },
+    {
+      "enrollment": 284,
+      "epmc_mentions": 53,
+      "nct": "NCT03941093",
+      "phases": [
+        "PHASE3"
+      ],
+      "registry_pmids": 0,
+      "year": 2024
+    },
+    {
+      "enrollment": 72,
+      "epmc_mentions": 2,
+      "nct": "NCT01658033",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 5,
+      "year": 2014
+    },
+    {
+      "enrollment": 101,
+      "epmc_mentions": 1,
+      "nct": "NCT05472532",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 0,
+      "year": 2025
+    },
+    {
+      "enrollment": 1170,
+      "epmc_mentions": 0,
+      "nct": "NCT02156869",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 2,
+      "year": 2014
+    },
+    {
+      "enrollment": 15,
+      "epmc_mentions": 3,
+      "nct": "NCT02323854",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 1,
+      "year": 2017
+    },
+    {
+      "enrollment": 176,
+      "epmc_mentions": 6,
+      "nct": "NCT01010217",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2017
+    },
+    {
+      "enrollment": 36,
+      "epmc_mentions": 11,
+      "nct": "NCT03144804",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2022
+    },
+    {
+      "enrollment": 81,
+      "epmc_mentions": 5,
+      "nct": "NCT01328249",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2017
+    },
+    {
+      "enrollment": 30,
+      "epmc_mentions": 0,
+      "nct": "NCT00564200",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2014
+    },
+    {
+      "enrollment": 3,
+      "epmc_mentions": 4,
+      "nct": "NCT01018745",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 0,
+      "year": 2010
+    },
+    {
+      "enrollment": 229,
+      "epmc_mentions": 11,
+      "nct": "NCT04145531",
+      "phases": [
+        "PHASE2",
+        "PHASE3"
+      ],
+      "registry_pmids": 2,
+      "year": 2022
+    },
+    {
+      "enrollment": 13,
+      "epmc_mentions": 120,
+      "nct": "NCT02395250",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 1,
+      "year": 2018
+    },
+    {
+      "enrollment": 142,
+      "epmc_mentions": 6,
+      "nct": "NCT05017012",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 1,
+      "year": 2026
+    },
+    {
+      "enrollment": 60,
+      "epmc_mentions": 0,
+      "nct": "NCT04932720",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 0,
+      "year": 2021
+    },
+    {
+      "enrollment": 19,
+      "epmc_mentions": 16,
+      "nct": "NCT04410224",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 0,
+      "year": 2024
+    },
+    {
+      "enrollment": 24,
+      "epmc_mentions": 0,
+      "nct": "NCT02619292",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 0,
+      "year": 2017
+    },
+    {
+      "enrollment": 47,
+      "epmc_mentions": 1,
+      "nct": "NCT00028899",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 1,
+      "year": 2012
+    },
+    {
+      "enrollment": 300,
+      "epmc_mentions": 1,
+      "nct": "NCT01954641",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 1,
+      "year": 2018
+    },
+    {
+      "enrollment": 30,
+      "epmc_mentions": 13,
+      "nct": "NCT01921426",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 0,
+      "year": 2016
+    },
+    {
+      "enrollment": 34,
+      "epmc_mentions": 34,
+      "nct": "NCT01079741",
+      "phases": [
+        "PHASE1",
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2013
+    },
+    {
+      "enrollment": 72,
+      "epmc_mentions": 0,
+      "nct": "NCT00040599",
+      "phases": [
+        "PHASE1",
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2004
+    },
+    {
+      "enrollment": 38,
+      "epmc_mentions": 0,
+      "nct": "NCT00139269",
+      "phases": [
+        "PHASE1",
+        "PHASE2"
+      ],
+      "registry_pmids": 2,
+      "year": 2006
+    },
+    {
+      "enrollment": 13,
+      "epmc_mentions": 5,
+      "nct": "NCT04320030",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2021
+    },
+    {
+      "enrollment": 12,
+      "epmc_mentions": 1,
+      "nct": "NCT03823352",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2020
+    },
+    {
+      "enrollment": 53,
+      "epmc_mentions": 8,
+      "nct": "NCT03082144",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 9,
+      "year": 2018
+    },
+    {
+      "enrollment": 64,
+      "epmc_mentions": 4,
+      "nct": "NCT01265810",
+      "phases": [
+        "PHASE3"
+      ],
+      "registry_pmids": 0,
+      "year": 2015
+    },
+    {
+      "enrollment": 1200,
+      "epmc_mentions": 1,
+      "nct": "NCT00131716",
+      "phases": [
+        "PHASE3"
+      ],
+      "registry_pmids": 1,
+      "year": 2005
+    },
+    {
+      "enrollment": null,
+      "epmc_mentions": 0,
+      "nct": "NCT00027924",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2003
+    },
+    {
+      "enrollment": 898,
+      "epmc_mentions": 3,
+      "nct": "NCT00221702",
+      "phases": [
+        "PHASE3"
+      ],
+      "registry_pmids": 1,
+      "year": 2010
+    },
+    {
+      "enrollment": 21,
+      "epmc_mentions": 4,
+      "nct": "NCT01560325",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 0,
+      "year": 2014
+    },
+    {
+      "enrollment": 33,
+      "epmc_mentions": 2,
+      "nct": "NCT00910754",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 0,
+      "year": 2012
+    },
+    {
+      "enrollment": 50,
+      "epmc_mentions": 1,
+      "nct": "NCT03056300",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 0,
+      "year": 2017
+    },
+    {
+      "enrollment": 57,
+      "epmc_mentions": 0,
+      "nct": "NCT04476654",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 0,
+      "year": 2023
+    },
+    {
+      "enrollment": 1134,
+      "epmc_mentions": 54,
+      "nct": "NCT02993731",
+      "phases": [
+        "PHASE3"
+      ],
+      "registry_pmids": 0,
+      "year": 2020
+    },
+    {
+      "enrollment": null,
+      "epmc_mentions": 3,
+      "nct": "NCT00020475",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2007
+    },
+    {
+      "enrollment": 61,
+      "epmc_mentions": 1,
+      "nct": "NCT02413008",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 1,
+      "year": 2017
+    },
+    {
+      "enrollment": 133,
+      "epmc_mentions": 36,
+      "nct": "NCT02707588",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2022
+    },
+    {
+      "enrollment": 9,
+      "epmc_mentions": 5,
+      "nct": "NCT02931929",
+      "phases": [
+        "PHASE1",
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2019
+    },
+    {
+      "enrollment": 112,
+      "epmc_mentions": 17,
+      "nct": "NCT04241315",
+      "phases": [
+        "PHASE3"
+      ],
+      "registry_pmids": 0,
+      "year": 2021
+    },
+    {
+      "enrollment": 15,
+      "epmc_mentions": 3,
+      "nct": "NCT04626895",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 1,
+      "year": 2020
+    },
+    {
+      "enrollment": 36,
+      "epmc_mentions": 12,
+      "nct": "NCT02412670",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 1,
+      "year": 2022
+    },
+    {
+      "enrollment": 13,
+      "epmc_mentions": 2,
+      "nct": "NCT00328562",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 0,
+      "year": 2010
+    },
+    {
+      "enrollment": 34,
+      "epmc_mentions": 2,
+      "nct": "NCT02439489",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 0,
+      "year": 2017
+    },
+    {
+      "enrollment": 43,
+      "epmc_mentions": 24,
+      "nct": "NCT03925246",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 1,
+      "year": 2021
+    },
+    {
+      "enrollment": 21,
+      "epmc_mentions": 3,
+      "nct": "NCT05509699",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2024
+    },
+    {
+      "enrollment": 12,
+      "epmc_mentions": 31,
+      "nct": "NCT03773666",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 0,
+      "year": 2021
+    },
+    {
+      "enrollment": 25,
+      "epmc_mentions": 0,
+      "nct": "NCT06371989",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 0,
+      "year": 2022
+    },
+    {
+      "enrollment": 183,
+      "epmc_mentions": 3,
+      "nct": "NCT00182234",
+      "phases": [
+        "PHASE3"
+      ],
+      "registry_pmids": 1,
+      "year": 2009
+    },
+    {
+      "enrollment": 102,
+      "epmc_mentions": 8,
+      "nct": "NCT01276548",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2012
+    },
+    {
+      "enrollment": 17,
+      "epmc_mentions": 0,
+      "nct": "NCT01540461",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 0,
+      "year": 2013
+    },
+    {
+      "enrollment": 2521,
+      "epmc_mentions": 1,
+      "nct": "NCT01241656",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 1,
+      "year": 2012
+    },
+    {
+      "enrollment": 42,
+      "epmc_mentions": 1,
+      "nct": "NCT00113529",
+      "phases": [
+        "PHASE1",
+        "PHASE2"
+      ],
+      "registry_pmids": 1,
+      "year": 2008
+    },
+    {
+      "enrollment": 375,
+      "epmc_mentions": 2,
+      "nct": "NCT01667562",
+      "phases": [
+        "PHASE3"
+      ],
+      "registry_pmids": 0,
+      "year": 2017
+    },
+    {
+      "enrollment": 66,
+      "epmc_mentions": 34,
+      "nct": "NCT02115373",
+      "phases": [
+        "PHASE1",
+        "PHASE2"
+      ],
+      "registry_pmids": 2,
+      "year": 2018
+    },
+    {
+      "enrollment": 36,
+      "epmc_mentions": 1,
+      "nct": "NCT04961047",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 0,
+      "year": 2025
+    },
+    {
+      "enrollment": 39,
+      "epmc_mentions": 11,
+      "nct": "NCT01859221",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 28,
+      "year": 2022
+    },
+    {
+      "enrollment": 924,
+      "epmc_mentions": 7,
+      "nct": "NCT01047345",
+      "phases": [
+        "PHASE3"
+      ],
+      "registry_pmids": 3,
+      "year": 2015
+    },
+    {
+      "enrollment": 200,
+      "epmc_mentions": 1,
+      "nct": "NCT03188562",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 0,
+      "year": 2017
+    },
+    {
+      "enrollment": 22,
+      "epmc_mentions": 20,
+      "nct": "NCT03043664",
+      "phases": [
+        "PHASE1",
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2022
+    },
+    {
+      "enrollment": 144,
+      "epmc_mentions": 0,
+      "nct": "NCT06664762",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 14,
+      "year": 2025
+    },
+    {
+      "enrollment": 16,
+      "epmc_mentions": 22,
+      "nct": "NCT02823405",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 1,
+      "year": 2018
+    },
+    {
+      "enrollment": 789,
+      "epmc_mentions": 15,
+      "nct": "NCT00989131",
+      "phases": [
+        "PHASE3"
+      ],
+      "registry_pmids": 1,
+      "year": 2013
+    },
+    {
+      "enrollment": 2240,
+      "epmc_mentions": 19,
+      "nct": "NCT04870333",
+      "phases": [
+        "PHASE2",
+        "PHASE3"
+      ],
+      "registry_pmids": 2,
+      "year": 2025
+    },
+    {
+      "enrollment": 300,
+      "epmc_mentions": 0,
+      "nct": "NCT00540696",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 3,
+      "year": 2003
+    },
+    {
+      "enrollment": 96,
+      "epmc_mentions": 0,
+      "nct": "NCT04037800",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 5,
+      "year": 2021
+    },
+    {
+      "enrollment": 64,
+      "epmc_mentions": 1,
+      "nct": "NCT04495751",
+      "phases": [
+        "EARLY_PHASE1"
+      ],
+      "registry_pmids": 1,
+      "year": 2024
+    },
+    {
+      "enrollment": 22,
+      "epmc_mentions": 13,
+      "nct": "NCT01257594",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 0,
+      "year": 2018
+    },
+    {
+      "enrollment": 25,
+      "epmc_mentions": 23,
+      "nct": "NCT01877083",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 2,
+      "year": 2017
+    },
+    {
+      "enrollment": 1,
+      "epmc_mentions": 2,
+      "nct": "NCT04541407",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 0,
+      "year": 2022
+    },
+    {
+      "enrollment": 14,
+      "epmc_mentions": 19,
+      "nct": "NCT03451162",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 1,
+      "year": 2021
+    },
+    {
+      "enrollment": 28,
+      "epmc_mentions": 3,
+      "nct": "NCT00921492",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 1,
+      "year": 2010
+    },
+    {
+      "enrollment": 125,
+      "epmc_mentions": 2,
+      "nct": "NCT00412659",
+      "phases": [
+        "PHASE2",
+        "PHASE3"
+      ],
+      "registry_pmids": 5,
+      "year": 2016
+    },
+    {
+      "enrollment": 56,
+      "epmc_mentions": 3,
+      "nct": "NCT00003369",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 1,
+      "year": 2004
+    },
+    {
+      "enrollment": 118,
+      "epmc_mentions": 1,
+      "nct": "NCT00838357",
+      "phases": [
+        "PHASE3"
+      ],
+      "registry_pmids": 0,
+      "year": 2010
+    },
+    {
+      "enrollment": 80,
+      "epmc_mentions": 0,
+      "nct": "NCT06414421",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 0,
+      "year": 2023
+    },
+    {
+      "enrollment": 40,
+      "epmc_mentions": 11,
+      "nct": "NCT00088868",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 0,
+      "year": 2010
+    },
+    {
+      "enrollment": 23,
+      "epmc_mentions": 6,
+      "nct": "NCT01234012",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 0,
+      "year": 2014
+    },
+    {
+      "enrollment": 16,
+      "epmc_mentions": 6,
+      "nct": "NCT04798781",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2025
+    },
+    {
+      "enrollment": 32,
+      "epmc_mentions": 3,
+      "nct": "NCT00919659",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 1,
+      "year": 2004
+    },
+    {
+      "enrollment": 69,
+      "epmc_mentions": 19,
+      "nct": "NCT03249142",
+      "phases": [
+        "PHASE1",
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2024
+    },
+    {
+      "enrollment": 19,
+      "epmc_mentions": 12,
+      "nct": "NCT03348514",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 2,
+      "year": 2020
+    },
+    {
+      "enrollment": 40,
+      "epmc_mentions": 1,
+      "nct": "NCT00239304",
+      "phases": [
+        "PHASE1",
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2006
+    },
+    {
+      "enrollment": 313,
+      "epmc_mentions": 0,
+      "nct": "NCT02149576",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2018
+    },
+    {
+      "enrollment": 75,
+      "epmc_mentions": 25,
+      "nct": "NCT04257448",
+      "phases": [
+        "PHASE1",
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2024
+    },
+    {
+      "enrollment": 320,
+      "epmc_mentions": 0,
+      "nct": "NCT01307878",
+      "phases": [
+        "PHASE3"
+      ],
+      "registry_pmids": 0,
+      "year": 2021
+    },
+    {
+      "enrollment": 57,
+      "epmc_mentions": 4,
+      "nct": "NCT00321685",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 1,
+      "year": 2019
+    },
+    {
+      "enrollment": 30,
+      "epmc_mentions": 2,
+      "nct": "NCT05412446",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2022
+    },
+    {
+      "enrollment": 8,
+      "epmc_mentions": 17,
+      "nct": "NCT04462471",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 1,
+      "year": 2023
+    },
+    {
+      "enrollment": 54,
+      "epmc_mentions": 10,
+      "nct": "NCT03432598",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 1,
+      "year": 2020
+    },
+    {
+      "enrollment": 37,
+      "epmc_mentions": 2,
+      "nct": "NCT00638937",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2013
+    },
+    {
+      "enrollment": 35,
+      "epmc_mentions": 20,
+      "nct": "NCT01931098",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 3,
+      "year": 2019
+    },
+    {
+      "enrollment": 5774,
+      "epmc_mentions": 23,
+      "nct": "NCT01975064",
+      "phases": [
+        "PHASE4"
+      ],
+      "registry_pmids": 27,
+      "year": 2022
+    },
+    {
+      "enrollment": 16,
+      "epmc_mentions": 1,
+      "nct": "NCT05279690",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 0,
+      "year": 2024
+    },
+    {
+      "enrollment": 100,
+      "epmc_mentions": 0,
+      "nct": "NCT01816919",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 0,
+      "year": 2013
+    },
+    {
+      "enrollment": 372,
+      "epmc_mentions": 0,
+      "nct": "NCT06879353",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 0,
+      "year": 2024
+    },
+    {
+      "enrollment": 20,
+      "epmc_mentions": 49,
+      "nct": "NCT01727076",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 2,
+      "year": 2016
+    },
+    {
+      "enrollment": 64,
+      "epmc_mentions": 3,
+      "nct": "NCT05661578",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2025
+    },
+    {
+      "enrollment": 112,
+      "epmc_mentions": 1,
+      "nct": "NCT04972630",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 1,
+      "year": 2023
+    },
+    {
+      "enrollment": 10,
+      "epmc_mentions": 1,
+      "nct": "NCT00480090",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2011
+    },
+    {
+      "enrollment": 29,
+      "epmc_mentions": 0,
+      "nct": "NCT04667065",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 0,
+      "year": 2023
+    },
+    {
+      "enrollment": 18,
+      "epmc_mentions": 3,
+      "nct": "NCT00400348",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2008
+    },
+    {
+      "enrollment": 84,
+      "epmc_mentions": 0,
+      "nct": "NCT00926536",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 0,
+      "year": 2010
+    },
+    {
+      "enrollment": 24,
+      "epmc_mentions": 1,
+      "nct": "NCT05800106",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 0,
+      "year": 2019
+    },
+    {
+      "enrollment": 30,
+      "epmc_mentions": 4,
+      "nct": "NCT00331630",
+      "phases": [
+        "EARLY_PHASE1"
+      ],
+      "registry_pmids": 1,
+      "year": 2010
+    },
+    {
+      "enrollment": 50,
+      "epmc_mentions": 6,
+      "nct": "NCT00919009",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2011
+    },
+    {
+      "enrollment": 13,
+      "epmc_mentions": 0,
+      "nct": "NCT00003460",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2005
+    },
+    {
+      "enrollment": 15,
+      "epmc_mentions": 0,
+      "nct": "NCT00288028",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 0,
+      "year": 2012
+    },
+    {
+      "enrollment": 3,
+      "epmc_mentions": 1,
+      "nct": "NCT00176748",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2009
+    },
+    {
+      "enrollment": 2,
+      "epmc_mentions": 0,
+      "nct": "NCT01849666",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 0,
+      "year": 2014
+    },
+    {
+      "enrollment": 106,
+      "epmc_mentions": 27,
+      "nct": "NCT00944463",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2014
+    },
+    {
+      "enrollment": 61,
+      "epmc_mentions": 10,
+      "nct": "NCT00058526",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 1,
+      "year": 2006
+    },
+    {
+      "enrollment": 40,
+      "epmc_mentions": 0,
+      "nct": "NCT00003683",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2002
+    },
+    {
+      "enrollment": 406,
+      "epmc_mentions": 0,
+      "nct": "NCT04823871",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 0,
+      "year": 2022
+    },
+    {
+      "enrollment": 12,
+      "epmc_mentions": 1,
+      "nct": "NCT00972712",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 0,
+      "year": 2015
+    },
+    {
+      "enrollment": 220,
+      "epmc_mentions": 3,
+      "nct": "NCT00671658",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2013
+    },
+    {
+      "enrollment": 155,
+      "epmc_mentions": 0,
+      "nct": "NCT03708393",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 0,
+      "year": 2018
+    },
+    {
+      "enrollment": 31,
+      "epmc_mentions": 0,
+      "nct": "NCT01155102",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 0,
+      "year": 2006
+    },
+    {
+      "enrollment": 42,
+      "epmc_mentions": 1,
+      "nct": "NCT00671437",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 19,
+      "year": 2015
+    },
+    {
+      "enrollment": 81,
+      "epmc_mentions": 16,
+      "nct": "NCT00700882",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 2,
+      "year": 2020
+    },
+    {
+      "enrollment": 1132,
+      "epmc_mentions": 24,
+      "nct": "NCT01324596",
+      "phases": [
+        "PHASE3"
+      ],
+      "registry_pmids": 2,
+      "year": 2015
+    },
+    {
+      "enrollment": 102,
+      "epmc_mentions": 30,
+      "nct": "NCT03981614",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2024
+    },
+    {
+      "enrollment": 38,
+      "epmc_mentions": 0,
+      "nct": "NCT04076696",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 0,
+      "year": 2021
+    },
+    {
+      "enrollment": 101,
+      "epmc_mentions": 1,
+      "nct": "NCT04164251",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 1,
+      "year": 2016
+    },
+    {
+      "enrollment": 20,
+      "epmc_mentions": 25,
+      "nct": "NCT03883919",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 0,
+      "year": 2022
+    },
+    {
+      "enrollment": 166,
+      "epmc_mentions": 2,
+      "nct": "NCT04449861",
+      "phases": [
+        "PHASE3"
+      ],
+      "registry_pmids": 0,
+      "year": 2023
+    },
+    {
+      "enrollment": 17,
+      "epmc_mentions": 2,
+      "nct": "NCT00983307",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2012
+    },
+    {
+      "enrollment": 16,
+      "epmc_mentions": 6,
+      "nct": "NCT01692678",
+      "phases": [
+        "PHASE3"
+      ],
+      "registry_pmids": 0,
+      "year": 2016
+    },
+    {
+      "enrollment": 517,
+      "epmc_mentions": 4,
+      "nct": "NCT01307579",
+      "phases": [
+        "PHASE3"
+      ],
+      "registry_pmids": 1,
+      "year": 2020
+    },
+    {
+      "enrollment": 64,
+      "epmc_mentions": 1,
+      "nct": "NCT01435200",
+      "phases": [
+        "PHASE3"
+      ],
+      "registry_pmids": 1,
+      "year": 2012
+    },
+    {
+      "enrollment": 18,
+      "epmc_mentions": 11,
+      "nct": "NCT04634539",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 1,
+      "year": 2025
+    },
+    {
+      "enrollment": 1,
+      "epmc_mentions": 2,
+      "nct": "NCT02367859",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2019
+    },
+    {
+      "enrollment": 15,
+      "epmc_mentions": 8,
+      "nct": "NCT02613598",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 0,
+      "year": 2021
+    },
+    {
+      "enrollment": 603,
+      "epmc_mentions": 0,
+      "nct": "NCT00050167",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 1,
+      "year": 2011
+    },
+    {
+      "enrollment": 442,
+      "epmc_mentions": 1,
+      "nct": "NCT00963794",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 0,
+      "year": 2008
+    },
+    {
+      "enrollment": 45,
+      "epmc_mentions": 13,
+      "nct": "NCT01271920",
+      "phases": [
+        "PHASE1",
+        "PHASE2"
+      ],
+      "registry_pmids": 1,
+      "year": 2013
+    },
+    {
+      "enrollment": 25,
+      "epmc_mentions": 21,
+      "nct": "NCT00432107",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2009
+    },
+    {
+      "enrollment": 100,
+      "epmc_mentions": 0,
+      "nct": "NCT07803549",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 6,
+      "year": 2025
+    },
+    {
+      "enrollment": 85,
+      "epmc_mentions": 0,
+      "nct": "NCT02326246",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 0,
+      "year": 2017
+    },
+    {
+      "enrollment": 12,
+      "epmc_mentions": 1,
+      "nct": "NCT02774018",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 0,
+      "year": 2015
+    },
+    {
+      "enrollment": 50,
+      "epmc_mentions": 1,
+      "nct": "NCT02500277",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 0,
+      "year": 2018
+    },
+    {
+      "enrollment": 15,
+      "epmc_mentions": 0,
+      "nct": "NCT01863745",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2023
+    },
+    {
+      "enrollment": 20,
+      "epmc_mentions": 14,
+      "nct": "NCT01727531",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 0,
+      "year": 2013
+    },
+    {
+      "enrollment": 19,
+      "epmc_mentions": 48,
+      "nct": "NCT03507699",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 0,
+      "year": 2022
+    },
+    {
+      "enrollment": 220,
+      "epmc_mentions": 1,
+      "nct": "NCT01343173",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 1,
+      "year": 2017
+    },
+    {
+      "enrollment": 14,
+      "epmc_mentions": 0,
+      "nct": "NCT00306111",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2011
+    },
+    {
+      "enrollment": null,
+      "epmc_mentions": 0,
+      "nct": "NCT00121030",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 1,
+      "year": 2003
+    },
+    {
+      "enrollment": 293,
+      "epmc_mentions": 6,
+      "nct": "NCT05375461",
+      "phases": [
+        "PHASE3"
+      ],
+      "registry_pmids": 2,
+      "year": 2025
+    },
+    {
+      "enrollment": 24,
+      "epmc_mentions": 5,
+      "nct": "NCT04231747",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 1,
+      "year": 2024
+    },
+    {
+      "enrollment": 104,
+      "epmc_mentions": 23,
+      "nct": "NCT03744676",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 2,
+      "year": 2023
+    },
+    {
+      "enrollment": 43,
+      "epmc_mentions": 5,
+      "nct": "NCT00781911",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2016
+    },
+    {
+      "enrollment": 101,
+      "epmc_mentions": 5,
+      "nct": "NCT02058901",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 1,
+      "year": 2019
+    },
+    {
+      "enrollment": 13,
+      "epmc_mentions": 0,
+      "nct": "NCT00510250",
+      "phases": [
+        "PHASE1",
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2015
+    },
+    {
+      "enrollment": 612,
+      "epmc_mentions": 106,
+      "nct": "NCT02614794",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 6,
+      "year": 2022
+    },
+    {
+      "enrollment": 50,
+      "epmc_mentions": 3,
+      "nct": "NCT00002665",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 2,
+      "year": 2003
+    },
+    {
+      "enrollment": 58,
+      "epmc_mentions": 1,
+      "nct": "NCT00153933",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 0,
+      "year": 2014
+    },
+    {
+      "enrollment": 244,
+      "epmc_mentions": 7,
+      "nct": "NCT03038516",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 2,
+      "year": 2020
+    },
+    {
+      "enrollment": 125,
+      "epmc_mentions": 0,
+      "nct": "NCT06601205",
+      "phases": [
+        "PHASE2",
+        "PHASE3"
+      ],
+      "registry_pmids": 0,
+      "year": 2017
+    },
+    {
+      "enrollment": 172,
+      "epmc_mentions": 0,
+      "nct": "NCT00818623",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2004
+    },
+    {
+      "enrollment": 26,
+      "epmc_mentions": 1,
+      "nct": "NCT02489071",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 1,
+      "year": 2018
+    },
+    {
+      "enrollment": 16,
+      "epmc_mentions": 13,
+      "nct": "NCT01604772",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 1,
+      "year": 2014
+    },
+    {
+      "enrollment": 433,
+      "epmc_mentions": 11,
+      "nct": "NCT00518336",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 2,
+      "year": 2010
+    },
+    {
+      "enrollment": 6,
+      "epmc_mentions": 29,
+      "nct": "NCT01169584",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 0,
+      "year": 2014
+    },
+    {
+      "enrollment": 162,
+      "epmc_mentions": 1,
+      "nct": "NCT04728113",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 0,
+      "year": 2025
+    },
+    {
+      "enrollment": 24,
+      "epmc_mentions": 0,
+      "nct": "NCT02394821",
+      "phases": [
+        "PHASE3"
+      ],
+      "registry_pmids": 0,
+      "year": 2015
+    },
+    {
+      "enrollment": 13,
+      "epmc_mentions": 6,
+      "nct": "NCT05087992",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 0,
+      "year": 2023
+    },
+    {
+      "enrollment": 224,
+      "epmc_mentions": 7,
+      "nct": "NCT00444379",
+      "phases": [
+        "PHASE4"
+      ],
+      "registry_pmids": 0,
+      "year": 2012
+    },
+    {
+      "enrollment": 30,
+      "epmc_mentions": 0,
+      "nct": "NCT00767273",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 0,
+      "year": 2007
+    },
+    {
+      "enrollment": 58,
+      "epmc_mentions": 8,
+      "nct": "NCT03131024",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 1,
+      "year": 2021
+    },
+    {
+      "enrollment": 59,
+      "epmc_mentions": 4,
+      "nct": "NCT00880269",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2012
+    },
+    {
+      "enrollment": 180,
+      "epmc_mentions": 0,
+      "nct": "NCT00002870",
+      "phases": [
+        "PHASE3"
+      ],
+      "registry_pmids": 1,
+      "year": 2002
+    },
+    {
+      "enrollment": 16,
+      "epmc_mentions": 8,
+      "nct": "NCT01554969",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 1,
+      "year": 2015
+    },
+    {
+      "enrollment": 208,
+      "epmc_mentions": 21,
+      "nct": "NCT01589367",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 32,
+      "year": 2018
+    },
+    {
+      "enrollment": 21,
+      "epmc_mentions": 6,
+      "nct": "NCT02092298",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 1,
+      "year": 2020
+    },
+    {
+      "enrollment": 94,
+      "epmc_mentions": 0,
+      "nct": "NCT04256512",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 0,
+      "year": 2023
+    },
+    {
+      "enrollment": 66,
+      "epmc_mentions": 1,
+      "nct": "NCT03731832",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2024
+    },
+    {
+      "enrollment": 358,
+      "epmc_mentions": 3,
+      "nct": "NCT01971658",
+      "phases": [
+        "PHASE3"
+      ],
+      "registry_pmids": 1,
+      "year": 2015
+    },
+    {
+      "enrollment": 101,
+      "epmc_mentions": 6,
+      "nct": "NCT03934684",
+      "phases": [
+        "PHASE4"
+      ],
+      "registry_pmids": 0,
+      "year": 2025
+    },
+    {
+      "enrollment": 30,
+      "epmc_mentions": 1,
+      "nct": "NCT04440995",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 0,
+      "year": 2021
+    },
+    {
+      "enrollment": 51,
+      "epmc_mentions": 7,
+      "nct": "NCT00229203",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2008
+    },
+    {
+      "enrollment": 33,
+      "epmc_mentions": 0,
+      "nct": "NCT00580281",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 0,
+      "year": 2013
+    },
+    {
+      "enrollment": 53,
+      "epmc_mentions": 0,
+      "nct": "NCT00965341",
+      "phases": [
+        "PHASE3"
+      ],
+      "registry_pmids": 0,
+      "year": 2012
+    },
+    {
+      "enrollment": 12,
+      "epmc_mentions": 7,
+      "nct": "NCT02488330",
+      "phases": [
+        "PHASE3"
+      ],
+      "registry_pmids": 0,
+      "year": 2018
+    },
+    {
+      "enrollment": 34,
+      "epmc_mentions": 1,
+      "nct": "NCT06278493",
+      "phases": [
+        "PHASE1",
+        "PHASE2"
+      ],
+      "registry_pmids": 1,
+      "year": 2023
+    },
+    {
+      "enrollment": 3,
+      "epmc_mentions": 0,
+      "nct": "NCT03446092",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 0,
+      "year": 2020
+    },
+    {
+      "enrollment": 51,
+      "epmc_mentions": 0,
+      "nct": "NCT00005037",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2008
+    },
+    {
+      "enrollment": 9,
+      "epmc_mentions": 6,
+      "nct": "NCT02483104",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 1,
+      "year": 2016
+    },
+    {
+      "enrollment": 40,
+      "epmc_mentions": 1,
+      "nct": "NCT03762343",
+      "phases": [
+        "PHASE3"
+      ],
+      "registry_pmids": 0,
+      "year": 2020
+    },
+    {
+      "enrollment": 78,
+      "epmc_mentions": 5,
+      "nct": "NCT03627026",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 0,
+      "year": 2024
+    },
+    {
+      "enrollment": 114,
+      "epmc_mentions": 35,
+      "nct": "NCT04209114",
+      "phases": [
+        "PHASE3"
+      ],
+      "registry_pmids": 0,
+      "year": 2023
+    },
+    {
+      "enrollment": 132,
+      "epmc_mentions": 71,
+      "nct": "NCT03504488",
+      "phases": [
+        "PHASE1",
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2024
+    },
+    {
+      "enrollment": 65,
+      "epmc_mentions": 1,
+      "nct": "NCT06141005",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 0,
+      "year": 2024
+    },
+    {
+      "enrollment": 600,
+      "epmc_mentions": 8,
+      "nct": "NCT00144755",
+      "phases": [
+        "PHASE3"
+      ],
+      "registry_pmids": 7,
+      "year": 2012
+    },
+    {
+      "enrollment": 7,
+      "epmc_mentions": 2,
+      "nct": "NCT02458339",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 0,
+      "year": 2019
+    },
+    {
+      "enrollment": 509,
+      "epmc_mentions": 0,
+      "nct": "NCT05242562",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 0,
+      "year": 2023
+    },
+    {
+      "enrollment": 51,
+      "epmc_mentions": 2,
+      "nct": "NCT04166214",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 0,
+      "year": 2020
+    },
+    {
+      "enrollment": 18,
+      "epmc_mentions": 1,
+      "nct": "NCT01852799",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2017
+    },
+    {
+      "enrollment": 37,
+      "epmc_mentions": 6,
+      "nct": "NCT01527149",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 2,
+      "year": 2024
+    },
+    {
+      "enrollment": 100,
+      "epmc_mentions": 2,
+      "nct": "NCT06047184",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 0,
+      "year": 2024
+    },
+    {
+      "enrollment": 159,
+      "epmc_mentions": 5,
+      "nct": "NCT02037568",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 2,
+      "year": 2017
+    },
+    {
+      "enrollment": 40,
+      "epmc_mentions": 14,
+      "nct": "NCT01520519",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 1,
+      "year": 2018
+    },
+    {
+      "enrollment": 16,
+      "epmc_mentions": 1,
+      "nct": "NCT00570635",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2009
+    },
+    {
+      "enrollment": 124,
+      "epmc_mentions": 4,
+      "nct": "NCT01345526",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2016
+    },
+    {
+      "enrollment": 77,
+      "epmc_mentions": 21,
+      "nct": "NCT04993677",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2024
+    },
+    {
+      "enrollment": 60,
+      "epmc_mentions": 3,
+      "nct": "NCT02473965",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 2,
+      "year": 2019
+    },
+    {
+      "enrollment": 20,
+      "epmc_mentions": 0,
+      "nct": "NCT01930435",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 0,
+      "year": 2014
+    },
+    {
+      "enrollment": 18,
+      "epmc_mentions": 20,
+      "nct": "NCT01716195",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 1,
+      "year": 2020
+    },
+    {
+      "enrollment": 17,
+      "epmc_mentions": 5,
+      "nct": "NCT04259658",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2023
+    },
+    {
+      "enrollment": 67,
+      "epmc_mentions": 12,
+      "nct": "NCT00968981",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 1,
+      "year": 2010
+    },
+    {
+      "enrollment": 240,
+      "epmc_mentions": 0,
+      "nct": "NCT02649153",
+      "phases": [
+        "PHASE3"
+      ],
+      "registry_pmids": 2,
+      "year": 2023
+    },
+    {
+      "enrollment": 480,
+      "epmc_mentions": 9,
+      "nct": "NCT02853474",
+      "phases": [
+        "PHASE3"
+      ],
+      "registry_pmids": 2,
+      "year": 2022
+    },
+    {
+      "enrollment": 15,
+      "epmc_mentions": 1,
+      "nct": "NCT05875129",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 1,
+      "year": 2023
+    },
+    {
+      "enrollment": 17,
+      "epmc_mentions": 38,
+      "nct": "NCT02236195",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 1,
+      "year": 2016
+    },
+    {
+      "enrollment": 120,
+      "epmc_mentions": 0,
+      "nct": "NCT03852030",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 48,
+      "year": 2016
+    },
+    {
+      "enrollment": 34,
+      "epmc_mentions": 6,
+      "nct": "NCT05289908",
+      "phases": [
+        "PHASE1",
+        "PHASE2"
+      ],
+      "registry_pmids": 3,
+      "year": 2024
+    },
+    {
+      "enrollment": 25,
+      "epmc_mentions": 2,
+      "nct": "NCT03307629",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 0,
+      "year": 2020
+    },
+    {
+      "enrollment": 105,
+      "epmc_mentions": 0,
+      "nct": "NCT02799030",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2007
+    },
+    {
+      "enrollment": 80,
+      "epmc_mentions": 8,
+      "nct": "NCT03564197",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 0,
+      "year": 2026
+    },
+    {
+      "enrollment": 16,
+      "epmc_mentions": 0,
+      "nct": "NCT04315337",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 0,
+      "year": 2024
+    },
+    {
+      "enrollment": 68,
+      "epmc_mentions": 35,
+      "nct": "NCT03915379",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 0,
+      "year": 2022
+    },
+    {
+      "enrollment": 19,
+      "epmc_mentions": 5,
+      "nct": "NCT00363454",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 0,
+      "year": 2010
+    },
+    {
+      "enrollment": 48,
+      "epmc_mentions": 7,
+      "nct": "NCT01608022",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2015
+    },
+    {
+      "enrollment": 158,
+      "epmc_mentions": 9,
+      "nct": "NCT04924062",
+      "phases": [
+        "PHASE3"
+      ],
+      "registry_pmids": 2,
+      "year": 2025
+    },
+    {
+      "enrollment": 66,
+      "epmc_mentions": 5,
+      "nct": "NCT01443026",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 7,
+      "year": 2009
+    },
+    {
+      "enrollment": 23,
+      "epmc_mentions": 4,
+      "nct": "NCT02197000",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 0,
+      "year": 2018
+    },
+    {
+      "enrollment": 6,
+      "epmc_mentions": 1,
+      "nct": "NCT00667537",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 4,
+      "year": 2008
+    },
+    {
+      "enrollment": 5,
+      "epmc_mentions": 12,
+      "nct": "NCT01471847",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 0,
+      "year": 2012
+    },
+    {
+      "enrollment": 258,
+      "epmc_mentions": 0,
+      "nct": "NCT00795782",
+      "phases": [
+        "PHASE3"
+      ],
+      "registry_pmids": 1,
+      "year": 2014
+    },
+    {
+      "enrollment": 37,
+      "epmc_mentions": 9,
+      "nct": "NCT00976755",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 1,
+      "year": 2019
+    },
+    {
+      "enrollment": 60,
+      "epmc_mentions": 0,
+      "nct": "NCT00104689",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2008
+    },
+    {
+      "enrollment": 27,
+      "epmc_mentions": 3,
+      "nct": "NCT00759837",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 0,
+      "year": 2009
+    },
+    {
+      "enrollment": 60,
+      "epmc_mentions": 0,
+      "nct": "NCT03320447",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 0,
+      "year": 2017
+    },
+    {
+      "enrollment": 58,
+      "epmc_mentions": 9,
+      "nct": "NCT01458717",
+      "phases": [
+        "PHASE2",
+        "PHASE3"
+      ],
+      "registry_pmids": 0,
+      "year": 2018
+    },
+    {
+      "enrollment": 840,
+      "epmc_mentions": 6,
+      "nct": "NCT00904813",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 6,
+      "year": 2018
+    },
+    {
+      "enrollment": 60,
+      "epmc_mentions": 0,
+      "nct": "NCT04426435",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 4,
+      "year": 2020
+    },
+    {
+      "enrollment": 53,
+      "epmc_mentions": 2,
+      "nct": "NCT00101972",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 1,
+      "year": 2008
+    },
+    {
+      "enrollment": 56,
+      "epmc_mentions": 0,
+      "nct": "NCT01791088",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 0,
+      "year": 2018
+    },
+    {
+      "enrollment": 58,
+      "epmc_mentions": 0,
+      "nct": "NCT00156884",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2008
+    },
+    {
+      "enrollment": 200,
+      "epmc_mentions": 4,
+      "nct": "NCT02294552",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 1,
+      "year": 2017
+    },
+    {
+      "enrollment": 27,
+      "epmc_mentions": 0,
+      "nct": "NCT02927899",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 0,
+      "year": 2015
+    },
+    {
+      "enrollment": 60,
+      "epmc_mentions": 0,
+      "nct": "NCT05470543",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 0,
+      "year": 2023
+    },
+    {
+      "enrollment": 302,
+      "epmc_mentions": 13,
+      "nct": "NCT00103662",
+      "phases": [
+        "PHASE3"
+      ],
+      "registry_pmids": 1,
+      "year": 2008
+    },
+    {
+      "enrollment": 355,
+      "epmc_mentions": 0,
+      "nct": "NCT03814369",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 7,
+      "year": 2018
+    },
+    {
+      "enrollment": 268,
+      "epmc_mentions": 0,
+      "nct": "NCT04420208",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 1,
+      "year": 2021
+    },
+    {
+      "enrollment": 71,
+      "epmc_mentions": 0,
+      "nct": "NCT00941720",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2013
+    },
+    {
+      "enrollment": 62,
+      "epmc_mentions": 1,
+      "nct": "NCT02773719",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 1,
+      "year": 2018
+    },
+    {
+      "enrollment": 6,
+      "epmc_mentions": 2,
+      "nct": "NCT05054569",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 2,
+      "year": 2021
+    },
+    {
+      "enrollment": null,
+      "epmc_mentions": 0,
+      "nct": "NCT00004103",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 1,
+      "year": 2009
+    },
+    {
+      "enrollment": 79,
+      "epmc_mentions": 0,
+      "nct": "NCT01310387",
+      "phases": [
+        "PHASE3"
+      ],
+      "registry_pmids": 0,
+      "year": 2012
+    },
+    {
+      "enrollment": 24,
+      "epmc_mentions": 29,
+      "nct": "NCT01703572",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 0,
+      "year": 2016
+    },
+    {
+      "enrollment": 48,
+      "epmc_mentions": 14,
+      "nct": "NCT02484391",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 1,
+      "year": 2022
+    },
+    {
+      "enrollment": 25,
+      "epmc_mentions": 5,
+      "nct": "NCT02388490",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 1,
+      "year": 2019
+    },
+    {
+      "enrollment": 20,
+      "epmc_mentions": 0,
+      "nct": "NCT00025168",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 1,
+      "year": 2003
+    },
+    {
+      "enrollment": 20,
+      "epmc_mentions": 0,
+      "nct": "NCT05041920",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 0,
+      "year": 2021
+    },
+    {
+      "enrollment": 200,
+      "epmc_mentions": 5,
+      "nct": "NCT05035173",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 1,
+      "year": 2026
+    },
+    {
+      "enrollment": 14,
+      "epmc_mentions": 1,
+      "nct": "NCT01941810",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 0,
+      "year": 2015
+    },
+    {
+      "enrollment": 12,
+      "epmc_mentions": 0,
+      "nct": "NCT00003710",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 0,
+      "year": 2001
+    },
+    {
+      "enrollment": 31,
+      "epmc_mentions": 55,
+      "nct": "NCT00978913",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 0,
+      "year": 2014
+    },
+    {
+      "enrollment": 558,
+      "epmc_mentions": 0,
+      "nct": "NCT01236781",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 2,
+      "year": 2013
+    },
+    {
+      "enrollment": 200,
+      "epmc_mentions": 0,
+      "nct": "NCT00372203",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2010
+    },
+    {
+      "enrollment": 180,
+      "epmc_mentions": 3,
+      "nct": "NCT01928225",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 1,
+      "year": 2018
+    },
+    {
+      "enrollment": 22,
+      "epmc_mentions": 20,
+      "nct": "NCT01767792",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2020
+    },
+    {
+      "enrollment": 40,
+      "epmc_mentions": 8,
+      "nct": "NCT00582660",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2008
+    },
+    {
+      "enrollment": 488,
+      "epmc_mentions": 3,
+      "nct": "NCT00373256",
+      "phases": [
+        "PHASE3"
+      ],
+      "registry_pmids": 0,
+      "year": 2011
+    },
+    {
+      "enrollment": 90,
+      "epmc_mentions": 0,
+      "nct": "NCT07333976",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2024
+    },
+    {
+      "enrollment": 198,
+      "epmc_mentions": 4,
+      "nct": "NCT00064038",
+      "phases": [
+        "PHASE3"
+      ],
+      "registry_pmids": 1,
+      "year": 2012
+    },
+    {
+      "enrollment": 20,
+      "epmc_mentions": 0,
+      "nct": "NCT07088913",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 0,
+      "year": 2026
+    },
+    {
+      "enrollment": 14,
+      "epmc_mentions": 0,
+      "nct": "NCT07682012",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 0,
+      "year": 2024
+    },
+    {
+      "enrollment": 9,
+      "epmc_mentions": 8,
+      "nct": "NCT03688152",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 0,
+      "year": 2020
+    },
+    {
+      "enrollment": 1366,
+      "epmc_mentions": 37,
+      "nct": "NCT01015118",
+      "phases": [
+        "PHASE3"
+      ],
+      "registry_pmids": 2,
+      "year": 2016
+    },
+    {
+      "enrollment": null,
+      "epmc_mentions": 0,
+      "nct": "NCT00042783",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2006
+    },
+    {
+      "enrollment": 45,
+      "epmc_mentions": 3,
+      "nct": "NCT01517451",
+      "phases": [
+        "PHASE1",
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2025
+    },
+    {
+      "enrollment": 13,
+      "epmc_mentions": 14,
+      "nct": "NCT00858663",
+      "phases": [
+        "PHASE1"
+      ],
+      "registry_pmids": 0,
+      "year": 2013
+    },
+    {
+      "enrollment": 4,
+      "epmc_mentions": 3,
+      "nct": "NCT03453489",
+      "phases": [
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2020
+    },
+    {
+      "enrollment": 600,
+      "epmc_mentions": 0,
+      "nct": "NCT04234646",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 0,
+      "year": 2026
+    },
+    {
+      "enrollment": 95,
+      "epmc_mentions": 4,
+      "nct": "NCT01588184",
+      "phases": [
+        "PHASE4"
+      ],
+      "registry_pmids": 1,
+      "year": 2019
+    },
+    {
+      "enrollment": 60,
+      "epmc_mentions": 0,
+      "nct": "NCT05656612",
+      "phases": [
+        "NA"
+      ],
+      "registry_pmids": 0,
+      "year": 2020
+    },
+    {
+      "enrollment": 45,
+      "epmc_mentions": 24,
+      "nct": "NCT02857920",
+      "phases": [
+        "PHASE1",
+        "PHASE2"
+      ],
+      "registry_pmids": 0,
+      "year": 2019
+    }
+  ],
+  "sampled": 600,
+  "seed": 20260907,
+  "summary": {
+    "both": 228,
+    "by_completion_era": {
+      "2000-2004": {
+        "pct": 32.1,
+        "trials": 28,
+        "with_any_mention": 9
+      },
+      "2005-2009": {
+        "pct": 55.9,
+        "trials": 68,
+        "with_any_mention": 38
+      },
+      "2010-2014": {
+        "pct": 70.3,
+        "trials": 111,
+        "with_any_mention": 78
+      },
+      "2015-2019": {
+        "pct": 83.2,
+        "trials": 149,
+        "with_any_mention": 124
+      },
+      "2020-2024": {
+        "pct": 76.5,
+        "trials": 196,
+        "with_any_mention": 150
+      },
+      "2025-2029": {
+        "pct": 72.9,
+        "trials": 48,
+        "with_any_mention": 35
+      }
+    },
+    "literature_mentions_it": 434,
+    "literature_only": 206,
+    "literature_pct": 72.3,
+    "neither": 126,
+    "neither_pct": 21.0,
+    "registry_only": 40,
+    "registry_pct": 44.7,
+    "registry_says_published": 268,
+    "reliable_era": "2015-2019",
+    "reliable_era_gap_pct": 16.8,
+    "reliable_era_stats": {
+      "pct": 83.2,
+      "trials": 149,
+      "with_any_mention": 124
+    },
+    "sampled": 600
+  }
+}
