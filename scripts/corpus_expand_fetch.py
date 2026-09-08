@@ -165,6 +165,17 @@ FETCH_WORKERS = max(1, int(os.getenv("FERRO_EXPAND_WORKERS", "8")))
 # 300-second wait on one article is worse than deferring it.
 RETRY_AFTER_FLOOR = 1.0
 RETRY_AFTER_CAP = 60.0
+# A server may legitimately say "come back tomorrow". OpenAlex's free tier is
+# 1,000 requests a day and, when it is spent, answers 429 with
+# `Retry-After: 60875` -- seventeen hours, until the budget resets at midnight
+# UTC. Capping that at 60s and retrying five times is not politeness with a
+# backoff; it is knocking on a door that has told you when it opens. A wait
+# this long is honoured in full, up to a day, because the alternative is
+# hammering a service that answered the question clearly.
+LONG_WAIT_CAP = 86_400.0
+# What counts as "not a retry any more" -- past this the wait is a scheduled
+# return, and it is logged as one so a sleeping crawler is not read as hung.
+LONG_WAIT_THRESHOLD = 120.0
 
 
 # How long to keep trying one search page before giving up on the whole run.
@@ -379,6 +390,13 @@ def _get(url: str, tries: int = 4, timeout: int = 120,
                 return None
             last = e
             wait = _retry_after(e)
+            long_wait = _long_retry_after(e)
+            if long_wait is not None:
+                print(f"  server asked for {long_wait / 3600:.1f}h "
+                      f"({int(long_wait)}s); waiting rather than retrying: "
+                      f"{url[:70]}", flush=True)
+                time.sleep(long_wait)
+                continue
         except Exception as e:  # noqa: BLE001 - network, DNS, timeouts, resets
             last = e
             wait = None
@@ -392,6 +410,36 @@ def _get(url: str, tries: int = 4, timeout: int = 120,
             time.sleep(wait if wait is not None
                        else min(BACKOFF_CAP, 2.0 ** (attempt + 1)))
     raise TransientFetchError(f"giving up after {tries}: {url[:110]} :: {last}")
+
+
+def _long_retry_after(e) -> float | None:
+    """A server-supplied wait too long to be a retry: honour it as scheduled.
+
+    Read from the RAW header rather than from `_retry_after`, which clamps to
+    RETRY_AFTER_CAP -- clamping is right for a short wait and exactly wrong
+    here, because it turns "come back in seventeen hours" into "come back in a
+    minute" and then does so five times.
+    """
+    h = getattr(e, "headers", None)
+    if h is None:
+        return None
+    try:
+        v = h.get("Retry-After")
+    except Exception:  # noqa: BLE001
+        return None
+    if v is None:
+        return None
+    if isinstance(v, bytes):
+        v = v.decode("ascii", "replace")
+    try:
+        secs = float(v)
+    except (TypeError, ValueError):
+        secs = _http_date_delay(v)
+        if secs is None:
+            return None
+    if secs != secs or secs <= LONG_WAIT_THRESHOLD:
+        return None
+    return min(LONG_WAIT_CAP, secs)
 
 
 def _retry_after(e) -> float | None:

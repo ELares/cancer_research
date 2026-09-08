@@ -1170,3 +1170,91 @@ def test_a_reopened_slice_records_the_new_questions_total(tmp_path, monkeypatch)
     assert row["hits"] == 999, (
         f"hits is {row['hits']}, still the old question's total; a wider "
         "query has a larger answer")
+
+
+# --- A server that says "come back tomorrow" ------------------------------
+#
+# OpenAlex's free tier is 1,000 requests a day. When it is spent it answers
+# 429 with `Retry-After: 60875` -- seventeen hours, until the budget resets at
+# midnight UTC -- and the clamped `_retry_after` turned that into 60 seconds,
+# retried five times, gave up, and let the supervisor restart and do it again.
+# Politely, on a schedule, forever, against a service that had answered the
+# question precisely.
+
+def test_a_long_retry_after_is_read_from_the_raw_header(monkeypatch):
+    """`_retry_after` CLAMPS to 60s, which is right for a short wait and
+    exactly wrong for a budget reset: it turns seventeen hours into a minute."""
+    import urllib.error
+
+    class H(dict):
+        def get(self, k, d=None): return "60875" if k == "Retry-After" else d
+
+    e = urllib.error.HTTPError("u", 429, "budget", H(), None)
+    assert fx._retry_after(e) == fx.RETRY_AFTER_CAP == 60.0
+    assert fx._long_retry_after(e) == 60875.0, (
+        "the long wait is being clamped, so the crawler will knock again in a "
+        "minute on a door that told it when it opens")
+
+
+def test_a_short_retry_after_is_not_treated_as_a_scheduled_return(monkeypatch):
+    """The two paths must not merge: a 5s wait is a retry, and sleeping through
+    it as a 'scheduled return' would log every blip as an outage."""
+    import urllib.error
+
+    for raw in ("5", "30", "120"):
+        class H(dict):
+            def get(self, k, d=None): return raw if k == "Retry-After" else d
+        e = urllib.error.HTTPError("u", 503, "busy", H(), None)
+        assert fx._long_retry_after(e) is None, raw
+
+
+def test_a_long_wait_is_bounded():
+    """A server could say 'come back in a year'. Honouring that literally is
+    indistinguishable from hanging."""
+    import urllib.error
+
+    class H(dict):
+        def get(self, k, d=None): return "99999999" if k == "Retry-After" else d
+
+    got = fx._long_retry_after(urllib.error.HTTPError("u", 429, "x", H(), None))
+    assert got == fx.LONG_WAIT_CAP <= 86_400.0
+
+
+def test_get_waits_out_a_budget_reset_instead_of_retrying(monkeypatch):
+    """The behaviour, not just the parser. Before this, five clamped retries
+    burned the whole schedule in under six minutes and then failed."""
+    import urllib.error
+
+    class H(dict):
+        def get(self, k, d=None): return "3600" if k == "Retry-After" else d
+
+    slept, attempts = [], {"n": 0}
+    monkeypatch.setattr(fx.time, "sleep", lambda s: slept.append(s))
+
+    def flaky(url, *a, **k):
+        attempts["n"] += 1
+        if attempts["n"] == 1:
+            raise urllib.error.HTTPError(url, 429, "budget", H(), None)
+        class R:
+            status = 200
+            def read(self): return b"{}"
+            def __enter__(self): return self
+            def __exit__(self, *x): return False
+        return R()
+
+    monkeypatch.setattr(fx.urllib.request, "urlopen", flaky)
+    assert fx._get("https://www.ebi.ac.uk/x", tries=3, timeout=1) == b"{}"
+    assert 3600.0 in slept, (
+        f"waited {slept} instead of the hour the server asked for")
+    assert attempts["n"] == 2, "the wait consumed a retry instead of pausing"
+
+
+def test_the_long_wait_does_not_consume_the_retry_budget(monkeypatch):
+    """`continue` rather than falling through: a scheduled return is not a
+    failed attempt, and counting it as one exhausts `tries` while waiting."""
+    src = Path(fx.__file__).read_text()
+    i = src.index("long_wait = _long_retry_after(e)")
+    block = src[i:src.index("except Exception", i)]
+    assert "continue" in block, (
+        "the long wait falls through into the retry counter, so a service on a "
+        "daily budget exhausts `tries` by waiting")

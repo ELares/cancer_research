@@ -140,6 +140,19 @@ corpus:
       that mentions cancer once. Restricting to title and abstract is what
       makes the claim defensible, and a sample of THAT set is genuinely
       oncology.
+    request_budget: >
+      THE FREE TIER IS 1,000 REQUESTS PER DAY, resetting at midnight UTC. Past
+      that the API answers 429 with an explicit price ("this request costs
+      $0.0001 but you only have $0 remaining") and a `Retry-After` naming the
+      seconds until reset -- 60,875 when first hit, about seventeen hours.
+      At 200 records per page that is 200,000 records a day, so the 2,894,767
+      PMID-less cancer works are roughly fifteen days of unattended crawling,
+      or a paid plan. The fetcher now honours the long Retry-After by waiting
+      it out rather than clamping it to sixty seconds and knocking again.
+
+      The supported bulk alternative is OpenAlex's full S3 snapshot, which is
+      free and needs no credentials, but is hundreds of gigabytes. That is a
+      bandwidth decision, recorded rather than taken.
     limits: >
       Metadata and abstracts, no full text -- OpenAlex holds none to give, and
       this fetcher does not go looking elsewhere. Works that DO carry a PMID
