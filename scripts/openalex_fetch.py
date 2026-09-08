@@ -47,6 +47,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from corpus_expand_fetch import (  # noqa: E402
     _RateLimit, Shards, TransientFetchError, _get, norm_doi, norm_pmid,
+    retry_page,
 )
 from corpus_identity_index import connect as id_connect, is_held  # noqa: E402
 
@@ -54,11 +55,25 @@ API = "https://api.openalex.org/works"
 OUT_ROOT = Path(os.getenv(
     "FERRO_OPENALEX_OUT", str(Path.home() / "nas" / "cancer-atlas" / "openalex")))
 PAGE = 200                      # the API's documented maximum
-SLEEP = float(os.getenv("FERRO_OPENALEX_SLEEP", "0.15"))
+# 0.15 tripped a 429 on the first live run and killed the fetcher outright;
+# 0.35 was still throttled. Without a real contact address this client is in
+# the common pool, so one request per second is the honest setting -- 2.89M
+# records at 200 per page is ~14,500 pages, which is hours, not weeks, and the
+# crawl is not in a hurry.
+SLEEP = float(os.getenv("FERRO_OPENALEX_SLEEP", "1.0"))
 SHARD_RECORDS = 4000
-# OpenAlex asks for a contact address in the User-Agent and gives the polite
-# pool in return. Sending one is the price of the faster queue, not a trick.
-MAILTO = os.getenv("FERRO_CONTACT_EMAIL", "research@example.org")
+# OpenAlex offers a faster "polite pool" to clients that supply a contact
+# address. This sends one ONLY if a real one is configured.
+#
+# The default was `research@example.org`, which is nobody. Supplying a fake
+# address to an API that asks for a real one claims a contact point that does
+# not exist -- it buys the polite pool under false pretences, and if this
+# crawler ever misbehaved there would be no way to reach whoever ran it. The
+# repository URL goes in the User-Agent instead, which is a real and checkable
+# place to complain to.
+MAILTO = os.getenv("FERRO_CONTACT_EMAIL") or None
+UA = ("cancer-research-corpus/1.0 "
+      "(+https://github.com/ELares/cancer_research)")
 
 # The subject filter. TITLE AND ABSTRACT, not `default.search`: the latter
 # reads full text and pulls in anything that mentions cancer once.
@@ -86,8 +101,9 @@ def abstract_text(inv: dict | None) -> str | None:
 
 
 def _page(cursor: str, extra: str = ""):
-    q = {"filter": SUBJECT + extra, "per-page": PAGE, "cursor": cursor,
-         "mailto": MAILTO}
+    q = {"filter": SUBJECT + extra, "per-page": PAGE, "cursor": cursor}
+    if MAILTO:
+        q["mailto"] = MAILTO
     raw = _get(f"{API}?{urllib.parse.urlencode(q)}", tries=4, timeout=120)
     if raw is None:
         # A refusal on a PAGED search is not "no more results"; treating it as
@@ -140,7 +156,9 @@ def run(limit: int | None = None, only_missing_pmid: bool = True,
     try:
         while cursor:
             limiter.wait()
-            d = _page(cursor, extra)
+            d = retry_page(_page, cursor, extra,
+                           label=f"openalex cursor={cursor[:16]}",
+                           verbose=verbose)
             if total is None:
                 total = (d.get("meta") or {}).get("count")
                 if verbose:

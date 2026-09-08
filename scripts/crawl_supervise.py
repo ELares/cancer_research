@@ -39,7 +39,20 @@ import time
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent
-CRAWLER = REPO / "scripts" / "corpus_expand_fetch.py"
+
+# Every long-running fetcher in this project, by name. They share the same
+# durability contract -- write before index, per-page commits, a resumable
+# cursor -- which is exactly what makes restarting any of them safe, so they
+# can share the supervisor too. Adding a fetcher here rather than writing a
+# second supervisor is the same reasoning that made the page retry shared:
+# three copies of a thing drift, and the drift is invisible until one of them
+# is the copy that failed.
+TARGETS = {
+    "expand": REPO / "scripts" / "corpus_expand_fetch.py",
+    "openalex": REPO / "scripts" / "openalex_fetch.py",
+    "trials": REPO / "scripts" / "trials_fetch.py",
+}
+CRAWLER = TARGETS["expand"]
 
 # Waits between restarts, in seconds. Escalating, because the same failure
 # twice in a row usually means the service needs longer than the same failure
@@ -56,7 +69,7 @@ def _backoff(n: int) -> int:
 
 
 def supervise(max_restarts: int | None = None, env: dict | None = None,
-              runner=None, log=print) -> dict:
+              runner=None, log=print, target: str = "expand") -> dict:
     """Run the crawler until it finishes, or until restarting is pointless.
 
     `runner` exists so the decision logic can be tested without a crawl: it is
@@ -66,7 +79,7 @@ def supervise(max_restarts: int | None = None, env: dict | None = None,
     stats = {"runs": 0, "restarts": 0, "immediate_failures": 0, "reason": None}
     while True:
         stats["runs"] += 1
-        code, elapsed = runner(env or {})
+        code, elapsed = runner(env or {}, target)
         if code == 0:
             stats["reason"] = "crawl finished"
             log(f"crawl finished after {stats['runs']} run(s)")
@@ -99,16 +112,19 @@ def supervise(max_restarts: int | None = None, env: dict | None = None,
         time.sleep(wait)
 
 
-def _run_crawler(extra_env: dict) -> tuple[int, float]:
+def _run_crawler(extra_env: dict, target: str = "expand") -> tuple[int, float]:
+    script = TARGETS[target]
     env = {**os.environ, **extra_env}
     t = time.time()
-    p = subprocess.run([sys.executable, str(CRAWLER)], env=env)
+    p = subprocess.run([sys.executable, str(script)], env=env)
     return p.returncode, time.time() - t
 
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("--target", default="expand", choices=sorted(TARGETS),
+                    help="which fetcher to supervise")
     ap.add_argument("--workers", default=None)
     ap.add_argument("--sleep", default=None)
     ap.add_argument("--max-restarts", type=int, default=None)
@@ -122,7 +138,8 @@ def main() -> int:
     def stamped(msg):
         print(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] {msg}", flush=True)
 
-    s = supervise(max_restarts=a.max_restarts, env=env, log=stamped)
+    s = supervise(max_restarts=a.max_restarts, env=env, log=stamped,
+                  target=a.target)
     stamped(f"supervisor done: {s}")
     return 0 if s["reason"] == "crawl finished" else 1
 

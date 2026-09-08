@@ -156,3 +156,32 @@ def test_the_durability_contract_is_imported_not_copied():
     src = Path(oaf.__file__).read_text()
     assert "class Shards" not in src and "def _get(" not in src
 
+
+
+def test_no_fake_contact_address_is_sent():
+    """Supplying `research@example.org` to an API that asks for a real contact
+    buys the polite pool under false pretences, and leaves nobody to complain
+    to if this crawler misbehaves. The repository URL is a real, checkable
+    contact; a made-up mailbox is not."""
+    src = Path(oaf.__file__).read_text()
+    # CODE lines only. The comment explaining why the fake address was removed
+    # necessarily names it, and a test that forbids the word forbids recording
+    # the correction -- which is the wrong thing to optimise for.
+    code = "\n".join(l for l in src.split("\n")
+                     if not l.lstrip().startswith("#"))
+    assert "example.org" not in code and "example.com" not in code
+    assert oaf.MAILTO is None or "@" in str(oaf.MAILTO)
+    assert "github.com/ELares/cancer_research" in src, (
+        "no checkable contact point is advertised at all")
+
+
+def test_the_mailto_parameter_is_omitted_when_there_is_no_real_address(monkeypatch):
+    seen = {}
+    monkeypatch.setattr(oaf, "MAILTO", None)
+    monkeypatch.setattr(oaf, "_get", lambda url, **k: seen.setdefault("u", url) and None)
+    try:
+        oaf._page("*")
+    except Exception:
+        pass
+    assert "mailto" not in seen.get("u", ""), (
+        "an empty or fake mailto is still being sent")

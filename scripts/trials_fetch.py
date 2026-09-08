@@ -44,7 +44,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from corpus_expand_fetch import (  # noqa: E402
-    _RateLimit, Shards, TransientFetchError, _get,
+    _RateLimit, Shards, TransientFetchError, _get, retry_page,
 )
 from corpus_identity_index import connect as id_connect  # noqa: E402
 
@@ -125,7 +125,9 @@ def run(condition: str = "cancer", limit: int | None = None,
     try:
         while True:
             limiter.wait()
-            d = _page(token, condition)
+            d = retry_page(_page, token, condition,
+                           label=f"ctgov token={str(token)[:16]}",
+                           verbose=verbose)
             if total is None and d.get("totalCount"):
                 total = d["totalCount"]
                 if verbose:
