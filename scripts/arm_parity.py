@@ -460,11 +460,11 @@ def render(d: dict) -> str:
          "`modality-module-depth.json`, `modality-calibration.json`, "
          "`census-mechanism-profile.json`, `FIGURES.yaml`, `PREREGISTRATION.md` "
          "and the manuscript.*", "",
-         "The aggregate gap is already published: the modality arms are roughly "
-         "an order of magnitude smaller than the ferroptosis engine by line "
-         "count. That single ratio cannot say WHICH arm or HOW FAR, which is "
-         "the question a campaign to close it has to answer. This is the same "
-         "measurement, per arm, on the axes the work actually has to move.", "",
+         "The aggregate code-size comparison is reported in "
+         "`analysis/modality-module-depth.md`. An aggregate ratio does not "
+         "describe any individual arm. This table separates the arms and "
+         "compares their code, tests, evidence status, and manuscript coverage; "
+         "code volume is not a measure of scientific validity.", "",
          "| arm | engine lines | pub fns | rust tests | calibration | book words | figures | predictions | spatial |",
          "|---|--:|--:|--:|---|--:|--:|--:|---|"]
     for r in d["arms"]:

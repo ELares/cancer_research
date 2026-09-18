@@ -545,9 +545,9 @@ class _RateLimit:
     going away, which is the same mistake as shortening it, made larger and
     less visibly. Lowering that pause preceded a 503 that ended a run.
 
-    Gating on start times rather than on completions keeps the rate the same
-    whatever the latency does: N workers overlap their WAITING, not their
-    requests.
+    Spacing admissions rather than completions keeps request latency from
+    multiplying the allowed rate. Network requests can overlap after admission;
+    a delayed wakeup does not accumulate credit for a burst of admissions.
     """
 
     def __init__(self, interval: float):
@@ -560,11 +560,14 @@ class _RateLimit:
             return
         with self._lock:
             now = time.monotonic()
-            due = max(now, self._next)
-            self._next = due + self.interval
-        delay = due - now
-        if delay > 0:
-            time.sleep(delay)
+            while now < self._next:
+                time.sleep(self._next - now)
+                now = time.monotonic()
+            # Space grants from the actual wakeup, not a reserved future slot.
+            # A delayed worker must not release alongside workers whose slots
+            # also expired while the scheduler was busy. Only the wait is
+            # serialized; network requests still run concurrently.
+            self._next = now + self.interval
 
 
 def _fetch_texts(wanted, limiter=None) -> dict:

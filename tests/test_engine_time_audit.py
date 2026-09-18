@@ -122,6 +122,31 @@ def test_doc_comment_runs_are_joined_before_matching():
         "split across two lines is invisible -- the second half of the bug")
 
 
+def test_pricing_symbol_follows_long_documentation_to_its_declaration(tmp_path, monkeypatch):
+    """Adding API documentation must not erase a real time-bound function."""
+    m = _mod()
+    source = tmp_path / "pk.rs"
+    source.write_text(
+        "/// One step is 1 minute.\n"
+        + "/// Numerical method and assumptions.\n" * 40
+        + "#[must_use]\npub fn solve_pk() {}\n"
+    )
+    monkeypatch.setattr(m, "_path_for", lambda _: source)
+    assert m._pricing_symbols("pk.rs", [1]) == ["solve_pk"]
+
+
+def test_pricing_symbol_does_not_skip_code_to_an_unrelated_public_item(tmp_path, monkeypatch):
+    m = _mod()
+    source = tmp_path / "pk.rs"
+    source.write_text(
+        "/// One step is 1 minute.\n"
+        "fn private_solver() {}\n"
+        "pub fn unrelated() {}\n"
+    )
+    monkeypatch.setattr(m, "_path_for", lambda _: source)
+    assert m._pricing_symbols("pk.rs", [1]) == []
+
+
 def test_the_headline_can_say_the_opposite():
     """A headline that cannot flip is decoration, not a finding.
 

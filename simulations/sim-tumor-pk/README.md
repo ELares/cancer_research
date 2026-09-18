@@ -45,7 +45,9 @@ Tumor PK parameters are defined per tumor type in `ferroptosis_core::tumor_pk`:
 
 Spatial-temporal composition uses metabolism-only penetration length (lambda_met ~224 um for RSL3) to avoid double-counting cellular uptake.
 
-Radial distance bins for C(r,t): [0, 25, 50, 75, 100, 125] um.
+Candidate radial distance bins for C(r,t): [0, 25, 50, 75, 100, 125] um.
+Each tumor includes bins only up to its tissue half-distance (Breast/Melanoma
+60 um, Pancreatic 125 um, GBM 75 um, Sarcoma 100 um), yielding 21 conditions.
 
 ## Output format
 
@@ -53,23 +55,24 @@ Output directory: `output/tumor-pk/`
 
 ### 1. `tumor_pk_summary.json` -- per-scenario results
 
-JSON array with one entry per scenario (2D reference + 5 tumor types):
+JSON array with one entry per scenario (2D reference + 5 tumor types). Example
+from the default 10,000-cell, seed-42 run, with floating-point values rounded:
 
 ```json
 {
   "tumor_type": "Breast",
   "context": "tumor_pk",
   "n_cells": 10000,
-  "n_dead": 850,
-  "death_rate": 0.085,
-  "ci_low": 0.079,
-  "ci_high": 0.091,
-  "mean_lp": 4.20,
-  "mean_gsh": 2.10,
-  "mean_gpx4": 0.05,
-  "peak_c_interstitial": 0.180,
-  "auc_c_interstitial": 12.5,
-  "protection_factor": 4.8
+  "n_dead": 251,
+  "death_rate": 0.0251,
+  "ci_low": 0.022212,
+  "ci_high": 0.028353,
+  "mean_lp": 0.882771,
+  "mean_gsh": 1.078692,
+  "mean_gpx4": 0.635620,
+  "peak_c_interstitial": 0.408550,
+  "auc_c_interstitial": 20.041354,
+  "protection_factor": 16.310757
 }
 ```
 
@@ -81,19 +84,32 @@ JSON array with one entry per scenario (2D reference + 5 tumor types):
 
 ### 2. `tumor_pk_timecourse.csv` -- concentration time series
 
+Each row samples all three compartments at the same time, starting with the
+zero vascular and interstitial initial conditions at minute 0. The 180 samples
+cover minutes 0 through 179 and supply the concentration at the start of each
+one-minute biochemistry step. Earlier versions advanced the tumor compartments
+one minute before recording them, so previously generated timecourses and
+PK-driven cell outcomes need to be regenerated with the corrected solver.
+
 ```csv
 time_min,tumor_type,c_plasma,c_vascular,c_interstitial
-0,Breast,1.000000,0.120000,0.012000
-1,Breast,0.977000,0.118000,0.014000
+0,Breast,1.000000,0.000000,0.000000
+1,Breast,0.977160,0.764272,0.150001
 ...
 ```
+
+The same sampling convention applies to the opt-in `sim-tme-3d --dose-sweep`
+PK schedule. The default 3D matrix uses constant dosing and does not call this
+solver. CSV plasma imports through `PlasmaModel::from_csv` reject nonfinite
+times or concentrations rather than silently turning missing values into zero
+exposure.
 
 ### 3. `tumor_pk_spatial_temporal.csv` -- C(r,t) kill rates
 
 ```csv
 tumor_type,distance_um,peak_conc,death_rate,ci_low,ci_high,n_cells,n_dead
-Breast,0,0.180,0.085,0.079,0.091,10000,850
-Breast,25,0.160,0.072,0.067,0.078,10000,720
+Breast,0,0.408550,0.025100,0.022212,0.028353,10000,251
+Breast,25,0.365334,0.023100,0.020334,0.026233,10000,231
 ...
 ```
 
@@ -105,22 +121,24 @@ cargo run --release -p sim-tumor-pk
 # stderr output includes "=== Protection Factor Summary ==="
 # Expected:
 #   2D culture ref: ~41% death rate (baseline)
-#   Breast: protection ~4-5x
-#   Pancreatic: protection ~16-27x
-#   GBM: protection ~20-30x (blood-brain barrier)
-#   Melanoma: protection ~3-5x
-#   Sarcoma: protection ~8-15x
-# Claim: 2D-to-in-vivo gap demonstrates why pharmacologic ferroptosis inducers
-#        fail in vivo (protection factors of 3-30x from PK barriers alone)
+#   Breast: protection 16.3x
+#   Pancreatic: protection 21.9x
+#   GBM: protection 26.4x (blood-brain barrier)
+#   Melanoma: protection 17.5x
+#   Sarcoma: protection 20.4x
+# These estimated PK barriers reduce killing in the model; the factors do
+# not establish the cause or magnitude of treatment failure in vivo.
 ```
 
-**Spatial x Temporal (temporal PK dominates spatial decay):**
-```bash
-cargo run --release -p sim-tumor-pk 2>&1 | grep "Key finding"
-# Expected: "temporal PK barrier (16-27x) dominates spatial decay (1.3-1.7x)"
-# The PK barrier (getting drug to the tumor interstitium) is far more
-# limiting than the radial diffusion gradient within tissue
-```
+**Spatial x Temporal:** compare each tumor's `death_rate` at distance 0 with
+its rate at the furthest sampled distance in `tumor_pk_spatial_temporal.csv`.
+Their ratio measures the additional spatial protection beyond temporal PK.
+The default seed-42 run gives approximately 1.18x (Breast), 1.19x (Pancreatic),
+1.05x (GBM), 1.14x (Melanoma), and 1.16x (Sarcoma), compared with 16.3–26.4x
+protection from temporal PK alone. These are simulated outcomes under the
+listed presets, not fixed properties of the model or measured tissue effects.
+The binary prints the calculated rows; it no longer announces the obsolete
+hard-coded 1.3–1.7x range before running them.
 
 ## Caveats
 

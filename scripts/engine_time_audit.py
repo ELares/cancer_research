@@ -542,7 +542,11 @@ def _pricing_symbols(module, binding_lines):
     out = set()
     for ln in binding_lines:
         found = None
-        for j in range(ln - 1, min(len(lines), ln + 12)):
+        # Follow the attached documentation to its declaration. An arbitrary
+        # line limit made a longer API doc silently remove its function from
+        # the audit; scanning past actual code would instead attach a binding
+        # to a later, unrelated item.
+        for j in range(ln - 1, len(lines)):
             m = re.match(r"\s*pub\s+(?:fn|struct|enum|const|static)\s+(\w+)",
                          lines[j])
             if m:
@@ -562,6 +566,9 @@ def _pricing_symbols(module, binding_lines):
                     if s:
                         found = s.group(1)
                         break
+                break
+            stripped = lines[j].strip()
+            if stripped and not stripped.startswith(("//", "#[", "#![")):
                 break
         if found:
             out.add(found)

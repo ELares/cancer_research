@@ -13,9 +13,9 @@ Both numbers are CONVENTIONS, not matches -- deduplicating one side and not the 
 | `trigger_wave.rs` | 74 | solver-timestep | `pub dt_min: f64,` | 0.02 min | *no caller* |
 | `trigger_wave.rs` | 99 | solver-timestep | `dt_min: 0.02,` | 0.02 min | *no caller* |
 | `trigger_wave.rs` | 157 | solver-timestep | `...et dt = cfg.dt_min;` | 0.02 min | *no caller* |
-| `tumor_pk.rs` | 354 | wall-clock | `...me points in minutes (one per simulation step).` | 1 min | `sim-tme-3d`, `sim-tumor-pk` |
-| `tumor_pk.rs` | 364 | wall-clock | `...-courses at 1-minute resolution (one value per simula` | 1 min | `sim-tme-3d`, `sim-tumor-pk` |
-| `tumor_pk.rs` | 391 | wall-clock | `for minute in 0..n_steps {` | 1 min | `sim-tme-3d`, `sim-tumor-pk` |
+| `tumor_pk.rs` | 365 | wall-clock | `...me points in minutes (one per simulation step).` | 1 min | `sim-tme-3d`, `sim-tumor-pk` |
+| `tumor_pk.rs` | 375 | wall-clock | `...-courses at 1-minute resolution (one value per simula` | 1 min | `sim-tme-3d`, `sim-tumor-pk` |
+| `tumor_pk.rs` | 409 | wall-clock | `for minute in 0..n_steps {` | 1 min | `sim-tme-3d`, `sim-tumor-pk` |
 
 `solver-timestep` rows are an integrator's own `dt`, constrained by numerical stability -- `trigger_wave` asserts a CFL bound beside its. Two solvers having different `dt` is not a disagreement about what a step is worth, and an earlier draft pooled them to report one.
 

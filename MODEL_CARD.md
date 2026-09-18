@@ -3,7 +3,7 @@
 A concise intended-use and limitations summary for the simulation suite in
 this repository. It consolidates the per-layer accounting in
 [`simulations/calibration/CALIBRATION_STATUS.md`](simulations/calibration/CALIBRATION_STATUS.md)
-and the manuscript honesty section (`article/drafts/v1.md` Section 8.4) into the
+and the manuscript honesty section (`article/drafts/v1.md` Section 9.4) into the
 structured "model card" format used in computational biology, with an explicit
 assumptions/scope checklist (ARRIVE-style for the in-silico experiments,
 TRIPOD-style for any predictive framing, adapting the TRIPOD-AI checklist even
@@ -25,7 +25,7 @@ predictor. Breadth of coverage is not evidence of depth.**
 | Author | Ezequiel Lares |
 | License | MIT |
 | Language | Rust (core + binaries), Python bindings (PyO3), C FFI (PhysiCell-style ABI) |
-| Type | Mechanistic, stochastic (Monte Carlo) single-cell ferroptosis ODE engine + 2D/3D spatial tumor-microenvironment layers + nine selectable treatment arms (ferroptosis induction, PDT, SDT, radiation, checkpoint blockade, adoptive cell therapy, oncolytic virus, ablation, ADC). NOT a statistical / machine-learning predictor. |
+| Type | Mechanistic, stochastic (Monte Carlo) single-cell ferroptosis ODE engine + 2D/3D spatial tumor-microenvironment layers + 10 selectable treatment arms plus an untreated control (ferroptosis induction, PDT, SDT, radiation, checkpoint blockade, adoptive cell therapy, oncolytic virus, ablation, chemotherapy, ADC). NOT a statistical / machine-learning predictor. |
 | What it is NOT | Not a trained model, not fit to a patient dataset, not a clinical decision tool, not a validated biomarker. |
 
 ## 2. Intended use
@@ -39,11 +39,16 @@ test whether it is internally consistent and what direction and rough magnitude
 the model produces, so the claim can be turned into a falsifiable wet-lab
 experiment.
 
-**The nine arms are not equally developed, and the difference matters more than
-the count.** The ferroptosis and physical-ROS work carries the calibrated legs
-and every number the manuscript reports; the arms added later are roughly 11 to
-13 times smaller by line count, and each is recorded in
-`simulations/calibration/CALIBRATION_STATUS.md` as feeding no number in the manuscript's QUANTITATIVE chapters (Chapter 6 does report these arms' own figures, which is a different thing).
+**The arms are not equally developed, and the difference matters more than
+the count.** The ferroptosis and physical-ROS work carries the anchored legs
+and the legacy quantitative results in Chapters 5, 7 and 8. The committed
+[`modality-module-depth` analysis](analysis/modality-module-depth.md) counts the
+modality modules together at 1,562 production lines, against an engine 2.4 to 3.0
+times larger depending on how shared machinery is assigned. That is an aggregate
+code-size comparison, not a calibration or quality score for an individual arm.
+Chapter 6 separately reports the newer arms' comparisons and limitations; their
+per-layer evidence status belongs to
+[`CALIBRATION_STATUS.md`](simulations/calibration/CALIBRATION_STATUS.md).
 Use a newer arm to ask whether a mechanism's DIRECTION is internally
 consistent. Do not read a magnitude off one.
 
@@ -88,7 +93,7 @@ A single-cell ferroptosis ODE engine (`biochem`): `total_ros = basal_ros + exoge
 
 ### 6.2 In-silico experiment reporting (ARRIVE-style)
 
-- [x] **Objective stated** per experiment (manuscript Chapters 6-7; each has a falsification criterion in Chapter 9).
+- [x] **Objective stated** per experiment (manuscript Chapters 6-8; proposed experiments are organized in Chapter 10 and registered in `PREREGISTRATION.md`).
 - [x] **Model + parameters documented**: `parameter_provenance.md` (per-parameter, with `Grounded?` column) and source code (authoritative for defaults).
 - [x] **Randomization / seeds**: fixed, documented seeds; runs reproducible.
 - [x] **Replication / reproducibility**: pinned Rust toolchain (`simulations/rust-toolchain.toml`, 1.96.0) and Python lockfile; CI re-runs the suite and a production byte-identity SHA.
@@ -99,7 +104,7 @@ A single-cell ferroptosis ODE engine (`biochem`): `total_ros = basal_ros + exoge
 - [x] **Intended use and population**: in-silico mechanistic exploration, NOT a patient-outcome model. No human-subjects predictors or outcomes.
 - [x] **Predictors / outcome**: biochemistry parameters -> simulated cell death; not a fitted risk score.
 - [x] **Validation status**: see Section 7. There is **no external clinical validation**; the model is not a clinical prediction model and should not be reported as one.
-- [x] **Limitations stated**: Section 3 (out-of-scope) and the manuscript Section 8.4.
+- [x] **Limitations stated**: Section 3 (out-of-scope) and the manuscript Section 9.4.
 
 ## 7. Calibration and validation status
 

@@ -114,7 +114,7 @@ CLAIMS = [
     ("P1 arm asymmetry", "census-protocol-precedent.json", "arm_asymmetry", str,
      "a factor of {}"),
     ("P1 GPX4-arm precedent", "census-protocol-precedent.json",
-     "arm1_precedent", _comma, "{} articles"),
+     "arm1_precedent", _comma, "GPX4 reagent list yields {} article mentions"),
     ("synergy-metric control size", "census-synergy-metrics.json",
      "control_records", _comma, "{} records"),
 ]

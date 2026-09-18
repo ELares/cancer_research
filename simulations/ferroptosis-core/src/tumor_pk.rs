@@ -238,6 +238,8 @@ impl PlasmaModel {
     /// Parse a CSV string with "time,concentration" columns.
     /// Time is expected in minutes. Concentrations are auto-normalized
     /// so peak = 1.0 (compatible with the GPX4 inactivation model).
+    /// Times and concentrations must be finite; negative concentrations are
+    /// clipped to zero after normalization.
     /// First line is treated as header if it doesn't parse as numbers.
     pub fn from_csv(csv_content: &str) -> Result<Self, String> {
         let mut time_min = Vec::new();
@@ -276,6 +278,15 @@ impl PlasmaModel {
                     ))
                 }
             };
+            if !t.is_finite() {
+                return Err(format!("Line {}: time must be finite, got '{t}'", i + 1));
+            }
+            if !c.is_finite() {
+                return Err(format!(
+                    "Line {}: concentration must be finite, got '{c}'",
+                    i + 1
+                ));
+            }
             time_min.push(t);
             conc_raw.push(c);
         }
@@ -364,8 +375,14 @@ pub struct TumorPKResult {
 /// Solve the two-compartment tumor PK ODE using forward Euler.
 ///
 /// Returns concentration time-courses at 1-minute resolution (one value per
-/// simulation step). Internal sub-stepping at `substeps_per_min` ensures
-/// numerical stability for fast vascular equilibration dynamics.
+/// simulation step), sampled at times `0..n_steps`. All compartments in a row
+/// describe the same time;
+/// the first row contains the zero vascular/interstitial initial conditions.
+/// Internal sub-stepping at `substeps_per_min` resolves the fast vascular
+/// equilibration dynamics; callers must choose a sufficiently small step.
+///
+/// # Panics
+/// Panics if `substeps_per_min` is zero.
 ///
 /// The ODE:
 /// ```text
@@ -379,6 +396,7 @@ pub fn solve_tumor_pk(
     n_steps: usize,
     substeps_per_min: usize,
 ) -> TumorPKResult {
+    assert!(substeps_per_min > 0, "substeps_per_min must be positive");
     let dt = 1.0 / substeps_per_min as f64;
     let mut c_v = 0.0_f64;
     let mut c_i = 0.0_f64;
@@ -389,6 +407,17 @@ pub fn solve_tumor_pk(
     let mut c_interstitial_out = Vec::with_capacity(n_steps);
 
     for minute in 0..n_steps {
+        // Record the state AT this minute before integrating toward the next.
+        // Recording after the substeps would pair C_v(t+1) and C_i(t+1) with
+        // C_p(t), advancing the drug exposure supplied to cell simulations.
+        time_min.push(minute as f64);
+        c_plasma_out.push(plasma.concentration_at(minute as f64));
+        c_vascular_out.push(c_v);
+        c_interstitial_out.push(c_i);
+        if minute + 1 == n_steps {
+            break;
+        }
+
         for sub in 0..substeps_per_min {
             let t = minute as f64 + sub as f64 * dt;
             let c_p = plasma.concentration_at(t);
@@ -418,12 +447,6 @@ pub fn solve_tumor_pk(
             c_v = (c_v + dc_v * dt).max(0.0);
             c_i = (c_i + dc_i * dt).max(0.0);
         }
-
-        let c_p = plasma.concentration_at(minute as f64);
-        time_min.push(minute as f64);
-        c_plasma_out.push(c_p);
-        c_vascular_out.push(c_v);
-        c_interstitial_out.push(c_i);
     }
 
     TumorPKResult {
@@ -462,10 +485,10 @@ pub fn metabolism_only_penetration_um(drug: &crate::drug_transport::DrugParams) 
 /// ODE already includes cellular uptake. This avoids double-counting and
 /// produces a longer penetration length (224 μm vs 100 μm for RSL3).
 ///
-/// Key finding from this composition: the spatial barrier adds only 1.3-1.7×
-/// additional protection on top of the 16-27× temporal PK barrier. For small
-/// molecules with short half-lives, drug EXPOSURE TIME matters more than
-/// drug PENETRATION DEPTH.
+/// Compare outcomes from this schedule with the temporal-only schedule to
+/// quantify the additional spatial barrier. Its magnitude depends on the PK
+/// parameters, distance from vessels, and biochemical response; it is not a
+/// fixed property of this composition.
 pub fn compute_spatial_temporal_schedule(
     pk_result: &TumorPKResult,
     r_um: f64,
@@ -569,6 +592,64 @@ pub fn sim_cell_with_pk(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn ode_records_initial_conditions_and_requested_times() {
+        let plasma = rsl3_iv_bolus();
+        let tumor = breast_tumor();
+        for n_steps in [0, 1, 3] {
+            let result = solve_tumor_pk(&plasma, &tumor, n_steps, 100);
+            assert_eq!(result.time_min.len(), n_steps);
+            assert_eq!(result.c_plasma.len(), n_steps);
+            assert_eq!(result.c_vascular.len(), n_steps);
+            assert_eq!(result.c_interstitial.len(), n_steps);
+            for (step, &time) in result.time_min.iter().enumerate() {
+                assert_eq!(time, step as f64);
+                assert_eq!(result.c_plasma[step], plasma.concentration_at(time));
+            }
+            if n_steps > 0 {
+                assert_eq!(result.c_vascular[0], 0.0);
+                assert_eq!(result.c_interstitial[0], 0.0);
+            }
+        }
+    }
+
+    #[test]
+    fn ode_vascular_samples_match_analytical_solution_at_reported_times() {
+        // With PS=0, Q/V=1 and no metabolism, the compartments decouple and
+        // dC_v/dt = 1 - C_v has the exact solution C_v(t) = 1 - exp(-t).
+        let mut tumor = breast_tumor();
+        tumor.ps_product = 0.0;
+        tumor.blood_flow_q = tumor.vascular_fraction;
+        tumor.k_met_v = 0.0;
+        let plasma = PlasmaModel::Constant { concentration: 1.0 };
+        let result = solve_tumor_pk(&plasma, &tumor, 4, 1000);
+        for (&time, &actual) in result.time_min.iter().zip(&result.c_vascular) {
+            let exact = 1.0 - (-time).exp();
+            assert!(
+                (actual - exact).abs() < 0.0003,
+                "C_v({time})={actual}, expected {exact} within Euler error"
+            );
+        }
+    }
+
+    #[test]
+    fn ode_does_not_anticipate_a_future_plasma_input() {
+        let plasma = PlasmaModel::from_csv("time,concentration\n0,0\n1,0\n2,1\n3,0").unwrap();
+        let result = solve_tumor_pk(&plasma, &breast_tumor(), 3, 100);
+        // Plasma is zero through t=1. Future exposure during (1,2] must not
+        // appear in the vascular/interstitial samples labelled t=1.
+        assert_eq!(&result.c_vascular[..2], &[0.0, 0.0]);
+        assert_eq!(&result.c_interstitial[..2], &[0.0, 0.0]);
+        assert!(result.c_vascular[2] > 0.0);
+        assert!(result.c_interstitial[2] > 0.0);
+    }
+
+    #[test]
+    #[should_panic(expected = "substeps_per_min must be positive")]
+    fn ode_rejects_zero_substeps_instead_of_returning_zero_exposure() {
+        solve_tumor_pk(&rsl3_iv_bolus(), &breast_tumor(), 2, 0);
+    }
 
     #[test]
     fn ode_reaches_steady_state_with_constant_plasma() {
@@ -710,6 +791,24 @@ mod tests {
     fn csv_plasma_rejects_empty() {
         let csv = "time,concentration\n";
         assert!(PlasmaModel::from_csv(csv).is_err());
+    }
+
+    #[test]
+    fn csv_plasma_rejects_nonfinite_measurements() {
+        // Parsing floats accepts NaN/infinity. Before validation, NaN time
+        // bypassed the ordering check, while nonfinite concentrations were
+        // silently turned into zero by normalization and f64::max.
+        for value in ["NaN", "inf", "-inf"] {
+            for csv in [
+                format!("time,concentration\n{value},1\n1,0.5"),
+                format!("time,concentration\n0,1\n{value},0.5"),
+                format!("time,concentration\n0,{value}\n1,0.5"),
+                format!("time,concentration\n0,1\n1,{value}"),
+            ] {
+                let error = PlasmaModel::from_csv(&csv).unwrap_err();
+                assert!(error.contains("must be finite"), "{csv:?}: {error}");
+            }
+        }
     }
 
     #[test]

@@ -273,8 +273,6 @@ fn main() {
         "λ_met = {:.0} μm (metabolism only, no uptake double-counting)",
         lambda_met
     );
-    eprintln!("Key finding: temporal PK barrier (16-27×) dominates spatial decay (1.3-1.7×).\n");
-
     let mut crt_rows: Vec<String> = vec![
         "tumor_type,distance_um,peak_conc,death_rate,ci_low,ci_high,n_cells,n_dead".to_string(),
     ];

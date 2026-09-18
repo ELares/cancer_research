@@ -22,7 +22,8 @@
 //! ## Safety
 //! - Each thread must own its own FerroRng (not shared across threads)
 //! - Caller must free FerroRng with ferro_rng_free (no double-free)
-//! - Pointers must be valid and non-null (undefined behavior otherwise)
+//! - Non-null pointers must satisfy each function's validity and aliasing contract
+//! - Pointer-consuming functions are unsafe for Rust callers; the C ABI is unchanged
 
 use ferroptosis_core::biochem::sim_cell;
 use ferroptosis_core::cell::{gen_cell, Cell, Phenotype, Treatment};
@@ -259,8 +260,13 @@ pub extern "C" fn ferro_rng_new(seed: u64) -> *mut FerroRng {
 
 /// Free a FerroRng created by ferro_rng_new. Passing NULL is safe (no-op).
 /// Do NOT double-free or use after free.
+///
+/// # Safety
+/// A non-null `rng` must be the live pointer returned by `ferro_rng_new`, not
+/// previously freed. The caller must own it exclusively, with no outstanding
+/// references or concurrent calls using it. The pointer is invalid after return.
 #[no_mangle]
-pub extern "C" fn ferro_rng_free(rng: *mut FerroRng) {
+pub unsafe extern "C" fn ferro_rng_free(rng: *mut FerroRng) {
     if !rng.is_null() {
         let _ = unsafe { Box::from_raw(rng as *mut StdRng) };
     }
@@ -285,9 +291,14 @@ pub extern "C" fn ferro_params_invivo() -> FerroParams {
 /// phenotype: 0=Glycolytic, 1=OXPHOS, 2=Persister, 3=PersisterNrf2, 4=Stromal.
 /// Invalid values default to Glycolytic.
 ///
-/// rng: Must be a valid FerroRng pointer (from ferro_rng_new). Must not be NULL.
+/// Passing a NULL RNG returns a zeroed cell.
+///
+/// # Safety
+/// A non-null `rng` must be the live pointer returned by `ferro_rng_new`.
+/// The caller must provide exclusive access for this call; no other reference
+/// or thread may access or free that RNG while it is borrowed here.
 #[no_mangle]
-pub extern "C" fn ferro_gen_cell(phenotype: i32, rng: *mut FerroRng) -> FerroCell {
+pub unsafe extern "C" fn ferro_gen_cell(phenotype: i32, rng: *mut FerroRng) -> FerroCell {
     if rng.is_null() {
         // Return zeroed cell on null RNG (defensive)
         return FerroCell {
@@ -308,14 +319,23 @@ pub extern "C" fn ferro_gen_cell(phenotype: i32, rng: *mut FerroRng) -> FerroCel
 
 /// Run a full 180-step ferroptosis simulation for one cell.
 ///
-/// cell: Pointer to a FerroCell (from ferro_gen_cell). Must not be NULL.
+/// cell: Pointer to a FerroCell (from ferro_gen_cell).
 /// treatment: 0=Control, 1=RSL3, 2=SDT, 3=PDT. Invalid values default to Control.
-/// params: Pointer to FerroParams (from ferro_params_default/invivo). Must not be NULL.
-/// rng: Must be a valid FerroRng pointer. Must not be NULL.
+/// params: Pointer to FerroParams (from ferro_params_default/invivo).
+/// rng: Pointer to a FerroRng from ferro_rng_new.
 ///
 /// Returns a FerroResult with dead status and final LP/GSH/GPX4 values.
+/// If any pointer is NULL, returns a zeroed result without dereferencing any.
+///
+/// # Safety
+/// When all pointers are non-null, `cell` and `params` must be aligned, point
+/// to initialized values of their respective types, and remain valid and
+/// unmodified throughout the call. `rng` must be the live pointer returned by
+/// `ferro_rng_new`, exclusively accessible for the call and not overlapping
+/// either input. No other reference or thread may access or free that RNG
+/// while it is borrowed here.
 #[no_mangle]
-pub extern "C" fn ferro_sim_cell(
+pub unsafe extern "C" fn ferro_sim_cell(
     cell: *const FerroCell,
     treatment: i32,
     params: *const FerroParams,

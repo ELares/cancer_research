@@ -25,24 +25,37 @@ refute.
 P1 depends on the **fewest contested assumptions** of the eight predictions. It
 does not rely on the contested SDT oxygen-dependence (P4), the poorly characterized
 RSL3 pKa (P7), spatial penetration physics (P2, P8), or the immune-coupling layer
-(P5). It rests only on the claim that **GPX4 and FSP1 are parallel, independent
-ferroptosis-defense pathways**, so inhibiting both drops antioxidant capacity below
-the autocatalytic lipid-peroxidation threshold super-additively. That claim is
-grounded in published biology (Doll 2019 FSP1 as the GPX4-independent arm, PMID
-31634900; Bersuker 2019, PMID 31634899; Hangauer 2017 persister GPX4-dependence,
-PMID 29088702). One dose-matrix experiment confirms or refutes it.
+(P5). The existence of **GPX4 and FSP1 as parallel ferroptosis-defense pathways** is
+grounded in published biology (Doll 2019, PMID 31634900; Bersuker 2019, PMID
+31634899; Hangauer 2017 persister GPX4-dependence, PMID 29088702). That foundation
+motivates the experiment but does not guarantee synergy at every dose or in
+every cell state. One dose matrix tests the interaction for the chosen exposures
+and persister system; it does not establish or refute pathway independence on
+its own.
 
 ## Model prediction being tested
 
 - **Directional claim:** GPX4 inhibition + FSP1 inhibition is **synergistic** in
   FSP1-low persister-enriched cells.
-- **Quantitative model output:** Bliss excess about **1.99x** (95% prior-predictive
-  interval about 1.0x to 5.2x; the supra-additive direction is robust at the lower
-  bound, the magnitude is not, see `analysis/headline-uncertainty-report.md`).
+- **Quantitative model output:** observed-to-Bliss **ratio about 1.99x**, not a
+  Bliss excess. The committed 300-draw prior-predictive report gives a 95%
+  interval of **[1.000, 5.242]** and a full sampled range of **[0.953, 7.800]**
+  (`analysis/headline-uncertainty-report.md`). The rounded lower bound includes
+  the additive null and some draws are sub-additive, so supra-additivity is not
+  guaranteed. Improving on each single agent and exceeding Bliss independence
+  are separate claims. These priors are not conditioned on experimental data.
 - **Pre-stated falsification threshold:** Chou-Talalay combination index (CI)
-  **greater than 0.8** at the matched-effect dose ratio (additive or antagonistic),
+  **greater than 0.8** at the matched-effect dose ratio,
   **or** measured combined kill at or below the Bliss-independence prediction within
   assay error.
+
+These are the existing P1 decision thresholds; this clarification does not amend
+`PREREGISTRATION.md`. Its original wording calls the 1.99x ratio an "excess" and
+interprets the rounded lower interval bound as robust supra-additivity; the
+artifact above does not support those interpretations. CI > 0.8 is the project's
+chosen failure threshold, not the general definition of additivity: values
+between 0.8 and 1 may still indicate weaker synergy under Chou-Talalay
+([Chou 2010](https://pubmed.ncbi.nlm.nih.gov/20068163/)).
 
 ## Materials
 
@@ -55,11 +68,22 @@ PMID 29088702). One dose-matrix experiment confirms or refutes it.
   chosen line (e.g. sustained high-dose targeted therapy for ~9 to 14 days until a
   slow-cycling drug-tolerant population remains), per the line's established
   protocol.
-- **Drugs.** GPX4 inhibitor: **RSL3** (or ML162 as a more stable surrogate). FSP1
-  inhibitor: **iFSP1** (or brequinar, which inhibits the DHODH backup arm, as a
-  mechanistic cross-check). Ferroptosis-pathway confirmation: **C11-BODIPY 581/591**
+- **Drugs.** GPX4 inhibitor: **RSL3** (or ML162, with its own single-agent response
+  established). FSP1 inhibitor: **iFSP1**. Brequinar may be examined in a separate
+  mechanistic comparison, not as an interchangeable selective FSP1 reagent (see
+  target-attribution note below). Ferroptosis-pathway confirmation: **C11-BODIPY 581/591**
   (lipid peroxidation). Rescue control: **ferrostatin-1** (Fer-1) and
   **liproxstatin-1**.
+
+**Target attribution.** Brequinar targets DHODH, the mitochondrial defense studied
+by [Mao et al. (2021)](https://doi.org/10.1038/s41586-021-03539-7).
+[Mishima et al. (2023)](https://doi.org/10.1038/s41586-023-06269-0) showed that
+ferroptosis sensitization at high inhibitor concentrations can instead reflect
+FSP1 inhibition; the [authors' reply](https://doi.org/10.1038/s41586-023-06270-7)
+discusses the dependence on context. Interpret a brequinar comparison with
+concentration-specific target engagement and DHODH/FSP1 genetic controls. A drug
+response alone cannot distinguish those mechanisms, and a brequinar result
+cannot replace the GPX4i-by-iFSP1 matrix specified for P1.
 
 ### How much precedent each arm has
 
@@ -73,10 +97,12 @@ Measured over the 13,346 census articles carrying the
 | RSL3 | 609 | arm 1, primary |
 | ML162 | 12 | arm 1, offered surrogate |
 | iFSP1 | 23 | arm 2, primary |
-| brequinar | 12 | arm 2, offered cross-check |
+| brequinar | 12 | separate DHODH / off-target comparison |
 
-Arm 1 rests on 621 articles and arm 2 on
-35 — a factor of 17.7. Three consequences
+The historical grouping pools 621 reagent mentions for arm 1 and
+35 for its backup-defense comparison list — a factor of 17.7. The latter
+combines iFSP1 and brequinar; it is not a count of selective FSP1-inhibitor
+evidence or a claim that the two reagents are interchangeable. Three consequences
 for whoever runs this:
 
 1. **Dose-finding is asymmetric.** There is abundant published guidance for an
@@ -85,7 +111,7 @@ for whoever runs this:
 2. **The offered surrogates are thinner than the primaries.** ML162 appears in
    roughly a fiftieth as many articles as RSL3, so a result obtained with it
    has correspondingly less to be compared against. Prefer RSL3 unless
-   stability forces the substitution, and say which was used.
+   the chosen model system justifies the substitution, and say which was used.
 3. **A negative result on arm 2 is harder to interpret.** With this little
    comparative work, a null could mean the hypothesis is wrong or that the
    dose or the FSP1-low status was wrong, and the protocol's pre-stated
@@ -106,13 +132,14 @@ count cannot tell those apart. What it can do is say where the thin ice is.
   combination well (must rescue if the death is ferroptotic).
 - **Replicates:** at least 3 biological replicates (independent persister
   inductions / passages), each with at least 3 technical replicates. Power the
-  design to resolve a CI of 0.7 versus 0.9 (the synergy-versus-additivity boundary)
+  design to resolve a CI of 0.7 versus 0.9 (straddling P1's decision threshold)
   at the matrix center.
 
 ## Readouts
 
 1. **Viability / death:** a live/dead or ATP-viability readout at a fixed endpoint
-   (e.g. 24 to 48 h), used to compute the combination index and the Bliss excess.
+   (e.g. 24 to 48 h), used to compute the combination index, Bliss ratio and
+   Bliss excess.
 2. **Pathway confirmation:** C11-BODIPY lipid-peroxidation signal (flow or imaging)
    at the synergistic well, and **Fer-1 rescue** of that well (ferroptosis-specific
    death, not generic cytotoxicity).
@@ -122,8 +149,14 @@ count cannot tell those apart. What it can do is say where the thin ice is.
 ## Analysis
 
 - Compute the **Chou-Talalay combination index** (CompuSyn or equivalent) at the
-  matched-effect dose ratio, and the **Bliss independence excess** (observed minus
-  expected combined effect under independence).
+  matched-effect dose ratio. Separately report Bliss expected kill,
+  `E = A + B - A*B` for fractional single-agent kills A and B, the **Bliss ratio**
+  `observed / E`, and the **Bliss excess** `observed - E`. The ratio is undefined
+  when E is zero; do not report an infinite synergy score.
+- For the manuscript's illustrative rates (A = 0.40, B = 0.037, observed = 0.841),
+  E = 0.4222, the ratio is approximately 1.99, and excess is approximately 0.419
+  (41.9 percentage points). Chou-Talalay CI cannot be derived from this ratio;
+  it needs the dose-response data.
 - Pre-registered decision: **confirm** if CI is at or below 0.8 (synergy) with the
   combined effect above the Bliss-independence prediction; **refute** if CI is
   greater than 0.8 or the combined effect is at or below independence within assay
@@ -133,14 +166,15 @@ count cannot tell those apart. What it can do is say where the thin ice is.
 
 ## Expected result and what a refutation means
 
-- **If confirmed:** the parallel-independent-repair assumption holds; the dual
-  GPX4i + FSP1i combination is a real synergy in FSP1-low persisters, supporting the
-  manuscript's combination case study and the simulation's Bliss leg.
-- **If refuted (CI greater than 0.8):** the two defenses are not independent in
-  these cells (FSP1 may not be the dominant backup when GPX4 is inhibited, or the
-  persister state re-wires the redox network), which would revise the
-  parallel-pathway assumption the Bliss number rests on. This refutation will be
-  reported as prominently as a confirmation (the preregistration honesty clause).
+- **If confirmed:** the tested combination meets P1's synergy criterion in this
+  cell state and dose region, supporting the combination case study. This does
+  not independently establish biochemical pathway independence or clinical
+  efficacy.
+- **If refuted:** P1's specified synergy prediction fails for the tested system.
+  The result does not by itself show that the two defenses are not independent.
+  Check target engagement, response saturation, exposure timing and alternative
+  defense pathways before assigning a mechanism. Report the outcome as
+  prominently as a confirmation (the preregistration honesty clause).
 
 ## Cost and timeline
 

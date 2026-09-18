@@ -78,6 +78,11 @@ struct FerroRng *ferro_rng_new(uint64_t seed);
 /**
  * Free a FerroRng created by ferro_rng_new. Passing NULL is safe (no-op).
  * Do NOT double-free or use after free.
+ *
+ * # Safety
+ * A non-null `rng` must be the live pointer returned by `ferro_rng_new`, not
+ * previously freed. The caller must own it exclusively, with no outstanding
+ * references or concurrent calls using it. The pointer is invalid after return.
  */
 void ferro_rng_free(struct FerroRng *rng);
 
@@ -99,19 +104,33 @@ struct FerroParams ferro_params_invivo(void);
  * phenotype: 0=Glycolytic, 1=OXPHOS, 2=Persister, 3=PersisterNrf2, 4=Stromal.
  * Invalid values default to Glycolytic.
  *
- * rng: Must be a valid FerroRng pointer (from ferro_rng_new). Must not be NULL.
+ * Passing a NULL RNG returns a zeroed cell.
+ *
+ * # Safety
+ * A non-null `rng` must be the live pointer returned by `ferro_rng_new`.
+ * The caller must provide exclusive access for this call; no other reference
+ * or thread may access or free that RNG while it is borrowed here.
  */
 struct FerroCell ferro_gen_cell(int32_t phenotype, struct FerroRng *rng);
 
 /**
  * Run a full 180-step ferroptosis simulation for one cell.
  *
- * cell: Pointer to a FerroCell (from ferro_gen_cell). Must not be NULL.
+ * cell: Pointer to a FerroCell (from ferro_gen_cell).
  * treatment: 0=Control, 1=RSL3, 2=SDT, 3=PDT. Invalid values default to Control.
- * params: Pointer to FerroParams (from ferro_params_default/invivo). Must not be NULL.
- * rng: Must be a valid FerroRng pointer. Must not be NULL.
+ * params: Pointer to FerroParams (from ferro_params_default/invivo).
+ * rng: Pointer to a FerroRng from ferro_rng_new.
  *
  * Returns a FerroResult with dead status and final LP/GSH/GPX4 values.
+ * If any pointer is NULL, returns a zeroed result without dereferencing any.
+ *
+ * # Safety
+ * When all pointers are non-null, `cell` and `params` must be aligned, point
+ * to initialized values of their respective types, and remain valid and
+ * unmodified throughout the call. `rng` must be the live pointer returned by
+ * `ferro_rng_new`, exclusively accessible for the call and not overlapping
+ * either input. No other reference or thread may access or free that RNG
+ * while it is borrowed here.
  */
 struct FerroResult ferro_sim_cell(const struct FerroCell *cell,
                                   int32_t treatment,

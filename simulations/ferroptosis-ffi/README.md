@@ -54,6 +54,12 @@ LD_LIBRARY_PATH=../target/release ./test_ffi        # Linux
 - Each thread must own its own `FerroRng` (not thread-safe)
 - Caller must free `FerroRng` with `ferro_rng_free` (no double-free)
 - NULL cell pointer to `ferro_sim_cell` returns a safe default result (dead=false)
+- Non-null cell and parameter pointers must be aligned, initialized, readable,
+  and unmodified throughout the call; the RNG requires exclusive access and
+  must not overlap either input
+- Rust callers must use `unsafe` for `ferro_gen_cell`, `ferro_sim_cell`, and
+  `ferro_rng_free` and uphold their documented pointer contracts. C/C++ callers
+  use the same declarations and ABI as before.
 
 ## License
 

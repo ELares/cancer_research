@@ -12,7 +12,10 @@ NOT report a co-occurrence rate (which Section 3.13 shows is a property of the
 labelling instrument). Both refusals are guarded, because a refusal nothing
 checks is a comment.
 """
+import gzip
+import importlib.util
 import json
+import sys
 from pathlib import Path
 
 import pytest
@@ -21,6 +24,78 @@ REPO = Path(__file__).resolve().parent.parent
 JSON = REPO / "analysis/census-mechanism-profile.json"
 MD = REPO / "analysis/census-mechanism-profile.md"
 MANUSCRIPT = REPO / "article/drafts/v1.md"
+
+
+def _load_profile():
+    spec = importlib.util.spec_from_file_location(
+        "census_profile_input_test", REPO / "scripts/census_mechanism_profile.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+@pytest.mark.parametrize("input_state", ["missing", "empty-directory", "empty-shard"])
+def test_missing_census_preserves_existing_reports(tmp_path, monkeypatch, input_state):
+    """A fresh checkout must not publish absence of input as an empty census."""
+    profile = _load_profile()
+    records = tmp_path / "records"
+    if input_state != "missing":
+        records.mkdir()
+    if input_state == "empty-shard":
+        with gzip.open(records / "part.jsonl.gz", "wt"):
+            pass
+    monkeypatch.setattr(profile, "RECORDS", records)
+    outputs = {"OUT_JSON": b'{"existing": "published counts"}\n',
+               "OUT_MD": b"Existing published interpretation.\n"}
+    for attr, content in outputs.items():
+        path = tmp_path / attr
+        path.write_bytes(content)
+        monkeypatch.setattr(profile, attr, path)
+    monkeypatch.setattr(sys, "argv", ["census_mechanism_profile.py"])
+    with pytest.raises(SystemExit, match="No census records.*--render-only"):
+        profile.main()
+    for attr, content in outputs.items():
+        assert getattr(profile, attr).read_bytes() == content
+
+
+@pytest.mark.parametrize("stride", [0, -1])
+def test_nonpositive_sampling_stride_is_refused(stride):
+    with pytest.raises(SystemExit, match="positive integer"):
+        _load_profile().scan(stride)
+
+
+def test_external_census_with_no_mechanism_matches_is_valid(tmp_path, monkeypatch):
+    """Zero matching mechanisms in a readable input differs from no input.
+
+    Use the public environment setting and real parser so an ignored external
+    root cannot accidentally make this test pass through a mocked scan.
+    """
+    root = tmp_path / "external-atlas"
+    records = root / "records"
+    records.mkdir(parents=True)
+    with gzip.open(records / "part.jsonl.gz", "wt", encoding="utf-8") as fh:
+        fh.write(json.dumps({"pmid": "42", "mesh": ["Unmapped test descriptor"]}) + "\n")
+    monkeypatch.setenv("FERRO_ATLAS_ROOT", str(root))
+    profile = _load_profile()
+    monkeypatch.setattr(profile, "OUT_JSON", tmp_path / "profile.json")
+    monkeypatch.setattr(profile, "OUT_MD", tmp_path / "profile.md")
+    monkeypatch.setattr(sys, "argv", ["census_mechanism_profile.py"])
+    assert profile.main() == 0
+    result = json.loads(profile.OUT_JSON.read_text())
+    assert result["census"] == 1
+    assert result["rows"] == []
+
+
+def test_render_only_works_without_raw_census(tmp_path, monkeypatch):
+    profile = _load_profile()
+    monkeypatch.setattr(profile, "RECORDS", tmp_path / "missing-records")
+    monkeypatch.setattr(profile, "OUT_JSON", tmp_path / "profile.json")
+    monkeypatch.setattr(profile, "OUT_MD", tmp_path / "profile.md")
+    profile.OUT_JSON.write_bytes(JSON.read_bytes())
+    monkeypatch.setattr(sys, "argv", ["census_mechanism_profile.py", "--render-only"])
+    assert profile.main() == 0
+    assert json.loads(profile.OUT_JSON.read_text()) == json.loads(JSON.read_text())
+    assert "4,403,994 census records" in profile.OUT_MD.read_text()
 
 
 @pytest.fixture(scope="module")
