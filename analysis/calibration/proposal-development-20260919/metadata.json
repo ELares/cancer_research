@@ -1,0 +1,102 @@
+{
+  "schema_version": 1,
+  "status": "development_only",
+  "selected_configuration": "mixed_gap32",
+  "development_seeds": [
+    2026092301,
+    2026092302,
+    2026092303
+  ],
+  "declarations": [
+    {
+      "order": 1,
+      "configurations": [
+        "independent_k32",
+        "independent_k8",
+        "mixed_k32",
+        "mixed_k8"
+      ],
+      "n_records": 12,
+      "declared_before": "any of these 12 development runs"
+    },
+    {
+      "order": 2,
+      "configurations": [
+        "mixed_gap32",
+        "staged_gap32"
+      ],
+      "n_records": 6,
+      "declared_after": "inspection of all first 12 results",
+      "declared_before": "any of these 6 follow-up runs"
+    }
+  ],
+  "historical_base_commit": "49a3934e5b9e94efea04e39659ebfdc02ba89a0a",
+  "original_source_sha256": {
+    "scripts/proposal_synthetic_validation.py": "74ecb1a9114619622d1e96c29d32c6b993e40610247759c545fde7ca223be43c",
+    "scripts/resample_move.py": "7a65b96ea011726148513e07cb52605d456aa719e688c3d9aa24f5047dbcaa7b",
+    "scripts/bounded_proposal.py": "14c4f6e2a3c08b2db5fdbd5982b18fedbe63e78b34e83a66f6594be5681c6632",
+    "scripts/importance_sampling.py": "4bf7b9f97b797d3262bceea9972c502c50dd057465f81aee18a08ae8bc13cad8"
+  },
+  "original_source_hash_scope": "Hashes identify unchanged original repository files only. In-memory scratch substitutions are specified by the separate exact script hashes and configuration; original source hashes alone do not describe those substitutions.",
+  "scratch_scripts": {
+    "run_development.py.txt": {
+      "sha256": "94ab544876bfc42daffbad512b31de70bd1a740a230735e9193a05625ffd90f3",
+      "original_path": "/Users/ezequiellares/scratchpad/resample-development-20260919/run_development.py",
+      "role": "development execution"
+    },
+    "run_followup.py.txt": {
+      "sha256": "2e5bceccbeb3c998eb236e3778f0f62a207dd18740e4dd9e9a56ce75191fbc20",
+      "original_path": "/Users/ezequiellares/scratchpad/resample-development-20260919/run_followup.py",
+      "role": "development execution"
+    },
+    "check_development.py.txt": {
+      "sha256": "9d46eee878cd8e465022af740764e26506943a1791488841ffa79fe0439093c0",
+      "original_path": "/Users/ezequiellares/scratchpad/resample-development-20260919/check_development.py",
+      "role": "development numerical verification"
+    },
+    "verify_candidate.py.txt": {
+      "sha256": "28514150e664069e2d1793076b6e62bca1415a0de863ace4b1d23120f2ee8eba",
+      "original_path": "/Users/ezequiellares/scratchpad/resample-development-20260919/verify_candidate.py",
+      "role": "development numerical verification"
+    }
+  },
+  "archives": {
+    "development_results.json.gz": {
+      "sha256": "97950ece6f6e05a3933f511ee435868cfd78c7518c5f692d9a0fe82ce2e681fb",
+      "uncompressed_sha256": "ee1d4fad0b625310ec2ab48cee92cba727785791db3532d1301982b0b561e027",
+      "n_records": 12,
+      "original_path": "/Users/ezequiellares/scratchpad/resample-development-20260919/development_results.json",
+      "gzip_mtime": 0,
+      "gzip_filename": ""
+    },
+    "followup_results.json.gz": {
+      "sha256": "bd452bd26eb1afb762e2b55cb2cead29e0220163a00e5072ae4d58dfcea1e02e",
+      "uncompressed_sha256": "cec88a4b7f53a8088e6866e99df4fb87d05dcdfb6864965ec9e81f87adee7f48",
+      "n_records": 6,
+      "original_path": "/Users/ezequiellares/scratchpad/resample-development-20260919/followup_results.json",
+      "gzip_mtime": 0,
+      "gzip_filename": ""
+    }
+  },
+  "candidate_verification": {
+    "path": "candidate_verification.json",
+    "sha256": "553bed9533c30ada1c4e83d8fa51663e4c4df0c50e406a0f384db07156f3166a"
+  },
+  "runtime": {
+    "python": "3.14.6",
+    "numpy": "2.5.2",
+    "scipy": "1.18.1"
+  },
+  "additional_scratch_checks": {
+    "seed": 2026092399,
+    "count": 4,
+    "passed": true,
+    "scope": "reflected-kernel symmetry, minority-gap widths, singleton fallback, conditional-uniform moments; not additional learned-proposal trials"
+  },
+  "limits": [
+    "Same three development seeds are paired across configurations, not 18 independent replicates.",
+    "Selection used these results; passing development checks is not prospective validation.",
+    "Only the separated-box fixture was used for these 18 trials; no new biological or reserved validation seeds were run.",
+    "Pilot particles and resampling copies are not independent inference samples. Importance diagnostics use the separate 8192 production attempts per record."
+  ]
+}

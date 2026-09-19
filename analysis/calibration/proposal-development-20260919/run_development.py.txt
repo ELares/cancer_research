@@ -1,0 +1,80 @@
+"""Predeclared scratch-only development; never validation evidence."""
+import hashlib
+import json
+import pathlib
+import sys
+import numpy as np
+
+ROOT = pathlib.Path('/Users/ezequiellares/scratchpad/cancer-research-proposal')
+OUT = pathlib.Path(__file__).parent
+sys.path.insert(0, str(ROOT / 'scripts'))
+import resample_move as rm
+import proposal_synthetic_validation as sv
+
+SEEDS = [2026092301, 2026092302, 2026092303]
+CONFIGS = [('independent_k32',32,False), ('independent_k8',8,False),
+           ('mixed_k32',32,True), ('mixed_k8',8,True)]
+ORIGINAL_MOVE = rm.independent_move
+COUNTERS = {}
+
+def mixed_move(points, distances, ancestors, proposal, threshold, rng, evaluate):
+    points, distances = np.array(points,copy=True), np.array(distances,copy=True)
+    n, d = points.shape
+    proposed, _ = proposal.sample(rng,n)
+    local = rng.random(n) < .5
+    step = np.clip(.5*np.median(proposal.scales,axis=0), .0025, .25)
+    raw = points[local] + rng.normal(size=(int(local.sum()), d))*step
+    folded = np.mod(raw,2.)
+    proposed[local] = np.where(folded <= 1.,folded,2.-folded)
+    with np.errstate(divide='ignore'):
+        log_u = np.log(rng.random(n))
+    eligible = local.copy()
+    global_mask = ~local
+    eligible[global_mask] = log_u[global_mask] <= np.minimum(0.,
+        proposal.log_density(points[global_mask])-proposal.log_density(proposed[global_mask]))
+    accepted, calls, early = 0,0,0
+    for i in np.flatnonzero(eligible):
+        distance,cost = rm._evaluation(evaluate(proposed[i],threshold),threshold)
+        calls += cost
+        if distance is None:
+            early += 1
+        elif distance <= threshold:
+            points[i],distances[i] = proposed[i],distance
+            accepted += 1
+            key = 'local_accepted' if local[i] else 'global_accepted'
+            COUNTERS[key] = COUNTERS.get(key,0)+1
+    for key,value in [('local_attempts',local.sum()),('global_attempts',global_mask.sum()),
+                      ('global_evaluated',np.sum(eligible & global_mask))]:
+        COUNTERS[key] = COUNTERS.get(key,0)+int(value)
+    return points,distances,np.array(ancestors,copy=True),{
+        'attempts':n,'evaluated':int(eligible.sum()),
+        'mh_rejected_without_evaluation':int((~eligible).sum()),
+        'early_rejected':early,'accepted_moves':accepted,'simulator_dose_calls':calls}
+
+results=[]
+for name,k,mixed in CONFIGS:
+    plan = dict(rm.PILOT_PLAN,kernel_neighbors=k)
+    rm.independent_move = mixed_move if mixed else ORIGINAL_MOVE
+    for seed in SEEDS:
+        COUNTERS.clear()
+        result = sv.run_positive('separated_boxes',seed,plan=plan)
+        result['development_config'] = name
+        result['development_only'] = True
+        result['move_counters'] = dict(COUNTERS)
+        result['final_island_mode_counts'] = [
+            {mode:int(mask.sum()) for mode,mask in sv.membership(i['final_points'],'separated_boxes').items()}
+            for i in result['pilot']['islands']]
+        results.append(result)
+        (OUT / 'development_results.json').write_text(json.dumps({
+            'seeds':SEEDS,'configs':CONFIGS,
+            'mixed_move':{'local_probability':.5,'step':'clip(0.5 * median(all kernel scales), .0025, .25)',
+                          'reflection':'modulo 2 independently per coordinate'},
+            'source_hashes':sv.source_hashes(),'results':results},indent=2,allow_nan=False)+'\n')
+        a = result['assessment']
+        print(json.dumps({'config':name,'seed':seed,'passed':a['passed'],
+            'importance':a['importance'],'mode_masses':a['mode_masses'],
+            'mode_counts':a['mode_counts'],'relative_mass_error':a['relative_mass_error'],
+            'usual_checks':a['usual_checks'],'truth_checks':a['truth_checks'],
+            'island_modes':result['final_island_mode_counts'],
+            'moves':result['move_counters'],'wall_seconds':result['wall_seconds']}),flush=True)
+rm.independent_move = ORIGINAL_MOVE

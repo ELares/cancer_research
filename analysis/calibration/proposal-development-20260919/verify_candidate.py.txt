@@ -1,0 +1,52 @@
+"""Clean-import comparison of implemented candidate to development records."""
+import hashlib
+import json
+from pathlib import Path
+import sys
+import numpy as np
+
+ROOT=Path('/Users/ezequiellares/scratchpad/cancer-research-proposal')
+OUT=Path(__file__).parent
+sys.path.insert(0,str(ROOT/'scripts'))
+import resample_move_local as candidate
+import proposal_synthetic_validation as validator
+from bounded_proposal import BoundedGaussianMixture
+
+results=json.loads((OUT/'followup_results.json').read_text())['results']
+checks=[]
+for original in results:
+    if original['development_config']!='mixed_gap32': continue
+    seed=original['seed']
+    pilot_stream,production_stream=np.random.SeedSequence(seed).spawn(2)
+    pilot=candidate.train_pilot(lambda p,t=None:validator.evaluate(p,'separated_boxes',t),
+        7,1.,pilot_stream)
+    for field in ['final_points','final_distances','attempts','simulator_dose_calls','all_islands_reached_epsilon']:
+        assert pilot[field]==original['pilot'][field],(seed,field)
+    for new_island,old_island in zip(pilot['islands'],original['pilot']['islands']):
+        for field in old_island:
+            if field=='history':
+                for new_h,old_h in zip(new_island[field],old_island[field]):
+                    assert all(new_h[k]==v for k,v in old_h.items()),(seed,'history')
+            else:
+                assert new_island[field]==old_island[field],(seed,field)
+    proposal=candidate.fit_proposal(pilot['final_points'])
+    assert proposal.to_dict()==original['proposal'],(seed,'proposal')
+    points,ids=proposal.sample(np.random.default_rng(production_stream),8192)
+    archived=BoundedGaussianMixture.from_dict(original['proposal'])
+    expected_points,expected_ids=archived.sample(np.random.default_rng(np.random.SeedSequence(seed).spawn(2)[1]),8192)
+    np.testing.assert_array_equal(points,expected_points)
+    np.testing.assert_array_equal(ids,expected_ids)
+    np.testing.assert_array_equal(proposal.log_density(points),archived.log_density(expected_points))
+    assert np.bincount(ids,minlength=len(proposal.means)+1).tolist()==original['production_component_counts']
+    assessment=validator.summarize(points,proposal.log_density(points),'separated_boxes')
+    assessment['pilot_reached_epsilon']=pilot['all_islands_reached_epsilon']
+    assessment['passed'] &= assessment['pilot_reached_epsilon']
+    assert assessment==original['assessment'],(seed,'assessment')
+    checks.append({'seed':seed,'pilot_exact':True,'island_history_original_fields_exact':True,
+        'proposal_exact':True,'production_points_ids_density_exact':True,'assessment_exact':True})
+    print('Exact candidate reproduction:',seed,flush=True)
+
+payload={'development_only':True,'candidate_source_sha256':hashlib.sha256((ROOT/'scripts/resample_move_local.py').read_bytes()).hexdigest(),
+    'candidate_source_path':'scripts/resample_move_local.py','checks':checks,
+    'method':'Fresh interpreter; direct candidate import; no scratch monkeypatches imported or installed.'}
+(OUT/'candidate_verification.json').write_text(json.dumps(payload,indent=2)+'\n')

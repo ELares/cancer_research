@@ -27,6 +27,10 @@ The [joint sampling experiment](analysis/calibration/joint-importance-sampling.m
 now archives three independent runs; all failed the fixed adequacy screens, so
 joint inference remains unresolved. The [external assay acquisition review](docs/INDEPENDENT_ASSAY_CANDIDATE.md)
 records available observations and the metadata still needed for validation.
+The next proposal now has a [known-target coverage check](docs/JOINT_RESAMPLE_FAILURE.md):
+its first bounded design failed before biological production, and the
+[recorded revision](docs/JOINT_RESAMPLE_LOCAL_PLAN.md) adds local exploration and
+gap-limited neighborhoods. Every development attempt is retained.
 
 This project reads the cancer literature at census scale. It holds **5,187,265
 cancer articles** — the 4,403,994 that MeSH indexes under the neoplasms tree,
@@ -215,7 +219,7 @@ These are computational predictions with documented assumptions and caveats, not
 | `corpus/` | Frozen full text by PubMed ID + INDEX.jsonl; `corpus/atlas/` holds the census (bulk gitignored, committed artifacts in `analysis/`); `corpus/living/` documents the frozen-versus-living split (the monthly deltas themselves are uploaded as workflow artifacts, never committed) |
 | `tags/` | Precomputed tag indexes (mechanism, cancer type, tissue, evidence level, diagnostic-therapy) |
 | `news/` | News source scaffolding: fetched articles, extracted claims, verification results, credibility scores |
-| `tests/` | 2724 Python tests (pipeline smoke + figure traceability + calibration-status ref guard + manuscript-inventory drift guard + depth-kill physics-constant guard + flagship-figure data guard + quantitative-figure drift guards (Figs 21/22/23) + invariant/integration + calibrate-extractor + MeSH evidence-fallback + gold-set precision-floor regression (#346) + Bliss/sim-tme/penetration prior-predictive intervals + ABC posterior (#332) + non-circular mechanism-recall (#412) + CTRPv2 calibration target + in-vitro kill-switch fit (#330) + System Xc-/erastin fit (#502) + joint multi-inducer posterior (#500) + spheroid structure validation (#333) + embedding evidence leg (#411) + RD-vs-BioFVM cross-check (#408) + dashboard data layer (#354) + tumor-PK measured-data anchor (#334) + Krogh penetration validation (#335) + spheroid size-aware zone thresholds (#333) + spheroid kill-vs-size direction (#333) + gene-symbol ambiguity/FSP1 sense disambiguation (#ATLAS-AMBIG) + rare-event Poisson intervals + tail-resolution classification + corpus identity/dedup index + expansion-crawl licence gating + duplicate-audit non-circularity + ferroptosis-python bindings) |
+| `tests/` | 2843 Python tests (pipeline smoke + figure traceability + calibration-status ref guard + manuscript-inventory drift guard + depth-kill physics-constant guard + flagship-figure data guard + quantitative-figure drift guards (Figs 21/22/23) + invariant/integration + calibrate-extractor + MeSH evidence-fallback + gold-set precision-floor regression (#346) + Bliss/sim-tme/penetration prior-predictive intervals + ABC posterior (#332) + non-circular mechanism-recall (#412) + CTRPv2 calibration target + in-vitro kill-switch fit (#330) + System Xc-/erastin fit (#502) + joint multi-inducer posterior (#500) + spheroid structure validation (#333) + embedding evidence leg (#411) + RD-vs-BioFVM cross-check (#408) + dashboard data layer (#354) + tumor-PK measured-data anchor (#334) + Krogh penetration validation (#335) + spheroid size-aware zone thresholds (#333) + spheroid kill-vs-size direction (#333) + gene-symbol ambiguity/FSP1 sense disambiguation (#ATLAS-AMBIG) + rare-event Poisson intervals + tail-resolution classification + corpus identity/dedup index + expansion-crawl licence gating + duplicate-audit non-circularity + ferroptosis-python bindings) |
 
 Start with the files in `analysis/` if you want to see what we've concluded so far—and where we're still uncertain.
 

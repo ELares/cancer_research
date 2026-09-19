@@ -23,11 +23,17 @@ not require another simulation mechanism or a larger unmeasured corpus.
    and report reconstruction are archived. No pooled posterior is published.
    This documents an insufficient sampling design, not an empty target or
    established biological model failure.
-   **Next deliverable:** design a proposal that concentrates enough mass near
-   the final acceptance region while testing coverage of separated modes on
-   synthetic targets. Prespecify a new budget and independent-run evaluation
-   before further production runs. Do not widen the criterion, pool these
-   underpowered runs, or select a favorable seed to fill a quota.
+   **Synthetic coverage prerequisite added:** the first bounded resample/move
+   design passed three boundary-slab runs but failed all three separated-region
+   runs. One failed run had ESS 1,101 while missing a region containing 25% of
+   the target mass. Its [failure analysis](JOINT_RESAMPLE_FAILURE.md) and
+   [replayable study](../analysis/calibration/proposal-synthetic-validation.md)
+   are retained; the biological driver rejects this failed prerequisite.
+   **Next deliverable:** repair minority-region exploration and evaluate the
+   revised design under a separately recorded plan before biological production.
+   Do not widen the criterion, pool underpowered runs, or select a favorable
+   seed to fill a quota. Reused synthetic fixtures are development challenges;
+   passing them cannot establish general mode-discovery reliability.
    **Complete when:** the joint inference meets its documented adequacy and
    repeated-run screens, or the new design's specific shortfall is reported
    without posterior claims. Independent validation is a separate requirement

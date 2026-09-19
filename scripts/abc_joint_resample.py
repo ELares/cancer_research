@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Resample/move pilots and bounded frozen-proposal joint calibration.
 
-The scientific target is unchanged. See docs/JOINT_RESAMPLE_PLAN.md for the
+The scientific target is unchanged. See docs/JOINT_RESAMPLE_LOCAL_PLAN.md for the
 prespecified design and its limits. Historical experiments are not overwritten.
 """
 import argparse
@@ -20,7 +20,7 @@ sys.path.insert(0, str(ROOT / "scripts"))
 import abc_joint_importance as base
 from bounded_proposal import BoundedGaussianMixture
 from importance_sampling import importance_diagnostics, normalized_weights, weighted_quantiles
-from resample_move import PILOT_PLAN, fit_proposal, train_pilot
+from resample_move_local import PILOT_PLAN, fit_proposal, train_pilot, validate_pilot_archive
 
 OUT = ROOT / "analysis" / "calibration"
 OUT_MD = OUT / "joint-resample-sampling.md"
@@ -192,6 +192,7 @@ def read_archive(path):
 def validate_pilot(archive):
     """Reconcile the fixed pilot budget and final cloud before using its cost."""
     pilot, plan = archive['pilot'], archive['plan']['pilot']
+    validate_pilot_archive(pilot)
     target = archive['target']
     if pilot['plan'] != plan or len(pilot['islands']) != plan['islands']:
         raise ValueError('pilot plan or island count differs')
@@ -284,7 +285,8 @@ def validate_pilot(archive):
 def source_provenance():
     hashes = base.source_provenance()
     for name in ('abc_joint_resample.py', 'resample_move.py', 'bounded_proposal.py',
-                 'proposal_synthetic_validation.py'):
+                 'proposal_synthetic_validation.py', 'resample_move_local.py',
+                 'proposal_synthetic_validation_v2.py', 'synthetic_proposal_study.py'):
         relative = 'scripts/' + name
         hashes[relative] = hashlib.sha256((ROOT / relative).read_bytes()).hexdigest()
     return hashes
@@ -292,8 +294,8 @@ def source_provenance():
 
 def verify_synthetic_study():
     """Require the committed known-target study before any biological run."""
-    import proposal_synthetic_validation as synthetic
-    path = OUT / 'proposal-synthetic-validation.json'
+    import proposal_synthetic_validation_v2 as synthetic
+    path = OUT / 'proposal-synthetic-validation-v2.json'
     raw = path.read_bytes()
     study = synthetic.assemble(json.loads(raw))
     if not study['passed'] or study['pilot_plan'] != PLAN['pilot']:
@@ -402,12 +404,13 @@ def render(report):
              '## Fixed target and method', '',
              f"Reference distance {report['target']['reference_distance']:.10f}; factor {report['target']['tolerance_factor']}; final epsilon {report['target']['epsilon']:.10f}.",
              'Priors, dose support, empirical curves, simulation seed and cell count are unchanged.',
-             'Each run trains two independent islands using intermediate thresholds, then freezes',
+             'Each run trains two independent islands using local reflected and global independence',
+             'moves at intermediate thresholds, with gap-limited neighborhoods. It then freezes',
              'a mixture of bounded Gaussian product kernels and 20% uniform prior. A separate stream',
              'draws 8,192 independent production attempts; weights use the entire normalized mixture.',
              'Pilots and resampling multiplicities are excluded from inference. See the',
-             '[prespecified plan](../../docs/JOINT_RESAMPLE_PLAN.md) and',
-             '[known-target validation](proposal-synthetic-validation.md).', '',
+             '[prespecified plan](../../docs/JOINT_RESAMPLE_LOCAL_PLAN.md) and',
+             '[known-target validation](proposal-synthetic-validation-v2.md).', '',
              '## Per-run diagnostics', '',
              '| Seed | Accepted | ESS | Maximum weight | Relative normalizer MCSE | Dose calls incl. pilot/reference | Adequacy |',
              '|---|---:|---:|---:|---:|---:|---|']

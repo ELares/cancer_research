@@ -1,0 +1,90 @@
+"""Second predeclared development comparison, paired seeds; no validation."""
+from pathlib import Path
+# Reuse precisely the previously tested scratch move without rerunning its trials.
+exec(Path(__file__).with_name('run_development.py').read_text().split('\nresults=[]')[0])
+
+GAP_PLAN = dict(rm.PILOT_PLAN, kernel_neighbors=32)
+ORIGINAL_SCALES = rm.local_scales
+STAGE = 0
+FROZEN_GLOBAL = None
+STAGE_PLAN = GAP_PLAN
+
+def gap_scales(points, plan=None):
+    plan = rm.PILOT_PLAN if plan is None else plan
+    points = np.asarray(points,dtype=float)
+    unique,inverse = np.unique(points,axis=0,return_inverse=True)
+    scaled = unique / np.maximum(np.std(unique,axis=0),plan['kernel_floor'])
+    euclidean = np.sqrt(np.sum((scaled[:,None,:]-scaled[None,:,:])**2,axis=2))
+    widths=[]
+    for i in range(len(unique)):
+        order = np.argsort(euclidean[i],kind='stable')[:min(32,len(unique))]
+        positive = euclidean[i,order] > 0
+        positive_indices = np.flatnonzero(positive)
+        for before,after in zip(positive_indices[:-1],positive_indices[1:]):
+            if euclidean[i,order[after]] > 3.*euclidean[i,order[before]]:
+                order = order[:after]
+                break
+        width = (np.full(points.shape[1],.04) if len(order)==1 else
+                 plan['kernel_scale']*np.std(unique[order],axis=0))
+        widths.append(np.clip(width,plan['kernel_floor'],plan['kernel_ceiling']))
+    return np.array(widths)[inverse]
+
+def staged_move(points,distances,ancestors,proposal,threshold,rng,evaluate):
+    global STAGE,FROZEN_GLOBAL
+    stage = STAGE % 4
+    STAGE += 1
+    if stage >= 2:
+        if stage == 2:
+            FROZEN_GLOBAL = rm.fit_proposal(points,STAGE_PLAN)
+        answer = ORIGINAL_MOVE(points,distances,ancestors,FROZEN_GLOBAL,threshold,rng,evaluate)
+        for key in ['attempts','evaluated','accepted_moves']:
+            COUNTERS['global_'+key] = COUNTERS.get('global_'+key,0)+answer[3][key]
+        return answer
+    points,distances = np.array(points,copy=True),np.array(distances,copy=True)
+    step = np.clip(.5*np.median(proposal.scales,axis=0),.0025,.25)
+    folded = np.mod(points+rng.normal(size=points.shape)*step,2.)
+    proposed = np.where(folded<=1.,folded,2.-folded)
+    accepted,calls,early = 0,0,0
+    for i in range(len(points)):
+        distance,cost = rm._evaluation(evaluate(proposed[i],threshold),threshold)
+        calls += cost
+        if distance is None: early += 1
+        elif distance <= threshold:
+            points[i],distances[i] = proposed[i],distance
+            accepted += 1
+    COUNTERS['local_attempts'] = COUNTERS.get('local_attempts',0)+len(points)
+    COUNTERS['local_accepted'] = COUNTERS.get('local_accepted',0)+accepted
+    return points,distances,np.array(ancestors,copy=True),{
+        'attempts':len(points),'evaluated':len(points),
+        'mh_rejected_without_evaluation':0,'early_rejected':early,
+        'accepted_moves':accepted,'simulator_dose_calls':calls}
+
+rm.local_scales = gap_scales
+results=[]
+for name,move in [('mixed_gap32',mixed_move),('staged_gap32',staged_move)]:
+    rm.independent_move = move
+    for seed in SEEDS:
+        STAGE=0
+        FROZEN_GLOBAL=None
+        COUNTERS.clear()
+        result=sv.run_positive('separated_boxes',seed,plan=GAP_PLAN)
+        result['development_config']=name
+        result['development_only']=True
+        result['move_counters']=dict(COUNTERS)
+        result['final_island_mode_counts']=[
+            {mode:int(mask.sum()) for mode,mask in sv.membership(i['final_points'],'separated_boxes').items()}
+            for i in result['pilot']['islands']]
+        results.append(result)
+        (OUT/'followup_results.json').write_text(json.dumps({
+            'seeds':SEEDS,'configs':['mixed_gap32','staged_gap32'],
+            'gap_rule':'max32 unique including center; first adjacent positive standardized Euclidean distance ratio>3 cuts before jump; singleton .04 widths; scale1.5 floor.005 cap.5',
+            'staged':'2 local sweeps sharedstep fixed from prelocal proposal; refit; 2 independent sweeps with fixed new proposal',
+            'source_hashes':sv.source_hashes(),'results':results},indent=2,allow_nan=False)+'\n')
+        a=result['assessment']
+        print(json.dumps({'config':name,'seed':seed,'passed':a['passed'],
+            'importance':a['importance'],'mode_masses':a['mode_masses'],
+            'relative_mass_error':a['relative_mass_error'],
+            'usual_checks':a['usual_checks'],'truth_checks':a['truth_checks'],
+            'island_modes':result['final_island_mode_counts'],'moves':result['move_counters']}),flush=True)
+rm.independent_move=ORIGINAL_MOVE
+rm.local_scales=ORIGINAL_SCALES

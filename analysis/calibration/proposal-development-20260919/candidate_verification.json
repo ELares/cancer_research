@@ -1,0 +1,32 @@
+{
+  "development_only": true,
+  "candidate_source_sha256": "f72544eeda13f66a10f820970282fac1a866c91c7ff74c8ac1cf5dcfa605fb1f",
+  "candidate_source_path": "scripts/resample_move_local.py",
+  "checks": [
+    {
+      "seed": 2026092301,
+      "pilot_exact": true,
+      "island_history_original_fields_exact": true,
+      "proposal_exact": true,
+      "production_points_ids_density_exact": true,
+      "assessment_exact": true
+    },
+    {
+      "seed": 2026092302,
+      "pilot_exact": true,
+      "island_history_original_fields_exact": true,
+      "proposal_exact": true,
+      "production_points_ids_density_exact": true,
+      "assessment_exact": true
+    },
+    {
+      "seed": 2026092303,
+      "pilot_exact": true,
+      "island_history_original_fields_exact": true,
+      "proposal_exact": true,
+      "production_points_ids_density_exact": true,
+      "assessment_exact": true
+    }
+  ],
+  "method": "Fresh interpreter; direct candidate import; no scratch monkeypatches imported or installed."
+}

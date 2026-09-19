@@ -1,0 +1,36 @@
+"""Small mathematical checks of scratch-only additions, not study validation."""
+import pathlib
+import numpy as np
+from scipy.stats import norm
+base=pathlib.Path(__file__).parent
+exec((base/'run_followup.py').read_text().split('\nrm.local_scales = gap_scales')[0])
+
+# The reflected constant-scale kernel is symmetric. Image sums converge well
+# inside this declared step range; no particle-dependent widths are used.
+for sigma in [.0025,.04,.25]:
+    for x,y in [(0.,.02),(.03,.2),(.9,1.),(.4,.6)]:
+        k=np.arange(-10,11)
+        def density(y,x):
+            return np.sum(norm.pdf(y-x+2*k,scale=sigma)+norm.pdf(y+x+2*k,scale=sigma))
+        np.testing.assert_allclose(density(y,x),density(x,y),rtol=1e-12,atol=1e-14)
+
+# Two minority centers must not borrow distant majority neighbors. Duplicate
+# particles retain their mixture mass but cannot create fake zero widths.
+rng=np.random.default_rng(2026092399)
+small=np.array([[.1]*7,[.12]*7])
+large=rng.uniform(.65,.85,size=(40,7))
+cloud=np.concatenate([small,large,small[:1]])
+scales=gap_scales(cloud,GAP_PLAN)
+np.testing.assert_allclose(scales[[0,1,-1]],.015,atol=1e-14,rtol=1e-12)
+np.testing.assert_array_equal(gap_scales(np.array([[.3]*7]),GAP_PLAN),np.full((1,7),.04))
+
+# Constant-width reflected proposals with hard-target rejection preserve a
+# conditional uniform moment, checked on an analytic initialization.
+x=rng.uniform(0,.25,size=(100000,7))
+z=np.mod(x+rng.normal(size=x.shape)*.04,2.)
+y=np.where(z<=1,z,2-z)
+accept=np.all(y<=.25,axis=1)
+final=np.where(accept[:,None],y,x)
+np.testing.assert_allclose(final.mean(axis=0),.125,atol=.001)
+np.testing.assert_allclose((final**2).mean(axis=0),.25**2/3,atol=.0004)
+print('4 scratch checks passed: reflected symmetry, minority gap widths, singleton fallback, conditional-uniform moments')

@@ -310,6 +310,13 @@ ESS values were 1.0, 3.6, and 4.0. All per-run adequacy screens failed, along
 with parameter-quantile and held-out-error stability. These archived diagnostic
 results do not resolve joint inference or alter any calibration tier. A failed
 sampler does not establish an empty target or a biological model defect.
+The next bounded resample/move proposal failed its
+[synthetic coverage prerequisite](../../analysis/calibration/proposal-synthetic-validation.md):
+all three separated-region runs failed, including one with ESS 1,101 that
+missed a quarter of the target mass. The three boundary-slab runs passed.
+No biological run was performed under that design; its
+[diagnosis](../../docs/JOINT_RESAMPLE_FAILURE.md) motivates a separately recorded
+revision and does not change the calibration status.
 Independent raw-replicate validation also remains pending; the
 [external assay acquisition review](../../docs/INDEPENDENT_ASSAY_CANDIDATE.md)
 documents candidate observations and the missing metadata and endpoint mapping.

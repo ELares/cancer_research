@@ -336,7 +336,7 @@ def test_every_planned_independent_run_and_pilot_must_pass(case):
 def report_files(tmp_path, monkeypatch, target, settings, models):
     monkeypatch.setattr(driver, "PLAN", settings)
     monkeypatch.setattr(driver, "OUT", tmp_path)
-    prerequisite = {"artifact": "proposal-synthetic-validation.json", "sha256": "fixture-study",
+    prerequisite = {"artifact": "proposal-synthetic-validation-v2.json", "sha256": "fixture-study",
                     "source_hashes": {"validator": "fixture-source"}, "passed": True}
     monkeypatch.setattr(driver, "verify_synthetic_study", lambda: copy.deepcopy(prerequisite))
     for seed in driver.SEEDS:
@@ -406,13 +406,13 @@ def test_report_rejects_changed_historical_target_or_uniform_baseline(report_fil
 @pytest.mark.parametrize("condition", ["missing", "failed", "different_plan"])
 def test_prerequisite_blocks_cli_before_biological_runtime_or_target_loading(
         tmp_path, monkeypatch, condition):
-    import proposal_synthetic_validation as synthetic
+    import proposal_synthetic_validation_v2 as synthetic
 
     monkeypatch.setattr(driver, "OUT", tmp_path)
     monkeypatch.setattr(sys, "argv", ["abc_joint_resample.py", "--seed", str(driver.SEEDS[0]),
                                       "--output-dir", str(tmp_path / "out")])
     if condition != "missing":
-        (tmp_path / "proposal-synthetic-validation.json").write_text('{"fixture": true}')
+        (tmp_path / "proposal-synthetic-validation-v2.json").write_text('{"fixture": true}')
         pilot_plan = copy.deepcopy(driver.PLAN["pilot"])
         if condition == "different_plan":
             pilot_plan["levels"] += 1
@@ -431,11 +431,11 @@ def test_prerequisite_blocks_cli_before_biological_runtime_or_target_loading(
 
 
 def test_verified_prerequisite_records_hash_of_the_exact_validated_bytes(tmp_path, monkeypatch):
-    import proposal_synthetic_validation as synthetic
+    import proposal_synthetic_validation_v2 as synthetic
 
     monkeypatch.setattr(driver, "OUT", tmp_path)
     raw = b'{"fixture": "study"}\n'
-    (tmp_path / "proposal-synthetic-validation.json").write_bytes(raw)
+    (tmp_path / "proposal-synthetic-validation-v2.json").write_bytes(raw)
     seen = []
 
     def assemble(payload):
