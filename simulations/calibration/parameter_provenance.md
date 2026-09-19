@@ -217,7 +217,7 @@ while a second reading sat in a binary. The audit now scans `sim-*/src` too.
 
 | reading | source | minutes/step | 180 steps |
 |---|---|--:|--:|
-| explicit declaration | `tumor_pk.rs:354` -- "Time points in minutes (one per simulation step)." | **1.0** | 3.0 h |
+| explicit declaration | `tumor_pk.rs:365` -- "Time points in minutes (one per simulation step)." | **1.0** | 3.0 h |
 | implied window | `sim-tme/src/main.rs:14` -- "resident T cell phase (0-48h)"; `sim-tme/README.md:138` -- "the resident T cell phase (0-48h)"; `sim-tme-3d/README.md:157` -- "a 0–48 h resident T-cell cascade". Each crate declares `const N_STEPS: u32 = 180` in its own `main.rs`. | **16.0** | 48 h |
 
 The two are different KINDS of claim. `tumor_pk` declares a clock; the immune

@@ -928,8 +928,7 @@ def test_adding_workers_does_not_raise_the_request_rate(monkeypatch):
 
 
 def test_the_rate_limiter_spaces_requests_from_every_worker(monkeypatch):
-    """Gated on request STARTS, so the rate is the same whatever the latency
-    does -- workers overlap their waiting, not their requests."""
+    """Admissions are spaced across workers; admitted requests may overlap."""
     import time as _t
 
     lim = fx._RateLimit(0.05)
@@ -954,6 +953,43 @@ def test_a_zero_interval_limiter_does_not_deadlock():
     lim = fx._RateLimit(0)
     for _ in range(5):
         lim.wait()
+
+
+def test_a_delayed_wakeup_does_not_accumulate_request_credit(monkeypatch):
+    """A scheduler pause must not turn expired reservations into a burst."""
+    from types import SimpleNamespace
+
+    clock = {"now": 0.0}
+
+    def sleep(delay):
+        clock["now"] += delay + 0.2  # the scheduler wakes us up late
+
+    monkeypatch.setattr(fx, "time", SimpleNamespace(
+        monotonic=lambda: clock["now"], sleep=sleep))
+    limiter = fx._RateLimit(0.05)
+    starts = []
+    for _ in range(3):
+        limiter.wait()
+        starts.append(clock["now"])
+    assert all(b - a >= 0.05 for a, b in zip(starts, starts[1:])), starts
+
+
+def test_an_early_wakeup_does_not_release_a_request_early(monkeypatch):
+    """The monotonic deadline, rather than sleep's return, grants a slot."""
+    from types import SimpleNamespace
+
+    clock = {"now": 0.0, "sleeps": 0}
+
+    def sleep(delay):
+        clock["sleeps"] += 1
+        clock["now"] += delay / 2 if clock["sleeps"] == 1 else delay
+
+    monkeypatch.setattr(fx, "time", SimpleNamespace(
+        monotonic=lambda: clock["now"], sleep=sleep))
+    limiter = fx._RateLimit(0.05)
+    limiter.wait()
+    limiter.wait()
+    assert clock["now"] >= 0.05
 
 
 def test_a_briefly_unavailable_search_page_is_retried_not_fatal(monkeypatch):

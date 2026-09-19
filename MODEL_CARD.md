@@ -3,7 +3,7 @@
 A concise intended-use and limitations summary for the simulation suite in
 this repository. It consolidates the per-layer accounting in
 [`simulations/calibration/CALIBRATION_STATUS.md`](simulations/calibration/CALIBRATION_STATUS.md)
-and the manuscript honesty section (`article/drafts/v1.md` Section 8.4) into the
+and the manuscript honesty section (`article/drafts/v1.md` Section 9.4) into the
 structured "model card" format used in computational biology, with an explicit
 assumptions/scope checklist (ARRIVE-style for the in-silico experiments,
 TRIPOD-style for any predictive framing, adapting the TRIPOD-AI checklist even
@@ -25,7 +25,7 @@ predictor. Breadth of coverage is not evidence of depth.**
 | Author | Ezequiel Lares |
 | License | MIT |
 | Language | Rust (core + binaries), Python bindings (PyO3), C FFI (PhysiCell-style ABI) |
-| Type | Mechanistic, stochastic (Monte Carlo) single-cell ferroptosis ODE engine + 2D/3D spatial tumor-microenvironment layers + nine selectable treatment arms (ferroptosis induction, PDT, SDT, radiation, checkpoint blockade, adoptive cell therapy, oncolytic virus, ablation, ADC). NOT a statistical / machine-learning predictor. |
+| Type | Mechanistic, stochastic (Monte Carlo) single-cell ferroptosis ODE engine + 2D/3D spatial tumor-microenvironment layers + 10 selectable treatment arms plus an untreated control (ferroptosis induction, PDT, SDT, radiation, checkpoint blockade, adoptive cell therapy, oncolytic virus, ablation, chemotherapy, ADC). NOT a statistical / machine-learning predictor. |
 | What it is NOT | Not a trained model, not fit to a patient dataset, not a clinical decision tool, not a validated biomarker. |
 
 ## 2. Intended use
@@ -39,11 +39,16 @@ test whether it is internally consistent and what direction and rough magnitude
 the model produces, so the claim can be turned into a falsifiable wet-lab
 experiment.
 
-**The nine arms are not equally developed, and the difference matters more than
-the count.** The ferroptosis and physical-ROS work carries the calibrated legs
-and every number the manuscript reports; the arms added later are roughly 11 to
-13 times smaller by line count, and each is recorded in
-`simulations/calibration/CALIBRATION_STATUS.md` as feeding no number in the manuscript's QUANTITATIVE chapters (Chapter 6 does report these arms' own figures, which is a different thing).
+**The arms are not equally developed, and the difference matters more than
+the count.** The ferroptosis and physical-ROS work carries the anchored legs
+and the legacy quantitative results in Chapters 5, 7 and 8. The committed
+[`modality-module-depth` analysis](analysis/modality-module-depth.md) counts the
+modality modules together at 1,562 production lines, against an engine 2.4 to 3.0
+times larger depending on how shared machinery is assigned. That is an aggregate
+code-size comparison, not a calibration or quality score for an individual arm.
+Chapter 6 separately reports the newer arms' comparisons and limitations; their
+per-layer evidence status belongs to
+[`CALIBRATION_STATUS.md`](simulations/calibration/CALIBRATION_STATUS.md).
 Use a newer arm to ask whether a mechanism's DIRECTION is internally
 consistent. Do not read a magnitude off one.
 
@@ -63,7 +68,7 @@ context to read the caveats. Every quantitative output should be read alongside
 Do **NOT** use this model for, or cite it as evidence of, any of the following:
 
 - **Patient-specific or clinical decisions.** No part of this is calibrated to or validated against patient data.
-- **Precise quantitative predictions.** The specific numbers in the manuscript (1.99x Bliss synergy, 53% pH-driven reduction, 104:1 immune ratio, depth-kill percentages) are explicitly order-of-magnitude estimates from the 2D engine with estimated parameters; they are predictions to test, not measurements.
+- **Precise quantitative predictions.** The specific numbers in the manuscript (1.99x observed-to-Bliss ratio, 53% pH-driven reduction, 104:1 total immune-kill ratio, depth-kill percentages) are explicitly order-of-magnitude estimates from the 2D engine with estimated parameters; they are predictions to test, not measurements.
 - **Dosing, scheduling, or safety guidance.**
 - **Absence claims about biology.** The model not producing an effect is not evidence the effect does not exist; the model only includes the mechanisms that were coded.
 - **Any uncalibrated 3D realism layer as a quantitative result.** The 3D `sim-tme-3d` layers (vasculature, slab, spheroid, clonal, persister + locking, suppressor, multi-checkpoint, contact, nutrient, senescence, dynamic iron, immunosuppressive ferroptosis, ...) are off-by-default, uncalibrated, and deliberately excluded from every quantitative claim in the manuscript.
@@ -88,7 +93,7 @@ A single-cell ferroptosis ODE engine (`biochem`): `total_ros = basal_ros + exoge
 
 ### 6.2 In-silico experiment reporting (ARRIVE-style)
 
-- [x] **Objective stated** per experiment (manuscript Chapters 6-7; each has a falsification criterion in Chapter 9).
+- [x] **Objective stated** per experiment (manuscript Chapters 6-8; proposed experiments are organized in Chapter 10 and registered in `PREREGISTRATION.md`).
 - [x] **Model + parameters documented**: `parameter_provenance.md` (per-parameter, with `Grounded?` column) and source code (authoritative for defaults).
 - [x] **Randomization / seeds**: fixed, documented seeds; runs reproducible.
 - [x] **Replication / reproducibility**: pinned Rust toolchain (`simulations/rust-toolchain.toml`, 1.96.0) and Python lockfile; CI re-runs the suite and a production byte-identity SHA.
@@ -99,7 +104,7 @@ A single-cell ferroptosis ODE engine (`biochem`): `total_ros = basal_ros + exoge
 - [x] **Intended use and population**: in-silico mechanistic exploration, NOT a patient-outcome model. No human-subjects predictors or outcomes.
 - [x] **Predictors / outcome**: biochemistry parameters -> simulated cell death; not a fitted risk score.
 - [x] **Validation status**: see Section 7. There is **no external clinical validation**; the model is not a clinical prediction model and should not be reported as one.
-- [x] **Limitations stated**: Section 3 (out-of-scope) and the manuscript Section 8.4.
+- [x] **Limitations stated**: Section 3 (out-of-scope) and the manuscript Section 9.4.
 
 ## 7. Calibration and validation status
 
@@ -147,7 +152,7 @@ uncalibrated layers feed the manuscript's quantitative claims.
 
 - **Magnitudes are not trustworthy.** Read direction and order of magnitude only.
 - **The hypoxia / SDT leg is contested.** SDT is modeled as oxygen-independent (optimistic upper bound); the lead clinical agent is oxygen-dependent. An off-by-default oxygen-dependent SDT mode and a dynamic-iron hypoxia coupling exist to test the reverse, but the magnitude of the SDT-vs-RSL3 hypoxia gap is unresolved.
-- **The immune-coupling ratio is geometry-sensitive** (104:1 in 2D shrinks to roughly 4:1 in 3D), and the net sign can flip once the off-by-default immunosuppressive-ferroptosis arm is enabled.
+- **The total immune-kill ratio is geometry-sensitive** (104:1 in 2D shrinks to roughly 4:1 in 3D), and the net sign can flip once the off-by-default immunosuppressive-ferroptosis arm is enabled. Those counts do not establish a DAMP or DC-maturation ratio per dead cell; the historical P5 readout label is corrected in manuscript Section 8.2.
 - **Several directions are genuinely contested in the literature** and the model encodes them as configurable/bidirectional rather than single-signed (e.g. ether-lipid plasmalogen sub-step, nutrient stress, and senescence, which is a senolytic target under direct GPX4 inhibition but resistant to upstream triggers).
 - **Corpus limitations:** open-access skew, missing landmark full text, taxonomy-dependent gap counts, 55% tagger recall.
 

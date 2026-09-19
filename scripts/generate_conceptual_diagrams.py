@@ -221,7 +221,7 @@ def fig19_immune():
 
     dot = graphviz.Digraph("immune", format="pdf")
     dot.attr(rankdir="LR", bgcolor="white", fontname="Helvetica",
-             label="Immune Coupling: Kill density determines DAMP-mediated immune activation",
+             label="Modeled immune coupling: DAMP-mediated immune activation",
              labelloc="t", fontsize="13", fontcolor="black", nodesep="0.6", ranksep="0.5")
     dot.attr("node", fontname="Helvetica", fontsize="9", style="filled,rounded",
              shape="box", penwidth="1.5")
@@ -230,7 +230,10 @@ def fig19_immune():
     # SDT path (orange) — top row
     sdt_attr = dict(fillcolor="#FFE0B2", color="#FF8C00")
     dot.node("s1", "SDT kills\n~140K cells", **sdt_attr, fontsize="10")
-    dot.node("s2", "High LP overshoot\n(LP~20)", **sdt_attr)
+    # DAMP release uses LP at the end of the post-death grace period. The
+    # reported output does not establish a treatment-specific mean LP per
+    # dead cell, so both paths show that rule without assigning one.
+    dot.node("s2", "Post-death LP\nsets DAMP signal", **sdt_attr)
     dot.node("s3", "Dense\nDAMP field", **sdt_attr)
     dot.node("s4", "Strong DC\nactivation", **sdt_attr)
     dot.node("s5", "521 immune\nkills", **sdt_attr, fontsize="10")
@@ -243,7 +246,7 @@ def fig19_immune():
     # RSL3 path (purple) — bottom row
     rsl3_attr = dict(fillcolor="#D1C4E9", color="#6A5ACD")
     dot.node("r1", "RSL3 kills\n~163 cells", **rsl3_attr, fontsize="10")
-    dot.node("r2", "Low LP overshoot\n(LP~7.8)", **rsl3_attr)
+    dot.node("r2", "Post-death LP\nsets DAMP signal", **rsl3_attr)
     dot.node("r3", "Sparse\nDAMP field", **rsl3_attr)
     dot.node("r4", "Minimal DC\nactivation", **rsl3_attr)
     dot.node("r5", "5 immune\nkills", **rsl3_attr, fontsize="10")
@@ -261,7 +264,7 @@ def fig19_immune():
             sub.node(r_node)
 
     # Ratio label between the two paths
-    dot.node("ratio", "104:1\nimmune kill ratio",
+    dot.node("ratio", "104:1\ntotal immune kill ratio",
              shape="box", style="filled,rounded,bold", fillcolor="white",
              color="#FF4500", fontcolor="#FF4500", fontsize="11", penwidth="2")
 

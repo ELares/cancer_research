@@ -47,6 +47,8 @@ import json
 import re
 from pathlib import Path
 
+import pytest
+
 REPO_ROOT = Path(__file__).resolve().parent.parent
 SCRIPT = REPO_ROOT / "scripts" / "engine_time_audit.py"
 MD = REPO_ROOT / "analysis" / "engine-time-audit.md"
@@ -120,6 +122,60 @@ def test_doc_comment_runs_are_joined_before_matching():
                for t in joined), (
         "consecutive doc-comment lines are no longer joined, so a declaration "
         "split across two lines is invisible -- the second half of the bug")
+
+
+def test_pricing_symbol_follows_long_documentation_to_its_declaration(tmp_path, monkeypatch):
+    """Adding API documentation must not erase a real time-bound function."""
+    m = _mod()
+    source = tmp_path / "pk.rs"
+    source.write_text(
+        "/// One step is 1 minute.\n"
+        + "/// Numerical method and assumptions.\n" * 40
+        + "#[must_use]\npub fn solve_pk() {}\n"
+    )
+    monkeypatch.setattr(m, "_path_for", lambda _: source)
+    assert m._pricing_symbols("pk.rs", [1]) == ["solve_pk"]
+
+
+@pytest.mark.parametrize("decoration", [
+    '#[cfg_attr(\n    feature = "profiling",\n    inline(never)\n)]\n',
+    '#[example(\n    values = [1, [2, 3]],\n)]\n',
+    r'''#[doc = "Brackets ] [ and escaped quote \" // /*"]''' + "\n",
+    '/* Outer comment\n /* nested comment */\n brackets ] [ */\n'
+    '#[doc = r##"Unmatched ] and a quote \"# /* //"##]\n',
+    '''#[example(chars = ['[', ']', '"'])]\n''',
+    '#[example(\n    /* ] /* nested [ */ ] */\n    [1, 2] // ] [\n)]\n',
+    '#[must_use] #[inline] /* adjacent comment */ ',
+    '/* Numerical method\n and assumptions. */ ',
+], ids=["multiline", "nested-brackets", "escaped-string", "raw-string",
+        "char-literals", "comments-in-attribute", "same-line-attributes",
+        "block-comment"])
+def test_pricing_symbol_follows_complete_attributes_and_comments(
+        tmp_path, monkeypatch, decoration):
+    m = _mod()
+    source = tmp_path / "pk.rs"
+    source.write_text("/// One step is 1 minute.\n" + decoration
+                      + "pub fn solve_pk() {}\n")
+    monkeypatch.setattr(m, "_path_for", lambda _: source)
+    assert m._pricing_symbols("pk.rs", [1]) == ["solve_pk"]
+
+
+@pytest.mark.parametrize("decoration", [
+    "",
+    "/* An unrelated private solver. */ ",
+    '#[cfg_attr(\n    feature = "profiling",\n    inline(never)\n)] ',
+], ids=["bare", "after-comment", "after-attribute"])
+def test_pricing_symbol_does_not_skip_code_to_an_unrelated_public_item(
+        tmp_path, monkeypatch, decoration):
+    m = _mod()
+    source = tmp_path / "pk.rs"
+    source.write_text(
+        "/// One step is 1 minute.\n" + decoration +
+        "fn private_solver() {}\n"
+        "pub fn unrelated() {}\n"
+    )
+    monkeypatch.setattr(m, "_path_for", lambda _: source)
+    assert m._pricing_symbols("pk.rs", [1]) == []
 
 
 def test_the_headline_can_say_the_opposite():

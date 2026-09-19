@@ -21,15 +21,23 @@ how broad each descriptor is. And it does not report a co-occurrence RATE, for
 the reason Section 3.13 sets out: that rate is a property of the labelling
 instrument rather than of how often researchers combine mechanisms. Partner
 ORDERINGS are stable under both instruments and are what is reported.
+
+The raw census is not committed. Set FERRO_ATLAS_ROOT when it lives outside
+corpus/atlas/, or use --render-only to regenerate from the committed counts
+without reading raw records. A missing or empty input never replaces a report.
 """
 import argparse
 import gzip
 import json
+import sys
 from collections import Counter, defaultdict
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from atlas_baseline import atlas_root  # noqa: E402
+
 REPO = Path(__file__).resolve().parent.parent
-RECORDS = REPO / "corpus/atlas/records"
+RECORDS = atlas_root() / "records"
 SITE_MAP = REPO / "analysis/site-descriptor-map.tsv"
 MECH_MAP = REPO / "analysis/mesh-mechanism-map.yaml"
 OUT_MD = REPO / "analysis/census-mechanism-profile.md"
@@ -58,6 +66,17 @@ def load_sites() -> dict[str, set[str]]:
 def scan(stride: int = 1) -> dict:
     import yaml
 
+    if stride < 1:
+        raise SystemExit("--stride must be a positive integer")
+    shards = sorted(RECORDS.glob("*.jsonl.gz"))[::stride]
+    missing_data = (
+        f"No census records found at {RECORDS}; existing reports were not changed. "
+        "Set FERRO_ATLAS_ROOT to the census data root, or use --render-only "
+        "to regenerate from the committed counts."
+    )
+    if not shards:
+        raise SystemExit(missing_data)
+
     mp = yaml.safe_load(MECH_MAP.read_text(encoding="utf-8"))["mechanisms"]
     mech = {k: {x.lower() for x in v["descriptors"]} for k, v in mp.items()}
     sites = load_sites()
@@ -69,7 +88,7 @@ def scan(stride: int = 1) -> dict:
     partners: dict[str, Counter] = defaultdict(Counter)
     site_tot: Counter = Counter()
     n = 0
-    for f in sorted(RECORDS.glob("*.jsonl.gz"))[::stride]:
+    for f in shards:
         with gzip.open(f, "rt", encoding="utf-8") as fh:
             for line in fh:
                 r = json.loads(line)
@@ -96,6 +115,8 @@ def scan(stride: int = 1) -> dict:
                     for other in hits:
                         if other != k:
                             partners[k][other] += 1
+    if not n:
+        raise SystemExit(missing_data)
     return {
         "census": n,
         "site_totals": dict(site_tot),

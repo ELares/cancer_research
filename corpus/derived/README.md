@@ -4,18 +4,22 @@ This directory holds **re-derivations of the frozen corpus**: the same PMIDs,
 re-tagged by a newer method, kept separate so the frozen snapshot stays
 reproducible.
 
-It is the third of three corpus surfaces. The separation is load-bearing.
+These layers retain the original 4,830-article retrieval for method comparisons.
+The current manuscript's literature counts and figures come from the cancer
+census, described in [`analysis/atlas-README.md`](../../analysis/atlas-README.md),
+with each analysis declaring which census streams it reads. The frozen retrieval
+and its derived layers do not replace that census denominator.
 
-| | Frozen manuscript corpus | Living review | Derived layers |
+| | Frozen retrieval | Living review | Derived layers |
 |---|---|---|---|
 | Location | `corpus/by-pmid/`, `corpus/abstracts/by-pmid/`, `corpus/INDEX.jsonl` | `corpus/living/<date>/` | `corpus/derived/<layer>/` |
-| Contains | the snapshot every manuscript number is computed from | NEW records found after the freeze | the SAME records, re-tagged by a newer method |
-| Mutability | **immutable** | append-only dated increments | regenerated in place from the frozen corpus |
+| Contains | the original retrieval used for historical results and method comparisons | records absent from the frozen retrieval, found in recent query windows | the SAME records, re-tagged by a newer method |
+| Mutability | **immutable** | dated increments | regenerated in place from the frozen corpus |
 | Produced by | the one-time corpus build | `scripts/living_review_update.py` | a named build script per layer |
 
 A derived layer never writes to `corpus/INDEX.jsonl`, `corpus/by-pmid/` or
-`tags/`. Anything that must reproduce a manuscript number reads the frozen
-index; anything that wants the better estimate joins a derived layer on `pmid`.
+`tags/`. Reproducing the original retrieval-based results requires the frozen
+index; evaluating the newer tagger joins a derived layer on `pmid`.
 
 ## Layers
 

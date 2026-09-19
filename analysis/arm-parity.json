@@ -8,12 +8,12 @@
    "census": null,
    "trials": null,
    "modules": 26,
-   "code_lines": 3805,
+   "code_lines": 3817,
    "pub_fns": 182,
-   "rust_tests": 263,
+   "rust_tests": 268,
    "calibration": null,
    "spatial": "by default",
-   "book_words": 5249,
+   "book_words": 5294,
    "book_sections": [
     "Chapter 5: The Ferroptosis Engine"
    ],
@@ -77,9 +77,9 @@
    "book_words_shared": 2288,
    "parity_lines": 0.017,
    "parity_fns": 0.044,
-   "parity_tests": 0.038,
-   "parity_words": 0.218,
-   "lines_short_of_parity": 3742
+   "parity_tests": 0.037,
+   "parity_words": 0.216,
+   "lines_short_of_parity": 3754
   },
   {
    "arm": "PDT",
@@ -111,9 +111,9 @@
    "book_words_shared": 2288,
    "parity_lines": 0.065,
    "parity_fns": 0.049,
-   "parity_tests": 0.224,
-   "parity_words": 0.218,
-   "lines_short_of_parity": 3556
+   "parity_tests": 0.22,
+   "parity_words": 0.216,
+   "lines_short_of_parity": 3568
   },
   {
    "arm": "Radiation",
@@ -145,9 +145,9 @@
    "book_words_shared": 0,
    "parity_lines": 0.069,
    "parity_fns": 0.126,
-   "parity_tests": 0.125,
-   "parity_words": 0.495,
-   "lines_short_of_parity": 3542
+   "parity_tests": 0.123,
+   "parity_words": 0.491,
+   "lines_short_of_parity": 3554
   },
   {
    "arm": "Immunotherapy",
@@ -162,7 +162,7 @@
    "rust_tests": 10,
    "calibration": "INADMISSIBLE",
    "spatial": "as modifier",
-   "book_words": 4279,
+   "book_words": 4406,
    "book_sections": [
     "6.8 Checkpoint Blockade, and What a Ratio Can Constrain",
     "6.19 Checkpoint Blockade, and a Number With No Denominator",
@@ -181,9 +181,9 @@
    "book_words_shared": 0,
    "parity_lines": 0.032,
    "parity_fns": 0.038,
-   "parity_tests": 0.038,
-   "parity_words": 0.815,
-   "lines_short_of_parity": 3683
+   "parity_tests": 0.037,
+   "parity_words": 0.832,
+   "lines_short_of_parity": 3695
   },
   {
    "arm": "AdoptiveCell",
@@ -213,11 +213,11 @@
     "P27"
    ],
    "book_words_shared": 0,
-   "parity_lines": 0.044,
+   "parity_lines": 0.043,
    "parity_fns": 0.071,
-   "parity_tests": 0.061,
-   "parity_words": 0.356,
-   "lines_short_of_parity": 3639
+   "parity_tests": 0.06,
+   "parity_words": 0.353,
+   "lines_short_of_parity": 3651
   },
   {
    "arm": "OncolyticVirus",
@@ -250,9 +250,9 @@
    "book_words_shared": 0,
    "parity_lines": 0.043,
    "parity_fns": 0.06,
-   "parity_tests": 0.053,
-   "parity_words": 0.381,
-   "lines_short_of_parity": 3640
+   "parity_tests": 0.052,
+   "parity_words": 0.378,
+   "lines_short_of_parity": 3652
   },
   {
    "arm": "Ablation",
@@ -284,9 +284,9 @@
    "book_words_shared": 0,
    "parity_lines": 0.034,
    "parity_fns": 0.049,
-   "parity_tests": 0.038,
-   "parity_words": 0.378,
-   "lines_short_of_parity": 3676
+   "parity_tests": 0.037,
+   "parity_words": 0.375,
+   "lines_short_of_parity": 3688
   },
   {
    "arm": "Chemotherapy",
@@ -318,9 +318,9 @@
    "book_words_shared": 0,
    "parity_lines": 0.074,
    "parity_fns": 0.104,
-   "parity_tests": 0.057,
-   "parity_words": 0.437,
-   "lines_short_of_parity": 3523
+   "parity_tests": 0.056,
+   "parity_words": 0.433,
+   "lines_short_of_parity": 3535
   },
   {
    "arm": "AntibodyDrugConjugate",
@@ -354,16 +354,16 @@
    "book_words_shared": 0,
    "parity_lines": 0.032,
    "parity_fns": 0.071,
-   "parity_tests": 0.042,
-   "parity_words": 0.355,
-   "lines_short_of_parity": 3682
+   "parity_tests": 0.041,
+   "parity_words": 0.352,
+   "lines_short_of_parity": 3694
   }
  ],
  "shared_modules": 5,
  "shared_code_lines": 818,
  "shared_pub_fns": 58,
- "manuscript_words_in_sections": 73152,
- "manuscript_words_attributed": 24427,
+ "manuscript_words_in_sections": 73836,
+ "manuscript_words_attributed": 24599,
  "sections_naming_more_than_one_arm": {
   "6.13 Photodynamic and Sonodynamic Therapy, the Two the Project Started With": 2
  },

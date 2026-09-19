@@ -183,13 +183,19 @@ def _already(c, path: Path) -> bool:
     return bool(row and abs(row[0] - st.st_mtime) < 1e-6 and row[1] == st.st_size)
 
 
-def _record(c, path: Path, n: int, bad: int = 0) -> None:
-    st = path.stat()
+def _record(c, path: Path, n: int, bad: int = 0, *, scanned_stat: os.stat_result) -> None:
+    # Use the version we read, even if the producer changes the path between
+    # the final comparison and this insert. Re-statting here would certify
+    # that unread replacement as scanned and hide it from subsequent builds.
     c.execute(
         "INSERT OR REPLACE INTO scanned(path, mtime, size, records, finished, bad) "
         "VALUES (?,?,?,?,?,?)",
-        (str(path), st.st_mtime, st.st_size, n, time.time(), bad),
+        (str(path), scanned_stat.st_mtime, scanned_stat.st_size, n, time.time(), bad),
     )
+
+
+def _file_version(st: os.stat_result) -> tuple:
+    return st.st_dev, st.st_ino, st.st_size, st.st_mtime_ns, st.st_ctime_ns
 
 
 def _add(rows, kind, key, source, ft):
@@ -210,16 +216,27 @@ def _flush(c, rows):
     rows.clear()
 
 
-def scan_jsonl_gz(c, path: Path, source: str, fulltext: bool, verbose=True) -> int:
+def scan_jsonl(c, path: Path, source: str, fulltext: bool, verbose=True) -> int:
+    """Index a JSONL file, optionally gzip-compressed, using the same keys.
+
+    Living-review increments are plain ``index.jsonl`` files, whereas the
+    census and open-access stores are gzipped shards. Both contain record
+    objects; a living increment is metadata, not proof of held full text.
+    """
     if _already(c, path):
         return 0
     rows, n, bad = [], 0, 0
+    opener = gzip.open if path.suffix == ".gz" else open
     try:
-        with gzip.open(path, "rt", encoding="utf-8", errors="replace") as fh:
+        with opener(path, "rt", encoding="utf-8", errors="replace") as fh:
+            scanned_stat = os.fstat(fh.fileno())
             for ln in fh:
                 try:
                     r = json.loads(ln)
-                except Exception:
+                except json.JSONDecodeError:
+                    bad += 1
+                    continue
+                if not isinstance(r, dict):
                     bad += 1
                     continue
                 n += 1
@@ -233,7 +250,18 @@ def scan_jsonl_gz(c, path: Path, source: str, fulltext: bool, verbose=True) -> i
         print(f"  ! unreadable {path.name}: {e}", file=sys.stderr)
         return 0
     _flush(c, rows)
-    _record(c, path, n, bad)
+    try:
+        unchanged = _file_version(path.stat()) == _file_version(scanned_stat)
+    except OSError:
+        unchanged = False
+    if unchanged:
+        _record(c, path, n, bad, scanned_stat=scanned_stat)
+    else:
+        # Living-review output can be replaced while a build is reading it.
+        # Keep identifiers already learned and retry the changed file later.
+        c.execute("DELETE FROM scanned WHERE path=?", (str(path),))
+        print(f"  ! {path.name}: changed during scan; will rescan when present",
+              file=sys.stderr)
     c.commit()
     if bad:
         print(f"  ! {path.name}: {bad} unparseable line(s) skipped", file=sys.stderr)
@@ -241,6 +269,11 @@ def scan_jsonl_gz(c, path: Path, source: str, fulltext: bool, verbose=True) -> i
         print(f"  {source:22s} {path.name[:44]:44s} {n:>8,}"
               + (f"  ({bad} bad)" if bad else ""))
     return n
+
+
+def scan_jsonl_gz(c, path: Path, source: str, fulltext: bool, verbose=True) -> int:
+    """Compatibility entry point for the census and full-text shard scanners."""
+    return scan_jsonl(c, path, source, fulltext, verbose=verbose)
 
 
 def scan_markdown_dir(c, d: Path, source: str, fulltext: bool) -> int:
@@ -285,6 +318,9 @@ def build(include_nas=True) -> dict:
     total += scan_markdown_dir(c, REPO / "corpus" / "abstracts" / "by-pmid", "abstract-archive", False)
     for d in sorted((REPO / "corpus" / "living").glob("*")):
         if d.is_dir():
+            index = d / "index.jsonl"
+            if index.is_file():
+                total += scan_jsonl(c, index, "living-review", fulltext=False)
             total += scan_markdown_dir(c, d, "living-review", False)
     if include_nas:
         shards = NAS_FULLTEXT / "shards"
