@@ -61,6 +61,11 @@ _PATTERN = re.compile(
 
 # module -> (streams it reads, why that set is the right one)
 REGISTRY = {
+    "abc_joint_resample.py": (
+        set(),
+        "The literal records contains simulated proposal attempts in a compressed "
+        "calibration archive, not census documents. This driver reads the CTRPv2 "
+        "CSV and synthetic-validation artifact, and reads no census stream."),
     "abc_joint_importance.py": (
         set(),
         "The literal records names simulated proposal-attempt entries inside "
