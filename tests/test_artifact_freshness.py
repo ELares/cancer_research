@@ -17,7 +17,10 @@ committed `.md` is byte-for-byte what the generator's own `--render-only`
 branch produces -- replicating that branch rather than assuming its shape,
 because two generators turn out not to re-assemble at all. Second, that the
 committed `.json` is what the generator would write, which is how a
-formatting drift was found. Third, and structurally rather than by calling
+formatting drift was found. The two synthetic importance studies permit only
+bounded floating-point differences in recomputed assessment fields across
+platforms; their formatting, raw inputs, decisions and provenance remain exact.
+Third, and structurally rather than by calling
 anything: that a generator owning an `assemble()` actually USES it on the
 render-only path.
 
@@ -66,6 +69,7 @@ import ast
 import importlib
 import inspect
 import json
+import math
 import re
 import sys
 import textwrap
@@ -470,6 +474,56 @@ def test_dump_options_follow_the_expression_written(source, expected, tmp_path, 
     assert _dump_kwargs("fixture") == expected
 
 
+# Linux and macOS BLAS/special-function implementations differ in the last
+# bits when replaying these weighted assessments. Keep the frozen experiments
+# unchanged. This scope does not relax counts, decisions, raw pilots/proposals,
+# source hashes, analytic truth, or any other generator's byte comparison.
+NUMERICAL_REASSEMBLY = frozenset({
+    "proposal_synthetic_validation", "proposal_synthetic_validation_v2",
+})
+
+
+def _assert_reassembled_json(name, produced_text, committed_text):
+    if name not in NUMERICAL_REASSEMBLY:
+        if produced_text != committed_text:
+            raise AssertionError(f"{name}: generated JSON bytes differ from the committed artifact")
+        return
+    produced, committed = json.loads(produced_text), json.loads(committed_text)
+    for label, value, text in (("produced", produced, produced_text),
+                               ("committed", committed, committed_text)):
+        try:
+            canonical = json.dumps(value, **_dump_kwargs(name)) + "\n"
+        except ValueError as exc:
+            raise AssertionError(f"{name}: invalid {label} JSON numbers") from exc
+        if canonical != text:
+            raise AssertionError(f"{name}: {label} JSON formatting differs from its writer")
+
+    def check(actual, expected, path=()):
+        label = name + ": $." + ".".join(map(str, path))
+        if type(actual) is not type(expected):
+            raise AssertionError(f"{label}: JSON value types differ")
+        if isinstance(expected, dict):
+            if actual.keys() != expected.keys():
+                raise AssertionError(f"{label}: JSON keys differ")
+            for key in expected:
+                check(actual[key], expected[key], (*path, key))
+        elif isinstance(expected, list):
+            if len(actual) != len(expected):
+                raise AssertionError(f"{label}: JSON list lengths differ")
+            for index, (left, right) in enumerate(zip(actual, expected)):
+                check(left, right, (*path, index))
+        elif (isinstance(expected, float) and len(path) >= 4 and
+              path[0] in {"positive_runs", "negative_controls"} and
+              isinstance(path[1], int) and path[2] == "assessment"):
+            if (not math.isfinite(actual) or not math.isfinite(expected) or
+                    not math.isclose(actual, expected, rel_tol=1e-12, abs_tol=1e-14)):
+                raise AssertionError(f"{label}: derived float differs ({actual!r} versus {expected!r})")
+        elif json.dumps(actual) != json.dumps(expected):
+            raise AssertionError(f"{label}: exact JSON value differs")
+
+    check(produced, committed)
+
+
 @pytest.mark.parametrize("name", LIVE)
 def test_the_committed_json_is_what_the_generator_writes(name):
     """A committed artifact that differs from its own generator's output makes
@@ -478,9 +532,7 @@ def test_the_committed_json_is_what_the_generator_writes(name):
     mod = importlib.import_module(name)
     committed = mod.OUT_JSON.read_text()
     produced = json.dumps(_reproduce(mod, name), **_dump_kwargs(name)) + "\n"
-    assert produced == committed, (
-        f"analysis/{mod.OUT_JSON.name} does not round-trip through {name}. "
-        f"Regenerate it with `{_remediation(name)}`.")
+    _assert_reassembled_json(name, produced, committed)
 
 
 ASSEMBLERS = [n for n in LIVE if any(g[0] == n and g[2] for g in GENERATORS)]

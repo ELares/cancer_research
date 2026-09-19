@@ -37,3 +37,25 @@ fresh validation seeds. The failed numerical implementation and artifacts stay
 available for offline replay; these fixtures are now development challenges,
 not unseen evidence of general sampling reliability. The scientific target,
 held-out compound and biological adequacy screens remain unchanged.
+
+## Verification across platforms
+
+The archived JSON retains the original experiment's bytes and hashes. Linux
+and macOS can recompute weighted assessments with differences in the last few
+floating-point digits. The freshness checks permit relative error at most
+`1e-12` or absolute error at most `1e-14` only in derived assessment floats;
+inputs, proposals, counts, decisions, provenance and JSON formatting stay exact.
+Markdown reports still match exactly. This also applies to the revised study.
+
+Use the read-only tests for cross-platform verification:
+
+```sh
+python -m pytest tests/test_artifact_freshness.py -k proposal_synthetic_validation
+python -m pytest tests/test_joint_resample_artifacts.py
+```
+
+Running a synthetic study's `--render-only` writer on another platform may
+change those final digits and therefore the JSON's byte hash. Such a rewritten
+file is not the original frozen archive required by downstream provenance
+checks; retain or restore the committed artifact rather than replacing its hash
+with the platform-specific rewrite.
