@@ -61,6 +61,11 @@ _PATTERN = re.compile(
 
 # module -> (streams it reads, why that set is the right one)
 REGISTRY = {
+    "abc_joint_importance.py": (
+        set(),
+        "The literal records names simulated proposal-attempt entries inside "
+        "the compressed calibration archive, not a census directory. This "
+        "sampler reads no census stream; its data targets are the CTRPv2 CSV."),
     "census_input.py": (
         {"records"},
         "Shared reader for analyses of the indexed census. Its default root "

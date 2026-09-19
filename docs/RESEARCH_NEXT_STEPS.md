@@ -66,15 +66,17 @@ not require another simulation mechanism or a larger unmeasured corpus.
 
    **Acquisition candidate checked in September 2026:**
    [Lee et al., Nature Metabolism (2024)](https://www.nature.com/articles/s42255-024-00974-4)
-   provides an accessible [Extended Data Fig. 2 workbook](https://media.springernature.com/original/springer-static/esm/art%3A10.1038%2Fs42255-024-00974-4/MediaObjects/42255_2024_974_MOESM11_ESM.xlsx)
-   with ML210 dose curves and normalized RSL3/erastin replicate values. It is
-   a candidate, not an ingested validation set: dose-curve sheets have two
-   columns per condition while the caption states three replicates, and the
-   dose header says “nmol” rather than concentration. The erastin sheet is a
-   single 6 µM, 72-hour condition. Units, control encoding, replicate identities,
-   and exposure-time compatibility must be resolved before evaluating a fit.
-   The inspected workbook was 20,728 bytes, SHA256
-   `27faf22389ea08063cda6e86d18c9c0c6ef126f83d427b41f64dd87802dee491`.
+   supplies three normalized observations for SK-Hep1 treated with 0.1 µM
+   ML210 for 24 hours, with vehicle and ferrostatin controls. This single-dose
+   endpoint is a bounded candidate; the erastin endpoint uses 6 µM for 72 hours
+   and a different assay. See the [acquisition findings](INDEPENDENT_ASSAY_CANDIDATE.md)
+   for source links, workbook hash and cell ranges, and descriptive summaries.
+   The ML210 curves remain unresolved: both workbook and figure say “nmol”,
+   two columns conflict with the caption's three replicates, and zero-dose
+   control encoding is implicit. Raw readings and experiment identities are
+   unavailable in the reviewed materials. Model-to-assay and exposure-time
+   mappings must be specified before comparison; no validation set has been
+   ingested and independent raw-replicate validation remains pending.
 
 5. **Measure evidence quality before promoting discovery candidates.** Deliver
    a bounded, independently adjudicated census sample with sentence-attributed
