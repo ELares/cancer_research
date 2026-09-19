@@ -6,7 +6,7 @@ increments should make existing claims reproducible and independently testable.
 This order follows the [research review](RESEARCH_REVIEW_2026-09-18.md); it does
 not require another simulation mechanism or a larger unmeasured corpus.
 
-1. **Calibration support is corrected; joint inference remains unresolved.**
+1. **Joint sampling passes its operational screens; biological validation remains pending.**
    The regenerated fits now use one supported cohort per compound, with input
    hashes, grids, and exclusions recorded. The former 100 µM erastin target
    exceeded every recorded maximum. The corrected joint run accepted only
@@ -29,15 +29,24 @@ not require another simulation mechanism or a larger unmeasured corpus.
    the target mass. Its [failure analysis](JOINT_RESAMPLE_FAILURE.md) and
    [replayable study](../analysis/calibration/proposal-synthetic-validation.md)
    are retained; the biological driver rejects this failed prerequisite.
-   **Next deliverable:** repair minority-region exploration and evaluate the
-   revised design under a separately recorded plan before biological production.
-   Do not widen the criterion, pool underpowered runs, or select a favorable
-   seed to fill a quota. Reused synthetic fixtures are development challenges;
-   passing them cannot establish general mode-discovery reliability.
-   **Complete when:** the joint inference meets its documented adequacy and
-   repeated-run screens, or the new design's specific shortfall is reported
-   without posterior claims. Independent validation is a separate requirement
-   below.
+   **Revised sampling experiment completed:** the
+   [separately frozen local-move plan](JOINT_RESAMPLE_LOCAL_PLAN.md) retained all
+   18 development trials, then passed all six prospective synthetic runs before
+   biological production. The [three biological runs](../analysis/calibration/joint-resample-sampling.md)
+   accepted 1,269, 1,323 and 1,236 of 8,192 independent attempts, with ESS 728.4,
+   844.1 and 824.1. All per-run and across-run screens passed; all six islands
+   reached the unchanged tolerance. The largest median span was 2.14% of prior
+   width, the largest tail-quantile span 2.72%, and held-out median-RMSE span
+   0.00262. Every evaluated production curve, weight, decision and cost is
+   archived, and no pooled posterior is published.
+   **Next deliverable:** test coverage on additional geometries selected before
+   seeing their results, and carry a frozen model-to-assay mapping into the
+   independent validation work below. These development fixtures and three
+   agreeing biological runs cannot rule out a shared unseen region. Do not
+   translate operational sampling success into precise-tail or clinical claims.
+   **Complete when:** the new coverage challenges and independent observable
+   have named inputs, fixed error criteria and published outcomes, including
+   failures. The historical underpowered experiments remain separate.
 
 2. **Census input protection is implemented in six analysis entry points.**
    The shared [streaming helper](../scripts/census_input.py) honors

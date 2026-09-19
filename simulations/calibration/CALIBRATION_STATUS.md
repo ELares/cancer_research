@@ -296,7 +296,7 @@ already state. When a target is upgraded to `calibration` in `targets.yaml`
 
 ### Joint inference after dose-support correction
 
-The joint ML162/erastin ABC run is currently **underpowered**: 4 of 40,000 draws
+The historical uniform joint ML162/erastin ABC run remains **underpowered**: 4 of 40,000 draws
 meet the unchanged tolerance, below the minimum of 20. Its prior credible
 interval and ML210 coverage claims are superseded. JSON summaries are retained
 as small-set diagnostics; they do not establish a usable joint posterior.
@@ -317,6 +317,15 @@ missed a quarter of the target mass. The three boundary-slab runs passed.
 No biological run was performed under that design; its
 [diagnosis](../../docs/JOINT_RESAMPLE_FAILURE.md) motivates a separately recorded
 revision and does not change the calibration status.
+The [revised local-move study](../../analysis/calibration/joint-resample-sampling.md)
+subsequently passed all six prospective synthetic checks and every prespecified
+biological sampling screen across three independent runs. Accepted counts were
+1,269 / 1,323 / 1,236 of 8,192, with importance-weight ESS 728.4 / 844.1 / 824.1.
+All six islands reached the same final tolerance; parameter-quantile stability,
+held-out error stability and normalizer agreement passed. This improves sampling
+under the fixed deterministic target. It does not establish complete region
+coverage, precise tails, experimental validity or a new calibration tier. No
+pooled posterior is published; historical results remain unchanged.
 Independent raw-replicate validation also remains pending; the
 [external assay acquisition review](../../docs/INDEPENDENT_ASSAY_CANDIDATE.md)
 documents candidate observations and the missing metadata and endpoint mapping.

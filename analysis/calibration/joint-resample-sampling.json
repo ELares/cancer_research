@@ -1,0 +1,2904 @@
+{
+  "archive_sha256": {
+    "joint-resample-run-2026091911.json.gz": "1a83bb71cba3e53a198df3789ab27c00bf55f9d5e53ce53868b24f6cff708d4a",
+    "joint-resample-run-2026091912.json.gz": "30694296abbf1ce337f5ca319294ac8c8273c9f80c2d684ba74b1c0105ac29f1",
+    "joint-resample-run-2026091913.json.gz": "43880416cce4cce859c24ee81c8feeaf90d16bee23968123e7cf4eaf13331bd7"
+  },
+  "baselines": {
+    "first_importance": {
+      "artifact": "joint-importance-sampling.json",
+      "runs": [
+        {
+          "ess_per_1000_simulator_dose_calls": 0.019267451494190863,
+          "importance": {
+            "assessable": true,
+            "ess": 1.0,
+            "max_normalized_weight": 1.0,
+            "n_accepted": 1,
+            "n_attempts": 8192,
+            "normalizer_estimate": 7.527772266790744e-05,
+            "normalizer_mcse": 7.527772266790744e-05,
+            "normalizer_relative_mcse": 1.0
+          },
+          "seed": 2026091901
+        },
+        {
+          "ess_per_1000_simulator_dose_calls": 0.07006694212141071,
+          "importance": {
+            "assessable": true,
+            "ess": 3.5811214118253014,
+            "max_normalized_weight": 0.37751556806821146,
+            "n_accepted": 4,
+            "n_attempts": 8192,
+            "normalizer_estimate": 0.0003118950154780764,
+            "normalizer_mcse": 0.00016478985591647958,
+            "normalizer_relative_mcse": 0.5283503991363495
+          },
+          "seed": 2026091902
+        },
+        {
+          "ess_per_1000_simulator_dose_calls": 0.079973477749917,
+          "importance": {
+            "assessable": true,
+            "ess": 3.9647651329298856,
+            "max_normalized_weight": 0.28518368630575697,
+            "n_accepted": 4,
+            "n_attempts": 8192,
+            "normalizer_estimate": 0.0004930403447103767,
+            "normalizer_mcse": 0.0002475683454008764,
+            "normalizer_relative_mcse": 0.5021259376781909
+          },
+          "seed": 2026091903
+        }
+      ],
+      "sha256": "ad912db087fbff9a28e488216f9282b2cdfa3aa89cec341e9d4d3c3d07ff4be9"
+    },
+    "uniform": {
+      "accepted": 4,
+      "artifact": "joint-posterior.json",
+      "draws": 40000,
+      "ess_per_1000_sampling_dose_calls": 0.007692307692307693,
+      "sampling_simulator_dose_calls_excluding_overhead": 520000,
+      "sha256": "5fb4218cc42b3e4874e848a1fa015752a6cecca2896bfce24527c62a309c324d",
+      "underpowered": true
+    }
+  },
+  "gates": {
+    "maximum_heldout_rmse_median_span": 0.02,
+    "maximum_median_span_prior_fraction": 0.05,
+    "maximum_normalized_weight": 0.02,
+    "maximum_normalizer_relative_mcse": 0.1,
+    "maximum_tail_span_prior_fraction": 0.1,
+    "minimum_accepted": 20,
+    "minimum_ess": 200.0,
+    "normalizer_combined_mcse_multiplier": 4.0
+  },
+  "plan": {
+    "pilot": {
+      "islands": 2,
+      "kernel_ceiling": 0.5,
+      "kernel_floor": 0.005,
+      "kernel_neighbors": 32,
+      "kernel_scale": 1.5,
+      "levels": 14,
+      "local_probability": 0.5,
+      "local_scale_ceiling": 0.25,
+      "local_scale_floor": 0.0025,
+      "local_scale_multiplier": 0.5,
+      "moves_per_level": 4,
+      "neighbor_gap_ratio": 3.0,
+      "particles_per_island": 256,
+      "retained_fraction": 0.5,
+      "singleton_scale": 0.04,
+      "uniform_weight": 0.2
+    },
+    "production_attempts": 8192
+  },
+  "runs": [
+    {
+      "adequacy": {
+        "checks": {
+          "accepted_count": true,
+          "ess": true,
+          "maximum_weight": true,
+          "normalizer_mcse": true
+        },
+        "passed": true
+      },
+      "all_islands_reached_epsilon": true,
+      "diagnostic_quantiles": {
+        "gpx4_rate": {
+          "cdf_mcse_at_quantiles": [
+            {
+              "cdf": 0.027571041808658013,
+              "mcse": 0.0077999395216497205
+            },
+            {
+              "cdf": 0.5002744668096709,
+              "mcse": 0.0185223376666087
+            },
+            {
+              "cdf": 0.9752594661085061,
+              "mcse": 0.004143857878628122
+            }
+          ],
+          "median": 0.4670043736945082,
+          "q2_5": 0.25451657404786876,
+          "q97_5": 0.5923528379729743
+        },
+        "gsh_scav_efficiency": {
+          "cdf_mcse_at_quantiles": [
+            {
+              "cdf": 0.026393928949017185,
+              "mcse": 0.006122407389421509
+            },
+            {
+              "cdf": 0.5002896706029862,
+              "mcse": 0.018528795454802315
+            },
+            {
+              "cdf": 0.9755513160119691,
+              "mcse": 0.006348703747428651
+            }
+          ],
+          "median": 0.5430157127277004,
+          "q2_5": 0.4251737270122088,
+          "q97_5": 0.6736862620655635
+        },
+        "hill": {
+          "cdf_mcse_at_quantiles": [
+            {
+              "cdf": 0.026029646289940003,
+              "mcse": 0.006177490308027873
+            },
+            {
+              "cdf": 0.5004220259902886,
+              "mcse": 0.018523392726326627
+            },
+            {
+              "cdf": 0.9753913429151138,
+              "mcse": 0.0060833363420600625
+            }
+          ],
+          "median": 4.10717270618154,
+          "q2_5": 1.5475530560959077,
+          "q97_5": 5.945665866439471
+        },
+        "k_erastin": {
+          "cdf_mcse_at_quantiles": [
+            {
+              "cdf": 0.026348487654115793,
+              "mcse": 0.005138716570572621
+            },
+            {
+              "cdf": 0.5003107326856295,
+              "mcse": 0.018528977335472215
+            },
+            {
+              "cdf": 0.9766166929369748,
+              "mcse": 0.005932981110845409
+            }
+          ],
+          "median": 5.438293047637465,
+          "q2_5": 3.1721193368071527,
+          "q97_5": 9.042114098329206
+        },
+        "k_um": {
+          "cdf_mcse_at_quantiles": [
+            {
+              "cdf": 0.025808302798260064,
+              "mcse": 0.005348878572921975
+            },
+            {
+              "cdf": 0.5009775141346082,
+              "mcse": 0.018526289691448938
+            },
+            {
+              "cdf": 0.9789388737187292,
+              "mcse": 0.0058251996671323854
+            }
+          ],
+          "median": 0.36570932284851687,
+          "q2_5": 0.12013983260637799,
+          "q97_5": 0.8011330891910581
+        },
+        "lp_propagation": {
+          "cdf_mcse_at_quantiles": [
+            {
+              "cdf": 0.027190224871144312,
+              "mcse": 0.016178142650355422
+            },
+            {
+              "cdf": 0.5005653170386701,
+              "mcse": 0.018524162452504038
+            },
+            {
+              "cdf": 0.9751919671659145,
+              "mcse": 0.005440483983569671
+            }
+          ],
+          "median": 0.8098775147750749,
+          "q2_5": 0.4360075245326079,
+          "q97_5": 0.9914564553543392
+        },
+        "lp_rate": {
+          "cdf_mcse_at_quantiles": [
+            {
+              "cdf": 0.02879193621054802,
+              "mcse": 0.008755176248219919
+            },
+            {
+              "cdf": 0.5000331746810922,
+              "mcse": 0.018527251383150777
+            },
+            {
+              "cdf": 0.9758305494788175,
+              "mcse": 0.0042155834960569665
+            }
+          ],
+          "median": 0.665032954754307,
+          "q2_5": 0.2991319256974112,
+          "q97_5": 0.9661387416217619
+        }
+      },
+      "ess_per_1000_simulator_dose_calls": 1.710739220454991,
+      "heldout": {
+        "band_median": [
+          0.94,
+          0.9339999999999999,
+          0.9145,
+          0.8240000000000001,
+          0.40449999999999997,
+          0.10899999999999999,
+          0.04200000000000004
+        ],
+        "band_q2_5": [
+          0.903,
+          0.893,
+          0.86,
+          0.694,
+          0.19899999999999995,
+          0.03849999999999998,
+          0.008000000000000007
+        ],
+        "band_q97_5": [
+          0.981,
+          0.979,
+          0.9675,
+          0.9105,
+          0.5785,
+          0.239,
+          0.16449999999999998
+        ],
+        "coverage": "5/7",
+        "rmse_quantiles": [
+          0.031064941962154306,
+          0.0922351149890476,
+          0.16569225485544375
+        ]
+      },
+      "importance": {
+        "assessable": true,
+        "ess": 728.4053882422078,
+        "max_normalized_weight": 0.015820515818887267,
+        "n_accepted": 1269,
+        "n_attempts": 8192,
+        "normalizer_estimate": 0.00025444591583508345,
+        "normalizer_mcse": 8.999418902765032e-06,
+        "normalizer_relative_mcse": 0.03536869072246345
+      },
+      "pilot": [
+        {
+          "first_epsilon_level": 12,
+          "history": [
+            {
+              "accepted_moves": 713,
+              "attempts": 1024,
+              "early_rejected": 1,
+              "evaluated": 980,
+              "global_attempts": 489,
+              "level": 1,
+              "local_accepted_moves": 439,
+              "local_attempts": 535,
+              "median_distance": 0.5656409644053721,
+              "mh_rejected_without_evaluation": 44,
+              "minimum_distance": 0.2633014693360931,
+              "resampled": true,
+              "retained_before_resampling": 129,
+              "simulator_dose_calls": 12733,
+              "threshold": 0.7688681055344591,
+              "unique_ancestors": 113,
+              "unique_particles": 256
+            },
+            {
+              "accepted_moves": 504,
+              "attempts": 1024,
+              "early_rejected": 24,
+              "evaluated": 990,
+              "global_attempts": 514,
+              "level": 2,
+              "local_accepted_moves": 324,
+              "local_attempts": 510,
+              "median_distance": 0.4681338351101327,
+              "mh_rejected_without_evaluation": 34,
+              "minimum_distance": 0.22771912127269828,
+              "resampled": true,
+              "retained_before_resampling": 129,
+              "simulator_dose_calls": 12702,
+              "threshold": 0.5658477373423825,
+              "unique_ancestors": 75,
+              "unique_particles": 254
+            },
+            {
+              "accepted_moves": 376,
+              "attempts": 1024,
+              "early_rejected": 47,
+              "evaluated": 1002,
+              "global_attempts": 507,
+              "level": 3,
+              "local_accepted_moves": 252,
+              "local_attempts": 517,
+              "median_distance": 0.39838988676929454,
+              "mh_rejected_without_evaluation": 22,
+              "minimum_distance": 0.16631773847238154,
+              "resampled": true,
+              "retained_before_resampling": 129,
+              "simulator_dose_calls": 12697,
+              "threshold": 0.4694884779575458,
+              "unique_ancestors": 59,
+              "unique_particles": 247
+            },
+            {
+              "accepted_moves": 292,
+              "attempts": 1024,
+              "early_rejected": 51,
+              "evaluated": 997,
+              "global_attempts": 540,
+              "level": 4,
+              "local_accepted_moves": 195,
+              "local_attempts": 484,
+              "median_distance": 0.35966673480780403,
+              "mh_rejected_without_evaluation": 27,
+              "minimum_distance": 0.16631773847238154,
+              "resampled": true,
+              "retained_before_resampling": 129,
+              "simulator_dose_calls": 12604,
+              "threshold": 0.39839105924661444,
+              "unique_ancestors": 49,
+              "unique_particles": 237
+            },
+            {
+              "accepted_moves": 291,
+              "attempts": 1024,
+              "early_rejected": 53,
+              "evaluated": 980,
+              "global_attempts": 499,
+              "level": 5,
+              "local_accepted_moves": 224,
+              "local_attempts": 525,
+              "median_distance": 0.3274789213739629,
+              "mh_rejected_without_evaluation": 44,
+              "minimum_distance": 0.16631773847238154,
+              "resampled": true,
+              "retained_before_resampling": 130,
+              "simulator_dose_calls": 12369,
+              "threshold": 0.35966673480780403,
+              "unique_ancestors": 40,
+              "unique_particles": 230
+            },
+            {
+              "accepted_moves": 207,
+              "attempts": 1024,
+              "early_rejected": 62,
+              "evaluated": 1001,
+              "global_attempts": 508,
+              "level": 6,
+              "local_accepted_moves": 152,
+              "local_attempts": 516,
+              "median_distance": 0.30241019211073805,
+              "mh_rejected_without_evaluation": 23,
+              "minimum_distance": 0.1505778972742484,
+              "resampled": true,
+              "retained_before_resampling": 130,
+              "simulator_dose_calls": 12579,
+              "threshold": 0.3274789213739629,
+              "unique_ancestors": 32,
+              "unique_particles": 209
+            },
+            {
+              "accepted_moves": 212,
+              "attempts": 1024,
+              "early_rejected": 111,
+              "evaluated": 999,
+              "global_attempts": 543,
+              "level": 7,
+              "local_accepted_moves": 162,
+              "local_attempts": 481,
+              "median_distance": 0.2731692992362198,
+              "mh_rejected_without_evaluation": 25,
+              "minimum_distance": 0.1343052379247842,
+              "resampled": true,
+              "retained_before_resampling": 129,
+              "simulator_dose_calls": 12210,
+              "threshold": 0.3027010046755292,
+              "unique_ancestors": 27,
+              "unique_particles": 211
+            },
+            {
+              "accepted_moves": 189,
+              "attempts": 1024,
+              "early_rejected": 196,
+              "evaluated": 999,
+              "global_attempts": 544,
+              "level": 8,
+              "local_accepted_moves": 145,
+              "local_attempts": 480,
+              "median_distance": 0.24760834951153565,
+              "mh_rejected_without_evaluation": 25,
+              "minimum_distance": 0.11069891113991029,
+              "resampled": true,
+              "retained_before_resampling": 131,
+              "simulator_dose_calls": 11615,
+              "threshold": 0.2731692992362198,
+              "unique_ancestors": 27,
+              "unique_particles": 204
+            },
+            {
+              "accepted_moves": 198,
+              "attempts": 1024,
+              "early_rejected": 231,
+              "evaluated": 1003,
+              "global_attempts": 503,
+              "level": 9,
+              "local_accepted_moves": 151,
+              "local_attempts": 521,
+              "median_distance": 0.22350860290275906,
+              "mh_rejected_without_evaluation": 21,
+              "minimum_distance": 0.0924253338525598,
+              "resampled": true,
+              "retained_before_resampling": 129,
+              "simulator_dose_calls": 11422,
+              "threshold": 0.24787159076109053,
+              "unique_ancestors": 22,
+              "unique_particles": 207
+            },
+            {
+              "accepted_moves": 228,
+              "attempts": 1024,
+              "early_rejected": 254,
+              "evaluated": 999,
+              "global_attempts": 530,
+              "level": 10,
+              "local_accepted_moves": 166,
+              "local_attempts": 494,
+              "median_distance": 0.19447656963977952,
+              "mh_rejected_without_evaluation": 25,
+              "minimum_distance": 0.07797212653622576,
+              "resampled": true,
+              "retained_before_resampling": 129,
+              "simulator_dose_calls": 11209,
+              "threshold": 0.22355690152183555,
+              "unique_ancestors": 21,
+              "unique_particles": 220
+            },
+            {
+              "accepted_moves": 204,
+              "attempts": 1024,
+              "early_rejected": 280,
+              "evaluated": 997,
+              "global_attempts": 509,
+              "level": 11,
+              "local_accepted_moves": 168,
+              "local_attempts": 515,
+              "median_distance": 0.16900678108299372,
+              "mh_rejected_without_evaluation": 27,
+              "minimum_distance": 0.08242497933988145,
+              "resampled": true,
+              "retained_before_resampling": 129,
+              "simulator_dose_calls": 11001,
+              "threshold": 0.19448577634016537,
+              "unique_ancestors": 15,
+              "unique_particles": 213
+            },
+            {
+              "accepted_moves": 213,
+              "attempts": 1024,
+              "early_rejected": 283,
+              "evaluated": 1009,
+              "global_attempts": 513,
+              "level": 12,
+              "local_accepted_moves": 180,
+              "local_attempts": 511,
+              "median_distance": 0.1552047324229881,
+              "mh_rejected_without_evaluation": 15,
+              "minimum_distance": 0.07251459969154561,
+              "resampled": true,
+              "retained_before_resampling": 156,
+              "simulator_dose_calls": 11136,
+              "threshold": 0.17447979628221513,
+              "unique_ancestors": 13,
+              "unique_particles": 213
+            },
+            {
+              "accepted_moves": 231,
+              "attempts": 1024,
+              "early_rejected": 240,
+              "evaluated": 1009,
+              "global_attempts": 507,
+              "level": 13,
+              "local_accepted_moves": 176,
+              "local_attempts": 517,
+              "median_distance": 0.15370360508951927,
+              "mh_rejected_without_evaluation": 15,
+              "minimum_distance": 0.06927633898317048,
+              "resampled": false,
+              "retained_before_resampling": 256,
+              "simulator_dose_calls": 11437,
+              "threshold": 0.17447979628221513,
+              "unique_ancestors": 13,
+              "unique_particles": 239
+            },
+            {
+              "accepted_moves": 248,
+              "attempts": 1024,
+              "early_rejected": 275,
+              "evaluated": 1012,
+              "global_attempts": 531,
+              "level": 14,
+              "local_accepted_moves": 191,
+              "local_attempts": 493,
+              "median_distance": 0.1539273769315686,
+              "mh_rejected_without_evaluation": 12,
+              "minimum_distance": 0.07440528355911175,
+              "resampled": false,
+              "retained_before_resampling": 256,
+              "simulator_dose_calls": 11231,
+              "threshold": 0.17447979628221513,
+              "unique_ancestors": 13,
+              "unique_particles": 248
+            }
+          ],
+          "island": 0
+        },
+        {
+          "first_epsilon_level": 12,
+          "history": [
+            {
+              "accepted_moves": 711,
+              "attempts": 1024,
+              "early_rejected": 0,
+              "evaluated": 976,
+              "global_attempts": 514,
+              "level": 1,
+              "local_accepted_moves": 416,
+              "local_attempts": 510,
+              "median_distance": 0.6073542913734032,
+              "mh_rejected_without_evaluation": 48,
+              "minimum_distance": 0.24403806545228324,
+              "resampled": true,
+              "retained_before_resampling": 129,
+              "simulator_dose_calls": 12688,
+              "threshold": 0.780994825224873,
+              "unique_ancestors": 117,
+              "unique_particles": 256
+            },
+            {
+              "accepted_moves": 555,
+              "attempts": 1024,
+              "early_rejected": 23,
+              "evaluated": 986,
+              "global_attempts": 481,
+              "level": 2,
+              "local_accepted_moves": 353,
+              "local_attempts": 543,
+              "median_distance": 0.5026504420710989,
+              "mh_rejected_without_evaluation": 38,
+              "minimum_distance": 0.27647342536208885,
+              "resampled": true,
+              "retained_before_resampling": 129,
+              "simulator_dose_calls": 12657,
+              "threshold": 0.6087654516853589,
+              "unique_ancestors": 79,
+              "unique_particles": 256
+            },
+            {
+              "accepted_moves": 385,
+              "attempts": 1024,
+              "early_rejected": 26,
+              "evaluated": 984,
+              "global_attempts": 547,
+              "level": 3,
+              "local_accepted_moves": 244,
+              "local_attempts": 477,
+              "median_distance": 0.4274239399701364,
+              "mh_rejected_without_evaluation": 40,
+              "minimum_distance": 0.15607570881193789,
+              "resampled": true,
+              "retained_before_resampling": 129,
+              "simulator_dose_calls": 12610,
+              "threshold": 0.5031197061302616,
+              "unique_ancestors": 66,
+              "unique_particles": 252
+            },
+            {
+              "accepted_moves": 297,
+              "attempts": 1024,
+              "early_rejected": 58,
+              "evaluated": 978,
+              "global_attempts": 518,
+              "level": 4,
+              "local_accepted_moves": 208,
+              "local_attempts": 506,
+              "median_distance": 0.37535083518512646,
+              "mh_rejected_without_evaluation": 46,
+              "minimum_distance": 0.21101437958684338,
+              "resampled": true,
+              "retained_before_resampling": 129,
+              "simulator_dose_calls": 12308,
+              "threshold": 0.42752586943008297,
+              "unique_ancestors": 44,
+              "unique_particles": 242
+            },
+            {
+              "accepted_moves": 271,
+              "attempts": 1024,
+              "early_rejected": 59,
+              "evaluated": 977,
+              "global_attempts": 517,
+              "level": 5,
+              "local_accepted_moves": 208,
+              "local_attempts": 507,
+              "median_distance": 0.33830903157660863,
+              "mh_rejected_without_evaluation": 47,
+              "minimum_distance": 0.1286943127456947,
+              "resampled": true,
+              "retained_before_resampling": 129,
+              "simulator_dose_calls": 12288,
+              "threshold": 0.3754760258549914,
+              "unique_ancestors": 32,
+              "unique_particles": 243
+            },
+            {
+              "accepted_moves": 249,
+              "attempts": 1024,
+              "early_rejected": 60,
+              "evaluated": 984,
+              "global_attempts": 503,
+              "level": 6,
+              "local_accepted_moves": 190,
+              "local_attempts": 521,
+              "median_distance": 0.30942762077830954,
+              "mh_rejected_without_evaluation": 40,
+              "minimum_distance": 0.13916564194873718,
+              "resampled": true,
+              "retained_before_resampling": 129,
+              "simulator_dose_calls": 12372,
+              "threshold": 0.33834909510967387,
+              "unique_ancestors": 31,
+              "unique_particles": 224
+            },
+            {
+              "accepted_moves": 273,
+              "attempts": 1024,
+              "early_rejected": 56,
+              "evaluated": 997,
+              "global_attempts": 497,
+              "level": 7,
+              "local_accepted_moves": 214,
+              "local_attempts": 527,
+              "median_distance": 0.27886823953866524,
+              "mh_rejected_without_evaluation": 27,
+              "minimum_distance": 0.10590957662644135,
+              "resampled": true,
+              "retained_before_resampling": 129,
+              "simulator_dose_calls": 12569,
+              "threshold": 0.30981656983779904,
+              "unique_ancestors": 25,
+              "unique_particles": 225
+            },
+            {
+              "accepted_moves": 214,
+              "attempts": 1024,
+              "early_rejected": 174,
+              "evaluated": 985,
+              "global_attempts": 508,
+              "level": 8,
+              "local_accepted_moves": 169,
+              "local_attempts": 516,
+              "median_distance": 0.2536162866293523,
+              "mh_rejected_without_evaluation": 39,
+              "minimum_distance": 0.10590957662644135,
+              "resampled": true,
+              "retained_before_resampling": 129,
+              "simulator_dose_calls": 11587,
+              "threshold": 0.27907678487117393,
+              "unique_ancestors": 23,
+              "unique_particles": 215
+            },
+            {
+              "accepted_moves": 272,
+              "attempts": 1024,
+              "early_rejected": 181,
+              "evaluated": 989,
+              "global_attempts": 516,
+              "level": 9,
+              "local_accepted_moves": 207,
+              "local_attempts": 508,
+              "median_distance": 0.2210799281464687,
+              "mh_rejected_without_evaluation": 35,
+              "minimum_distance": 0.09676291700336274,
+              "resampled": true,
+              "retained_before_resampling": 129,
+              "simulator_dose_calls": 11590,
+              "threshold": 0.25386645510973127,
+              "unique_ancestors": 22,
+              "unique_particles": 234
+            },
+            {
+              "accepted_moves": 204,
+              "attempts": 1024,
+              "early_rejected": 231,
+              "evaluated": 997,
+              "global_attempts": 514,
+              "level": 10,
+              "local_accepted_moves": 165,
+              "local_attempts": 510,
+              "median_distance": 0.18728781958820123,
+              "mh_rejected_without_evaluation": 27,
+              "minimum_distance": 0.09911494030608105,
+              "resampled": true,
+              "retained_before_resampling": 129,
+              "simulator_dose_calls": 11344,
+              "threshold": 0.2211041028705065,
+              "unique_ancestors": 22,
+              "unique_particles": 213
+            },
+            {
+              "accepted_moves": 214,
+              "attempts": 1024,
+              "early_rejected": 247,
+              "evaluated": 997,
+              "global_attempts": 492,
+              "level": 11,
+              "local_accepted_moves": 170,
+              "local_attempts": 532,
+              "median_distance": 0.16439828073390783,
+              "mh_rejected_without_evaluation": 27,
+              "minimum_distance": 0.060114054615801965,
+              "resampled": true,
+              "retained_before_resampling": 130,
+              "simulator_dose_calls": 11232,
+              "threshold": 0.18758007854122166,
+              "unique_ancestors": 18,
+              "unique_particles": 218
+            },
+            {
+              "accepted_moves": 226,
+              "attempts": 1024,
+              "early_rejected": 276,
+              "evaluated": 997,
+              "global_attempts": 507,
+              "level": 12,
+              "local_accepted_moves": 183,
+              "local_attempts": 517,
+              "median_distance": 0.15100645548545694,
+              "mh_rejected_without_evaluation": 27,
+              "minimum_distance": 0.07277440531565244,
+              "resampled": true,
+              "retained_before_resampling": 176,
+              "simulator_dose_calls": 11029,
+              "threshold": 0.17447979628221513,
+              "unique_ancestors": 18,
+              "unique_particles": 224
+            },
+            {
+              "accepted_moves": 270,
+              "attempts": 1024,
+              "early_rejected": 227,
+              "evaluated": 992,
+              "global_attempts": 541,
+              "level": 13,
+              "local_accepted_moves": 201,
+              "local_attempts": 483,
+              "median_distance": 0.15143213022634114,
+              "mh_rejected_without_evaluation": 32,
+              "minimum_distance": 0.07208331595923716,
+              "resampled": false,
+              "retained_before_resampling": 256,
+              "simulator_dose_calls": 11307,
+              "threshold": 0.17447979628221513,
+              "unique_ancestors": 18,
+              "unique_particles": 253
+            },
+            {
+              "accepted_moves": 249,
+              "attempts": 1024,
+              "early_rejected": 214,
+              "evaluated": 982,
+              "global_attempts": 509,
+              "level": 14,
+              "local_accepted_moves": 192,
+              "local_attempts": 515,
+              "median_distance": 0.1512138455758223,
+              "mh_rejected_without_evaluation": 42,
+              "minimum_distance": 0.07579179169880487,
+              "resampled": false,
+              "retained_before_resampling": 256,
+              "simulator_dose_calls": 11268,
+              "threshold": 0.17447979628221513,
+              "unique_ancestors": 18,
+              "unique_particles": 256
+            }
+          ],
+          "island": 1
+        }
+      ],
+      "pilot_attempts": 29184,
+      "prior_widths": {
+        "gpx4_rate": 0.44999999999999996,
+        "gsh_scav_efficiency": 0.7,
+        "hill": 5.0,
+        "k_erastin": 47.0,
+        "k_um": 3.9,
+        "lp_propagation": 0.95,
+        "lp_rate": 0.97
+      },
+      "production_early_rejections": 3025,
+      "production_outside_prior": 0,
+      "seed": 2026091911,
+      "simulator_dose_calls_including_pilot_reference": 425784,
+      "wall_seconds": 516.5495380004868
+    },
+    {
+      "adequacy": {
+        "checks": {
+          "accepted_count": true,
+          "ess": true,
+          "maximum_weight": true,
+          "normalizer_mcse": true
+        },
+        "passed": true
+      },
+      "all_islands_reached_epsilon": true,
+      "diagnostic_quantiles": {
+        "gpx4_rate": {
+          "cdf_mcse_at_quantiles": [
+            {
+              "cdf": 0.025506333434344455,
+              "mcse": 0.008077899957468639
+            },
+            {
+              "cdf": 0.500046440426779,
+              "mcse": 0.01721062104088522
+            },
+            {
+              "cdf": 0.9754336569627824,
+              "mcse": 0.004405337155147098
+            }
+          ],
+          "median": 0.4753449934284393,
+          "q2_5": 0.2504118330935019,
+          "q97_5": 0.5932154970251029
+        },
+        "gsh_scav_efficiency": {
+          "cdf_mcse_at_quantiles": [
+            {
+              "cdf": 0.02548509622123451,
+              "mcse": 0.007652491521983732
+            },
+            {
+              "cdf": 0.5003099229574921,
+              "mcse": 0.01721076624022924
+            },
+            {
+              "cdf": 0.9753843049552733,
+              "mcse": 0.00555487358461841
+            }
+          ],
+          "median": 0.5464849678802057,
+          "q2_5": 0.42307579565778897,
+          "q97_5": 0.6666005372547305
+        },
+        "hill": {
+          "cdf_mcse_at_quantiles": [
+            {
+              "cdf": 0.025447300668329963,
+              "mcse": 0.005049763616950641
+            },
+            {
+              "cdf": 0.500418759152276,
+              "mcse": 0.01721275133661966
+            },
+            {
+              "cdf": 0.9757851332926832,
+              "mcse": 0.0057972988562464255
+            }
+          ],
+          "median": 4.213931179489297,
+          "q2_5": 1.5462951588410663,
+          "q97_5": 5.874755692322773
+        },
+        "k_erastin": {
+          "cdf_mcse_at_quantiles": [
+            {
+              "cdf": 0.025881934517936668,
+              "mcse": 0.006029652349946253
+            },
+            {
+              "cdf": 0.500517241841322,
+              "mcse": 0.01721270355817669
+            },
+            {
+              "cdf": 0.9760137177296881,
+              "mcse": 0.0060451080767220675
+            }
+          ],
+          "median": 5.5097426865957555,
+          "q2_5": 3.1373596007872955,
+          "q97_5": 9.105862846568183
+        },
+        "k_um": {
+          "cdf_mcse_at_quantiles": [
+            {
+              "cdf": 0.025122434543692125,
+              "mcse": 0.004889704902174033
+            },
+            {
+              "cdf": 0.5008351083377452,
+              "mcse": 0.017214912623683555
+            },
+            {
+              "cdf": 0.9759177832082866,
+              "mcse": 0.007448165309228117
+            }
+          ],
+          "median": 0.3438871245313382,
+          "q2_5": 0.11460488387426004,
+          "q97_5": 0.8303101568039124
+        },
+        "lp_propagation": {
+          "cdf_mcse_at_quantiles": [
+            {
+              "cdf": 0.025374424267900056,
+              "mcse": 0.006799355760512543
+            },
+            {
+              "cdf": 0.5002271941545511,
+              "mcse": 0.017210628693184567
+            },
+            {
+              "cdf": 0.9753632173230684,
+              "mcse": 0.005663838099707714
+            }
+          ],
+          "median": 0.7977985169690894,
+          "q2_5": 0.46173349841501604,
+          "q97_5": 0.9886715505353865
+        },
+        "lp_rate": {
+          "cdf_mcse_at_quantiles": [
+            {
+              "cdf": 0.02626457415970229,
+              "mcse": 0.007900306273134846
+            },
+            {
+              "cdf": 0.5002779876083097,
+              "mcse": 0.01720989806162451
+            },
+            {
+              "cdf": 0.9753215016156644,
+              "mcse": 0.004820578199076839
+            }
+          ],
+          "median": 0.6855564586779884,
+          "q2_5": 0.2830176834082928,
+          "q97_5": 0.9811770156498963
+        }
+      },
+      "ess_per_1000_simulator_dose_calls": 1.9848530742042065,
+      "heldout": {
+        "band_median": [
+          0.94,
+          0.9345,
+          0.915,
+          0.821,
+          0.402,
+          0.11150000000000004,
+          0.04500000000000004
+        ],
+        "band_q2_5": [
+          0.9045,
+          0.896,
+          0.861,
+          0.6855,
+          0.1945,
+          0.038000000000000034,
+          0.007499999999999951
+        ],
+        "band_q97_5": [
+          0.982,
+          0.98,
+          0.9695,
+          0.913,
+          0.595,
+          0.245,
+          0.17500000000000004
+        ],
+        "coverage": "5/7",
+        "rmse_quantiles": [
+          0.031761488318984836,
+          0.0905919086681177,
+          0.167881163970913
+        ]
+      },
+      "importance": {
+        "assessable": true,
+        "ess": 844.0587698053388,
+        "max_normalized_weight": 0.005039198082162521,
+        "n_accepted": 1323,
+        "n_attempts": 8192,
+        "normalizer_estimate": 0.0002510459344190474,
+        "normalizer_mcse": 8.184294027192028e-06,
+        "normalizer_relative_mcse": 0.03260078298472165
+      },
+      "pilot": [
+        {
+          "first_epsilon_level": 12,
+          "history": [
+            {
+              "accepted_moves": 703,
+              "attempts": 1024,
+              "early_rejected": 2,
+              "evaluated": 987,
+              "global_attempts": 538,
+              "level": 1,
+              "local_accepted_moves": 384,
+              "local_attempts": 486,
+              "median_distance": 0.5751967194662548,
+              "mh_rejected_without_evaluation": 37,
+              "minimum_distance": 0.30941951989327765,
+              "resampled": true,
+              "retained_before_resampling": 129,
+              "simulator_dose_calls": 12817,
+              "threshold": 0.7762845285768825,
+              "unique_ancestors": 110,
+              "unique_particles": 256
+            },
+            {
+              "accepted_moves": 508,
+              "attempts": 1024,
+              "early_rejected": 20,
+              "evaluated": 960,
+              "global_attempts": 519,
+              "level": 2,
+              "local_accepted_moves": 328,
+              "local_attempts": 505,
+              "median_distance": 0.4816654010107534,
+              "mh_rejected_without_evaluation": 64,
+              "minimum_distance": 0.16013418682652464,
+              "resampled": true,
+              "retained_before_resampling": 129,
+              "simulator_dose_calls": 12340,
+              "threshold": 0.57522457412001,
+              "unique_ancestors": 72,
+              "unique_particles": 254
+            },
+            {
+              "accepted_moves": 394,
+              "attempts": 1024,
+              "early_rejected": 39,
+              "evaluated": 962,
+              "global_attempts": 495,
+              "level": 3,
+              "local_accepted_moves": 275,
+              "local_attempts": 529,
+              "median_distance": 0.4093255107689344,
+              "mh_rejected_without_evaluation": 62,
+              "minimum_distance": 0.1951419529504723,
+              "resampled": true,
+              "retained_before_resampling": 129,
+              "simulator_dose_calls": 12233,
+              "threshold": 0.48168208909026694,
+              "unique_ancestors": 52,
+              "unique_particles": 245
+            },
+            {
+              "accepted_moves": 308,
+              "attempts": 1024,
+              "early_rejected": 50,
+              "evaluated": 991,
+              "global_attempts": 519,
+              "level": 4,
+              "local_accepted_moves": 206,
+              "local_attempts": 505,
+              "median_distance": 0.3580643814411697,
+              "mh_rejected_without_evaluation": 33,
+              "minimum_distance": 0.16067470098288017,
+              "resampled": true,
+              "retained_before_resampling": 129,
+              "simulator_dose_calls": 12533,
+              "threshold": 0.4098977723369386,
+              "unique_ancestors": 41,
+              "unique_particles": 240
+            },
+            {
+              "accepted_moves": 226,
+              "attempts": 1024,
+              "early_rejected": 60,
+              "evaluated": 987,
+              "global_attempts": 503,
+              "level": 5,
+              "local_accepted_moves": 168,
+              "local_attempts": 521,
+              "median_distance": 0.3307158922079698,
+              "mh_rejected_without_evaluation": 37,
+              "minimum_distance": 0.2292966172276384,
+              "resampled": true,
+              "retained_before_resampling": 129,
+              "simulator_dose_calls": 12411,
+              "threshold": 0.3581704247981104,
+              "unique_ancestors": 30,
+              "unique_particles": 214
+            },
+            {
+              "accepted_moves": 209,
+              "attempts": 1024,
+              "early_rejected": 65,
+              "evaluated": 1003,
+              "global_attempts": 511,
+              "level": 6,
+              "local_accepted_moves": 160,
+              "local_attempts": 513,
+              "median_distance": 0.3051201843471067,
+              "mh_rejected_without_evaluation": 21,
+              "minimum_distance": 0.14452498920684298,
+              "resampled": true,
+              "retained_before_resampling": 129,
+              "simulator_dose_calls": 12584,
+              "threshold": 0.3307302917404991,
+              "unique_ancestors": 24,
+              "unique_particles": 208
+            },
+            {
+              "accepted_moves": 221,
+              "attempts": 1024,
+              "early_rejected": 80,
+              "evaluated": 996,
+              "global_attempts": 511,
+              "level": 7,
+              "local_accepted_moves": 171,
+              "local_attempts": 513,
+              "median_distance": 0.27871604995487675,
+              "mh_rejected_without_evaluation": 28,
+              "minimum_distance": 0.12044506576464303,
+              "resampled": true,
+              "retained_before_resampling": 129,
+              "simulator_dose_calls": 12388,
+              "threshold": 0.3051201843471067,
+              "unique_ancestors": 21,
+              "unique_particles": 224
+            },
+            {
+              "accepted_moves": 199,
+              "attempts": 1024,
+              "early_rejected": 177,
+              "evaluated": 998,
+              "global_attempts": 506,
+              "level": 8,
+              "local_accepted_moves": 164,
+              "local_attempts": 518,
+              "median_distance": 0.25412953941472444,
+              "mh_rejected_without_evaluation": 26,
+              "minimum_distance": 0.0817925955703191,
+              "resampled": true,
+              "retained_before_resampling": 129,
+              "simulator_dose_calls": 11735,
+              "threshold": 0.27871604995487675,
+              "unique_ancestors": 19,
+              "unique_particles": 211
+            },
+            {
+              "accepted_moves": 226,
+              "attempts": 1024,
+              "early_rejected": 223,
+              "evaluated": 991,
+              "global_attempts": 484,
+              "level": 9,
+              "local_accepted_moves": 184,
+              "local_attempts": 540,
+              "median_distance": 0.22369626488342478,
+              "mh_rejected_without_evaluation": 33,
+              "minimum_distance": 0.09219994513512313,
+              "resampled": true,
+              "retained_before_resampling": 129,
+              "simulator_dose_calls": 11322,
+              "threshold": 0.25419041086443406,
+              "unique_ancestors": 18,
+              "unique_particles": 220
+            },
+            {
+              "accepted_moves": 256,
+              "attempts": 1024,
+              "early_rejected": 230,
+              "evaluated": 974,
+              "global_attempts": 532,
+              "level": 10,
+              "local_accepted_moves": 197,
+              "local_attempts": 492,
+              "median_distance": 0.1953868547009353,
+              "mh_rejected_without_evaluation": 50,
+              "minimum_distance": 0.0794047903337033,
+              "resampled": true,
+              "retained_before_resampling": 129,
+              "simulator_dose_calls": 11052,
+              "threshold": 0.2239736033961996,
+              "unique_ancestors": 17,
+              "unique_particles": 223
+            },
+            {
+              "accepted_moves": 246,
+              "attempts": 1024,
+              "early_rejected": 232,
+              "evaluated": 1000,
+              "global_attempts": 510,
+              "level": 11,
+              "local_accepted_moves": 188,
+              "local_attempts": 514,
+              "median_distance": 0.16698515636290978,
+              "mh_rejected_without_evaluation": 24,
+              "minimum_distance": 0.07609963973593545,
+              "resampled": true,
+              "retained_before_resampling": 129,
+              "simulator_dose_calls": 11376,
+              "threshold": 0.19542783610467557,
+              "unique_ancestors": 16,
+              "unique_particles": 224
+            },
+            {
+              "accepted_moves": 228,
+              "attempts": 1024,
+              "early_rejected": 256,
+              "evaluated": 992,
+              "global_attempts": 510,
+              "level": 12,
+              "local_accepted_moves": 179,
+              "local_attempts": 514,
+              "median_distance": 0.14767375976389105,
+              "mh_rejected_without_evaluation": 32,
+              "minimum_distance": 0.06222390330030746,
+              "resampled": true,
+              "retained_before_resampling": 163,
+              "simulator_dose_calls": 11104,
+              "threshold": 0.17447979628221513,
+              "unique_ancestors": 15,
+              "unique_particles": 219
+            },
+            {
+              "accepted_moves": 260,
+              "attempts": 1024,
+              "early_rejected": 221,
+              "evaluated": 997,
+              "global_attempts": 505,
+              "level": 13,
+              "local_accepted_moves": 202,
+              "local_attempts": 519,
+              "median_distance": 0.14840444688004178,
+              "mh_rejected_without_evaluation": 27,
+              "minimum_distance": 0.07176227137196367,
+              "resampled": false,
+              "retained_before_resampling": 256,
+              "simulator_dose_calls": 11414,
+              "threshold": 0.17447979628221513,
+              "unique_ancestors": 15,
+              "unique_particles": 246
+            },
+            {
+              "accepted_moves": 251,
+              "attempts": 1024,
+              "early_rejected": 223,
+              "evaluated": 991,
+              "global_attempts": 503,
+              "level": 14,
+              "local_accepted_moves": 201,
+              "local_attempts": 521,
+              "median_distance": 0.15208907888401482,
+              "mh_rejected_without_evaluation": 33,
+              "minimum_distance": 0.07176227137196367,
+              "resampled": false,
+              "retained_before_resampling": 256,
+              "simulator_dose_calls": 11322,
+              "threshold": 0.17447979628221513,
+              "unique_ancestors": 15,
+              "unique_particles": 252
+            }
+          ],
+          "island": 0
+        },
+        {
+          "first_epsilon_level": 12,
+          "history": [
+            {
+              "accepted_moves": 712,
+              "attempts": 1024,
+              "early_rejected": 3,
+              "evaluated": 983,
+              "global_attempts": 526,
+              "level": 1,
+              "local_accepted_moves": 404,
+              "local_attempts": 498,
+              "median_distance": 0.5899617380832819,
+              "mh_rejected_without_evaluation": 41,
+              "minimum_distance": 0.23961160582517937,
+              "resampled": true,
+              "retained_before_resampling": 129,
+              "simulator_dose_calls": 12758,
+              "threshold": 0.7730949315063071,
+              "unique_ancestors": 106,
+              "unique_particles": 256
+            },
+            {
+              "accepted_moves": 526,
+              "attempts": 1024,
+              "early_rejected": 13,
+              "evaluated": 986,
+              "global_attempts": 480,
+              "level": 2,
+              "local_accepted_moves": 347,
+              "local_attempts": 544,
+              "median_distance": 0.48407126583394333,
+              "mh_rejected_without_evaluation": 38,
+              "minimum_distance": 0.1825244046584268,
+              "resampled": true,
+              "retained_before_resampling": 129,
+              "simulator_dose_calls": 12727,
+              "threshold": 0.5900014078278433,
+              "unique_ancestors": 73,
+              "unique_particles": 256
+            },
+            {
+              "accepted_moves": 371,
+              "attempts": 1024,
+              "early_rejected": 38,
+              "evaluated": 988,
+              "global_attempts": 494,
+              "level": 3,
+              "local_accepted_moves": 252,
+              "local_attempts": 530,
+              "median_distance": 0.41229333804305934,
+              "mh_rejected_without_evaluation": 36,
+              "minimum_distance": 0.18481258648907833,
+              "resampled": true,
+              "retained_before_resampling": 129,
+              "simulator_dose_calls": 12578,
+              "threshold": 0.4843624241723491,
+              "unique_ancestors": 55,
+              "unique_particles": 247
+            },
+            {
+              "accepted_moves": 288,
+              "attempts": 1024,
+              "early_rejected": 66,
+              "evaluated": 997,
+              "global_attempts": 526,
+              "level": 4,
+              "local_accepted_moves": 206,
+              "local_attempts": 498,
+              "median_distance": 0.3704727743105992,
+              "mh_rejected_without_evaluation": 27,
+              "minimum_distance": 0.16042091823279536,
+              "resampled": true,
+              "retained_before_resampling": 129,
+              "simulator_dose_calls": 12499,
+              "threshold": 0.4125001822797584,
+              "unique_ancestors": 46,
+              "unique_particles": 239
+            },
+            {
+              "accepted_moves": 233,
+              "attempts": 1024,
+              "early_rejected": 66,
+              "evaluated": 983,
+              "global_attempts": 495,
+              "level": 5,
+              "local_accepted_moves": 179,
+              "local_attempts": 529,
+              "median_distance": 0.33569528972254636,
+              "mh_rejected_without_evaluation": 41,
+              "minimum_distance": 0.11322867876453087,
+              "resampled": true,
+              "retained_before_resampling": 129,
+              "simulator_dose_calls": 12317,
+              "threshold": 0.3707550443779064,
+              "unique_ancestors": 38,
+              "unique_particles": 221
+            },
+            {
+              "accepted_moves": 248,
+              "attempts": 1024,
+              "early_rejected": 55,
+              "evaluated": 993,
+              "global_attempts": 523,
+              "level": 6,
+              "local_accepted_moves": 189,
+              "local_attempts": 501,
+              "median_distance": 0.3043857599777552,
+              "mh_rejected_without_evaluation": 31,
+              "minimum_distance": 0.13553024612531187,
+              "resampled": true,
+              "retained_before_resampling": 129,
+              "simulator_dose_calls": 12524,
+              "threshold": 0.3364929542732472,
+              "unique_ancestors": 30,
+              "unique_particles": 222
+            },
+            {
+              "accepted_moves": 253,
+              "attempts": 1024,
+              "early_rejected": 60,
+              "evaluated": 994,
+              "global_attempts": 502,
+              "level": 7,
+              "local_accepted_moves": 187,
+              "local_attempts": 522,
+              "median_distance": 0.2755349074222624,
+              "mh_rejected_without_evaluation": 30,
+              "minimum_distance": 0.1319016706611905,
+              "resampled": true,
+              "retained_before_resampling": 129,
+              "simulator_dose_calls": 12502,
+              "threshold": 0.3049119510395515,
+              "unique_ancestors": 27,
+              "unique_particles": 226
+            },
+            {
+              "accepted_moves": 265,
+              "attempts": 1024,
+              "early_rejected": 153,
+              "evaluated": 979,
+              "global_attempts": 518,
+              "level": 8,
+              "local_accepted_moves": 209,
+              "local_attempts": 506,
+              "median_distance": 0.2402818005796194,
+              "mh_rejected_without_evaluation": 45,
+              "minimum_distance": 0.11516573026665564,
+              "resampled": true,
+              "retained_before_resampling": 129,
+              "simulator_dose_calls": 11656,
+              "threshold": 0.27560867533455674,
+              "unique_ancestors": 23,
+              "unique_particles": 233
+            },
+            {
+              "accepted_moves": 261,
+              "attempts": 1024,
+              "early_rejected": 219,
+              "evaluated": 1001,
+              "global_attempts": 513,
+              "level": 9,
+              "local_accepted_moves": 209,
+              "local_attempts": 511,
+              "median_distance": 0.2067382065824262,
+              "mh_rejected_without_evaluation": 23,
+              "minimum_distance": 0.10396043262589677,
+              "resampled": true,
+              "retained_before_resampling": 129,
+              "simulator_dose_calls": 11480,
+              "threshold": 0.24040258966691694,
+              "unique_ancestors": 18,
+              "unique_particles": 229
+            },
+            {
+              "accepted_moves": 221,
+              "attempts": 1024,
+              "early_rejected": 271,
+              "evaluated": 1005,
+              "global_attempts": 512,
+              "level": 10,
+              "local_accepted_moves": 168,
+              "local_attempts": 512,
+              "median_distance": 0.17848171122773715,
+              "mh_rejected_without_evaluation": 19,
+              "minimum_distance": 0.09021511100115345,
+              "resampled": true,
+              "retained_before_resampling": 129,
+              "simulator_dose_calls": 11168,
+              "threshold": 0.2067382065824262,
+              "unique_ancestors": 17,
+              "unique_particles": 226
+            },
+            {
+              "accepted_moves": 212,
+              "attempts": 1024,
+              "early_rejected": 297,
+              "evaluated": 1002,
+              "global_attempts": 501,
+              "level": 11,
+              "local_accepted_moves": 168,
+              "local_attempts": 523,
+              "median_distance": 0.15551564609128904,
+              "mh_rejected_without_evaluation": 22,
+              "minimum_distance": 0.06347065608820256,
+              "resampled": true,
+              "retained_before_resampling": 129,
+              "simulator_dose_calls": 10947,
+              "threshold": 0.17858662772085535,
+              "unique_ancestors": 15,
+              "unique_particles": 220
+            },
+            {
+              "accepted_moves": 218,
+              "attempts": 1024,
+              "early_rejected": 253,
+              "evaluated": 994,
+              "global_attempts": 486,
+              "level": 12,
+              "local_accepted_moves": 179,
+              "local_attempts": 538,
+              "median_distance": 0.1525116054332831,
+              "mh_rejected_without_evaluation": 30,
+              "minimum_distance": 0.07071808794988477,
+              "resampled": true,
+              "retained_before_resampling": 233,
+              "simulator_dose_calls": 11151,
+              "threshold": 0.17447979628221513,
+              "unique_ancestors": 15,
+              "unique_particles": 229
+            },
+            {
+              "accepted_moves": 275,
+              "attempts": 1024,
+              "early_rejected": 216,
+              "evaluated": 995,
+              "global_attempts": 466,
+              "level": 13,
+              "local_accepted_moves": 226,
+              "local_attempts": 558,
+              "median_distance": 0.15175835243112207,
+              "mh_rejected_without_evaluation": 29,
+              "minimum_distance": 0.07179064485250047,
+              "resampled": false,
+              "retained_before_resampling": 256,
+              "simulator_dose_calls": 11423,
+              "threshold": 0.17447979628221513,
+              "unique_ancestors": 15,
+              "unique_particles": 252
+            },
+            {
+              "accepted_moves": 242,
+              "attempts": 1024,
+              "early_rejected": 268,
+              "evaluated": 994,
+              "global_attempts": 528,
+              "level": 14,
+              "local_accepted_moves": 195,
+              "local_attempts": 496,
+              "median_distance": 0.15085966603117829,
+              "mh_rejected_without_evaluation": 30,
+              "minimum_distance": 0.07253946770406106,
+              "resampled": false,
+              "retained_before_resampling": 256,
+              "simulator_dose_calls": 11046,
+              "threshold": 0.17447979628221513,
+              "unique_ancestors": 15,
+              "unique_particles": 256
+            }
+          ],
+          "island": 1
+        }
+      ],
+      "pilot_attempts": 29184,
+      "prior_widths": {
+        "gpx4_rate": 0.44999999999999996,
+        "gsh_scav_efficiency": 0.7,
+        "hill": 5.0,
+        "k_erastin": 47.0,
+        "k_um": 3.9,
+        "lp_propagation": 0.95,
+        "lp_rate": 0.97
+      },
+      "production_early_rejections": 3046,
+      "production_outside_prior": 0,
+      "seed": 2026091912,
+      "simulator_dose_calls_including_pilot_reference": 425250,
+      "wall_seconds": 497.39712862484157
+    },
+    {
+      "adequacy": {
+        "checks": {
+          "accepted_count": true,
+          "ess": true,
+          "maximum_weight": true,
+          "normalizer_mcse": true
+        },
+        "passed": true
+      },
+      "all_islands_reached_epsilon": true,
+      "diagnostic_quantiles": {
+        "gpx4_rate": {
+          "cdf_mcse_at_quantiles": [
+            {
+              "cdf": 0.026567123733516433,
+              "mcse": 0.010118264423868015
+            },
+            {
+              "cdf": 0.5007934128886978,
+              "mcse": 0.0174114127725235
+            },
+            {
+              "cdf": 0.9776748014836119,
+              "mcse": 0.005561808904359967
+            }
+          ],
+          "median": 0.4765410751432373,
+          "q2_5": 0.24228214342993487,
+          "q97_5": 0.5922630840797732
+        },
+        "gsh_scav_efficiency": {
+          "cdf_mcse_at_quantiles": [
+            {
+              "cdf": 0.0250400635859646,
+              "mcse": 0.007551550377178254
+            },
+            {
+              "cdf": 0.5002164651278731,
+              "mcse": 0.01741748363834101
+            },
+            {
+              "cdf": 0.9760727750364754,
+              "mcse": 0.007072208638878723
+            }
+          ],
+          "median": 0.545605201159047,
+          "q2_5": 0.4263148374345529,
+          "q97_5": 0.6749187398398333
+        },
+        "hill": {
+          "cdf_mcse_at_quantiles": [
+            {
+              "cdf": 0.02541722716628396,
+              "mcse": 0.005628282882552061
+            },
+            {
+              "cdf": 0.501407800278568,
+              "mcse": 0.017415607305317736
+            },
+            {
+              "cdf": 0.9751685117023218,
+              "mcse": 0.005226034970411657
+            }
+          ],
+          "median": 4.2112231046679724,
+          "q2_5": 1.5543225976490034,
+          "q97_5": 5.896703627618591
+        },
+        "k_erastin": {
+          "cdf_mcse_at_quantiles": [
+            {
+              "cdf": 0.025654310900671808,
+              "mcse": 0.005315838916896524
+            },
+            {
+              "cdf": 0.5002648499663813,
+              "mcse": 0.01741784550605939
+            },
+            {
+              "cdf": 0.9763235423233636,
+              "mcse": 0.00573240831363314
+            }
+          ],
+          "median": 5.518899916515534,
+          "q2_5": 3.211304827155912,
+          "q97_5": 9.167525896442703
+        },
+        "k_um": {
+          "cdf_mcse_at_quantiles": [
+            {
+              "cdf": 0.026123354619568516,
+              "mcse": 0.005568115176051284
+            },
+            {
+              "cdf": 0.5011308761918095,
+              "mcse": 0.017422179337999538
+            },
+            {
+              "cdf": 0.9760651507522318,
+              "mcse": 0.007706961176067059
+            }
+          ],
+          "median": 0.3438205176358321,
+          "q2_5": 0.12047842120798484,
+          "q97_5": 0.7940243224499678
+        },
+        "lp_propagation": {
+          "cdf_mcse_at_quantiles": [
+            {
+              "cdf": 0.025210644427093223,
+              "mcse": 0.00627006051865362
+            },
+            {
+              "cdf": 0.500935744274197,
+              "mcse": 0.01741755981048133
+            },
+            {
+              "cdf": 0.9759396122453605,
+              "mcse": 0.00579162197426349
+            }
+          ],
+          "median": 0.7907959549476592,
+          "q2_5": 0.443186312037017,
+          "q97_5": 0.9909927280055684
+        },
+        "lp_rate": {
+          "cdf_mcse_at_quantiles": [
+            {
+              "cdf": 0.025161193919132883,
+              "mcse": 0.009734397272012314
+            },
+            {
+              "cdf": 0.5012818159854187,
+              "mcse": 0.01741464723863927
+            },
+            {
+              "cdf": 0.9759199623530701,
+              "mcse": 0.005894658595844166
+            }
+          ],
+          "median": 0.6796365093992156,
+          "q2_5": 0.29361475685776184,
+          "q97_5": 0.9747116597572777
+        }
+      },
+      "ess_per_1000_simulator_dose_calls": 1.9403967106537248,
+      "heldout": {
+        "band_median": [
+          0.9385,
+          0.9325,
+          0.912,
+          0.8215,
+          0.39549999999999996,
+          0.10899999999999999,
+          0.04200000000000004
+        ],
+        "band_q2_5": [
+          0.9005,
+          0.8925,
+          0.86,
+          0.6665,
+          0.1885,
+          0.040000000000000036,
+          0.009000000000000008
+        ],
+        "band_q97_5": [
+          0.9805,
+          0.9795,
+          0.9675,
+          0.912,
+          0.589,
+          0.241,
+          0.16300000000000003
+        ],
+        "coverage": "5/7",
+        "rmse_quantiles": [
+          0.03225288294435905,
+          0.09320994719705339,
+          0.16876396514976827
+        ]
+      },
+      "importance": {
+        "assessable": true,
+        "ess": 824.131112138982,
+        "max_normalized_weight": 0.007060233530104852,
+        "n_accepted": 1236,
+        "n_attempts": 8192,
+        "normalizer_estimate": 0.00024260258812643594,
+        "normalizer_mcse": 8.014930417622416e-06,
+        "normalizer_relative_mcse": 0.03303728323559894
+      },
+      "pilot": [
+        {
+          "first_epsilon_level": 12,
+          "history": [
+            {
+              "accepted_moves": 678,
+              "attempts": 1024,
+              "early_rejected": 8,
+              "evaluated": 974,
+              "global_attempts": 528,
+              "level": 1,
+              "local_accepted_moves": 399,
+              "local_attempts": 496,
+              "median_distance": 0.5581314011263507,
+              "mh_rejected_without_evaluation": 50,
+              "minimum_distance": 0.2737672956447401,
+              "resampled": true,
+              "retained_before_resampling": 129,
+              "simulator_dose_calls": 12606,
+              "threshold": 0.7490644038169503,
+              "unique_ancestors": 112,
+              "unique_particles": 256
+            },
+            {
+              "accepted_moves": 418,
+              "attempts": 1024,
+              "early_rejected": 24,
+              "evaluated": 992,
+              "global_attempts": 523,
+              "level": 2,
+              "local_accepted_moves": 260,
+              "local_attempts": 501,
+              "median_distance": 0.4775521334063001,
+              "mh_rejected_without_evaluation": 32,
+              "minimum_distance": 0.2511716170439261,
+              "resampled": true,
+              "retained_before_resampling": 129,
+              "simulator_dose_calls": 12728,
+              "threshold": 0.5585003808363104,
+              "unique_ancestors": 71,
+              "unique_particles": 251
+            },
+            {
+              "accepted_moves": 367,
+              "attempts": 1024,
+              "early_rejected": 32,
+              "evaluated": 980,
+              "global_attempts": 475,
+              "level": 3,
+              "local_accepted_moves": 271,
+              "local_attempts": 549,
+              "median_distance": 0.4063051033742172,
+              "mh_rejected_without_evaluation": 44,
+              "minimum_distance": 0.15242565334869854,
+              "resampled": true,
+              "retained_before_resampling": 129,
+              "simulator_dose_calls": 12516,
+              "threshold": 0.4779523144335463,
+              "unique_ancestors": 54,
+              "unique_particles": 248
+            },
+            {
+              "accepted_moves": 289,
+              "attempts": 1024,
+              "early_rejected": 51,
+              "evaluated": 997,
+              "global_attempts": 527,
+              "level": 4,
+              "local_accepted_moves": 199,
+              "local_attempts": 497,
+              "median_distance": 0.3601083230041457,
+              "mh_rejected_without_evaluation": 27,
+              "minimum_distance": 0.16475222004046686,
+              "resampled": true,
+              "retained_before_resampling": 129,
+              "simulator_dose_calls": 12604,
+              "threshold": 0.4063843577251708,
+              "unique_ancestors": 42,
+              "unique_particles": 230
+            },
+            {
+              "accepted_moves": 235,
+              "attempts": 1024,
+              "early_rejected": 72,
+              "evaluated": 1001,
+              "global_attempts": 491,
+              "level": 5,
+              "local_accepted_moves": 174,
+              "local_attempts": 533,
+              "median_distance": 0.3305678607339583,
+              "mh_rejected_without_evaluation": 23,
+              "minimum_distance": 0.1111466425246895,
+              "resampled": true,
+              "retained_before_resampling": 129,
+              "simulator_dose_calls": 12509,
+              "threshold": 0.36043249740840066,
+              "unique_ancestors": 36,
+              "unique_particles": 222
+            },
+            {
+              "accepted_moves": 223,
+              "attempts": 1024,
+              "early_rejected": 56,
+              "evaluated": 993,
+              "global_attempts": 509,
+              "level": 6,
+              "local_accepted_moves": 168,
+              "local_attempts": 515,
+              "median_distance": 0.31054872679869167,
+              "mh_rejected_without_evaluation": 31,
+              "minimum_distance": 0.1111466425246895,
+              "resampled": true,
+              "retained_before_resampling": 129,
+              "simulator_dose_calls": 12517,
+              "threshold": 0.3306452612300661,
+              "unique_ancestors": 31,
+              "unique_particles": 223
+            },
+            {
+              "accepted_moves": 237,
+              "attempts": 1024,
+              "early_rejected": 60,
+              "evaluated": 997,
+              "global_attempts": 543,
+              "level": 7,
+              "local_accepted_moves": 190,
+              "local_attempts": 481,
+              "median_distance": 0.27493504447555717,
+              "mh_rejected_without_evaluation": 27,
+              "minimum_distance": 0.07580641086897431,
+              "resampled": true,
+              "retained_before_resampling": 129,
+              "simulator_dose_calls": 12541,
+              "threshold": 0.3106438110596373,
+              "unique_ancestors": 27,
+              "unique_particles": 215
+            },
+            {
+              "accepted_moves": 193,
+              "attempts": 1024,
+              "early_rejected": 186,
+              "evaluated": 995,
+              "global_attempts": 499,
+              "level": 8,
+              "local_accepted_moves": 160,
+              "local_attempts": 525,
+              "median_distance": 0.2479166370043408,
+              "mh_rejected_without_evaluation": 29,
+              "minimum_distance": 0.07580641086897431,
+              "resampled": true,
+              "retained_before_resampling": 130,
+              "simulator_dose_calls": 11633,
+              "threshold": 0.27493504447555717,
+              "unique_ancestors": 23,
+              "unique_particles": 197
+            },
+            {
+              "accepted_moves": 223,
+              "attempts": 1024,
+              "early_rejected": 227,
+              "evaluated": 995,
+              "global_attempts": 492,
+              "level": 9,
+              "local_accepted_moves": 174,
+              "local_attempts": 532,
+              "median_distance": 0.22079269063033422,
+              "mh_rejected_without_evaluation": 29,
+              "minimum_distance": 0.10304748824413082,
+              "resampled": true,
+              "retained_before_resampling": 130,
+              "simulator_dose_calls": 11346,
+              "threshold": 0.24851684219187448,
+              "unique_ancestors": 22,
+              "unique_particles": 216
+            },
+            {
+              "accepted_moves": 234,
+              "attempts": 1024,
+              "early_rejected": 232,
+              "evaluated": 996,
+              "global_attempts": 523,
+              "level": 10,
+              "local_accepted_moves": 184,
+              "local_attempts": 501,
+              "median_distance": 0.19366243643539832,
+              "mh_rejected_without_evaluation": 28,
+              "minimum_distance": 0.07131880642525112,
+              "resampled": true,
+              "retained_before_resampling": 129,
+              "simulator_dose_calls": 11324,
+              "threshold": 0.2208948498698502,
+              "unique_ancestors": 19,
+              "unique_particles": 224
+            },
+            {
+              "accepted_moves": 224,
+              "attempts": 1024,
+              "early_rejected": 276,
+              "evaluated": 1005,
+              "global_attempts": 501,
+              "level": 11,
+              "local_accepted_moves": 173,
+              "local_attempts": 523,
+              "median_distance": 0.1709798756522283,
+              "mh_rejected_without_evaluation": 19,
+              "minimum_distance": 0.06742254488781234,
+              "resampled": true,
+              "retained_before_resampling": 130,
+              "simulator_dose_calls": 11133,
+              "threshold": 0.1938232027548891,
+              "unique_ancestors": 16,
+              "unique_particles": 214
+            },
+            {
+              "accepted_moves": 212,
+              "attempts": 1024,
+              "early_rejected": 285,
+              "evaluated": 999,
+              "global_attempts": 535,
+              "level": 12,
+              "local_accepted_moves": 159,
+              "local_attempts": 489,
+              "median_distance": 0.1488242863404879,
+              "mh_rejected_without_evaluation": 25,
+              "minimum_distance": 0.07229187446136393,
+              "resampled": true,
+              "retained_before_resampling": 142,
+              "simulator_dose_calls": 10992,
+              "threshold": 0.17447979628221513,
+              "unique_ancestors": 16,
+              "unique_particles": 216
+            },
+            {
+              "accepted_moves": 252,
+              "attempts": 1024,
+              "early_rejected": 235,
+              "evaluated": 990,
+              "global_attempts": 528,
+              "level": 13,
+              "local_accepted_moves": 205,
+              "local_attempts": 496,
+              "median_distance": 0.14979557684084943,
+              "mh_rejected_without_evaluation": 34,
+              "minimum_distance": 0.07458136308711676,
+              "resampled": false,
+              "retained_before_resampling": 256,
+              "simulator_dose_calls": 11225,
+              "threshold": 0.17447979628221513,
+              "unique_ancestors": 16,
+              "unique_particles": 241
+            },
+            {
+              "accepted_moves": 246,
+              "attempts": 1024,
+              "early_rejected": 242,
+              "evaluated": 1003,
+              "global_attempts": 498,
+              "level": 14,
+              "local_accepted_moves": 195,
+              "local_attempts": 526,
+              "median_distance": 0.1505216218290638,
+              "mh_rejected_without_evaluation": 21,
+              "minimum_distance": 0.08534032497201821,
+              "resampled": false,
+              "retained_before_resampling": 256,
+              "simulator_dose_calls": 11345,
+              "threshold": 0.17447979628221513,
+              "unique_ancestors": 16,
+              "unique_particles": 248
+            }
+          ],
+          "island": 0
+        },
+        {
+          "first_epsilon_level": 13,
+          "history": [
+            {
+              "accepted_moves": 706,
+              "attempts": 1024,
+              "early_rejected": 3,
+              "evaluated": 978,
+              "global_attempts": 505,
+              "level": 1,
+              "local_accepted_moves": 408,
+              "local_attempts": 519,
+              "median_distance": 0.5773173594719536,
+              "mh_rejected_without_evaluation": 46,
+              "minimum_distance": 0.21512741521769663,
+              "resampled": true,
+              "retained_before_resampling": 129,
+              "simulator_dose_calls": 12693,
+              "threshold": 0.7626211278811075,
+              "unique_ancestors": 112,
+              "unique_particles": 256
+            },
+            {
+              "accepted_moves": 464,
+              "attempts": 1024,
+              "early_rejected": 21,
+              "evaluated": 982,
+              "global_attempts": 543,
+              "level": 2,
+              "local_accepted_moves": 281,
+              "local_attempts": 481,
+              "median_distance": 0.5000764417982828,
+              "mh_rejected_without_evaluation": 42,
+              "minimum_distance": 0.20269597346939705,
+              "resampled": true,
+              "retained_before_resampling": 129,
+              "simulator_dose_calls": 12619,
+              "threshold": 0.5774813713859864,
+              "unique_ancestors": 81,
+              "unique_particles": 249
+            },
+            {
+              "accepted_moves": 358,
+              "attempts": 1024,
+              "early_rejected": 30,
+              "evaluated": 991,
+              "global_attempts": 510,
+              "level": 3,
+              "local_accepted_moves": 245,
+              "local_attempts": 514,
+              "median_distance": 0.43669043924612616,
+              "mh_rejected_without_evaluation": 33,
+              "minimum_distance": 0.23886923508099878,
+              "resampled": true,
+              "retained_before_resampling": 129,
+              "simulator_dose_calls": 12673,
+              "threshold": 0.5001588365533527,
+              "unique_ancestors": 59,
+              "unique_particles": 244
+            },
+            {
+              "accepted_moves": 336,
+              "attempts": 1024,
+              "early_rejected": 50,
+              "evaluated": 989,
+              "global_attempts": 501,
+              "level": 4,
+              "local_accepted_moves": 242,
+              "local_attempts": 523,
+              "median_distance": 0.3849232075300648,
+              "mh_rejected_without_evaluation": 35,
+              "minimum_distance": 0.2414966595204367,
+              "resampled": true,
+              "retained_before_resampling": 129,
+              "simulator_dose_calls": 12507,
+              "threshold": 0.43746567653620955,
+              "unique_ancestors": 46,
+              "unique_particles": 248
+            },
+            {
+              "accepted_moves": 302,
+              "attempts": 1024,
+              "early_rejected": 40,
+              "evaluated": 968,
+              "global_attempts": 492,
+              "level": 5,
+              "local_accepted_moves": 229,
+              "local_attempts": 532,
+              "median_distance": 0.33969151531983144,
+              "mh_rejected_without_evaluation": 56,
+              "minimum_distance": 0.16183472578709235,
+              "resampled": true,
+              "retained_before_resampling": 129,
+              "simulator_dose_calls": 12304,
+              "threshold": 0.38499685932057337,
+              "unique_ancestors": 41,
+              "unique_particles": 244
+            },
+            {
+              "accepted_moves": 268,
+              "attempts": 1024,
+              "early_rejected": 52,
+              "evaluated": 975,
+              "global_attempts": 499,
+              "level": 6,
+              "local_accepted_moves": 203,
+              "local_attempts": 525,
+              "median_distance": 0.31621247864412994,
+              "mh_rejected_without_evaluation": 49,
+              "minimum_distance": 0.12016524705565315,
+              "resampled": true,
+              "retained_before_resampling": 129,
+              "simulator_dose_calls": 12311,
+              "threshold": 0.3397043036473365,
+              "unique_ancestors": 33,
+              "unique_particles": 232
+            },
+            {
+              "accepted_moves": 245,
+              "attempts": 1024,
+              "early_rejected": 64,
+              "evaluated": 985,
+              "global_attempts": 509,
+              "level": 7,
+              "local_accepted_moves": 179,
+              "local_attempts": 515,
+              "median_distance": 0.28317923833935443,
+              "mh_rejected_without_evaluation": 39,
+              "minimum_distance": 0.12750107361677018,
+              "resampled": true,
+              "retained_before_resampling": 129,
+              "simulator_dose_calls": 12357,
+              "threshold": 0.31630870027913915,
+              "unique_ancestors": 30,
+              "unique_particles": 221
+            },
+            {
+              "accepted_moves": 246,
+              "attempts": 1024,
+              "early_rejected": 161,
+              "evaluated": 991,
+              "global_attempts": 497,
+              "level": 8,
+              "local_accepted_moves": 197,
+              "local_attempts": 527,
+              "median_distance": 0.25656036435529594,
+              "mh_rejected_without_evaluation": 33,
+              "minimum_distance": 0.11169438255223299,
+              "resampled": true,
+              "retained_before_resampling": 129,
+              "simulator_dose_calls": 11756,
+              "threshold": 0.28320296326793704,
+              "unique_ancestors": 23,
+              "unique_particles": 229
+            },
+            {
+              "accepted_moves": 211,
+              "attempts": 1024,
+              "early_rejected": 212,
+              "evaluated": 988,
+              "global_attempts": 504,
+              "level": 9,
+              "local_accepted_moves": 173,
+              "local_attempts": 520,
+              "median_distance": 0.23069554090217742,
+              "mh_rejected_without_evaluation": 36,
+              "minimum_distance": 0.09769167130133899,
+              "resampled": true,
+              "retained_before_resampling": 129,
+              "simulator_dose_calls": 11360,
+              "threshold": 0.25656036435529594,
+              "unique_ancestors": 21,
+              "unique_particles": 219
+            },
+            {
+              "accepted_moves": 198,
+              "attempts": 1024,
+              "early_rejected": 243,
+              "evaluated": 986,
+              "global_attempts": 539,
+              "level": 10,
+              "local_accepted_moves": 163,
+              "local_attempts": 485,
+              "median_distance": 0.20325961251056684,
+              "mh_rejected_without_evaluation": 38,
+              "minimum_distance": 0.06681649322443711,
+              "resampled": true,
+              "retained_before_resampling": 129,
+              "simulator_dose_calls": 11117,
+              "threshold": 0.2308192016288079,
+              "unique_ancestors": 21,
+              "unique_particles": 211
+            },
+            {
+              "accepted_moves": 210,
+              "attempts": 1024,
+              "early_rejected": 242,
+              "evaluated": 1001,
+              "global_attempts": 497,
+              "level": 11,
+              "local_accepted_moves": 168,
+              "local_attempts": 527,
+              "median_distance": 0.1751272862479957,
+              "mh_rejected_without_evaluation": 23,
+              "minimum_distance": 0.06681649322443711,
+              "resampled": true,
+              "retained_before_resampling": 129,
+              "simulator_dose_calls": 11319,
+              "threshold": 0.20331073170756112,
+              "unique_ancestors": 19,
+              "unique_particles": 214
+            },
+            {
+              "accepted_moves": 188,
+              "attempts": 1024,
+              "early_rejected": 319,
+              "evaluated": 1008,
+              "global_attempts": 521,
+              "level": 12,
+              "local_accepted_moves": 153,
+              "local_attempts": 503,
+              "median_distance": 0.1554764891650472,
+              "mh_rejected_without_evaluation": 16,
+              "minimum_distance": 0.07410361107644406,
+              "resampled": true,
+              "retained_before_resampling": 129,
+              "simulator_dose_calls": 10871,
+              "threshold": 0.1753203907476601,
+              "unique_ancestors": 16,
+              "unique_particles": 199
+            },
+            {
+              "accepted_moves": 180,
+              "attempts": 1024,
+              "early_rejected": 305,
+              "evaluated": 1009,
+              "global_attempts": 522,
+              "level": 13,
+              "local_accepted_moves": 151,
+              "local_attempts": 502,
+              "median_distance": 0.15711468810848728,
+              "mh_rejected_without_evaluation": 15,
+              "minimum_distance": 0.0690399067365039,
+              "resampled": true,
+              "retained_before_resampling": 246,
+              "simulator_dose_calls": 10982,
+              "threshold": 0.17447979628221513,
+              "unique_ancestors": 16,
+              "unique_particles": 207
+            },
+            {
+              "accepted_moves": 214,
+              "attempts": 1024,
+              "early_rejected": 250,
+              "evaluated": 999,
+              "global_attempts": 517,
+              "level": 14,
+              "local_accepted_moves": 165,
+              "local_attempts": 507,
+              "median_distance": 0.1533496182107363,
+              "mh_rejected_without_evaluation": 25,
+              "minimum_distance": 0.06904841733068114,
+              "resampled": false,
+              "retained_before_resampling": 256,
+              "simulator_dose_calls": 11237,
+              "threshold": 0.17447979628221513,
+              "unique_ancestors": 16,
+              "unique_particles": 240
+            }
+          ],
+          "island": 1
+        }
+      ],
+      "pilot_attempts": 29184,
+      "prior_widths": {
+        "gpx4_rate": 0.44999999999999996,
+        "gsh_scav_efficiency": 0.7,
+        "hill": 5.0,
+        "k_erastin": 47.0,
+        "k_um": 3.9,
+        "lp_propagation": 0.95,
+        "lp_rate": 0.97
+      },
+      "production_early_rejections": 3081,
+      "production_outside_prior": 0,
+      "seed": 2026091913,
+      "simulator_dose_calls_including_pilot_reference": 424723,
+      "wall_seconds": 498.0051928749308
+    }
+  ],
+  "runtime": {
+    "extension_binaries": {
+      "ferroptosis_core.cpython-314-darwin.so": "f5d9af35a67c6d5578a2659ec67e0ee056158159f14063df5d29a62f7dab7cc6"
+    },
+    "logical_cpus": 14,
+    "numpy": "2.5.2",
+    "platform": "macOS-26.5.1-arm64-arm-64bit-Mach-O",
+    "python": "3.14.6",
+    "rayon_num_threads_env": null,
+    "scipy": "1.18.1"
+  },
+  "schema_version": 2,
+  "source_hashes": {
+    "scripts/abc_joint_importance.py": "c29aff9cff22efd378a12ce748aa32de35bfa760ac19a6b355c1dd47a45542c3",
+    "scripts/abc_joint_posterior.py": "f85f6a0fc68d955bcd392551bc2582742fddcd482b1a9d348ede1cf718cb543f",
+    "scripts/abc_joint_resample.py": "99bc00bbebdd4d4f295e6e9fba4311ba5649e5b5fa4c42bd078297738af562fb",
+    "scripts/bounded_proposal.py": "14c4f6e2a3c08b2db5fdbd5982b18fedbe63e78b34e83a66f6594be5681c6632",
+    "scripts/calibrate_erastin.py": "69b2dc11a1b550a1760f9764e6ad6e364df669f8f1d107fdd30ed7f7181affc3",
+    "scripts/calibrate_kill_switch.py": "7812bce9d8246b28a3e8ba8f4e049d82bf28bda5951116486d7ffa1282d01201",
+    "scripts/ctrp_dose_support.py": "2822a41df3ae2e26f861338cab5e5f95dcc18fa5110f2b97f01615a84e008c3e",
+    "scripts/importance_sampling.py": "4bf7b9f97b797d3262bceea9972c502c50dd057465f81aee18a08ae8bc13cad8",
+    "scripts/proposal_synthetic_validation.py": "74ecb1a9114619622d1e96c29d32c6b993e40610247759c545fde7ca223be43c",
+    "scripts/proposal_synthetic_validation_v2.py": "bb841176514fd29836e5265df52437090411326d54642295fec22ed971b9a625",
+    "scripts/resample_move.py": "7a65b96ea011726148513e07cb52605d456aa719e688c3d9aa24f5047dbcaa7b",
+    "scripts/resample_move_local.py": "380b147c26bfe31fe20bedad42c93bdc7d600efe350d00d1c8120c35776522a5",
+    "scripts/synthetic_proposal_study.py": "925af6258ef0eb16dcfd09e016d9d82cc08a2b2fb0d61765eb543921a18442e2",
+    "simulations/Cargo.lock": "59d190c84c1168a6ec6e1d0d40c264ff0ca62328e20e4f394ba0ca4ceb2642f6",
+    "simulations/ferroptosis-core/src/ablation.rs": "1342d23c65de87672e1bfdf63baba519f8520ee0532ff71e7c1c3dde4dec3b1c",
+    "simulations/ferroptosis-core/src/acsl4.rs": "b352f35f56bf6343f61f9b6b8b4b728cd76e39c7705cc100f0aa79e27fee398a",
+    "simulations/ferroptosis-core/src/adc.rs": "07abb852ef7a855a848088c675d0fa8be4101d31f5dcabc16162792feae900cc",
+    "simulations/ferroptosis-core/src/adoptive.rs": "143edbc37346f24d1f5a2ee3fac554166554eca589177b0cd665501e5d7e09d3",
+    "simulations/ferroptosis-core/src/alox.rs": "807794a174bf2635012b82d0e020036d35a37f9fe778407872e1b2d58b18d9e3",
+    "simulations/ferroptosis-core/src/biochem.rs": "ead06fd3f499920b4b0e1880e9864bf89e5ede3d143934a6ac39bf045dc622a6",
+    "simulations/ferroptosis-core/src/cell.rs": "f639b584b7532fcb1eacc0a730c94ae64f888913e6e0361ba694122874360fa2",
+    "simulations/ferroptosis-core/src/checkpoint.rs": "0bd4c30f4210e5dbdb590098d7bfa5f9e7a551f23e2e6e3fc895196465db7d4d",
+    "simulations/ferroptosis-core/src/chemo.rs": "d465aef866e70fcd89cd2b6604ece06133beb5120875a41cbf1f1061c4d6a1b9",
+    "simulations/ferroptosis-core/src/clonal.rs": "62a632bae4c195b279db6d8aeb177ef0a58b53d27227e90c6b6606a114358d05",
+    "simulations/ferroptosis-core/src/contact.rs": "85daecbbc996e97ca1acd85897168d4cbfed51972e8055b2038441a714cde7a3",
+    "simulations/ferroptosis-core/src/copper.rs": "e79cbc6f8dfbcc0f83492d8ee8ad99c818284474542031d0a567837b787c079f",
+    "simulations/ferroptosis-core/src/dose_schedule.rs": "1acafc1dcc8a44f46f01b8fc1b4808a1a1f4c6cb0cb34d6e8370c12b30c3f39e",
+    "simulations/ferroptosis-core/src/drug_transport.rs": "9815e0f1240ddadbfd4ed5a0675b18236490bb611a4e0e2d0ee1413eae70053d",
+    "simulations/ferroptosis-core/src/grid.rs": "590d7f9f541bcadf7f7d5a6f1621c8f156ce647713b2493a62c64765d77c7ad4",
+    "simulations/ferroptosis-core/src/ifngamma.rs": "99ab72137385656eb3658d730b4ca59c803794eab0f386d6f1e5c7fa07514921",
+    "simulations/ferroptosis-core/src/immune.rs": "d3dfb859902676cc9247f0c46dc9e2a8869b13112d96accda3730a132071a722",
+    "simulations/ferroptosis-core/src/immune_spatial.rs": "1e6048cd6c8177ff4015b0212eca2f2baa225426d8975075aaec29040615ae2b",
+    "simulations/ferroptosis-core/src/io.rs": "1188bf1412ec0ac69d2a8abd69fbaf835affe4c6673a356fc7b4d03bac29eafc",
+    "simulations/ferroptosis-core/src/lib.rs": "1f1d0c2cd88dd91edd436caba73b1f477f1c24e57984f4b30eae22a1c93605cc",
+    "simulations/ferroptosis-core/src/nutrient.rs": "7f92d1e19ad02fdec5f76dcd7ed25b0c32820717808e3030cbaa6020ea96c394",
+    "simulations/ferroptosis-core/src/oncolytic.rs": "cd972e3e5914247a01982d95b39be4a078b3849dbdfd6d8250059533cdd06613",
+    "simulations/ferroptosis-core/src/oxygen.rs": "87127e84842572cfa362b3bc096242b5710b27fc417fb7c930934170b8d7b58e",
+    "simulations/ferroptosis-core/src/params.rs": "8c6584569bbe8073a959c17f8eaf8b57f04fe564f65ad017547e29ca846d140a",
+    "simulations/ferroptosis-core/src/persister.rs": "8150b051d08978bafab491f90fbbd1f10301825abc2a64091b4d92751e06931d",
+    "simulations/ferroptosis-core/src/ph.rs": "d22ab498f3eb6cf3fc51dd79a0a3a99cfa7765cc9fd0394b7deae86e138d67bd",
+    "simulations/ferroptosis-core/src/phenotype_mufa.rs": "29792309b7a0d9e946d5c070366bd529a7dddb83ea4ded82087e323b5437fb5f",
+    "simulations/ferroptosis-core/src/photosensitizer_pk.rs": "7faf4029f0105ae563623e1b2c63baf756c48120b4ce604128e6bc7771e61119",
+    "simulations/ferroptosis-core/src/physics.rs": "20b84eaab5fbb8a9481935101f5a7cb48ab9fef4af724e74392b95aae960b18e",
+    "simulations/ferroptosis-core/src/radiation.rs": "af693516919d803bef888762de27bb6c4755ac3ca4d1fb896f7f96fea97d8a6f",
+    "simulations/ferroptosis-core/src/reaction_diffusion.rs": "794075195021bf0bab2f532e97ed91f9a1e8aee72a14762e8733ace6113baac8",
+    "simulations/ferroptosis-core/src/repair.rs": "acead760f730d3d825becdb909540e2a2bacf3c308d3ee0372dbb6769f35a5f9",
+    "simulations/ferroptosis-core/src/senescence.rs": "2be624fe0730174718f772c1fa5bc8f918f1305cc6901165e1d7671b73d98986",
+    "simulations/ferroptosis-core/src/slab.rs": "6418b3aa1bde1f9c8e6db9f84c23be2dbb1bcf97549679dba72053ccc6539971",
+    "simulations/ferroptosis-core/src/sonodynamic.rs": "4b653bd16f43deafc842973f51701193141bcf4a84553cc1f5588af9850cea13",
+    "simulations/ferroptosis-core/src/spheroid.rs": "df47d2063c4ee81274173269c0fb5b9d280eaaa1de6886ce63951ebabe3ea2b3",
+    "simulations/ferroptosis-core/src/stats.rs": "871844becad66d2229843b3ce8e1ad615dde6b90df10283f3ac270c6cfb4e5f5",
+    "simulations/ferroptosis-core/src/stromal.rs": "2cd186f8c654aeade67607b6d076c1a74e92da56af1ff49bb688fb2616014c31",
+    "simulations/ferroptosis-core/src/trigger_wave.rs": "ab27f6f8e7355ad1f340cbd33c4e41df9c955812f061ee7f2efc14540b8b751b",
+    "simulations/ferroptosis-core/src/tumor_pk.rs": "f8d686ee6955a7c7af48952079f06b63b523019287b5ced8298d66166268c110",
+    "simulations/ferroptosis-core/src/vasculature.rs": "be6509bf5b0598a5dc7f5aca3d2f50b27e7cdde723132024f83c38dffb4140b2",
+    "simulations/ferroptosis-python/src/lib.rs": "8eb558bf0fd35588c37e3b8a7c07794c49540e7f97bab822a7b0a9d5b578f983",
+    "simulations/rust-toolchain.toml": "14e3882647ecdcb192664239effae80fbd23296193075a1183ecebf4658d4edf"
+  },
+  "stability": {
+    "checks": {
+      "all_pilots_reached_epsilon": true,
+      "all_runs_adequate": true,
+      "heldout_rmse_stability": true,
+      "median_stability": true,
+      "normalizer_agreement": true,
+      "same_prior_widths": true,
+      "tail_stability": true,
+      "three_prespecified_independent_runs": true
+    },
+    "heldout_rmse_median_span": 0.00261803852893569,
+    "normalizer_comparisons": [
+      {
+        "combined_mcse": 1.2164382816689702e-05,
+        "difference": 3.399981416036071e-06,
+        "passed": true,
+        "seeds": [
+          2026091911,
+          2026091912
+        ]
+      },
+      {
+        "combined_mcse": 1.2051085021141191e-05,
+        "difference": 1.1843327708647506e-05,
+        "passed": true,
+        "seeds": [
+          2026091911,
+          2026091913
+        ]
+      },
+      {
+        "combined_mcse": 1.1455207476203133e-05,
+        "difference": 8.443346292611435e-06,
+        "passed": true,
+        "seeds": [
+          2026091912,
+          2026091913
+        ]
+      }
+    ],
+    "parameter_spans_prior_fraction": {
+      "gpx4_rate": {
+        "median": 0.021192669886064646,
+        "q2_5": 0.027187623595408644,
+        "q97_5": 0.0021164732118436926
+      },
+      "gsh_scav_efficiency": {
+        "median": 0.004956078789293272,
+        "q2_5": 0.004627202538234184,
+        "q97_5": 0.011883146550146932
+      },
+      "hill": {
+        "median": 0.021351694661551335,
+        "q2_5": 0.0016054877615874208,
+        "q97_5": 0.014182034823339684
+      },
+      "k_erastin": {
+        "median": 0.001715039763363161,
+        "q2_5": 0.001573302688693967,
+        "q97_5": 0.0026683361300744
+      },
+      "k_um": {
+        "median": 0.0056125141570986595,
+        "q2_5": 0.0015060352137755888,
+        "q97_5": 0.00930406009075503
+      },
+      "lp_propagation": {
+        "median": 0.020085852449911224,
+        "q2_5": 0.027079972507798065,
+        "q97_5": 0.0029314787567923913
+      },
+      "lp_rate": {
+        "median": 0.02115825146771279,
+        "q2_5": 0.016612620916616905,
+        "q97_5": 0.015503375286736497
+      }
+    },
+    "passed": true
+  },
+  "synthetic_validation": {
+    "artifact": "proposal-synthetic-validation-v2.json",
+    "passed": true,
+    "sha256": "cc801aef90938127a15d7a671a88953f081d19b1f11c2d4a59b73c0da7eef46e",
+    "source_hashes": {
+      "scripts/bounded_proposal.py": "14c4f6e2a3c08b2db5fdbd5982b18fedbe63e78b34e83a66f6594be5681c6632",
+      "scripts/importance_sampling.py": "4bf7b9f97b797d3262bceea9972c502c50dd057465f81aee18a08ae8bc13cad8",
+      "scripts/proposal_synthetic_validation.py": "74ecb1a9114619622d1e96c29d32c6b993e40610247759c545fde7ca223be43c",
+      "scripts/proposal_synthetic_validation_v2.py": "bb841176514fd29836e5265df52437090411326d54642295fec22ed971b9a625",
+      "scripts/resample_move.py": "7a65b96ea011726148513e07cb52605d456aa719e688c3d9aa24f5047dbcaa7b",
+      "scripts/resample_move_local.py": "380b147c26bfe31fe20bedad42c93bdc7d600efe350d00d1c8120c35776522a5",
+      "scripts/synthetic_proposal_study.py": "925af6258ef0eb16dcfd09e016d9d82cc08a2b2fb0d61765eb543921a18442e2"
+    }
+  },
+  "target": {
+    "empirical_erastin": [
+      1.0077644009349758,
+      1.003569952101022,
+      0.9924027975696358,
+      0.9505599608245953,
+      0.5245657652369768,
+      0.4258264118956729
+    ],
+    "empirical_heldout": [
+      0.9952769088457382,
+      0.9848098729696396,
+      0.955692088937454,
+      0.8574958874765037,
+      0.5343545608207255,
+      0.23221134305174632,
+      0.1522275475335611
+    ],
+    "empirical_rsl3": [
+      1.0089190192569037,
+      1.0058030192596805,
+      0.979508863384436,
+      0.8440658541992442,
+      0.3412631552698026,
+      0.07023116473720219,
+      0.040360023553120704
+    ],
+    "epsilon": 0.17447979628221513,
+    "erastin_doses_um": [
+      0.1,
+      0.3,
+      1.0,
+      3.0,
+      10.0,
+      30.0
+    ],
+    "priors": [
+      [
+        "lp_propagation",
+        0.05,
+        1.0
+      ],
+      [
+        "lp_rate",
+        0.03,
+        1.0
+      ],
+      [
+        "gpx4_rate",
+        0.15,
+        0.6
+      ],
+      [
+        "gsh_scav_efficiency",
+        0.2,
+        0.9
+      ],
+      [
+        "k_um",
+        0.1,
+        4.0
+      ],
+      [
+        "k_erastin",
+        3.0,
+        50.0
+      ],
+      [
+        "hill",
+        1.0,
+        6.0
+      ]
+    ],
+    "reference_distance": 0.15861799662019557,
+    "reference_simulator_dose_calls": 13,
+    "reference_vector": {
+      "gpx4_rate": 0.3,
+      "gsh_scav_efficiency": 0.5,
+      "hill": 6.0,
+      "k_erastin": 3.0,
+      "k_um": 0.25,
+      "lp_propagation": 0.7,
+      "lp_rate": 0.4
+    },
+    "rsl3_doses_um": [
+      0.01,
+      0.03,
+      0.1,
+      0.3,
+      1.0,
+      3.0,
+      10.0
+    ],
+    "simulation_n": 2000,
+    "simulation_seed": 42,
+    "source": {
+      "file": "ctrpv2_ferroptosis_curves.csv",
+      "sha256": "37856d90187d7d4fe8b8c02442b0d1cc0b51c1908bc51b572628e5d087892622",
+      "target_kind": "median of fitted CTRPv2 curves within recorded dose ranges"
+    },
+    "support": {
+      "ERASTIN": {
+        "compound": "ERASTIN",
+        "excluded_rows": [
+          {
+            "ModelID": "ACH-000028",
+            "maximum_dose_um": 8.3,
+            "minimum_dose_um": 0.0081,
+            "reasons": [
+              "requested_dose_above_maximum"
+            ],
+            "row_index": 16
+          },
+          {
+            "ModelID": "ACH-000094",
+            "maximum_dose_um": 8.3,
+            "minimum_dose_um": 0.002,
+            "reasons": [
+              "requested_dose_above_maximum"
+            ],
+            "row_index": 59
+          },
+          {
+            "ModelID": "ACH-000296",
+            "maximum_dose_um": 17.0,
+            "minimum_dose_um": 0.002,
+            "reasons": [
+              "requested_dose_above_maximum"
+            ],
+            "row_index": 201
+          },
+          {
+            "ModelID": "ACH-000317",
+            "maximum_dose_um": 0.26,
+            "minimum_dose_um": 0.002,
+            "reasons": [
+              "requested_dose_above_maximum"
+            ],
+            "row_index": 218
+          },
+          {
+            "ModelID": "ACH-000364",
+            "maximum_dose_um": 4.2,
+            "minimum_dose_um": 0.002,
+            "reasons": [
+              "requested_dose_above_maximum"
+            ],
+            "row_index": 255
+          },
+          {
+            "ModelID": "ACH-000454",
+            "maximum_dose_um": 66.0,
+            "minimum_dose_um": 0.52,
+            "reasons": [
+              "requested_dose_below_minimum"
+            ],
+            "row_index": 325
+          },
+          {
+            "ModelID": "ACH-000578",
+            "maximum_dose_um": 17.0,
+            "minimum_dose_um": 0.002,
+            "reasons": [
+              "requested_dose_above_maximum"
+            ],
+            "row_index": 412
+          },
+          {
+            "ModelID": "ACH-000720",
+            "maximum_dose_um": 17.0,
+            "minimum_dose_um": 0.002,
+            "reasons": [
+              "requested_dose_above_maximum"
+            ],
+            "row_index": 515
+          },
+          {
+            "ModelID": "ACH-000752",
+            "maximum_dose_um": 17.0,
+            "minimum_dose_um": 0.002,
+            "reasons": [
+              "requested_dose_above_maximum"
+            ],
+            "row_index": 543
+          },
+          {
+            "ModelID": "ACH-002820",
+            "maximum_dose_um": 17.0,
+            "minimum_dose_um": 0.002,
+            "reasons": [
+              "requested_dose_above_maximum"
+            ],
+            "row_index": 776
+          }
+        ],
+        "n_excluded": 10,
+        "n_original": 795,
+        "n_retained": 785,
+        "per_dose_support": [
+          {
+            "dose_um": 0.1,
+            "n_supported": 794
+          },
+          {
+            "dose_um": 0.3,
+            "n_supported": 793
+          },
+          {
+            "dose_um": 1.0,
+            "n_supported": 794
+          },
+          {
+            "dose_um": 3.0,
+            "n_supported": 794
+          },
+          {
+            "dose_um": 10.0,
+            "n_supported": 791
+          },
+          {
+            "dose_um": 30.0,
+            "n_supported": 786
+          }
+        ],
+        "policy": "entire_grid_within_recorded_dose_range",
+        "requested_doses_um": [
+          0.1,
+          0.3,
+          1.0,
+          3.0,
+          10.0,
+          30.0
+        ]
+      },
+      "ML162": {
+        "compound": "ML162",
+        "excluded_rows": [
+          {
+            "ModelID": "ACH-000317",
+            "maximum_dose_um": 33.0,
+            "minimum_dose_um": 0.26,
+            "reasons": [
+              "requested_dose_below_minimum"
+            ],
+            "row_index": 222
+          },
+          {
+            "ModelID": "ACH-000598",
+            "maximum_dose_um": 33.0,
+            "minimum_dose_um": 0.065,
+            "reasons": [
+              "requested_dose_below_minimum"
+            ],
+            "row_index": 427
+          }
+        ],
+        "n_excluded": 2,
+        "n_original": 795,
+        "n_retained": 793,
+        "per_dose_support": [
+          {
+            "dose_um": 0.01,
+            "n_supported": 793
+          },
+          {
+            "dose_um": 0.03,
+            "n_supported": 793
+          },
+          {
+            "dose_um": 0.1,
+            "n_supported": 794
+          },
+          {
+            "dose_um": 0.3,
+            "n_supported": 795
+          },
+          {
+            "dose_um": 1.0,
+            "n_supported": 795
+          },
+          {
+            "dose_um": 3.0,
+            "n_supported": 795
+          },
+          {
+            "dose_um": 10.0,
+            "n_supported": 795
+          }
+        ],
+        "policy": "entire_grid_within_recorded_dose_range",
+        "requested_doses_um": [
+          0.01,
+          0.03,
+          0.1,
+          0.3,
+          1.0,
+          3.0,
+          10.0
+        ]
+      },
+      "ML210": {
+        "compound": "ML210",
+        "excluded_rows": [
+          {
+            "ModelID": "ACH-000110",
+            "maximum_dose_um": 33.0,
+            "minimum_dose_um": 0.26,
+            "reasons": [
+              "requested_dose_below_minimum"
+            ],
+            "row_index": 69
+          },
+          {
+            "ModelID": "ACH-000753",
+            "maximum_dose_um": 8.3,
+            "minimum_dose_um": 0.001,
+            "reasons": [
+              "requested_dose_above_maximum"
+            ],
+            "row_index": 525
+          },
+          {
+            "ModelID": "ACH-000881",
+            "maximum_dose_um": 8.3,
+            "minimum_dose_um": 0.001,
+            "reasons": [
+              "requested_dose_above_maximum"
+            ],
+            "row_index": 620
+          }
+        ],
+        "n_excluded": 3,
+        "n_original": 762,
+        "n_retained": 759,
+        "per_dose_support": [
+          {
+            "dose_um": 0.01,
+            "n_supported": 761
+          },
+          {
+            "dose_um": 0.03,
+            "n_supported": 761
+          },
+          {
+            "dose_um": 0.1,
+            "n_supported": 761
+          },
+          {
+            "dose_um": 0.3,
+            "n_supported": 762
+          },
+          {
+            "dose_um": 1.0,
+            "n_supported": 762
+          },
+          {
+            "dose_um": 3.0,
+            "n_supported": 762
+          },
+          {
+            "dose_um": 10.0,
+            "n_supported": 760
+          }
+        ],
+        "policy": "entire_grid_within_recorded_dose_range",
+        "requested_doses_um": [
+          0.01,
+          0.03,
+          0.1,
+          0.3,
+          1.0,
+          3.0,
+          10.0
+        ]
+      }
+    },
+    "tolerance_factor": 1.1
+  }
+}
