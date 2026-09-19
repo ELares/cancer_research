@@ -6,7 +6,7 @@ import sys
 import subprocess
 import numpy as np
 
-ROOT=Path('/Users/ezequiellares/scratchpad/cancer-research-proposal')
+ROOT=Path('CHECKOUT_ROOT')
 OUT=Path(__file__).parent
 sys.path.insert(0,str(ROOT/'scripts'))
 import resample_move_local as candidate

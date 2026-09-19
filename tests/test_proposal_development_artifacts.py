@@ -1,5 +1,6 @@
 """Preserve every development attempt without treating selection as validation."""
 
+import ast
 import gzip
 import hashlib
 import json
@@ -24,8 +25,15 @@ CONFIGURATIONS = (
 ARCHIVES = ("development_results.json.gz", "followup_results.json.gz")
 SCRIPTS = (
     "run_development.py.txt", "run_followup.py.txt",
-    "check_development.py.txt", "verify_candidate.py.txt",
+    "check_development.py.txt", "verify_candidate.py.txt", "verify_final_candidate.py.txt",
 )
+ORIGINAL_SCRIPT_HASHES = {
+    "run_development.py.txt": "94ab544876bfc42daffbad512b31de70bd1a740a230735e9193a05625ffd90f3",
+    "run_followup.py.txt": "2e5bceccbeb3c998eb236e3778f0f62a207dd18740e4dd9e9a56ce75191fbc20",
+    "check_development.py.txt": "9d46eee878cd8e465022af740764e26506943a1791488841ffa79fe0439093c0",
+    "verify_candidate.py.txt": "28514150e664069e2d1793076b6e62bca1415a0de863ace4b1d23120f2ee8eba",
+    "verify_final_candidate.py.txt": "6f0acb0a2c584802234b79dceb2a76145cb00f2888b7888997855f5962289330",
+}
 ORIGINAL_SOURCES = (
     "scripts/proposal_synthetic_validation.py", "scripts/resample_move.py",
     "scripts/bounded_proposal.py", "scripts/importance_sampling.py",
@@ -103,16 +111,28 @@ def test_archive_compressed_and_original_bytes_match_recorded_hashes(name, metad
     assert info["gzip_mtime"] == 0
     assert info["gzip_filename"] == ""
     assert len(studies[name]["results"]) == info["n_records"]
-    assert Path(info["original_path"]).is_absolute()
+    assert info["original_path"] == "DEVELOPMENT_DIR/" + name.removesuffix(".gz")
     assert studies[name]["source_hashes"] == metadata["original_source_sha256"]
 
 
 @pytest.mark.parametrize("name", SCRIPTS)
-def test_scratch_code_bytes_are_preserved_as_nonexecuted_text(name, metadata):
+def test_normalized_scratch_snapshots_preserve_original_hashes_and_logical_paths(name, metadata):
     info = metadata["scratch_scripts"][name]
-    assert hashlib.sha256((FOLDER / name).read_bytes()).hexdigest() == info["sha256"]
-    assert Path(info["original_path"]).is_absolute()
-    assert Path(info["original_path"]).name + ".txt" == name
+    raw = (FOLDER / name).read_bytes()
+    assert set(metadata["scratch_scripts"]) == set(SCRIPTS)
+    assert hashlib.sha256(raw).hexdigest() == info["sha256"]
+    assert info["original_sha256"] == ORIGINAL_SCRIPT_HASHES[name]
+    assert info["original_path"] == "DEVELOPMENT_DIR/" + name.removesuffix(".txt")
+    assert info["normalization"] == metadata["path_normalization"]["id"] == "path-only-v1"
+    assert set(metadata["path_normalization"]["placeholders"]) == {"CHECKOUT_ROOT", "DEVELOPMENT_DIR"}
+    assert set(metadata["path_normalization"]["script_hash_scope"]) == {"sha256", "original_sha256"}
+    replacements = info["path_replacement_counts"]
+    assert set(replacements) == {"CHECKOUT_ROOT", "DEVELOPMENT_DIR"}
+    for placeholder, count in replacements.items():
+        assert type(count) is int and count >= 0
+        assert raw.count(placeholder.encode()) == count
+    assert (info["sha256"] == info["original_sha256"]) == (sum(replacements.values()) == 0)
+    ast.parse(raw, filename=name)  # Inspect syntax; never execute historical scratch code.
 
 
 @pytest.mark.parametrize("name", ORIGINAL_SOURCES)
@@ -137,14 +157,19 @@ def test_every_production_summary_replays_from_its_frozen_proposal(configuration
     assert_nested_close(rebuilt, record["assessment"])
 
 
-def test_past_candidate_verification_is_historical_evidence_not_a_current_source_pin(metadata):
-    info = metadata["candidate_verification"]
+@pytest.mark.parametrize("name", ["candidate_verification", "final_candidate_verification"])
+def test_both_candidate_verifications_preserve_their_recorded_source_and_checks(name, metadata):
+    info = metadata[name]
+    assert info["path"] == name + ".json"
     raw = (FOLDER / info["path"]).read_bytes()
     assert hashlib.sha256(raw).hexdigest() == info["sha256"]
     verification = json.loads(raw)
     assert verification["development_only"] is True
     assert verification["candidate_source_path"] == "scripts/resample_move_local.py"
     assert len(bytes.fromhex(verification["candidate_source_sha256"])) == 32
+    if name == "final_candidate_verification":
+        assert verification["source_git_commit"] == info["source_git_commit"] == "91ca37aae10e2f22c19d0c6c4a2923bc4220b61c"
+        assert verification["candidate_source_sha256"] == info["candidate_source_sha256"]
     assert [check["seed"] for check in verification["checks"]] == list(SEEDS)
     expected_fields = {
         "seed", "pilot_exact", "island_history_original_fields_exact", "proposal_exact",
