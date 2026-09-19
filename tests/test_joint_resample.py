@@ -339,6 +339,7 @@ def report_files(tmp_path, monkeypatch, target, settings, models):
     prerequisite = {"artifact": "proposal-synthetic-validation-v2.json", "sha256": "fixture-study",
                     "source_hashes": {"validator": "fixture-source"}, "passed": True}
     monkeypatch.setattr(driver, "verify_synthetic_study", lambda: copy.deepcopy(prerequisite))
+    monkeypatch.setattr(driver, "source_provenance", lambda: {"driver": "fixture-frozen-code"})
     for seed in driver.SEEDS:
         archive = driver.run_experiment(seed, target, settings)
         archive.update(source_hashes={"driver": "fixture-frozen-code"}, synthetic_validation=prerequisite,
@@ -364,6 +365,16 @@ def test_report_uses_replayed_archives_and_hashed_matching_baselines(report_file
         (report_files / "joint-importance-sampling.json").read_bytes()).hexdigest()
     text = driver.render(report)
     assert "pooled inference is withheld" in text and "No pooled posterior is published" in text
+
+
+def test_report_rejects_shared_stale_source_hashes_across_all_runs(report_files):
+    for seed in driver.SEEDS:
+        path = driver.archive_path(report_files, seed)
+        archive = driver.read_archive(path)
+        archive["source_hashes"] = {"driver": "same-but-stale-in-every-run"}
+        driver.write_archive(path, archive)
+    with pytest.raises(ValueError, match="current report implementation"):
+        driver.build_report(report_files)
 
 
 @pytest.mark.parametrize("field", ["seed", "plan", "gates", "target", "source_hashes", "synthetic_validation",

@@ -363,6 +363,8 @@ def build_report(directory=OUT):
     archives = [read_archive(archive_path(directory, seed)) for seed in SEEDS]
     first = archives[0]
     prerequisite = verify_synthetic_study()
+    if first['source_hashes'] != source_provenance():
+        raise ValueError('archived numerical sources differ from the current report implementation')
     for seed, item in zip(SEEDS, archives):
         if item['seed'] != seed or item['plan'] != PLAN or item['gates'] != GATES:
             raise ValueError('archive does not use the prespecified seed, plan and screens')
