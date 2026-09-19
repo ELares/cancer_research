@@ -58,6 +58,11 @@
       "sha256": "28514150e664069e2d1793076b6e62bca1415a0de863ace4b1d23120f2ee8eba",
       "original_path": "/Users/ezequiellares/scratchpad/resample-development-20260919/verify_candidate.py",
       "role": "development numerical verification"
+    },
+    "verify_final_candidate.py.txt": {
+      "sha256": "6f0acb0a2c584802234b79dceb2a76145cb00f2888b7888997855f5962289330",
+      "original_path": "/Users/ezequiellares/scratchpad/resample-development-20260919/verify_final_candidate.py",
+      "role": "final frozen-source development verification"
     }
   },
   "archives": {
@@ -98,5 +103,11 @@
     "Selection used these results; passing development checks is not prospective validation.",
     "Only the separated-box fixture was used for these 18 trials; no new biological or reserved validation seeds were run.",
     "Pilot particles and resampling copies are not independent inference samples. Importance diagnostics use the separate 8192 production attempts per record."
-  ]
+  ],
+  "final_candidate_verification": {
+    "path": "final_candidate_verification.json",
+    "sha256": "b50c1ec52e6c5715e17fd2e492e082c3542546b72924b9870e5bf8bb34f16747",
+    "source_git_commit": "91ca37aae10e2f22c19d0c6c4a2923bc4220b61c",
+    "candidate_source_sha256": "380b147c26bfe31fe20bedad42c93bdc7d600efe350d00d1c8120c35776522a5"
+  }
 }
