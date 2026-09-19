@@ -396,9 +396,13 @@ def _dump_kwargs(name: str) -> dict:
     Assuming them is how the first version of this gate reported two false
     failures: two generators pass `sort_keys=True` and the check did not, so
     every key order looked wrong. A gate that guesses the format is testing its
-    own guess.
+    own guess. A generator may prepare its JSON before writing so that a later
+    rendering failure preserves both artifacts; follow that local assignment
+    as well as an inline serialization call.
     """
     tree = ast.parse((SCRIPTS / f"{name}.py").read_text(encoding="utf-8"))
+    parents = {child: parent for parent in ast.walk(tree)
+               for child in ast.iter_child_nodes(parent)}
     for node in ast.walk(tree):
         if not (isinstance(node, ast.Call)
                 and isinstance(node.func, ast.Attribute)
@@ -406,11 +410,64 @@ def _dump_kwargs(name: str) -> dict:
                 and isinstance(node.func.value, ast.Name)
                 and node.func.value.id == "OUT_JSON"):
             continue
-        for arg in ast.walk(node):
-            if (isinstance(arg, ast.Call)
-                    and getattr(arg.func, "attr", None) == "dumps"):
-                return {k.arg: ast.literal_eval(k.value) for k in arg.keywords}
+        expressions = [node]
+        value = (node.args[0] if node.args else
+                 next((k.value for k in node.keywords if k.arg == "data"), None))
+        if isinstance(value, ast.Name):
+            # Resolve only direct preceding assignments in the writer's own
+            # scope. A helper's same-named variable or unrelated json.dumps
+            # must not decide how this artifact is serialized.
+            scope = parents[node]
+            while not isinstance(scope, (ast.Module, ast.FunctionDef,
+                                         ast.AsyncFunctionDef, ast.Lambda)):
+                scope = parents[scope]
+            if not isinstance(scope, ast.Lambda):
+                assignments = [stmt for stmt in scope.body
+                               if isinstance(stmt, ast.Assign)
+                               and stmt.end_lineno < node.lineno
+                               and any(isinstance(t, ast.Name)
+                                       and t.id == value.id
+                                       for t in stmt.targets)]
+                if assignments:
+                    expressions.append(assignments[-1].value)
+        for expression in expressions:
+            for arg in ast.walk(expression):
+                if (isinstance(arg, ast.Call)
+                        and getattr(arg.func, "attr", None) == "dumps"):
+                    return {k.arg: ast.literal_eval(k.value) for k in arg.keywords}
     return {}
+
+
+@pytest.mark.parametrize("source,expected", [
+    ("def main():\n"
+     "    OUT_JSON.write_text(data=json.dumps(d, indent=2, sort_keys=True) + '\\n')\n",
+     {"indent": 2, "sort_keys": True}),
+    ("def main():\n"
+     "    json_text = json.dumps(d, indent=1) + '\\n'\n"
+     "    md_text = render(d)\n"
+     "    OUT_JSON.write_text(json_text)\n",
+     {"indent": 1}),
+    ("def main():\n"
+     "    json_text = json.dumps(d, indent=4)\n"
+     "    json_text = json.dumps(d, indent=1, sort_keys=True) + '\\n'\n"
+     "    OUT_JSON.write_text(json_text)\n",
+     {"indent": 1, "sort_keys": True}),
+    ("def helper():\n"
+     "    json_text = json.dumps(d, indent=4, sort_keys=True)\n"
+     "def main():\n"
+     "    json_text = json.dumps(d, indent=1) + '\\n'\n"
+     "    OUT_JSON.write_text(json_text)\n",
+     {"indent": 1}),
+    ("def main():\n"
+     "    logging_text = json.dumps(d, indent=4, sort_keys=True)\n"
+     "    json_text = json.dumps(d) + '\\n'\n"
+     "    OUT_JSON.write_text(json_text)\n",
+     {}),
+])
+def test_dump_options_follow_the_expression_written(source, expected, tmp_path, monkeypatch):
+    (tmp_path / "fixture.py").write_text(source)
+    monkeypatch.setattr(sys.modules[__name__], "SCRIPTS", tmp_path)
+    assert _dump_kwargs("fixture") == expected
 
 
 @pytest.mark.parametrize("name", LIVE)

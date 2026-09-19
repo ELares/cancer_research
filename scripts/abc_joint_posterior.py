@@ -1,53 +1,22 @@
 #!/usr/bin/env python3
-"""Joint multi-inducer ABC posterior for the single-cell switch (#500).
+"""Joint multi-inducer ABC calibration of the single-cell switch.
 
-#330 anchored the switch to a SINGLE inducer (RSL3/GPX4i). #332 produced an ABC
-posterior but on that one inducer, and showed the in-vivo PRCC priors and the
-in-vitro data are disjoint. #502 added System Xc-/erastin to the core. This script
-closes #500: it conditions the SHARED single-cell switch jointly on a multi-inducer
-panel (a GPX4 inhibitor AND a System Xc- inhibitor at once) and reports a POSTERIOR
-with credible intervals, not another tuned point.
+Fit shared cascade parameters to supported CTRPv2 ML162 and erastin fitted-curve
+medians. Accept prior draws only within 1.10 times the reference vector's joint
+RMSE. ML210 is held out by compound in the same screen, with overlapping cell
+lines; it is not independent assay validation. Bands describe parameter draws,
+not experimental replicate uncertainty.
 
-WHAT IS JOINTLY FIT
--------------------
-A single shared cascade drives BOTH inducers; only the per-mechanism potency
-differs:
-  * shared:   lp_propagation, lp_rate, gpx4_rate, gsh_scav_efficiency
-  * RSL3:     k_um           (GPX4i dose -> rsl3_gpx4_inhib = dose/(dose+k_um))
-  * erastin:  k_erastin, hill (System Xc- dose -> erastin_xc_inhib =
-                               dose^h/(dose^h+k_erastin^h), run under Control)
+Fewer than MIN_POSTERIOR accepted draws produce an underpowered diagnostic:
+quantiles in JSON are retained for audit, but reports and plots suppress posterior
+inference. The corrected 40,000-draw run accepted four draws. It cannot support
+joint credible intervals or parameter-information claims. The spatial headlines
+remain prior-predictive, with no validated transfer from this in-vitro target.
 
-ABC: draw from in-vitro-spanning uniform priors, simulate BOTH dose-response
-curves per draw, score by the JOINT distance (RSL3 RMSE vs ML162 + erastin RMSE
-vs CTRPv2 erastin), accept the closest fraction -> the joint posterior. Marginal
-2.5/50/97.5 credible intervals per parameter.
-
-POSTERIOR-PREDICTIVE CHECK
---------------------------
-The accepted draws predict a HELD-OUT GPX4 inhibitor (ML210, never used in the
-distance), reported as a posterior-predictive RMSE distribution + coverage of the
-held-out points inside the 95% predictive band. This is generalization, not
-training fit.
-
-HONESTY / SCOPE (the load-bearing caveat)
------------------------------------------
-This is an IN-VITRO joint posterior. It puts credible intervals on the IN-VITRO
-single-cell switch. It does NOT condition the in-vivo / spatial manuscript
-headlines: the in-vivo PRCC priors and the in-vitro data are DISJOINT (#332,
-re-confirmed here for the joint fit), so the in-vivo/spatial headline numbers stay
-PRIOR-predictive (the existing headline_uncertainty intervals). The manuscript
-switch magnitudes therefore carry the in-vitro joint posterior intervals where the
-claim is in-vitro, and stay prior-predictive where the claim is in-vivo/spatial,
-and this script states which is which. Conditioning the in-vivo headlines needs an
-in-vivo ferroptosis dataset that maps onto these dimensionless headline parameters,
-which does not exist publicly: the in-vivo ferroptosis readouts that DO exist (the
-IKE PK course used for tumor-PK calibration, Zhang 2019 PMID 30799221; in-vivo
-SCD1/MUFA, Sen 2025 PMID 40198901; public tumor-growth-inhibition series) measure
-different observables that do not condition the five headlines.
-
-Run (needs the compiled `ferroptosis_core` extension; not run in CI):
-  python3 scripts/abc_joint_posterior.py
-Writes analysis/calibration/joint-posterior.{md,json} + joint-posterior-predictive.png.
+Run with the compiled ferroptosis_core extension:
+  python scripts/abc_joint_posterior.py --n-draws 40000
+Rebuild prose (and the underpowered status plot) without sampling:
+  python scripts/abc_joint_posterior.py --render-only
 """
 
 import argparse
@@ -129,13 +98,13 @@ def model_erastin(doses, params, n=SIM_N, seed=SIM_SEED):
 
 
 def run(args):
-    curves = ck.load_curves()
+    curves, source = ck.load_target_data()
     rsl3_doses = list(ck.DOSE_GRID_UM)
     erastin_doses = list(ce.DOSE_GRID_UM)
 
-    emp_rsl3 = ck.empirical_median_viability(curves[ck.FIT_COMPOUND], rsl3_doses)        # ML162
-    emp_erastin = ck.empirical_median_viability(curves[ce.COMPOUND], erastin_doses)      # erastin
-    emp_heldout = ck.empirical_median_viability(curves[ck.HELDOUT_GPX4I], rsl3_doses)    # ML210
+    emp_rsl3, rsl3_support = ck.empirical_target(curves[ck.FIT_COMPOUND], rsl3_doses)
+    emp_erastin, erastin_support = ck.empirical_target(curves[ce.COMPOUND], erastin_doses)
+    emp_heldout, heldout_support = ck.empirical_target(curves[ck.HELDOUT_GPX4I], rsl3_doses)
 
     rng = np.random.default_rng(RNG_SEED)
     names = [p[0] for p in PRIORS]
@@ -252,6 +221,9 @@ def run(args):
                      if post[n]["posterior_width_frac_of_prior"] > null_p5]
 
     result = {
+        "target_source": source,
+        "target_support": {ck.FIT_COMPOUND: rsl3_support, ce.COMPOUND: erastin_support,
+                           ck.HELDOUT_GPX4I: heldout_support},
         "n_draws": args.n_draws,
         "n_accepted": int(n_accept),
         "accept_frac": round(n_accept / args.n_draws, 5),
@@ -294,14 +266,53 @@ def run(args):
     _plot(result, accept_idx, rsl3_models, erastin_models, pp_band)
     write_report(result)
     print(f"accepted {n_accept}/{args.n_draws}; eps={eps:.4f}")
-    print(f"held-out ML210 coverage {result['heldout_posterior_predictive']['coverage_inside_95pct_band']}, "
-          f"median PP RMSE {result['heldout_posterior_predictive']['median_pp_rmse']}")
-    print(f"unconstrained: {unconstrained}")
+    if posterior_is_usable(result):
+        print(f"held-out ML210 coverage {result['heldout_posterior_predictive']['coverage_inside_95pct_band']}, "
+              f"median PP RMSE {result['heldout_posterior_predictive']['median_pp_rmse']}")
+        print(f"unconstrained: {unconstrained}")
+    else:
+        print("UNDERPOWERED: joint intervals, information classifications, and "
+              "generalization claims withheld; JSON summaries are audit-only diagnostics.")
     print(f"wrote {OUT_JSON.relative_to(REPO_ROOT)} + {OUT_MD.relative_to(REPO_ROOT)} + {OUT_PNG.name}")
     return result
 
 
+def posterior_is_usable(r):
+    """Require the sample-size guard even if an input flag is stale."""
+    return not r["underpowered"] and r["n_accepted"] >= r["min_posterior"]
+
+
+def _plot_underpowered(r):
+    """Render targets and sampling status without implying credible bands."""
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+
+    c = r["curves"]
+    fig, axes = plt.subplots(1, 3, figsize=(13, 4))
+    panels = (
+        ("ML162: fit target", c["rsl3_doses_um"], c["empirical_rsl3_ml162"]),
+        ("Erastin: fit target", c["erastin_doses_um"], c["empirical_erastin"]),
+        ("ML210: held-out compound", c["rsl3_doses_um"],
+         r["heldout_posterior_predictive"]["empirical"]),
+    )
+    for ax, (title, doses, target) in zip(axes, panels):
+        ax.semilogx(doses, target, "ko-", label="Supported fitted-curve median")
+        ax.set(xlabel="Dose (µM)", ylabel="Viability", ylim=(0, 1.1), title=title)
+        ax.legend(fontsize=7)
+    fig.suptitle(
+        f"UNDERPOWERED: {r['n_accepted']} / {r['n_draws']:,} draws accepted; "
+        f"minimum {r['min_posterior']} required\n"
+        "Joint credible intervals and predictive bands withheld", fontsize=11)
+    fig.tight_layout()
+    fig.savefig(OUT_PNG, dpi=120)
+    plt.close(fig)
+
+
 def _plot(r, accept_idx, rsl3_models, erastin_models, pp_band):
+    if not posterior_is_usable(r):
+        _plot_underpowered(r)
+        return
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
@@ -322,19 +333,19 @@ def _plot(r, accept_idx, rsl3_models, erastin_models, pp_band):
         a.set_xlabel("dose (µM)")
         a.set_ylabel("viability")
 
-    ax[0].fill_between(rsl3_doses, r_band[0], r_band[2], alpha=0.25, color="C0", label="95% posterior")
+    ax[0].fill_between(rsl3_doses, r_band[0], r_band[2], alpha=0.25, color="C0", label="95% parameter-draw band")
     ax[0].plot(rsl3_doses, r_band[1], "-", color="C0", label="posterior median")
     ax[0].plot(rsl3_doses, c["empirical_rsl3_ml162"], "ko", label="ML162 (fit)")
     ax[0].set_title("RSL3 / GPX4i (ML162): fit")
     ax[0].legend(fontsize=7)
 
-    ax[1].fill_between(erastin_doses, e_band[0], e_band[2], alpha=0.25, color="C1", label="95% posterior")
+    ax[1].fill_between(erastin_doses, e_band[0], e_band[2], alpha=0.25, color="C1", label="95% parameter-draw band")
     ax[1].plot(erastin_doses, e_band[1], "-", color="C1", label="posterior median")
     ax[1].plot(erastin_doses, c["empirical_erastin"], "ks", label="erastin (fit)")
     ax[1].set_title("erastin / System Xc-: fit")
     ax[1].legend(fontsize=7)
 
-    ax[2].fill_between(rsl3_doses, pp_band[0], pp_band[2], alpha=0.25, color="C2", label="95% predictive")
+    ax[2].fill_between(rsl3_doses, pp_band[0], pp_band[2], alpha=0.25, color="C2", label="95% parameter-draw band")
     ax[2].plot(rsl3_doses, pp_band[1], "-", color="C2", label="predictive median")
     ax[2].plot(rsl3_doses, hp["empirical"], "k^", label=f"{hp['compound']} (held-out)")
     ax[2].set_title(f"{hp['compound']}: held-out posterior-predictive")
@@ -346,7 +357,67 @@ def _plot(r, accept_idx, rsl3_models, erastin_models, pp_band):
     plt.close(fig)
 
 
+def _write_underpowered_report(r):
+    md = f"""# Joint multi-inducer calibration: underpowered
+
+Generated by `scripts/abc_joint_posterior.py` from `joint-posterior.json`.
+
+**Underpowered:** {r['n_accepted']} of {r['n_draws']:,} prior draws met the
+acceptance criterion; the minimum is {r['min_posterior']}. Joint credible
+intervals, parameter-information classifications, and held-out generalization
+claims are withheld. The JSON quantiles and coverage are diagnostic summaries
+of this small accepted set, not a usable posterior.
+
+## Dose support
+
+{ck.support_markdown(r['target_support'])}
+
+The unsupported 100 µM erastin target has been removed. The corrected erastin
+grid ends at 30 µM. Priors, reference vector, tolerance factor, and minimum
+accepted count are unchanged.
+
+## Acceptance and history
+
+The joint distance is ML162 RMSE plus erastin RMSE. The reference distance
+**{r['reference_distance']}** times **{r['tolerance_factor']}** sets epsilon to
+**{r['epsilon_joint_distance']}**. The accepted fraction is {r['accept_frac']:.2%};
+that fraction is an outcome, not a quota.
+
+An earlier version accepted a fixed 2% of draws. Its reference distance 0.2202
+and median-vector distance 0.2413 used the original targets, including the
+unsupported 100 µM value; they are not directly comparable to this run.
+Acceptance is now a TOLERANCE. The former fixed 0.6 threshold is no longer used
+for the information-width check. For this small set, its sample-size null P5
+width is **{r['uninformative_null_p5_width']}**, retained only as a diagnostic;
+no parameter is classified as informed or unconstrained here. See
+`abc-acceptance-diagnostic.md` and `abc-information-content.md`.
+
+## What can be concluded
+
+This run did not establish a usable joint posterior under the documented
+sampling budget and acceptance rule. It does not distinguish insufficient
+sampling from model or target mismatch. More efficient sampling should be
+assessed against the same fixed target and criterion before interpreting
+intervals. A larger draw count alone does not establish biological validity.
+
+The plot shows only supported fitted-curve targets and this sampling status.
+A parameter-draw band omits uncertainty in experimental outcomes and fitted
+curves. Dose-wise targets are not independent observations; ML210 shares cell
+lines with the training compound within the same screen. Independent assay
+validation remains pending.
+
+The separately refitted GPX4 point fit and single-inducer ABC remain available
+in `kill-switch-calibration.md` and `abc-posterior-report.md`. They do not supply
+a joint posterior. In-vivo/spatial headline intervals remain prior-predictive;
+this run establishes no transfer of in-vitro parameters to those outputs.
+"""
+    OUT_MD.write_text(md, encoding="utf-8")
+
+
 def write_report(r):
+    if not posterior_is_usable(r):
+        _write_underpowered_report(r)
+        return
     p = r["posterior"]
     d = r["disjunction_with_invivo_priors"]
     hp = r["heldout_posterior_predictive"]
@@ -363,6 +434,18 @@ def write_report(r):
         f"**{v['entire_95pct_posterior_above_invivo_max']}**."
         for n, v in d.items()
     )
+    separation = (
+        "Both reported 95% intervals lie above the corresponding PRCC ranges."
+        if all(v["entire_95pct_posterior_above_invivo_max"] for v in d.values())
+        else "At least one reported 95% interval does not lie entirely above its PRCC range."
+    )
+    sampling_note = (
+        f"**Underpowered:** only {r['n_accepted']} draws met the criterion, below "
+        f"the {r['min_posterior']}-draw reporting threshold. These quantiles are unstable."
+        if r["underpowered"] else
+        f"The accepted set meets the {r['min_posterior']}-draw minimum; this is a "
+        "sampling check, not evidence of biological validity."
+    )
 
     md = f"""# Joint multi-inducer in-vitro posterior (#500)
 
@@ -370,15 +453,25 @@ Generated by `scripts/abc_joint_posterior.py` (needs the compiled `ferroptosis_c
 extension; not run in CI). Builds on the #330 GPX4i fit, the #502 System Xc-/erastin
 mechanism, and the #332 single-inducer ABC.
 
+## Dose support
+
+{ck.support_markdown(r['target_support'])}
+
+Erastin uses the original grid through 30 µM. The unsupported 100 µM point
+has been removed. The reference distance and acceptance threshold are recomputed
+on these corrected targets, with the same priors and tolerance factor.
+
 ## History of this run's acceptance rule
 
 An earlier version accepted a fixed 2% of draws, so epsilon was an OUTPUT --
 whatever the last accepted draw scored -- and nothing had to meet it. That run
 (1,500 draws, 30 accepted, epsilon 0.35) returned a posterior whose median fitted
 WORSE than a vector already committed in this repository: 0.2413 against 0.2202
-on its own joint distance. Acceptance is now a TOLERANCE anchored to that
+on its original target set, which included the unsupported 100 µM point.
+Those historical distances are not directly comparable with distances on the
+corrected targets above. Acceptance is now a TOLERANCE anchored to the
 reachable reference, so epsilon is a criterion; the run reports a shortfall
-rather than padding itself back to a quota. Diagnosis and before/after:
+rather than padding itself back to a quota. History and current-target diagnostics:
 `analysis/calibration/abc-acceptance-diagnostic.md`.
 
 This note lives in the generator rather than in the document, because the
@@ -392,27 +485,39 @@ The shared single-cell switch (`lp_propagation`, `lp_rate`, `gpx4_rate`,
 `gsh_scav_efficiency`) is conditioned JOINTLY on **two inducer mechanisms at once**
 (a GPX4 inhibitor, ML162, and a System Xc- inhibitor, erastin), with per-mechanism
 potencies (`k_um` for RSL3; `k_erastin`, `hill` for erastin). ABC over {r['n_draws']}
-in-vitro-spanning prior draws, accepting the closest {r['accept_frac']:.0%}
-({r['n_accepted']} draws) by the joint distance (ML162 RMSE + erastin RMSE),
-epsilon = {r['epsilon_joint_distance']}.
+in-vitro-spanning prior draws. A draw is accepted when its joint distance
+(ML162 RMSE + erastin RMSE) is at most **{r['epsilon_joint_distance']}**:
+the reference distance **{r['reference_distance']}** multiplied by
+**{r['tolerance_factor']}**. This accepted **{r['n_accepted']} draws**
+({r['accept_frac']:.2%}); that fraction is an outcome, not a quota.
+
+{sampling_note}
 
 ## Joint posterior (credible intervals, not a point)
 
 {ptab()}
 
-The `width (frac of prior)` column is how much of the prior range the posterior
-still spans: ~1.0 means the data barely constrains it, small means well
-constrained. **Unconstrained (>= 0.6 of prior width):** {", ".join(f"`{x}`" for x in r['unconstrained_params']) or "none"}.
-These are the parameters the in-vitro dose-response panel does not identify (e.g.
-the GSH/GPX4 axis is partly degenerate with the LP cascade, consistent with the
-PRCC/Sobol identifiability findings); they are reported as intervals, not points.
+The `width (frac of prior)` column measures marginal interval width relative
+to the prior range. Its reference is the width obtained by sampling the prior
+alone with the same number of accepted draws. The 5th percentile of that null
+is **{r['uninformative_null_p5_width']}**. Parameters whose width exceeds this
+threshold show no detected contraction by this criterion:
+**{", ".join(f"`{x}`" for x in r['unconstrained_params']) or "none"}**.
+The former fixed 0.6 threshold is no longer used. Marginal contraction measures
+information under this ABC design; it does not establish unique mechanistic
+identification or a good fit.
 
 ## Held-out posterior-predictive ({hp['compound']}, never used in the fit)
 
-The accepted draws predict a held-out GPX4 inhibitor ({hp['compound']}):
-**coverage {hp['coverage_inside_95pct_band']} of held-out points inside the 95%
-predictive band**, median posterior-predictive RMSE **{hp['median_pp_rmse']}**. This
-is generalization to an unseen inducer of the same class, not training fit. See
+The accepted parameter draws produce model viability curves compared with the
+held-out compound {hp['compound']}: **{hp['coverage_inside_95pct_band']} fitted-curve
+target values** fall inside the central 95% parameter-draw band, with median
+held-out RMSE **{hp['median_pp_rmse']}**. Simulation seed and population size are
+fixed. The band omits uncertainty in the fitted CTRPv2 curves, variation across
+cell lines, and a measurement-error model; it is not a calibrated 95% interval
+for experimental outcomes. The dose-wise checks share fitted curves and are
+not independent validation observations. ML210 was held out by compound within
+the same screen, with overlapping cell lines. See
 `joint-posterior-predictive.png` (right panel).
 
 ## The load-bearing caveat: in-vitro only, disjoint from the in-vivo priors
@@ -422,23 +527,17 @@ fit:
 
 {disj_lines}
 
-So the in-vitro joint posterior lies ABOVE the in-vivo PRCC priors used for the
-spatial/headline prior-predictive intervals. The consequence is unchanged from
-#332 and is the honest scope of #500:
+{separation} These PRCC ranges are sensitivity bands around chosen defaults;
+separation from them is not independent validation of an in-vivo regime.
+The calibration scope remains:
 
 - **In-vitro switch claims** carry these joint-posterior credible intervals.
 - **In-vivo / spatial headline numbers** (hypoxia asymmetry, Bliss synergy,
   penetration gap, immune ratio) **cannot** be conditioned on in-vitro data and
   stay **prior-predictive** (the existing `headline_uncertainty.py` /
   `uncertainty_intervals.py` intervals, `analysis/identifiability-report.md`).
-  Conditioning them needs an in-vivo ferroptosis dataset that maps onto these
-  dimensionless headline parameters — one that does not exist publicly (the in-vivo
-  ferroptosis readouts that DO exist, e.g. the IKE PK course used for tumor-PK
-  calibration [Zhang 2019] and in-vivo SCD1/MUFA [Sen 2025], measure different
-  observables that do not condition the headlines).
-
-This is the posterior #500 asked for (a real multi-inducer posterior with
-held-out generalization), reported with exactly the scope the data supports.
+  The current workflow has no validated transfer from this fitted in-vitro
+  observable to those spatial headline parameters.
 """
     OUT_MD.write_text(md, encoding="utf-8")
 
@@ -453,7 +552,10 @@ def main():
     if args.render_only:
         # The prose lives in this file, so a wording change should not require
         # re-running the inference. Precedent: scripts/atlas_ambiguity.py.
-        write_report(json.loads(OUT_JSON.read_text()))
+        result = json.loads(OUT_JSON.read_text())
+        write_report(result)
+        if not posterior_is_usable(result):
+            _plot_underpowered(result)
         print(f"re-rendered {OUT_MD.relative_to(REPO_ROOT)} from "
               f"{OUT_JSON.relative_to(REPO_ROOT)} (no sampling)")
         return 0

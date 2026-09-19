@@ -29,16 +29,18 @@ brain/CNS reading from this class is a reading about sonodynamic, HIFU and
 electrochemical therapy specifically, not about physically delivered treatment.
 """
 import argparse
-import gzip
 import importlib.util
 import json
 import sys
 from collections import Counter, defaultdict
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from census_input import atlas_root, census_shards, iter_census_shards  # noqa: E402
+
 SCRIPT_DIR = Path(__file__).resolve().parent
 REPO = SCRIPT_DIR.parent
-RECORDS = REPO / "corpus/atlas/records"
+RECORDS = atlas_root() / "records"
 SITE_MAP = REPO / "analysis/site-descriptor-map.tsv"
 MECH_MAP = REPO / "analysis/mesh-mechanism-map.yaml"
 OUT_MD = REPO / "analysis/census-mechanism-sites.md"
@@ -83,25 +85,22 @@ def scan(stride: int = 1) -> dict:
     cls_site: dict[str, Counter] = {"physical": Counter(), "pharmacological": Counter()}
     site_tot: Counter = Counter()
     n = 0
-    shards = sorted(RECORDS.glob("*.jsonl.gz"))[::stride]
-    for f in shards:
-        with gzip.open(f, "rt", encoding="utf-8") as fh:
-            for line in fh:
-                rec = json.loads(line)
-                n += 1
-                ms = {m.lower() for m in (rec.get("mesh") or [])}
-                if not ms:
-                    continue
-                hit_sites = [s for s, d in sites.items() if ms & d]
-                if not hit_sites:
-                    continue
+    shards = census_shards(RECORDS, stride)
+    for rec in iter_census_shards(shards, RECORDS):
+        n += 1
+        ms = {m.lower() for m in (rec.get("mesh") or [])}
+        if not ms:
+            continue
+        hit_sites = [s for s, d in sites.items() if ms & d]
+        if not hit_sites:
+            continue
+        for s in hit_sites:
+            site_tot[s] += 1
+        hits = {k for k, d in mech.items() if ms & d}
+        for cname, members in (("physical", phys), ("pharmacological", pharm)):
+            if hits & members:
                 for s in hit_sites:
-                    site_tot[s] += 1
-                hits = {k for k, d in mech.items() if ms & d}
-                for cname, members in (("physical", phys), ("pharmacological", pharm)):
-                    if hits & members:
-                        for s in hit_sites:
-                            cls_site[cname][s] += 1
+                    cls_site[cname][s] += 1
     return {
         "census": n,
         "shards": len(shards),
@@ -143,8 +142,6 @@ def assemble(d: dict) -> dict:
 
 def render(d: dict) -> str:
     rows = d["rows"]
-    top = rows[0]
-    bot = rows[-1]
     haem = {r["site"]: r for r in rows if r["site"] in ("leukaemia", "lymphoma")}
     brain = next((r for r in rows if r["site"] == "brain/CNS"), None)
     L = []
@@ -157,6 +154,17 @@ def render(d: dict) -> str:
         f"({', '.join(d['physical_members'])}) and the pharmacological class "
         f"{len(d['pharmacological_members'])}.\n"
     )
+    if not rows or not d["physical_total"] or not d["pharmacological_total"]:
+        L.append(
+            f"The input contains {d['site_assigned_records']:,} site assignments, "
+            f"with {d['physical_total']:,} physical and "
+            f"{d['pharmacological_total']:,} pharmacological class assignments. "
+            "At least one class has no site-assigned records, so the comparison "
+            "of class enrichment is unavailable.\n"
+        )
+        return "\n".join(L)
+    top = rows[0]
+    bot = rows[-1]
     L.append(
         f"Enrichment is a class's share of a site divided by that site's share of "
         f"all site-assigned records ({d['site_assigned_records']:,}). 1.00x is the "
@@ -172,17 +180,23 @@ def render(d: dict) -> str:
         )
     L.append("")
     L.append("## What the ordering tracks\n")
-    L.append(
-        f"The physical class runs from {top['site']} at "
-        f"{top['physical_enrichment']:.2f}x down to {bot['site']} at "
-        f"{bot['physical_enrichment']:.2f}x, a factor of "
-        f"{top['physical_enrichment'] / bot['physical_enrichment']:.1f}. The enriched "
-        f"end is solid organs a probe, a fibre or an electrode can be placed in or "
-        f"on; the depleted end is disseminated and luminal disease. That is what "
-        f"these three modalities ARE -- each needs a physically reachable target -- "
-        f"so the ordering is a consistency check on the site assignment as much as a "
-        f"finding about the field.\n"
-    )
+    if bot["physical_enrichment"]:
+        L.append(
+            f"The physical class runs from {top['site']} at "
+            f"{top['physical_enrichment']:.2f}x down to {bot['site']} at "
+            f"{bot['physical_enrichment']:.2f}x, a factor of "
+            f"{top['physical_enrichment'] / bot['physical_enrichment']:.1f}. The enriched "
+            f"end is solid organs a probe, a fibre or an electrode can be placed in or "
+            f"on; the depleted end is disseminated and luminal disease. That is what "
+            f"these three modalities ARE -- each needs a physically reachable target -- "
+            f"so the ordering is a consistency check on the site assignment as much as a "
+            f"finding about the field.\n"
+        )
+    else:
+        L.append(
+            "At least one site has no physical-class records, so the ratio of "
+            "highest to lowest physical enrichment is undefined.\n"
+        )
     if d["opposed_sites"]:
         L.append(
             f"The reading that does not depend on the base rate is the "
@@ -243,11 +257,12 @@ def main() -> int:
         # costs nothing and makes the stored fields checkable rather than
         # merely carried forward.
         d = assemble(json.loads(OUT_JSON.read_text()))
-        OUT_JSON.write_text(json.dumps(d, indent=1) + "\n")
     else:
         d = assemble(scan(a.stride))
-        OUT_JSON.write_text(json.dumps(d, indent=1) + "\n")
-    OUT_MD.write_text(render(d))
+    json_text = json.dumps(d, indent=1) + "\n"
+    md_text = render(d)
+    OUT_JSON.write_text(json_text)
+    OUT_MD.write_text(md_text)
     print(f"wrote {OUT_MD}")
     return 0
 

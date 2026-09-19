@@ -1,4 +1,144 @@
 {
+  "target_source": {
+    "file": "ctrpv2_ferroptosis_curves.csv",
+    "sha256": "37856d90187d7d4fe8b8c02442b0d1cc0b51c1908bc51b572628e5d087892622",
+    "target_kind": "median of fitted CTRPv2 curves within recorded dose ranges"
+  },
+  "target_support": {
+    "ERASTIN": {
+      "policy": "entire_grid_within_recorded_dose_range",
+      "n_original": 795,
+      "n_retained": 785,
+      "n_excluded": 10,
+      "requested_doses_um": [
+        0.1,
+        0.3,
+        1.0,
+        3.0,
+        10.0,
+        30.0
+      ],
+      "per_dose_support": [
+        {
+          "dose_um": 0.1,
+          "n_supported": 794
+        },
+        {
+          "dose_um": 0.3,
+          "n_supported": 793
+        },
+        {
+          "dose_um": 1.0,
+          "n_supported": 794
+        },
+        {
+          "dose_um": 3.0,
+          "n_supported": 794
+        },
+        {
+          "dose_um": 10.0,
+          "n_supported": 791
+        },
+        {
+          "dose_um": 30.0,
+          "n_supported": 786
+        }
+      ],
+      "excluded_rows": [
+        {
+          "row_index": 16,
+          "minimum_dose_um": 0.0081,
+          "maximum_dose_um": 8.3,
+          "reasons": [
+            "requested_dose_above_maximum"
+          ],
+          "ModelID": "ACH-000028"
+        },
+        {
+          "row_index": 59,
+          "minimum_dose_um": 0.002,
+          "maximum_dose_um": 8.3,
+          "reasons": [
+            "requested_dose_above_maximum"
+          ],
+          "ModelID": "ACH-000094"
+        },
+        {
+          "row_index": 201,
+          "minimum_dose_um": 0.002,
+          "maximum_dose_um": 17.0,
+          "reasons": [
+            "requested_dose_above_maximum"
+          ],
+          "ModelID": "ACH-000296"
+        },
+        {
+          "row_index": 218,
+          "minimum_dose_um": 0.002,
+          "maximum_dose_um": 0.26,
+          "reasons": [
+            "requested_dose_above_maximum"
+          ],
+          "ModelID": "ACH-000317"
+        },
+        {
+          "row_index": 255,
+          "minimum_dose_um": 0.002,
+          "maximum_dose_um": 4.2,
+          "reasons": [
+            "requested_dose_above_maximum"
+          ],
+          "ModelID": "ACH-000364"
+        },
+        {
+          "row_index": 325,
+          "minimum_dose_um": 0.52,
+          "maximum_dose_um": 66.0,
+          "reasons": [
+            "requested_dose_below_minimum"
+          ],
+          "ModelID": "ACH-000454"
+        },
+        {
+          "row_index": 412,
+          "minimum_dose_um": 0.002,
+          "maximum_dose_um": 17.0,
+          "reasons": [
+            "requested_dose_above_maximum"
+          ],
+          "ModelID": "ACH-000578"
+        },
+        {
+          "row_index": 515,
+          "minimum_dose_um": 0.002,
+          "maximum_dose_um": 17.0,
+          "reasons": [
+            "requested_dose_above_maximum"
+          ],
+          "ModelID": "ACH-000720"
+        },
+        {
+          "row_index": 543,
+          "minimum_dose_um": 0.002,
+          "maximum_dose_um": 17.0,
+          "reasons": [
+            "requested_dose_above_maximum"
+          ],
+          "ModelID": "ACH-000752"
+        },
+        {
+          "row_index": 776,
+          "minimum_dose_um": 0.002,
+          "maximum_dose_um": 17.0,
+          "reasons": [
+            "requested_dose_above_maximum"
+          ],
+          "ModelID": "ACH-002820"
+        }
+      ],
+      "compound": "ERASTIN"
+    }
+  },
   "compound": "ERASTIN",
   "phenotype": "Glycolytic",
   "dose_grid_um": [
@@ -7,8 +147,7 @@
     1.0,
     3.0,
     10.0,
-    30.0,
-    100.0
+    30.0
   ],
   "calibrated_params": {
     "lp_propagation": 1.0,
@@ -17,25 +156,24 @@
     "hill": 6.0
   },
   "grid_evals": 1050,
-  "fit_rmse": 0.1003,
+  "fit_rmse": 0.0697,
   "shared_switch": {
     "lp_propagation": 0.7,
     "lp_rate": 0.4,
     "k_erastin": 3.0,
     "hill": 6.0,
-    "rmse": 0.1716
+    "rmse": 0.1101
   },
   "control_baseline_death_at_fitted_cascade": 0.0865,
-  "erastin_increment_top_dose": 0.4217,
+  "erastin_increment_top_dose": 0.4215,
   "curves": {
     "empirical": [
       1.0078,
-      1.0035,
-      0.9923,
+      1.0036,
+      0.9924,
       0.9506,
-      0.5254,
-      0.4267,
-      0.2884
+      0.5246,
+      0.4258
     ],
     "model_fit": [
       0.9135,
@@ -43,15 +181,13 @@
       0.9135,
       0.9113,
       0.5292,
-      0.492,
-      0.4918
+      0.492
     ],
     "model_shared_switch": [
       0.9758,
       0.9758,
       0.9758,
       0.9123,
-      0.6545,
       0.6545,
       0.6545
     ]

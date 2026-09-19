@@ -5,34 +5,55 @@ extension; not run in CI). Target data:
 `analysis/calibration/ctrpv2_ferroptosis_curves.csv` (the ERASTIN curves;
 see `calibration-targets-ctrpv2.md`).
 
+## Dose support
+
+Targets are medians of published fitted curves evaluated within each retained
+cell line's recorded dose range; they are not raw observations at every requested dose.
+A fixed cohort covers the entire grid for each compound, so its denominator
+does not change with dose. Excluded lines can differ biologically from retained
+lines; the result applies to this supported cohort, not the entire screen.
+
+| compound | curves available | retained across full grid | excluded | dose range (µM) |
+|---|---:|---:|---:|---|
+| ERASTIN | 795 | 785 | 10 | 0.1–30 |
+
+The JSON records the input CSV hash, dose support and excluded rows.
+
+The previous 100 µM target lay above every recorded erastin dose range
+(maximum 66 µM). It is excluded from fitting. The remaining original grid
+points span 0.1–30 µM; this is a correction to target construction, not evidence
+that a biological response changed. Error metrics use this revised target set.
+
 ## Result
 
 #502 put System Xc-/SLC7A11 cystine import in the CORE engine (the NRF2-driven GSH
 resynthesis IS the cystine supply; `erastin_xc_inhib` inhibits it, byte-identical
 at the `0.0` default). This is the FIT: the model erastin dose-response (phenotype
 **Glycolytic**, `Treatment::Control` so erastin acts ONLY via System Xc-) fit
-to the **ERASTIN** median viability(dose).
+to pointwise medians of the retained **ERASTIN** fitted viability curves.
 
 - **Calibrated parameters**: `lp_propagation = 1.0`, `lp_rate = 0.4`,
   µM->inhibition scale `K_erastin = 6.0` µM with Hill exponent
   `h = 6.0` (via `erastin_xc_inhib = dose^h/(dose^h+K_erastin^h)`).
-- **Fit RMSE**: 0.1003 (grid search over 1050 combinations).
-- **Mechanism specificity**: at the fitted cascade the Control baseline death
+- **Fit RMSE**: 0.0697 (grid search over 1050 combinations).
+- **Model input check**: at the fitted cascade the Control baseline death
   (`erastin_xc_inhib = 0`) is 0.0865, and erastin
-  RAISES death monotonically with dose to 0.4217 above that
-  baseline at the top dose, so the dose-DEPENDENT kill is entirely via System Xc-.
+  changes death by 0.4215 above that baseline at
+  30 µM. This checks how the implementation routes the drug effect
+  through System Xc-; it is not experimental evidence of target specificity.
 
 This is the core's SECOND data-anchored inducer mechanism: GPX4 inhibition (RSL3,
 #330) and now System Xc- (erastin). The Hill exponent on the dose->inhibition map
-captures the flat-then-steep erastin response (EC50 ~4.6 µM); the residual is the
-honest limit of a single-phenotype fit to the median cell line.
+allows a flat-then-steep dose response. The fit and residual describe a single
+phenotype's approximation to a population summary; they do not identify an
+individual median cell line or establish the Hill exponent's biological meaning.
 
 ### Erastin dose-response (fit)
 
-| dose (µM) | 0.1 | 0.3 | 1.0 | 3.0 | 10.0 | 30.0 | 100.0 |
-|---|---|---|---|---|---|---|---|
-| empirical median | 1.01 | 1.00 | 0.99 | 0.95 | 0.53 | 0.43 | 0.29 |
-| model (calibrated) | 0.91 | 0.91 | 0.91 | 0.91 | 0.53 | 0.49 | 0.49 |
+| dose (µM) | 0.1 | 0.3 | 1.0 | 3.0 | 10.0 | 30.0 |
+|---|---|---|---|---|---|---|
+| fitted-curve median | 1.01 | 1.00 | 0.99 | 0.95 | 0.52 | 0.43 |
+| model (calibrated) | 0.91 | 0.91 | 0.91 | 0.91 | 0.53 | 0.49 |
 
 ## Shared-switch check (does the #330 RSL3 cascade also fit erastin?)
 
@@ -40,24 +61,23 @@ Fixing the cascade at the #330 RSL3 in-vitro values
 (`lp_propagation = 0.7`, `lp_rate = 0.4`) and fitting only
 `(K_erastin, hill)`:
 
-- **Best K_erastin** = 3.0 µM, **Hill** = 6.0, **RMSE** = 0.1716.
+- **Best K_erastin** = 3.0 µM, **Hill** = 6.0, **RMSE** = 0.1101.
 
-| dose (µM) | 0.1 | 0.3 | 1.0 | 3.0 | 10.0 | 30.0 | 100.0 |
-|---|---|---|---|---|---|---|---|
-| empirical median | 1.01 | 1.00 | 0.99 | 0.95 | 0.53 | 0.43 | 0.29 |
-| model (#330 cascade) | 0.98 | 0.98 | 0.98 | 0.91 | 0.65 | 0.65 | 0.65 |
+| dose (µM) | 0.1 | 0.3 | 1.0 | 3.0 | 10.0 | 30.0 |
+|---|---|---|---|---|---|---|
+| fitted-curve median | 1.01 | 1.00 | 0.99 | 0.95 | 0.52 | 0.43 |
+| model (#330 cascade) | 0.98 | 0.98 | 0.98 | 0.91 | 0.65 | 0.65 |
 
-The #330 RSL3 cascade under-kills erastin at the top of the dose range (its
-GSH-starvation death saturates below the measured erastin ceiling), so a SINGLE
-switch serving both inducers is imperfect. Reconciling both mechanisms under one
-parameter set is the joint multi-inducer posterior (issue #500); #502 establishes
-that System Xc- is in the core and that each inducer mechanism is individually
-calibratable from data.
+The table compares the fixed-cascade prediction with the supported erastin
+target. It does not measure a high-dose biological ceiling. Joint conditioning
+on both compounds is handled by the multi-inducer ABC (issue #500); these
+separate point fits alone do not show that one cascade explains both.
 
 ## Caveats
 
-1. **In-vitro, single representative phenotype** fit to the MEDIAN cell line; the
-   cell-line EC50 spread maps to phenotype heterogeneity and is not reproduced here.
+1. **In-vitro, single representative phenotype** fit to pointwise medians of
+   fitted curves. Cell-line variability and uncertainty in those fits are not
+   represented by this objective.
 2. **K_erastin is a fitted nuisance**, not a physical constant (it absorbs the
    µM-to-dimensionless-inhibition unit gap).
 3. **Production defaults are unchanged.** `erastin_xc_inhib = 0` is byte-identical;

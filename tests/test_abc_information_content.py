@@ -29,9 +29,16 @@ quietly move what counts as informed.
 import json
 import math
 import random
+import sys
 from pathlib import Path
 
+import pytest
+
 REPO_ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(REPO_ROOT / "scripts"))
+import abc_posterior_information as info  # noqa: E402
+import identifiability_report as ident  # noqa: E402
+
 CAL = REPO_ROOT / "analysis" / "calibration"
 INFO_JSON = CAL / "abc-information-content.json"
 INFO_MD = CAL / "abc-information-content.md"
@@ -50,7 +57,7 @@ def test_the_null_is_what_an_uninformative_posterior_looks_like():
     analysis uses. If the two disagreed, the null would be an artifact of one
     RNG rather than a property of the statistic.
     """
-    r = reports()[0]
+    r = next(r for r in reports() if r.get("parameters"))
     n = r["n_accepted"]
     rng = random.Random(12345)
     widths = []
@@ -74,54 +81,88 @@ def test_the_null_is_what_an_uninformative_posterior_looks_like():
 
 
 def test_the_legacy_threshold_mislabels_informed_parameters():
-    """The finding. If it ever stops holding, the corrections must be revisited."""
-    mis = [(r["artifact"], n) for r in reports()
-           for n, v in r.get("parameters", {}).items()
-           if v["informed"] and v["legacy_flag_unconstrained"]]
-    assert mis, (
-        "no parameter is both informed and flagged unconstrained any more, so "
-        "the corrections written into joint-posterior.md and CLAUDE.md no "
-        "longer describe the data and should be re-checked")
-    names = {n for _, n in mis}
-    for expected in ("lp_propagation", "lp_rate"):
-        assert expected in names, (
-            f"{expected} is no longer among the mislabelled parameters; the "
-            "manuscript quotes its credible interval, so this matters")
+    """Test the retired rule's defect independently of a run's validity."""
+    null = sorted(info.null_widths(30, replicates=4000))
+    width = 0.65
+    assert width >= info.LEGACY_THRESHOLD
+    assert width < info._pct(null, 5)
 
 
-def test_the_cascade_parameters_are_informed_by_the_data():
-    """The substantive claim the corrections assert."""
+def test_joint_information_is_withheld_when_the_current_run_is_underpowered():
+    """A sample-size diagnostic cannot license intervals from four draws."""
     joint = [r for r in reports() if "joint-posterior" in r["artifact"]][0]
-    for p in ("lp_propagation", "lp_rate", "gpx4_rate"):
-        v = joint["parameters"][p]
-        assert v["informed"], f"{p} is no longer informed by the data"
-        # The decision threshold is 5%, not 1%. This asserted <= 1.0 because on
-        # the 1,500-draw run all three sat at 0.0-0.1. The tolerance-anchored
-        # 40,000-draw run moved gpx4_rate to 1.5 -- still decisively informed,
-        # but a guard pinned to the incidental value rather than the criterion
-        # fired on an improvement.
-        assert v["null_percentile"] <= 5.0, (
-            f"{p} sits at the {v['null_percentile']}th percentile of the null, "
-            "above the 5% threshold this analysis uses to call a parameter "
-            "informed")
+    source = json.loads((CAL / "joint-posterior.json").read_text())
+    assert source["min_posterior"] == 20
+    if source["underpowered"] or source["n_accepted"] < source["min_posterior"]:
+        assert joint["underpowered"] is True
+        assert "underpowered" in joint["unassessable"]
+        assert "parameters" not in joint and "null_p5_width" not in joint
+    else:
+        assert joint.get("parameters") and not joint.get("unassessable")
 
 
-def test_the_genuinely_uninformed_parameters_are_still_reported_as_such():
-    """The correction must not overshoot into claiming everything is informed."""
-    joint = [r for r in reports() if "joint-posterior" in r["artifact"]][0]
-    # `hill` only. k_erastin WAS uninformed on the 1,500-draw quantile run
-    # (0.813 of prior width, 8.5th percentile) and became informed under the
-    # tolerance-anchored 40,000-draw run (0.391, 0.0th) -- a real gain from the
-    # fix, not a drift, so the guard follows it rather than pinning the old set.
-    assert not joint["parameters"]["hill"]["informed"], (
-        "hill is now reported as informed; it is the parameter measured to be "
-        "INERT (the joint distance is identical at hill 6, 8 and 10), so this "
-        "would contradict abc-acceptance-diagnostic.md")
-    assert joint["parameters"]["hill"]["null_percentile"] > 25, (
-        "hill's width is no longer unremarkable for noise")
-    assert joint["parameters"]["k_erastin"]["informed"], (
-        "k_erastin is uninformed again; the denser tolerance-anchored run had "
-        "brought it inside, so this suggests the acceptance fix regressed")
+def test_assessable_parameter_flags_follow_the_null_criterion():
+    for report in reports():
+        if report.get("parameters"):
+            for parameter in report["parameters"].values():
+                assert parameter["informed"] == (parameter["null_percentile"] <= 5.0)
+
+
+def _posterior_fixture(path, n=4, underpowered=True):
+    path.write_text(json.dumps({
+        "n_draws": 40000, "n_accepted": n, "min_posterior": 20,
+        "underpowered": underpowered,
+        "posterior": {
+            "narrow": {"posterior_width_frac_of_prior": 0.1},
+            "wide": {"posterior_width_frac_of_prior": 0.99},
+        },
+    }))
+
+
+@pytest.mark.parametrize("n,flag", [(4, True), (4, False), (20, True)])
+def test_underpowered_status_or_count_blocks_information_before_null(n, flag, tmp_path, monkeypatch):
+    path = tmp_path / "joint-posterior.json"
+    _posterior_fixture(path, n, flag)
+    monkeypatch.setattr(info, "null_widths", lambda *a, **k: pytest.fail("invalid posterior reached null test"))
+    result = info.assess(path)
+    assert result["underpowered"] is True and result["n_accepted"] == n
+    assert "parameters" not in result and "null_median_width" not in result
+    rendered = info.render([result])
+    assert "Not assessed: underpowered" in rendered
+    assert "parameters are informed" not in rendered
+
+
+def test_minimum_accepted_count_permits_informative_and_uninformative_results(tmp_path):
+    path = tmp_path / "joint-posterior.json"
+    _posterior_fixture(path, n=20, underpowered=False)
+    result = info.assess(path)
+    assert "unassessable" not in result
+    assert result["parameters"]["narrow"]["informed"] is True
+    assert result["parameters"]["wide"]["informed"] is False
+
+
+@pytest.mark.parametrize("current", ["underpowered", "missing"])
+def test_identifiability_does_not_reuse_stale_joint_information(current, tmp_path, monkeypatch):
+    cal = tmp_path / "analysis" / "calibration"
+    cal.mkdir(parents=True)
+    (cal / "abc-information-content.json").write_text(json.dumps([{
+        "artifact": "analysis/calibration/joint-posterior.json",
+        "parameters": {"old_parameter": {"informed": True}},
+    }]))
+    if current == "underpowered":
+        _posterior_fixture(cal / "joint-posterior.json")
+    monkeypatch.setattr(ident, "REPO_ROOT", tmp_path)
+    monkeypatch.setattr(ident, "OUT_MD", tmp_path / "identifiability.md")
+    facts = ident._fitted_cascade_facts()
+    assert "informed" not in facts and "uninformed" not in facts
+    assert facts["joint_information"]["unassessable"]
+    report = ident.build()
+    assert "parameters" not in report["joint_posterior_information"]
+    ident.write_report(report)
+    text = ident.OUT_MD.read_text()
+    assert "Current joint inference" in text and "NOT ASSESSED" in text
+    assert "1 of its 1 parameters" not in text
+    assert "including the whole LP cascade" not in text
 
 
 def test_the_generator_no_longer_uses_a_bare_constant():
@@ -141,12 +182,17 @@ def test_the_history_survives_regeneration():
     template, so regenerating reproduces it -- which is what this checks.
     """
     txt = JOINT_MD.read_text()
-    assert "History of this run's acceptance rule" in txt, (
+    source_result = json.loads((CAL / "joint-posterior.json").read_text())
+    underpowered = (source_result["underpowered"] or
+                    source_result["n_accepted"] < source_result["min_posterior"])
+    history_heading = ("Acceptance and history" if underpowered else
+                       "History of this run's acceptance rule")
+    assert history_heading in txt, (
         "the acceptance-rule history is missing from joint-posterior.md; if it "
         "was written into the markdown directly it will be erased again on the "
         "next regeneration -- it belongs in the generator")
     src = (REPO_ROOT / "scripts" / "abc_joint_posterior.py").read_text()
-    assert "History of this run's acceptance rule" in src, (
+    assert history_heading in src, (
         "the history is in the generated document but not in the generator, so "
         "it will not survive the next run")
 
@@ -164,18 +210,12 @@ IDENT_MD = REPO_ROOT / "analysis" / "identifiability-report.md"
 IDENT_GEN = REPO_ROOT / "scripts" / "identifiability_report.py"
 
 
-def test_the_closing_section_does_not_still_promise_a_route_already_taken():
-    """It said #500 + #502 "would condition" the constants. Both landed.
-
-    Neither made any headline point-estimable, so the promise had become a
-    deferred note describing where the author stopped looking rather than what
-    turned out to be true.
-    """
+def test_the_closing_section_separates_current_inference_from_historical_substitution():
     txt = IDENT_MD.read_text()
     tail = txt[txt.index("## What would make a headline point-estimable"):]
-    assert "has been taken, and it is closed" in tail, (
-        "the closing section no longer records that the route it used to name "
-        "was taken and did not work")
+    assert "Current joint inference" in tail
+    assert "Historical substitution experiment" in tail
+    assert "not an admissibility result for the corrected joint" in tail
     assert "INADMISSIBLE" in tail, (
         "the closing section does not record the demonstrated reason the "
         "substitution route is closed")
@@ -202,10 +242,12 @@ def test_the_closing_figures_are_derived_from_the_artifacts():
     assert f"{h['default']['admissibility']['worst_rate']*100:.2f}%" in tail
 
     joint = [r for r in reports() if "joint-posterior" in r["artifact"]][0]
-    informed = sum(1 for v in joint["parameters"].values() if v["informed"])
-    assert f"{informed} of its {len(joint['parameters'])} parameters" in tail, (
-        "the informed-parameter count in the prose is not the one in "
-        "abc-information-content.json")
+    if joint.get("parameters"):
+        informed = sum(1 for v in joint["parameters"].values() if v["informed"])
+        assert f"{informed} of its {len(joint['parameters'])} parameters" in tail
+    else:
+        assert joint["unassessable"] in tail
+        assert "NOT ASSESSED" in tail
 
     # The generator must CALL the helper, not merely define it. Asserting the
     # name appears anywhere passed a mutation that deleted the call site, because

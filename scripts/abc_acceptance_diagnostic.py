@@ -1,44 +1,17 @@
 #!/usr/bin/env python3
-"""Why the joint ABC accepts parameter vectors worse than one already committed.
+"""Check the joint ABC's reference, acceptance rule and local boundary probes.
 
-THE OBSERVATION
----------------
-`analysis/calibration/joint-posterior.json` reports a posterior over 30 accepted
-draws with an acceptance threshold of 0.35 in the joint distance. But the vector
-this repository had already committed -- the #330 cascade plus the #502
-shared-switch erastin parameters -- scores 0.2202 on that same distance, and the
-posterior MEDIAN scores 0.2413. The inference returned something worse than its
-own starting material.
+The original fixed-fraction run accepted its best 2% irrespective of fit. Its
+coordinate-wise posterior median scored 0.2413 against a known reference at
+0.2202 on the same original targets. That history is retained separately from
+the current-target comparison: the dose-support correction removes the
+unsupported 100 µM erastin point and changes the retained cohorts, so comparing
+old and new distances would confound the acceptance rule with a changed target.
 
-WHAT IT IS NOT (both tested here, not assumed)
-----------------------------------------------
-1. A TRUNCATED PRIOR. The committed vector sits exactly on two prior bounds --
-   `k_erastin` at its low bound of 3.0 and `hill` at its high bound of 6.0 --
-   which looks like the box clipping the optimum. It is not: pushing `k_erastin`
-   below 3.0 makes the fit monotonically worse, and `hill` is INERT, changing the
-   distance by nothing at all between 6 and 10. The box is not in the way.
-
-2. AN UNDER-SAMPLED POSTERIOR. More draws would help, but the defect is not that
-   30 is a small number. It is what the acceptance rule does with any number.
-
-WHAT IT IS
-----------
-The acceptance is a fixed FRACTION -- `n_accept = n_draws * 0.02` -- so the run
-always accepts its best 2% no matter how bad they are. The reported epsilon is
-therefore an OUTPUT, whatever the 30th-best draw happened to score, and never a
-criterion anything had to meet. A rejection ABC built this way has no floor: hand
-it draws that are uniformly terrible and it will still return 2% of them and
-label the result a posterior.
-
-Here that shows up as a measurable gap. Uniform draws essentially never reach the
-good region in 7 dimensions -- 0 of 300 beat the committed vector in the run
-below -- so the 2% cut lands in a shell well above what is achievable, and the
-posterior median inherits the shell rather than the optimum.
-
-Both things are true at once, and the second does not cancel the first: the
-accepted set IS narrower than the prior for five of seven parameters
-(`analysis/calibration/abc-information-content.md`), so the data does move them.
-It is centred in the wrong place.
+Current probes score the reference and median vector against the same stored
+targets, vary two coordinates outside their prior bounds, and estimate how often
+fresh prior draws improve on the reference. These are fit diagnostics, not proof
+of a global optimum, mechanistic identifiability or biological validity.
 
 Usage:
     python scripts/abc_acceptance_diagnostic.py            # 300 draws, ~10 s
@@ -65,6 +38,7 @@ OUT_JSON = PROJECT_ROOT / "analysis" / "calibration" / "abc-acceptance-diagnosti
 HISTORICAL = {
     "n_draws": 1500, "n_accepted": 30,
     "epsilon": 0.35, "posterior_median_distance": 0.2413,
+    "reference_distance": 0.2202,
     "rule": "fixed 2% quantile",
 }
 
@@ -101,6 +75,8 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--draws", type=int, default=300)
     args = ap.parse_args()
+    if args.draws < 1:
+        ap.error("--draws must be positive")
 
     try:
         import numpy as np
@@ -142,6 +118,9 @@ def main() -> int:
                    for _ in range(args.draws)])
 
     res = {
+        "acceptance_rule": art.get("acceptance_rule"),
+        "target_source": art.get("target_source"),
+        "target_dose_grids_um": {"ML162": rd, "ERASTIN": ed},
         "committed_vector": COMMITTED,
         "committed_distance": round(float(committed), 4),
         "posterior_median_distance": round(float(median_d), 4),
@@ -150,13 +129,17 @@ def main() -> int:
         "prior_truncation_test": {k: {str(a): round(float(b), 4) for a, b in v.items()}
                                   for k, v in outside.items()},
         "n_accepted_now": art.get("n_accepted"),
+        "min_posterior": art.get("min_posterior"),
+        "underpowered": art.get("underpowered"),
         "sampling": {
             "draws": args.draws,
             "draws_of_record": art.get("n_draws"),
+            "seed": 7,
             "best": round(float(ds.min()), 4),
             "quantile_2pct": round(float(np.quantile(ds, 0.02)), 4),
             "n_beating_committed": int((ds < committed).sum()),
-            "frac_inside_epsilon": round(float((ds < eps).mean()), 4) if eps else None,
+            "n_inside_epsilon": int((ds <= eps).sum()) if eps is not None else None,
+            "frac_inside_epsilon": round(float((ds <= eps).mean()), 4) if eps is not None else None,
         },
     }
     OUT_JSON.write_text(json.dumps(res, indent=2, sort_keys=True) + "\n")
@@ -196,40 +179,85 @@ def render(r: dict) -> str:
     s = r["sampling"]
     ke = r["prior_truncation_test"]["k_erastin"]
     hl = r["prior_truncation_test"]["hill"]
-    hill_inert = len(set(hl.values())) == 1
-    ke_worse = all(v >= ke["3.0"] for v in ke.values())
-    fixed = r["posterior_median_distance"] < r["committed_distance"]
+    hill_unchanged = len(set(hl.values())) == 1
+    ke_no_improvement = all(v >= ke["3.0"] for v in ke.values())
+    median_better = r["posterior_median_distance"] < r["committed_distance"]
+    minimum = r.get("min_posterior")
+    count = r.get("n_accepted_now")
+    # A recorded shortfall or a count below the stated minimum is sufficient;
+    # absent metadata must not silently turn into a claim of adequate sampling.
+    underpowered = (r.get("underpowered") is True
+                    or (minimum is not None and count is not None and count < minimum))
+    adequacy_recorded = (minimum is not None and count is not None
+                         and r.get("underpowered") is not None)
     h = HISTORICAL
 
     L = ["# The ABC acceptance rule: the defect, and its fix", "",
          "Generated by `scripts/abc_acceptance_diagnostic.py`.", ""]
 
-    if fixed:
-        L += ["## Status: RESOLVED", "",
-              "The acceptance rule has been changed from a fixed quantile to a",
-              "tolerance anchored to a reachable distance, and the posterior it",
-              "produces now beats the reference it used to lose to. This document",
-              "records what was wrong, how it was diagnosed, and what the fix",
-              "bought — the defect itself is no longer present.", "",
-              "| | before | after |", "|---|--:|--:|",
-              f"| acceptance rule | {h['rule']} | tolerance |",
-              f"| draws | {h['n_draws']:,} | {r['sampling']['draws_of_record']:,} |",
-              f"| accepted | {h['n_accepted']} | {r['n_accepted_now']} |",
-              f"| epsilon | {h['epsilon']} (an output) | "
-              f"{r['reported_epsilon']} (a criterion) |",
-              f"| posterior median distance | {h['posterior_median_distance']} | "
-              f"**{r['posterior_median_distance']}** |",
-              f"| reference (committed vector) | {r['committed_distance']} | "
-              f"{r['committed_distance']} |", "",
-              f"The median went from **losing** to the reference by "
-              f"{100*(h['posterior_median_distance']/r['committed_distance']-1):.0f}% to "
-              f"**beating** it by "
-              f"{100*(1-r['posterior_median_distance']/r['committed_distance']):.0f}%.", ""]
+    if r.get("acceptance_rule") == "tolerance":
+        status = ("ACCEPTANCE RULE FIXED; POSTERIOR UNDERPOWERED" if underpowered
+                  else "ACCEPTANCE RULE FIXED" if adequacy_recorded
+                  else "ACCEPTANCE RULE FIXED; SAMPLING ADEQUACY UNKNOWN")
+        L += [f"## Status: {status}", "",
+              "The joint run uses a reference-based tolerance instead of filling a",
+              "fixed acceptance quota. This resolves the acceptance-rule defect;",
+              "it does not establish that the accepted sample supports reliable",
+              "posterior summaries.", ""]
     else:
-        L += ["## Status: PRESENT", "",
-              f"The posterior median ({r['posterior_median_distance']}) fits worse",
-              f"than the committed reference ({r['committed_distance']}), with an",
-              f"acceptance threshold of {r['reported_epsilon']}.", ""]
+        L += ["## Status: TOLERANCE RULE NOT RECORDED", "",
+              "This diagnostic does not record a tolerance-based acceptance rule.",
+              "An older artifact may lack that metadata; regenerate before using",
+              "this document to establish the current rule.", ""]
+
+    L += ["## Historical run: original targets", "",
+          f"The {h['rule']} run drew {h['n_draws']:,} vectors and accepted",
+          f"{h['n_accepted']}, with epsilon {h['epsilon']} determined by that quota.",
+          f"Its coordinate-wise posterior median scored {h['posterior_median_distance']}",
+          f"against a reference distance of {h['reference_distance']} on the SAME",
+          "original targets. Those targets used unfiltered cohorts and included",
+          "the unsupported 100 µM erastin point.", "",
+          "Historical and corrected-target distances are not directly comparable.",
+          "Removing an extrapolated target and changing the retained cohort changes",
+          "the objective; a lower distance does not by itself demonstrate better",
+          "biological validity. Historical reference values are preserved above,",
+          "not recomputed using the current targets.", "",
+          "## Current-target check", ""]
+    grids = r.get("target_dose_grids_um")
+    if grids:
+        for name, doses in grids.items():
+            L.append(f"* {name} dose grid (µM): {doses}.")
+    else:
+        L.append("Dose-grid metadata is absent in this older diagnostic artifact.")
+    if r.get("target_source"):
+        L.append(f"* Input CSV SHA256: `{r['target_source']['sha256']}`.")
+    L += ["",
+          f"The run drew {s['draws_of_record']:,} vectors and accepted",
+          f"{r['n_accepted_now']}; its recorded epsilon is {r['reported_epsilon']}.", ""]
+    if underpowered:
+        L += [f"**Posterior underpowered:** {count} accepted draws; recorded minimum",
+              f"{minimum if minimum is not None else 'not available'}.",
+              "The coordinate medians, interval endpoints and parameter-draw bands",
+              "are exploratory summaries of this small accepted sample, not reliable",
+              "posterior estimates. A favorable median-vector distance cannot resolve",
+              "this sampling shortfall.", ""]
+    elif adequacy_recorded:
+        L += [f"The accepted count meets the recorded minimum of {minimum}.",
+              "Meeting that minimum alone does not establish Monte Carlo stability",
+              "or posterior calibration.", ""]
+    else:
+        L += ["Sampling-adequacy metadata is incomplete. This diagnostic cannot",
+              "establish whether the recorded minimum accepted count was met.", ""]
+    L += [
+          f"On these targets the reference scores **{r['committed_distance']}**",
+          f"and the coordinate-wise accepted-draw median scores **{r['posterior_median_distance']}**.",
+          ("That single constructed vector fits better than the reference on the current targets."
+           if median_better else
+           "That single constructed vector does not fit better than the reference on the current targets."),
+          "A coordinate-wise median need not be an accepted vector, and its distance",
+          "is not the median distance of accepted draws. This check alone neither",
+          "establishes nor refutes compliance with the acceptance tolerance, and",
+          "does not establish that the posterior is adequately sampled.", ""]
 
     L += ["## What the defect was", "",
           f"Acceptance was a fixed FRACTION — the run kept its best 2% however bad",
@@ -238,42 +266,48 @@ def render(r: dict) -> str:
           "meet. A rejection ABC built that way has no floor: hand it uniformly",
           "terrible draws and it returns 2% of them and calls the result a",
           "posterior.", "",
-          "## It was not a truncated prior", "",
+          "## Boundary probes on the current targets", "",
           "The reference vector sits exactly on two prior bounds — `k_erastin` at",
-          "its low 3.0, `hill` at its high 6.0 — which looks like the box clipping",
-          "the optimum. Stepping outside says otherwise.", "",
+          "its low 3.0, `hill` at its high 6.0. These probes change one coordinate",
+          "at that reference; they do not search for a global optimum outside the prior.", "",
           "| parameter | value | joint distance |", "|---|--:|--:|"]
     for v, d in _outward(ke, "k_erastin"):
         L.append(f"| `k_erastin` | {v} | {d}{'  (prior low bound)' if v == '3.0' else ''} |")
     for v, d in _outward(hl, "hill"):
         L.append(f"| `hill` | {v} | {d}{'  (prior high bound)' if v == '6.0' else ''} |")
     L += ["",
-          ("Pushing `k_erastin` below its bound makes the fit monotonically worse."
-           if ke_worse else "`k_erastin` improves outside its bound — the prior IS truncating."),
-          ("And `hill` is **inert**: the distance does not move at all between 6 and "
-           "10. It is not weakly identified, it has no effect — which is why it is "
-           "the one parameter the information-content analysis still finds "
-           "indistinguishable from its prior."
-           if hill_inert else "`hill` does change the fit outside its bound."), "",
-          "## How rare the good region is", "",
+          ("The tested lower `k_erastin` values do not improve the reported distance."
+           if ke_no_improvement else
+           "A tested `k_erastin` value outside the prior improves the reported distance."),
+          ("The reported `hill` distances are unchanged at the probed values 6, 8 and 10. "
+           "This does not establish that the parameter is inert throughout its prior."
+           if hill_unchanged else "The reported `hill` distances differ across the tested values."), "",
+          "## Fresh prior-search diagnostic", "",
           f"Over {s['draws']:,} uniform draws:", "",
           f"* best: **{s['best']}**;",
           f"* draws beating the reference {r['committed_distance']}: "
           f"**{s['n_beating_committed']} of {s['draws']:,}** "
-          f"(about {s['n_beating_committed']/max(s['draws'],1):.1e} per draw);", "",
-          "That rate is why the old rule failed and why the fix needed more draws",
-          "rather than fewer: the region exists and is reachable, but a 1,500-draw",
-          "run essentially never lands in it, so a quantile cut over those draws",
-          "lands in a shell well above what is achievable.", "",
+          f"(about {s['n_beating_committed']/max(s['draws'],1):.1e} per draw);"]
+    if s.get("n_inside_epsilon") is not None:
+        L += [f"* draws at or below the recorded tolerance: **{s['n_inside_epsilon']} "
+              f"of {s['draws']:,}**."]
+    L += ["",
+          "This estimates how frequently uniform prior draws beat the reference on",
+          "the current targets. It does not reconstruct the sampling rate on the",
+          "different historical target set. Zero observed hits would not prove",
+          "that no better-fitting region exists. These additional draws diagnose",
+          "search difficulty; they are not added to the joint posterior and do not",
+          "cure a shortfall in its accepted sample.", "",
           "## What the fix does not claim", "",
           "* The tolerance is anchored to a hand-tuned reference vector. That sets",
           "  the bar; it never enters the posterior. The alternative is a bar set by",
           "  whatever the sampler happened to draw, which is what produced the",
           "  defect.",
-          "* A better-fitting posterior is not a validated one. It fits the two",
-          "  in-vitro dose-response panels better; it says nothing about the in-vivo",
-          "  regime, where substituting these values remains inadmissible",
-          "  (`analysis/headline-at-fitted-cascade.md`).", ""]
+          "* A better-fitting posterior is not a validated one. This is a comparison",
+          "  against two in-vitro fitted-curve summaries. The separate",
+          "  `analysis/headline-at-fitted-cascade.md` substitution test found recorded",
+          "  historical vectors inadmissible in the spatial model. It did not test",
+          "  the corrected posterior and cannot establish its admissibility.", ""]
     return "\n".join(L) + "\n"
 
 

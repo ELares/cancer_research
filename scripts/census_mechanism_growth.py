@@ -25,13 +25,16 @@ literature -- and reporting the corpus figure against x1.10 attributed all of it
 to the mechanisms.
 """
 import argparse
-import gzip
 import json
+import sys
 from collections import Counter, defaultdict
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from census_input import atlas_root, census_shards, iter_census_shards  # noqa: E402
+
 REPO = Path(__file__).resolve().parent.parent
-RECORDS = REPO / "corpus/atlas/records"
+RECORDS = atlas_root() / "records"
 MECH_MAP = REPO / "analysis/mesh-mechanism-map.yaml"
 OUT_MD = REPO / "analysis/census-mechanism-growth.md"
 OUT_JSON = REPO / "analysis/census-mechanism-growth.json"
@@ -54,26 +57,23 @@ def scan(stride: int = 1) -> dict:
     union: Counter = Counter()
     field: Counter = Counter()
     n = 0
-    shards = sorted(RECORDS.glob("*.jsonl.gz"))[::stride]
-    for f in shards:
-        with gzip.open(f, "rt", encoding="utf-8") as fh:
-            for line in fh:
-                r = json.loads(line)
-                n += 1
-                y = r.get("year")
-                if not isinstance(y, int):
-                    continue
-                field[y] += 1
-                ms = {m.lower() for m in (r.get("mesh") or [])}
-                if not ms:
-                    continue
-                hit = False
-                for k, d in mech.items():
-                    if ms & d:
-                        by[k][y] += 1
-                        hit = True
-                if hit:
-                    union[y] += 1
+    shards = census_shards(RECORDS, stride)
+    for r in iter_census_shards(shards, RECORDS):
+        n += 1
+        y = r.get("year")
+        if not isinstance(y, int):
+            continue
+        field[y] += 1
+        ms = {m.lower() for m in (r.get("mesh") or [])}
+        if not ms:
+            continue
+        hit = False
+        for k, d in mech.items():
+            if ms & d:
+                by[k][y] += 1
+                hit = True
+        if hit:
+            union[y] += 1
     return {
         "census": n,
         "shards": len(shards),
@@ -126,7 +126,8 @@ def assemble(d: dict) -> dict:
     out["field_start"] = field.get(s, 0)
     out["field_end"] = field.get(e, 0)
     out["mechanisms_over_field"] = (
-        round(union_growth / field_growth, 2) if field_growth else None
+        round(union_growth / field_growth, 2)
+        if union_growth is not None and field_growth else None
     )
     out["min_base"] = MIN_BASE
     out["recent_start_year"] = RECENT_START
@@ -153,6 +154,12 @@ def render(d: dict) -> str:
         f"census records, {s} to {e}, with mechanisms labelled by MeSH descriptor "
         f"rather than by keyword.\n"
     )
+    if not d["rows"]:
+        L.append(
+            "No dated records matched the mechanism descriptors; mechanism "
+            "growth ratios are unavailable.\n"
+        )
+        return "\n".join(L)
     L.append("## The denominator a growth claim needs\n")
     L.append(f"| | {s} | {e} | growth |")
     L.append("|---|--:|--:|--:|")
@@ -233,11 +240,12 @@ def main() -> int:
         # existed, and means the stored derived fields are checkable against a
         # fresh derivation rather than merely trusted.
         d = assemble(json.loads(OUT_JSON.read_text()))
-        OUT_JSON.write_text(json.dumps(d, indent=1) + "\n")
     else:
         d = assemble(scan(a.stride))
-        OUT_JSON.write_text(json.dumps(d, indent=1) + "\n")
-    OUT_MD.write_text(render(d))
+    json_text = json.dumps(d, indent=1) + "\n"
+    md_text = render(d)
+    OUT_JSON.write_text(json_text)
+    OUT_MD.write_text(md_text)
     print(f"wrote {OUT_MD}")
     return 0
 

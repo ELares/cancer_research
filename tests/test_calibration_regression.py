@@ -15,7 +15,7 @@ trigger-wave validator (which is pure-Python) as a computed cross-check.
 Anchors guarded:
 - CTRPv2 GPX4-inhibitor kill-switch fit (#330): ML162 fit RMSE, ML210 held-out RMSE.
 - CTRPv2 System Xc-/erastin fit (#502): erastin fit RMSE + mechanism specificity.
-- Joint multi-inducer in-vitro posterior (#500): in-vivo disjunction + held-out coverage.
+- Joint multi-inducer ABC (#500): sampling validity and conditional held-out coverage.
 - Tumor-PK partition vs IKE (#334): tissue:plasma Kp.
 - Ferroptotic trigger-wave speed vs Co 2024 (#482): baseline 5.52 um/min.
 - Krogh drug-penetration lengths vs measured (#335).
@@ -72,19 +72,30 @@ def test_erastin_system_xc_fit_holds():
         assert k in d["calibrated_params"], f"missing calibrated param {k}"
 
 
-def test_joint_posterior_disjunction_and_heldout_hold():
-    """#500: the joint multi-inducer (RSL3 + erastin) in-vitro posterior must stay
-    DISJOINT from the in-vivo priors (the load-bearing finding: in-vitro data cannot
-    condition the in-vivo/spatial headlines, so they remain prior-predictive), and
-    still generalize to the held-out inducer."""
+def test_joint_inference_validity_and_heldout_gate():
+    """Failed sampling must stay explicit; usable runs still face the coverage gate.
+
+    The unsupported erastin target's removal left four accepted draws. Retaining
+    a mandatory positive inference would incentivize changing the tolerance or
+    hiding the failed result. Guard the criterion and downstream abstention.
+    """
     d = _load("joint-posterior.json")
-    disj = d["disjunction_with_invivo_priors"]
-    assert disj["lp_propagation"]["entire_95pct_posterior_above_invivo_max"] is True
-    assert disj["lp_rate"]["entire_95pct_posterior_above_invivo_max"] is True
-    # A real posterior: credible intervals are ordered for every parameter.
+    assert d["min_posterior"] == 20
+    assert d["tolerance_factor"] == 1.10
+    assert d["n_draws"] >= 40000
+    assert d["underpowered"] == (d["n_accepted"] < d["min_posterior"])
     for name, v in d["posterior"].items():
-        assert v["q2_5"] <= v["median"] <= v["q97_5"], f"posterior interval inverted: {name}"
-    # Held-out generalization to the unseen GPX4 inhibitor (ML210, never in the fit).
+        assert v["q2_5"] <= v["median"] <= v["q97_5"], name
+    if d["underpowered"]:
+        report = (CALIB / "joint-posterior.md").read_text()
+        assert "**Underpowered:**" in report
+        assert "claims are withheld" in report
+        info = _load("abc-information-content.json")
+        joint = next(r for r in info if "joint-posterior" in r["artifact"])
+        assert "underpowered" in joint["unassessable"]
+        assert "parameters" not in joint
+        return
+    # Adequately sampled runs must still reproduce the documented held-out gate.
     cov = d["heldout_posterior_predictive"]["coverage_inside_95pct_band"]
     num, den = (int(x) for x in cov.split("/"))
     assert den == 7 and num >= 4, f"held-out coverage regressed: {cov}"

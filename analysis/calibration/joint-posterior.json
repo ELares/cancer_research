@@ -1,14 +1,295 @@
 {
+  "target_source": {
+    "file": "ctrpv2_ferroptosis_curves.csv",
+    "sha256": "37856d90187d7d4fe8b8c02442b0d1cc0b51c1908bc51b572628e5d087892622",
+    "target_kind": "median of fitted CTRPv2 curves within recorded dose ranges"
+  },
+  "target_support": {
+    "ML162": {
+      "policy": "entire_grid_within_recorded_dose_range",
+      "n_original": 795,
+      "n_retained": 793,
+      "n_excluded": 2,
+      "requested_doses_um": [
+        0.01,
+        0.03,
+        0.1,
+        0.3,
+        1.0,
+        3.0,
+        10.0
+      ],
+      "per_dose_support": [
+        {
+          "dose_um": 0.01,
+          "n_supported": 793
+        },
+        {
+          "dose_um": 0.03,
+          "n_supported": 793
+        },
+        {
+          "dose_um": 0.1,
+          "n_supported": 794
+        },
+        {
+          "dose_um": 0.3,
+          "n_supported": 795
+        },
+        {
+          "dose_um": 1.0,
+          "n_supported": 795
+        },
+        {
+          "dose_um": 3.0,
+          "n_supported": 795
+        },
+        {
+          "dose_um": 10.0,
+          "n_supported": 795
+        }
+      ],
+      "excluded_rows": [
+        {
+          "row_index": 222,
+          "minimum_dose_um": 0.26,
+          "maximum_dose_um": 33.0,
+          "reasons": [
+            "requested_dose_below_minimum"
+          ],
+          "ModelID": "ACH-000317"
+        },
+        {
+          "row_index": 427,
+          "minimum_dose_um": 0.065,
+          "maximum_dose_um": 33.0,
+          "reasons": [
+            "requested_dose_below_minimum"
+          ],
+          "ModelID": "ACH-000598"
+        }
+      ],
+      "compound": "ML162"
+    },
+    "ERASTIN": {
+      "policy": "entire_grid_within_recorded_dose_range",
+      "n_original": 795,
+      "n_retained": 785,
+      "n_excluded": 10,
+      "requested_doses_um": [
+        0.1,
+        0.3,
+        1.0,
+        3.0,
+        10.0,
+        30.0
+      ],
+      "per_dose_support": [
+        {
+          "dose_um": 0.1,
+          "n_supported": 794
+        },
+        {
+          "dose_um": 0.3,
+          "n_supported": 793
+        },
+        {
+          "dose_um": 1.0,
+          "n_supported": 794
+        },
+        {
+          "dose_um": 3.0,
+          "n_supported": 794
+        },
+        {
+          "dose_um": 10.0,
+          "n_supported": 791
+        },
+        {
+          "dose_um": 30.0,
+          "n_supported": 786
+        }
+      ],
+      "excluded_rows": [
+        {
+          "row_index": 16,
+          "minimum_dose_um": 0.0081,
+          "maximum_dose_um": 8.3,
+          "reasons": [
+            "requested_dose_above_maximum"
+          ],
+          "ModelID": "ACH-000028"
+        },
+        {
+          "row_index": 59,
+          "minimum_dose_um": 0.002,
+          "maximum_dose_um": 8.3,
+          "reasons": [
+            "requested_dose_above_maximum"
+          ],
+          "ModelID": "ACH-000094"
+        },
+        {
+          "row_index": 201,
+          "minimum_dose_um": 0.002,
+          "maximum_dose_um": 17.0,
+          "reasons": [
+            "requested_dose_above_maximum"
+          ],
+          "ModelID": "ACH-000296"
+        },
+        {
+          "row_index": 218,
+          "minimum_dose_um": 0.002,
+          "maximum_dose_um": 0.26,
+          "reasons": [
+            "requested_dose_above_maximum"
+          ],
+          "ModelID": "ACH-000317"
+        },
+        {
+          "row_index": 255,
+          "minimum_dose_um": 0.002,
+          "maximum_dose_um": 4.2,
+          "reasons": [
+            "requested_dose_above_maximum"
+          ],
+          "ModelID": "ACH-000364"
+        },
+        {
+          "row_index": 325,
+          "minimum_dose_um": 0.52,
+          "maximum_dose_um": 66.0,
+          "reasons": [
+            "requested_dose_below_minimum"
+          ],
+          "ModelID": "ACH-000454"
+        },
+        {
+          "row_index": 412,
+          "minimum_dose_um": 0.002,
+          "maximum_dose_um": 17.0,
+          "reasons": [
+            "requested_dose_above_maximum"
+          ],
+          "ModelID": "ACH-000578"
+        },
+        {
+          "row_index": 515,
+          "minimum_dose_um": 0.002,
+          "maximum_dose_um": 17.0,
+          "reasons": [
+            "requested_dose_above_maximum"
+          ],
+          "ModelID": "ACH-000720"
+        },
+        {
+          "row_index": 543,
+          "minimum_dose_um": 0.002,
+          "maximum_dose_um": 17.0,
+          "reasons": [
+            "requested_dose_above_maximum"
+          ],
+          "ModelID": "ACH-000752"
+        },
+        {
+          "row_index": 776,
+          "minimum_dose_um": 0.002,
+          "maximum_dose_um": 17.0,
+          "reasons": [
+            "requested_dose_above_maximum"
+          ],
+          "ModelID": "ACH-002820"
+        }
+      ],
+      "compound": "ERASTIN"
+    },
+    "ML210": {
+      "policy": "entire_grid_within_recorded_dose_range",
+      "n_original": 762,
+      "n_retained": 759,
+      "n_excluded": 3,
+      "requested_doses_um": [
+        0.01,
+        0.03,
+        0.1,
+        0.3,
+        1.0,
+        3.0,
+        10.0
+      ],
+      "per_dose_support": [
+        {
+          "dose_um": 0.01,
+          "n_supported": 761
+        },
+        {
+          "dose_um": 0.03,
+          "n_supported": 761
+        },
+        {
+          "dose_um": 0.1,
+          "n_supported": 761
+        },
+        {
+          "dose_um": 0.3,
+          "n_supported": 762
+        },
+        {
+          "dose_um": 1.0,
+          "n_supported": 762
+        },
+        {
+          "dose_um": 3.0,
+          "n_supported": 762
+        },
+        {
+          "dose_um": 10.0,
+          "n_supported": 760
+        }
+      ],
+      "excluded_rows": [
+        {
+          "row_index": 69,
+          "minimum_dose_um": 0.26,
+          "maximum_dose_um": 33.0,
+          "reasons": [
+            "requested_dose_below_minimum"
+          ],
+          "ModelID": "ACH-000110"
+        },
+        {
+          "row_index": 525,
+          "minimum_dose_um": 0.001,
+          "maximum_dose_um": 8.3,
+          "reasons": [
+            "requested_dose_above_maximum"
+          ],
+          "ModelID": "ACH-000753"
+        },
+        {
+          "row_index": 620,
+          "minimum_dose_um": 0.001,
+          "maximum_dose_um": 8.3,
+          "reasons": [
+            "requested_dose_above_maximum"
+          ],
+          "ModelID": "ACH-000881"
+        }
+      ],
+      "compound": "ML210"
+    }
+  },
   "n_draws": 40000,
-  "n_accepted": 31,
-  "accept_frac": 0.00077,
+  "n_accepted": 4,
+  "accept_frac": 0.0001,
   "acceptance_rule": "tolerance",
-  "reference_distance": 0.2202,
+  "reference_distance": 0.1586,
   "tolerance_factor": 1.1,
-  "underpowered": false,
+  "underpowered": true,
   "min_posterior": 20,
-  "uninformative_null_p5_width": 0.796,
-  "epsilon_joint_distance": 0.2422,
+  "uninformative_null_p5_width": 0.236,
+  "epsilon_joint_distance": 0.1745,
   "inducer_panel": {
     "fit": [
       "ML162",
@@ -18,49 +299,52 @@
   },
   "posterior": {
     "lp_propagation": {
-      "q2_5": 0.4356,
-      "median": 0.7663,
-      "q97_5": 0.9804,
-      "posterior_width_frac_of_prior": 0.573
+      "q2_5": 0.6372,
+      "median": 0.8358,
+      "q97_5": 0.9694,
+      "posterior_width_frac_of_prior": 0.35
     },
     "lp_rate": {
-      "q2_5": 0.3732,
-      "median": 0.7076,
-      "q97_5": 0.9694,
-      "posterior_width_frac_of_prior": 0.615
+      "q2_5": 0.5032,
+      "median": 0.6553,
+      "q97_5": 0.9118,
+      "posterior_width_frac_of_prior": 0.421
     },
     "gpx4_rate": {
-      "q2_5": 0.2322,
-      "median": 0.4797,
-      "q97_5": 0.5736,
-      "posterior_width_frac_of_prior": 0.759
+      "q2_5": 0.3723,
+      "median": 0.4772,
+      "q97_5": 0.5684,
+      "posterior_width_frac_of_prior": 0.436
     },
     "gsh_scav_efficiency": {
-      "q2_5": 0.4537,
-      "median": 0.5778,
-      "q97_5": 0.7094,
-      "posterior_width_frac_of_prior": 0.365
+      "q2_5": 0.4559,
+      "median": 0.5077,
+      "q97_5": 0.543,
+      "posterior_width_frac_of_prior": 0.124
     },
     "k_um": {
-      "q2_5": 0.1415,
-      "median": 0.3519,
-      "q97_5": 0.7773,
-      "posterior_width_frac_of_prior": 0.163
+      "q2_5": 0.1705,
+      "median": 0.4606,
+      "q97_5": 0.6123,
+      "posterior_width_frac_of_prior": 0.113
     },
     "k_erastin": {
-      "q2_5": 3.8884,
-      "median": 9.2079,
-      "q97_5": 22.2691,
-      "posterior_width_frac_of_prior": 0.391
+      "q2_5": 4.0667,
+      "median": 4.6846,
+      "q97_5": 6.7606,
+      "posterior_width_frac_of_prior": 0.057
     },
     "hill": {
-      "q2_5": 1.168,
-      "median": 4.3575,
-      "q97_5": 5.7605,
-      "posterior_width_frac_of_prior": 0.919
+      "q2_5": 3.1025,
+      "median": 3.202,
+      "q97_5": 4.2891,
+      "posterior_width_frac_of_prior": 0.237
     }
   },
   "unconstrained_params": [
+    "lp_propagation",
+    "lp_rate",
+    "gpx4_rate",
     "hill"
   ],
   "disjunction_with_invivo_priors": {
@@ -69,8 +353,8 @@
         0.05,
         0.2
       ],
-      "posterior_q2_5": 0.4356,
-      "posterior_median": 0.7663,
+      "posterior_q2_5": 0.6372,
+      "posterior_median": 0.8358,
       "entire_95pct_posterior_above_invivo_max": true
     },
     "lp_rate": {
@@ -78,50 +362,50 @@
         0.03,
         0.12
       ],
-      "posterior_q2_5": 0.3732,
-      "posterior_median": 0.7076,
+      "posterior_q2_5": 0.5032,
+      "posterior_median": 0.6553,
       "entire_95pct_posterior_above_invivo_max": true
     }
   },
   "heldout_posterior_predictive": {
     "compound": "ML210",
-    "coverage_inside_95pct_band": "5/7",
-    "median_pp_rmse": 0.0984,
+    "coverage_inside_95pct_band": "1/7",
+    "median_pp_rmse": 0.1143,
     "band_q2_5": [
-      0.8705,
-      0.8562,
-      0.827,
-      0.6466,
-      0.2336,
-      0.0507,
-      0.011
+      0.9185,
+      0.9113,
+      0.8806,
+      0.7761,
+      0.2635,
+      0.0545,
+      0.0119
     ],
     "band_median": [
-      0.919,
-      0.911,
-      0.876,
-      0.8065,
-      0.427,
-      0.1165,
-      0.053
+      0.929,
+      0.9255,
+      0.905,
+      0.824,
+      0.3445,
+      0.0797,
+      0.0318
     ],
     "band_q97_5": [
-      0.9846,
-      0.9826,
-      0.9711,
-      0.8861,
-      0.6033,
-      0.2997,
-      0.2156
+      0.9843,
+      0.9823,
+      0.9715,
+      0.8372,
+      0.4301,
+      0.1055,
+      0.047
     ],
     "empirical": [
       0.9953,
       0.9848,
-      0.9559,
-      0.8582,
-      0.5357,
-      0.2326,
-      0.1523
+      0.9557,
+      0.8575,
+      0.5344,
+      0.2322,
+      0.1522
     ]
   },
   "curves": {
@@ -140,44 +424,41 @@
       1.0,
       3.0,
       10.0,
-      30.0,
-      100.0
+      30.0
     ],
     "empirical_rsl3_ml162": [
       1.0089,
       1.0058,
       0.9795,
-      0.831,
-      0.3412,
+      0.8441,
+      0.3413,
       0.0702,
-      0.0411
+      0.0404
     ],
     "empirical_erastin": [
       1.0078,
-      1.0035,
-      0.9923,
+      1.0036,
+      0.9924,
       0.9506,
-      0.5254,
-      0.4267,
-      0.2884
+      0.5246,
+      0.4258
     ],
     "posterior_median_rsl3": [
-      0.919,
-      0.911,
-      0.876,
-      0.8065,
-      0.427,
-      0.1165,
-      0.053
+      0.929,
+      0.9255,
+      0.905,
+      0.824,
+      0.3445,
+      0.0797,
+      0.0318
     ],
     "posterior_median_erastin": [
-      0.9225,
-      0.9225,
-      0.922,
-      0.9115,
-      0.7035,
-      0.459,
-      0.4
+      0.933,
+      0.933,
+      0.9323,
+      0.919,
+      0.6375,
+      0.5212
     ]
   }
 }

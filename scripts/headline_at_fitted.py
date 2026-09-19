@@ -93,6 +93,8 @@ def _load(name):
 # and leave every other one at its default.
 hs = _load("headline_sensitivity")
 
+# Fixed vectors from the original transfer experiment; the posterior_median
+# row is historical and is not loaded from the current joint-posterior fit.
 PARAM_SETS = {
     "default": {},
     "ctrpv2_point": {"lp_propagation": 0.70, "lp_rate": 0.40},
@@ -303,6 +305,10 @@ def render(res: dict) -> str:
         "posterior lies *entirely above* the in-vivo priors for both cascade",
         "parameters. So the reported numbers rest on parameters that are unfalsified",
         "because untested in their own regime — not because a test cleared them.", "",
+        "The `posterior_median` row is the fixed historical vector recorded in this",
+        "script and JSON, not the latest supported-dose joint posterior. Its",
+        "admissibility result does not establish that of a newly refitted vector.",
+        "",
         "This does **not** calibrate the spatial headlines: an in-vitro posterior",
         "conditions an in-vitro switch, and carrying it into in-vivo spatial models",
         "does not make them data-conditioned. What it bounds is how much each",
