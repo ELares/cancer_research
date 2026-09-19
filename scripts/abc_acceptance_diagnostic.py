@@ -225,7 +225,9 @@ def render(r: dict) -> str:
           "## Current-target check", ""]
     grids = r.get("target_dose_grids_um")
     if grids:
-        for name, doses in grids.items():
+        # Compound labels carry no rank; list them alphabetically regardless
+        # of how the provenance mapping was constructed or serialized.
+        for name, doses in sorted(grids.items()):
             L.append(f"* {name} dose grid (µM): {doses}.")
     else:
         L.append("Dose-grid metadata is absent in this older diagnostic artifact.")
