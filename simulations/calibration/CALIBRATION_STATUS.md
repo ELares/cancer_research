@@ -302,3 +302,14 @@ interval and ML210 coverage claims are superseded. JSON summaries are retained
 as small-set diagnostics; they do not establish a usable joint posterior.
 The point fits above and single-inducer ABC are separate results. See
 [the corrected methods and results](../../docs/CALIBRATION_DOSE_SUPPORT.md).
+
+The follow-up [frozen-proposal importance experiment](../../analysis/calibration/joint-importance-sampling.md)
+kept that target and criterion unchanged. Three independent pilot/production
+runs accepted 1, 4, and 4 of 8,192 production attempts; their importance-weight
+ESS values were 1.0, 3.6, and 4.0. All per-run adequacy screens failed, along
+with parameter-quantile and held-out-error stability. These archived diagnostic
+results do not resolve joint inference or alter any calibration tier. A failed
+sampler does not establish an empty target or a biological model defect.
+Independent raw-replicate validation also remains pending; the
+[external assay acquisition review](../../docs/INDEPENDENT_ASSAY_CANDIDATE.md)
+documents candidate observations and the missing metadata and endpoint mapping.

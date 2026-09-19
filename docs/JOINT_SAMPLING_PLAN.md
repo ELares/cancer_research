@@ -98,3 +98,52 @@ The prior-component construction is also described by
 [Hesterberg (1995)](https://www.stat.cmu.edu/technometrics/90-00/vol-37-02/v3702185.pdf).
 The particular pilot heuristic and diagnostic thresholds above are this
 repository's experimental choices, not guarantees supplied by those papers.
+
+## Execution and reproduction
+
+The plan and numerical implementation were committed in `88d5999f` before
+the three production runs. Their [archived results](../analysis/calibration/joint-importance-sampling.md)
+are reported separately from the original rejection artifact.
+
+The completed experiment failed the adequacy screens. Final pilot selection
+cutoffs were 0.4123–0.4256, still well above the fixed epsilon of 0.17448.
+About 59–61% of production attempts fell outside the prior (with zero simulator
+cost), and 89–91% of the remaining attempts failed erastin alone. ESS was close
+to the tiny accepted counts: insufficient qualifying draws, rather than
+additional weight dispersion, dominated this observed shortfall. These
+diagnostics motivate a new proposal-design study; they do not establish that
+the target is empty or that any particular alternative will work.
+
+The normalizer-agreement screen passed with relative Monte Carlo errors of
+50–100%, which supplies little reassurance given the other failures. Zero CDF
+Monte Carlo errors at observed maxima, including every quantile of the one-hit
+run, reflect an empirical distribution with no observed mass above those
+points. They must not be read as precisely estimated tails.
+
+From the repository root, with the locked Python dependencies installed in an
+active virtual environment, build the bindings from this checkout and run:
+
+```bash
+python -m pip install ./simulations/ferroptosis-python
+python scripts/abc_joint_importance.py --output-dir local/joint-importance-rerun
+```
+
+The second command runs all three seeds serially. `--seed 2026091901` (or either
+other planned seed) runs one experiment; the summary is written once all three
+archives exist in the selected directory. Numerical source hashes must stay
+unchanged during a run. The archives record the actual extension binary hash,
+Python/NumPy/SciPy versions, and thread environment; runtime timings are not
+expected to be byte-identical across executions.
+
+Rebuild the committed JSON and Markdown directly from the compressed attempts,
+without the simulator or external corpus, using:
+
+```bash
+python scripts/abc_joint_importance.py --render-only
+python -m pytest tests/test_joint_importance_artifacts.py -q
+```
+
+The integrity checks reproduce proposal draws from the independent production
+streams, recalculate weighted diagnostics, and verify code/data provenance.
+Rerunning the same seeds is a reproducibility check, not additional independent
+evidence. A new sampling design or budget requires a new plan.

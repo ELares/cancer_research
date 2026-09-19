@@ -12,14 +12,26 @@ not require another simulation mechanism or a larger unmeasured corpus.
    exceeded every recorded maximum. The corrected joint run accepted only
    4 of 40,000 draws, below the unchanged minimum of 20; its earlier interval
    claims are superseded. See the [methods and results](CALIBRATION_DOSE_SUPPORT.md).
-   **Next deliverable:** compare a more efficient sampler with the fixed prior,
-   target construction, reference vector, and tolerance; report independent-run
-   stability, accepted counts, and held-out errors. Do not widen the criterion
-   to fill a quota. A favorable result is not a completion requirement.
-   **Complete when:** the joint inference meets its documented sampling minimum
-   and repeated-run diagnostics, or the remaining sampling/model mismatch is
-   documented without posterior claims. Independent validation is a separate
-   requirement below.
+   **Sampling experiment completed:** a
+   [plan committed before production](JOINT_SAMPLING_PLAN.md) evaluated three
+   independently fitted, frozen importance proposals with the same prior,
+   targets, reference vector, and final tolerance. The
+   [results](../analysis/calibration/joint-importance-sampling.md) accepted
+   1, 4, and 4 of 8,192 production attempts, with ESS 1.0, 3.6, and 4.0.
+   Every run failed all four per-run adequacy screens; parameter and held-out
+   error stability also failed. All attempts, weights, code/data provenance,
+   and report reconstruction are archived. No pooled posterior is published.
+   This documents an insufficient sampling design, not an empty target or
+   established biological model failure.
+   **Next deliverable:** design a proposal that concentrates enough mass near
+   the final acceptance region while testing coverage of separated modes on
+   synthetic targets. Prespecify a new budget and independent-run evaluation
+   before further production runs. Do not widen the criterion, pool these
+   underpowered runs, or select a favorable seed to fill a quota.
+   **Complete when:** the joint inference meets its documented adequacy and
+   repeated-run screens, or the new design's specific shortfall is reported
+   without posterior claims. Independent validation is a separate requirement
+   below.
 
 2. **Census input protection is implemented in six analysis entry points.**
    The shared [streaming helper](../scripts/census_input.py) honors

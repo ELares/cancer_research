@@ -1,0 +1,1306 @@
+{
+  "archive_sha256": {
+    "joint-importance-run-2026091901.json.gz": "b6ba0d79086c92a85f818786e35e77761996e743a4ca3d027850daa662a4ca96",
+    "joint-importance-run-2026091902.json.gz": "41beb540bf1f9eb475a2bf0ee70f41b995f5d489b2736f7ef7bb9632b40271fa",
+    "joint-importance-run-2026091903.json.gz": "a29a15b2c381c5789fcb5571402d2e6d08715e9e1e41e90776b6cb1f275f85c6"
+  },
+  "baseline": {
+    "accepted": 4,
+    "artifact": "joint-posterior.json",
+    "draws": 40000,
+    "ess_per_1000_sampling_dose_calls": 0.007692307692307693,
+    "sampling_simulator_dose_calls_excluding_overhead": 520000,
+    "sha256": "5fb4218cc42b3e4874e848a1fa015752a6cecca2896bfce24527c62a309c324d",
+    "underpowered": true
+  },
+  "gates": {
+    "maximum_heldout_rmse_median_span": 0.02,
+    "maximum_median_span_prior_fraction": 0.05,
+    "maximum_normalized_weight": 0.02,
+    "maximum_normalizer_relative_mcse": 0.1,
+    "maximum_tail_span_prior_fraction": 0.1,
+    "minimum_accepted": 20,
+    "minimum_ess": 200.0,
+    "normalizer_combined_mcse_multiplier": 4.0
+  },
+  "plan": {
+    "covariance_floor": 1e-06,
+    "covariance_scale": 2.0,
+    "elite_fraction": 0.2,
+    "min_elite": 32,
+    "pilot_attempts": 1024,
+    "pilot_rounds": 4,
+    "production_attempts": 8192,
+    "uniform_weight": 0.2
+  },
+  "runs": [
+    {
+      "adequacy": {
+        "checks": {
+          "accepted_count": false,
+          "ess": false,
+          "maximum_weight": false,
+          "normalizer_mcse": false
+        },
+        "passed": false
+      },
+      "diagnostic_quantiles": {
+        "gpx4_rate": {
+          "cdf_mcse_at_quantiles": [
+            {
+              "cdf": 1.0,
+              "mcse": 0.0
+            },
+            {
+              "cdf": 1.0,
+              "mcse": 0.0
+            },
+            {
+              "cdf": 1.0,
+              "mcse": 0.0
+            }
+          ],
+          "median": 0.5001281114609002,
+          "q2_5": 0.5001281114609002,
+          "q97_5": 0.5001281114609002
+        },
+        "gsh_scav_efficiency": {
+          "cdf_mcse_at_quantiles": [
+            {
+              "cdf": 1.0,
+              "mcse": 0.0
+            },
+            {
+              "cdf": 1.0,
+              "mcse": 0.0
+            },
+            {
+              "cdf": 1.0,
+              "mcse": 0.0
+            }
+          ],
+          "median": 0.5601180314345384,
+          "q2_5": 0.5601180314345384,
+          "q97_5": 0.5601180314345384
+        },
+        "hill": {
+          "cdf_mcse_at_quantiles": [
+            {
+              "cdf": 1.0,
+              "mcse": 0.0
+            },
+            {
+              "cdf": 1.0,
+              "mcse": 0.0
+            },
+            {
+              "cdf": 1.0,
+              "mcse": 0.0
+            }
+          ],
+          "median": 4.502200680899547,
+          "q2_5": 4.502200680899547,
+          "q97_5": 4.502200680899547
+        },
+        "k_erastin": {
+          "cdf_mcse_at_quantiles": [
+            {
+              "cdf": 1.0,
+              "mcse": 0.0
+            },
+            {
+              "cdf": 1.0,
+              "mcse": 0.0
+            },
+            {
+              "cdf": 1.0,
+              "mcse": 0.0
+            }
+          ],
+          "median": 7.0728933283109745,
+          "q2_5": 7.0728933283109745,
+          "q97_5": 7.0728933283109745
+        },
+        "k_um": {
+          "cdf_mcse_at_quantiles": [
+            {
+              "cdf": 1.0,
+              "mcse": 0.0
+            },
+            {
+              "cdf": 1.0,
+              "mcse": 0.0
+            },
+            {
+              "cdf": 1.0,
+              "mcse": 0.0
+            }
+          ],
+          "median": 0.20795827497154035,
+          "q2_5": 0.20795827497154035,
+          "q97_5": 0.20795827497154035
+        },
+        "lp_propagation": {
+          "cdf_mcse_at_quantiles": [
+            {
+              "cdf": 1.0,
+              "mcse": 0.0
+            },
+            {
+              "cdf": 1.0,
+              "mcse": 0.0
+            },
+            {
+              "cdf": 1.0,
+              "mcse": 0.0
+            }
+          ],
+          "median": 0.7617219915421098,
+          "q2_5": 0.7617219915421098,
+          "q97_5": 0.7617219915421098
+        },
+        "lp_rate": {
+          "cdf_mcse_at_quantiles": [
+            {
+              "cdf": 1.0,
+              "mcse": 0.0
+            },
+            {
+              "cdf": 1.0,
+              "mcse": 0.0
+            },
+            {
+              "cdf": 1.0,
+              "mcse": 0.0
+            }
+          ],
+          "median": 0.7233795871438687,
+          "q2_5": 0.7233795871438687,
+          "q97_5": 0.7233795871438687
+        }
+      },
+      "ess_per_1000_simulator_dose_calls": 0.019267451494190863,
+      "heldout": {
+        "band_median": [
+          0.9395,
+          0.9319999999999999,
+          0.9005,
+          0.7165,
+          0.19799999999999995,
+          0.055499999999999994,
+          0.03149999999999997
+        ],
+        "band_q2_5": [
+          0.9395,
+          0.9319999999999999,
+          0.9005,
+          0.7165,
+          0.19799999999999995,
+          0.055499999999999994,
+          0.03149999999999997
+        ],
+        "band_q97_5": [
+          0.9395,
+          0.9319999999999999,
+          0.9005,
+          0.7165,
+          0.19799999999999995,
+          0.055499999999999994,
+          0.03149999999999997
+        ],
+        "coverage": "0/7",
+        "rmse_quantiles": [
+          0.16377789109973884,
+          0.16377789109973884,
+          0.16377789109973884
+        ]
+      },
+      "importance": {
+        "assessable": true,
+        "ess": 1.0,
+        "max_normalized_weight": 1.0,
+        "n_accepted": 1,
+        "n_attempts": 8192,
+        "normalizer_estimate": 7.527772266790744e-05,
+        "normalizer_mcse": 7.527772266790744e-05,
+        "normalizer_relative_mcse": 1.0
+      },
+      "pilot": [
+        {
+          "attempts": 1024,
+          "component_fitted": true,
+          "in_prior": 1024,
+          "minimum_distance": 0.2418885897452709,
+          "n_elite": 205,
+          "round": 1,
+          "selection_distance": 0.5429815484238251,
+          "simulator_dose_calls": 13312
+        },
+        {
+          "attempts": 1024,
+          "component_fitted": true,
+          "in_prior": 412,
+          "minimum_distance": 0.24955561211830965,
+          "n_elite": 83,
+          "round": 2,
+          "selection_distance": 0.46082589200293533,
+          "simulator_dose_calls": 5356
+        },
+        {
+          "attempts": 1024,
+          "component_fitted": true,
+          "in_prior": 406,
+          "minimum_distance": 0.18506446564883045,
+          "n_elite": 82,
+          "round": 3,
+          "selection_distance": 0.41486570657209043,
+          "simulator_dose_calls": 5278
+        },
+        {
+          "attempts": 1024,
+          "component_fitted": true,
+          "in_prior": 411,
+          "minimum_distance": 0.18283736928817568,
+          "n_elite": 83,
+          "round": 4,
+          "selection_distance": 0.412256289496717,
+          "simulator_dose_calls": 5343
+        }
+      ],
+      "pilot_attempts": 4096,
+      "prior_widths": {
+        "gpx4_rate": 0.44999999999999996,
+        "gsh_scav_efficiency": 0.7,
+        "hill": 5.0,
+        "k_erastin": 47.0,
+        "k_um": 3.9,
+        "lp_propagation": 0.95,
+        "lp_rate": 0.97
+      },
+      "production_early_rejections": 2980,
+      "production_outside_prior": 4849,
+      "seed": 2026091901,
+      "simulator_dose_calls_including_pilot_reference": 51901,
+      "wall_seconds": 91.70397595781833
+    },
+    {
+      "adequacy": {
+        "checks": {
+          "accepted_count": false,
+          "ess": false,
+          "maximum_weight": false,
+          "normalizer_mcse": false
+        },
+        "passed": false
+      },
+      "diagnostic_quantiles": {
+        "gpx4_rate": {
+          "cdf_mcse_at_quantiles": [
+            {
+              "cdf": 0.2258832214071184,
+              "mcse": 0.20548877580484248
+            },
+            {
+              "cdf": 0.7423081318933926,
+              "mcse": 0.22523384598856758
+            },
+            {
+              "cdf": 1.0,
+              "mcse": 0.0
+            }
+          ],
+          "median": 0.3781480241290626,
+          "q2_5": 0.30651297810255934,
+          "q97_5": 0.4184265276045528
+        },
+        "gsh_scav_efficiency": {
+          "cdf_mcse_at_quantiles": [
+            {
+              "cdf": 0.13890934241806274,
+              "mcse": 0.1390166579045201
+            },
+            {
+              "cdf": 0.6224844319317886,
+              "mcse": 0.27334708097505844
+            },
+            {
+              "cdf": 1.0,
+              "mcse": 0.0
+            }
+          ],
+          "median": 0.5969275236553092,
+          "q2_5": 0.4903283843279879,
+          "q97_5": 0.607785942115163
+        },
+        "hill": {
+          "cdf_mcse_at_quantiles": [
+            {
+              "cdf": 0.13890934241806274,
+              "mcse": 0.1390166579045201
+            },
+            {
+              "cdf": 0.7423081318933926,
+              "mcse": 0.22523384598856758
+            },
+            {
+              "cdf": 1.0,
+              "mcse": 0.0
+            }
+          ],
+          "median": 4.513686638333899,
+          "q2_5": 3.550709808905842,
+          "q97_5": 5.2147559748395675
+        },
+        "k_erastin": {
+          "cdf_mcse_at_quantiles": [
+            {
+              "cdf": 0.13890934241806274,
+              "mcse": 0.1390166579045201
+            },
+            {
+              "cdf": 0.5164249104862741,
+              "mcse": 0.26299293395527834
+            },
+            {
+              "cdf": 1.0,
+              "mcse": 0.0
+            }
+          ],
+          "median": 3.8538437315310126,
+          "q2_5": 3.194264209367835,
+          "q97_5": 5.966564103089498
+        },
+        "k_um": {
+          "cdf_mcse_at_quantiles": [
+            {
+              "cdf": 0.37751556806821146,
+              "mcse": 0.27334708097505844
+            },
+            {
+              "cdf": 0.635207436174819,
+              "mcse": 0.23702728056239572
+            },
+            {
+              "cdf": 1.0,
+              "mcse": 0.0
+            }
+          ],
+          "median": 0.3419691755871663,
+          "q2_5": 0.15666717316466824,
+          "q97_5": 0.5087905481009971
+        },
+        "lp_propagation": {
+          "cdf_mcse_at_quantiles": [
+            {
+              "cdf": 0.37751556806821146,
+              "mcse": 0.27334708097505844
+            },
+            {
+              "cdf": 0.5164249104862741,
+              "mcse": 0.26299293395527834
+            },
+            {
+              "cdf": 1.0,
+              "mcse": 0.0
+            }
+          ],
+          "median": 0.7369935545670551,
+          "q2_5": 0.6371421897512903,
+          "q97_5": 0.9293774995296359
+        },
+        "lp_rate": {
+          "cdf_mcse_at_quantiles": [
+            {
+              "cdf": 0.2258832214071184,
+              "mcse": 0.20548877580484248
+            },
+            {
+              "cdf": 0.6033987894753299,
+              "mcse": 0.24830015137307515
+            },
+            {
+              "cdf": 1.0,
+              "mcse": 0.0
+            }
+          ],
+          "median": 0.4579525710997918,
+          "q2_5": 0.3686817985895354,
+          "q97_5": 0.5085236732809667
+        }
+      },
+      "ess_per_1000_simulator_dose_calls": 0.07006694212141071,
+      "heldout": {
+        "band_median": [
+          0.9605,
+          0.952,
+          0.933,
+          0.848,
+          0.48650000000000004,
+          0.14649999999999996,
+          0.05500000000000005
+        ],
+        "band_q2_5": [
+          0.9325,
+          0.928,
+          0.9075,
+          0.8305,
+          0.40900000000000003,
+          0.10399999999999998,
+          0.040000000000000036
+        ],
+        "band_q97_5": [
+          0.9745,
+          0.966,
+          0.9405,
+          0.865,
+          0.5285,
+          0.26549999999999996,
+          0.1915
+        ],
+        "coverage": "3/7",
+        "rmse_quantiles": [
+          0.029391402783466556,
+          0.057126378776015674,
+          0.08861352215333688
+        ]
+      },
+      "importance": {
+        "assessable": true,
+        "ess": 3.5811214118253014,
+        "max_normalized_weight": 0.37751556806821146,
+        "n_accepted": 4,
+        "n_attempts": 8192,
+        "normalizer_estimate": 0.0003118950154780764,
+        "normalizer_mcse": 0.00016478985591647958,
+        "normalizer_relative_mcse": 0.5283503991363495
+      },
+      "pilot": [
+        {
+          "attempts": 1024,
+          "component_fitted": true,
+          "in_prior": 1024,
+          "minimum_distance": 0.21502728397230925,
+          "n_elite": 205,
+          "round": 1,
+          "selection_distance": 0.552860074447107,
+          "simulator_dose_calls": 13312
+        },
+        {
+          "attempts": 1024,
+          "component_fitted": true,
+          "in_prior": 364,
+          "minimum_distance": 0.24002240961095145,
+          "n_elite": 73,
+          "round": 2,
+          "selection_distance": 0.46205817386773207,
+          "simulator_dose_calls": 4732
+        },
+        {
+          "attempts": 1024,
+          "component_fitted": true,
+          "in_prior": 412,
+          "minimum_distance": 0.15786409381445576,
+          "n_elite": 83,
+          "round": 3,
+          "selection_distance": 0.42514931575829296,
+          "simulator_dose_calls": 5356
+        },
+        {
+          "attempts": 1024,
+          "component_fitted": true,
+          "in_prior": 404,
+          "minimum_distance": 0.20088584498174716,
+          "n_elite": 81,
+          "round": 4,
+          "selection_distance": 0.4203737978258245,
+          "simulator_dose_calls": 5252
+        }
+      ],
+      "pilot_attempts": 4096,
+      "prior_widths": {
+        "gpx4_rate": 0.44999999999999996,
+        "gsh_scav_efficiency": 0.7,
+        "hill": 5.0,
+        "k_erastin": 47.0,
+        "k_um": 3.9,
+        "lp_propagation": 0.95,
+        "lp_rate": 0.97
+      },
+      "production_early_rejections": 2950,
+      "production_outside_prior": 4877,
+      "seed": 2026091902,
+      "simulator_dose_calls_including_pilot_reference": 51110,
+      "wall_seconds": 88.20940074976534
+    },
+    {
+      "adequacy": {
+        "checks": {
+          "accepted_count": false,
+          "ess": false,
+          "maximum_weight": false,
+          "normalizer_mcse": false
+        },
+        "passed": false
+      },
+      "diagnostic_quantiles": {
+        "gpx4_rate": {
+          "cdf_mcse_at_quantiles": [
+            {
+              "cdf": 0.2201704904496134,
+              "mcse": 0.19839546740151495
+            },
+            {
+              "cdf": 0.5053541767553704,
+              "mcse": 0.25105936854585675
+            },
+            {
+              "cdf": 0.9999999999999999,
+              "mcse": 5.576067288877107e-17
+            }
+          ],
+          "median": 0.5262311399524717,
+          "q2_5": 0.4782064682988991,
+          "q97_5": 0.582494192891563
+        },
+        "gsh_scav_efficiency": {
+          "cdf_mcse_at_quantiles": [
+            {
+              "cdf": 0.2201704904496134,
+              "mcse": 0.19839546740151495
+            },
+            {
+              "cdf": 0.7148163136942429,
+              "mcse": 0.23550330361549
+            },
+            {
+              "cdf": 0.9999999999999999,
+              "mcse": 5.576067288877107e-17
+            }
+          ],
+          "median": 0.5487526211702309,
+          "q2_5": 0.4272870654189008,
+          "q97_5": 0.6003119210267577
+        },
+        "hill": {
+          "cdf_mcse_at_quantiles": [
+            {
+              "cdf": 0.28518368630575697,
+              "mcse": 0.23550330361549002
+            },
+            {
+              "cdf": 0.5053541767553704,
+              "mcse": 0.25105936854585675
+            },
+            {
+              "cdf": 0.9999999999999999,
+              "mcse": 5.576067288877107e-17
+            }
+          ],
+          "median": 3.7719086789642304,
+          "q2_5": 1.4927980190738586,
+          "q97_5": 5.127278064199359
+        },
+        "k_erastin": {
+          "cdf_mcse_at_quantiles": [
+            {
+              "cdf": 0.2410092386996808,
+              "mcse": 0.21152557267545835
+            },
+            {
+              "cdf": 0.7148163136942429,
+              "mcse": 0.23550330361549
+            },
+            {
+              "cdf": 0.9999999999999999,
+              "mcse": 5.576067288877107e-17
+            }
+          ],
+          "median": 7.204842837842695,
+          "q2_5": 3.6591766564052115,
+          "q97_5": 7.401567288837078
+        },
+        "k_um": {
+          "cdf_mcse_at_quantiles": [
+            {
+              "cdf": 0.2410092386996808,
+              "mcse": 0.21152557267545835
+            },
+            {
+              "cdf": 0.5261929250054378,
+              "mcse": 0.2500782987747145
+            },
+            {
+              "cdf": 0.9999999999999999,
+              "mcse": 5.576067288877107e-17
+            }
+          ],
+          "median": 0.42847587037306845,
+          "q2_5": 0.15220672787061762,
+          "q97_5": 0.7137323268805302
+        },
+        "lp_propagation": {
+          "cdf_mcse_at_quantiles": [
+            {
+              "cdf": 0.2410092386996808,
+              "mcse": 0.21152557267545835
+            },
+            {
+              "cdf": 0.7148163136942429,
+              "mcse": 0.23550330361549
+            },
+            {
+              "cdf": 0.9999999999999999,
+              "mcse": 5.576067288877107e-17
+            }
+          ],
+          "median": 0.876863026547975,
+          "q2_5": 0.6036270833349394,
+          "q97_5": 0.8795634226563046
+        },
+        "lp_rate": {
+          "cdf_mcse_at_quantiles": [
+            {
+              "cdf": 0.28518368630575697,
+              "mcse": 0.23550330361549002
+            },
+            {
+              "cdf": 0.5261929250054378,
+              "mcse": 0.2500782987747145
+            },
+            {
+              "cdf": 0.9999999999999999,
+              "mcse": 5.576067288877107e-17
+            }
+          ],
+          "median": 0.7527541698263961,
+          "q2_5": 0.6826162609626246,
+          "q97_5": 0.8751086556154523
+        }
+      },
+      "ess_per_1000_simulator_dose_calls": 0.079973477749917,
+      "heldout": {
+        "band_median": [
+          0.9319999999999999,
+          0.927,
+          0.9125,
+          0.835,
+          0.4135,
+          0.119,
+          0.03700000000000003
+        ],
+        "band_q2_5": [
+          0.9135,
+          0.9055,
+          0.882,
+          0.7835,
+          0.31399999999999995,
+          0.044499999999999984,
+          0.005499999999999949
+        ],
+        "band_q97_5": [
+          0.9765,
+          0.97,
+          0.943,
+          0.8555,
+          0.517,
+          0.133,
+          0.09050000000000002
+        ],
+        "coverage": "0/7",
+        "rmse_quantiles": [
+          0.07132507614226276,
+          0.09781471893354383,
+          0.13391378386445507
+        ]
+      },
+      "importance": {
+        "assessable": true,
+        "ess": 3.9647651329298856,
+        "max_normalized_weight": 0.28518368630575697,
+        "n_accepted": 4,
+        "n_attempts": 8192,
+        "normalizer_estimate": 0.0004930403447103767,
+        "normalizer_mcse": 0.0002475683454008764,
+        "normalizer_relative_mcse": 0.5021259376781909
+      },
+      "pilot": [
+        {
+          "attempts": 1024,
+          "component_fitted": true,
+          "in_prior": 1024,
+          "minimum_distance": 0.20752936444759848,
+          "n_elite": 205,
+          "round": 1,
+          "selection_distance": 0.5385350143168508,
+          "simulator_dose_calls": 13312
+        },
+        {
+          "attempts": 1024,
+          "component_fitted": true,
+          "in_prior": 365,
+          "minimum_distance": 0.2285445187711143,
+          "n_elite": 73,
+          "round": 2,
+          "selection_distance": 0.43968221871201435,
+          "simulator_dose_calls": 4745
+        },
+        {
+          "attempts": 1024,
+          "component_fitted": true,
+          "in_prior": 405,
+          "minimum_distance": 0.24323803253350945,
+          "n_elite": 81,
+          "round": 3,
+          "selection_distance": 0.4403515135656506,
+          "simulator_dose_calls": 5265
+        },
+        {
+          "attempts": 1024,
+          "component_fitted": true,
+          "in_prior": 389,
+          "minimum_distance": 0.15133681358358564,
+          "n_elite": 78,
+          "round": 4,
+          "selection_distance": 0.4256465092623748,
+          "simulator_dose_calls": 5057
+        }
+      ],
+      "pilot_attempts": 4096,
+      "prior_widths": {
+        "gpx4_rate": 0.44999999999999996,
+        "gsh_scav_efficiency": 0.7,
+        "hill": 5.0,
+        "k_erastin": 47.0,
+        "k_um": 3.9,
+        "lp_propagation": 0.95,
+        "lp_rate": 0.97
+      },
+      "production_early_rejections": 2885,
+      "production_outside_prior": 5009,
+      "seed": 2026091903,
+      "simulator_dose_calls_including_pilot_reference": 49576,
+      "wall_seconds": 83.90533029101789
+    }
+  ],
+  "runtime": {
+    "extension_binaries": {
+      "ferroptosis_core.cpython-314-darwin.so": "f5d9af35a67c6d5578a2659ec67e0ee056158159f14063df5d29a62f7dab7cc6"
+    },
+    "logical_cpus": 14,
+    "numpy": "2.5.2",
+    "platform": "macOS-26.5.1-arm64-arm-64bit-Mach-O",
+    "python": "3.14.6",
+    "rayon_num_threads_env": null,
+    "scipy": "1.18.1"
+  },
+  "schema_version": 1,
+  "source_hashes": {
+    "scripts/abc_joint_importance.py": "c29aff9cff22efd378a12ce748aa32de35bfa760ac19a6b355c1dd47a45542c3",
+    "scripts/abc_joint_posterior.py": "f85f6a0fc68d955bcd392551bc2582742fddcd482b1a9d348ede1cf718cb543f",
+    "scripts/calibrate_erastin.py": "69b2dc11a1b550a1760f9764e6ad6e364df669f8f1d107fdd30ed7f7181affc3",
+    "scripts/calibrate_kill_switch.py": "7812bce9d8246b28a3e8ba8f4e049d82bf28bda5951116486d7ffa1282d01201",
+    "scripts/ctrp_dose_support.py": "2822a41df3ae2e26f861338cab5e5f95dcc18fa5110f2b97f01615a84e008c3e",
+    "scripts/importance_sampling.py": "4bf7b9f97b797d3262bceea9972c502c50dd057465f81aee18a08ae8bc13cad8",
+    "simulations/Cargo.lock": "59d190c84c1168a6ec6e1d0d40c264ff0ca62328e20e4f394ba0ca4ceb2642f6",
+    "simulations/ferroptosis-core/src/ablation.rs": "1342d23c65de87672e1bfdf63baba519f8520ee0532ff71e7c1c3dde4dec3b1c",
+    "simulations/ferroptosis-core/src/acsl4.rs": "b352f35f56bf6343f61f9b6b8b4b728cd76e39c7705cc100f0aa79e27fee398a",
+    "simulations/ferroptosis-core/src/adc.rs": "07abb852ef7a855a848088c675d0fa8be4101d31f5dcabc16162792feae900cc",
+    "simulations/ferroptosis-core/src/adoptive.rs": "143edbc37346f24d1f5a2ee3fac554166554eca589177b0cd665501e5d7e09d3",
+    "simulations/ferroptosis-core/src/alox.rs": "807794a174bf2635012b82d0e020036d35a37f9fe778407872e1b2d58b18d9e3",
+    "simulations/ferroptosis-core/src/biochem.rs": "ead06fd3f499920b4b0e1880e9864bf89e5ede3d143934a6ac39bf045dc622a6",
+    "simulations/ferroptosis-core/src/cell.rs": "f639b584b7532fcb1eacc0a730c94ae64f888913e6e0361ba694122874360fa2",
+    "simulations/ferroptosis-core/src/checkpoint.rs": "0bd4c30f4210e5dbdb590098d7bfa5f9e7a551f23e2e6e3fc895196465db7d4d",
+    "simulations/ferroptosis-core/src/chemo.rs": "d465aef866e70fcd89cd2b6604ece06133beb5120875a41cbf1f1061c4d6a1b9",
+    "simulations/ferroptosis-core/src/clonal.rs": "62a632bae4c195b279db6d8aeb177ef0a58b53d27227e90c6b6606a114358d05",
+    "simulations/ferroptosis-core/src/contact.rs": "85daecbbc996e97ca1acd85897168d4cbfed51972e8055b2038441a714cde7a3",
+    "simulations/ferroptosis-core/src/copper.rs": "e79cbc6f8dfbcc0f83492d8ee8ad99c818284474542031d0a567837b787c079f",
+    "simulations/ferroptosis-core/src/dose_schedule.rs": "1acafc1dcc8a44f46f01b8fc1b4808a1a1f4c6cb0cb34d6e8370c12b30c3f39e",
+    "simulations/ferroptosis-core/src/drug_transport.rs": "9815e0f1240ddadbfd4ed5a0675b18236490bb611a4e0e2d0ee1413eae70053d",
+    "simulations/ferroptosis-core/src/grid.rs": "590d7f9f541bcadf7f7d5a6f1621c8f156ce647713b2493a62c64765d77c7ad4",
+    "simulations/ferroptosis-core/src/ifngamma.rs": "99ab72137385656eb3658d730b4ca59c803794eab0f386d6f1e5c7fa07514921",
+    "simulations/ferroptosis-core/src/immune.rs": "d3dfb859902676cc9247f0c46dc9e2a8869b13112d96accda3730a132071a722",
+    "simulations/ferroptosis-core/src/immune_spatial.rs": "1e6048cd6c8177ff4015b0212eca2f2baa225426d8975075aaec29040615ae2b",
+    "simulations/ferroptosis-core/src/io.rs": "1188bf1412ec0ac69d2a8abd69fbaf835affe4c6673a356fc7b4d03bac29eafc",
+    "simulations/ferroptosis-core/src/lib.rs": "1f1d0c2cd88dd91edd436caba73b1f477f1c24e57984f4b30eae22a1c93605cc",
+    "simulations/ferroptosis-core/src/nutrient.rs": "7f92d1e19ad02fdec5f76dcd7ed25b0c32820717808e3030cbaa6020ea96c394",
+    "simulations/ferroptosis-core/src/oncolytic.rs": "cd972e3e5914247a01982d95b39be4a078b3849dbdfd6d8250059533cdd06613",
+    "simulations/ferroptosis-core/src/oxygen.rs": "87127e84842572cfa362b3bc096242b5710b27fc417fb7c930934170b8d7b58e",
+    "simulations/ferroptosis-core/src/params.rs": "8c6584569bbe8073a959c17f8eaf8b57f04fe564f65ad017547e29ca846d140a",
+    "simulations/ferroptosis-core/src/persister.rs": "8150b051d08978bafab491f90fbbd1f10301825abc2a64091b4d92751e06931d",
+    "simulations/ferroptosis-core/src/ph.rs": "d22ab498f3eb6cf3fc51dd79a0a3a99cfa7765cc9fd0394b7deae86e138d67bd",
+    "simulations/ferroptosis-core/src/phenotype_mufa.rs": "29792309b7a0d9e946d5c070366bd529a7dddb83ea4ded82087e323b5437fb5f",
+    "simulations/ferroptosis-core/src/photosensitizer_pk.rs": "7faf4029f0105ae563623e1b2c63baf756c48120b4ce604128e6bc7771e61119",
+    "simulations/ferroptosis-core/src/physics.rs": "20b84eaab5fbb8a9481935101f5a7cb48ab9fef4af724e74392b95aae960b18e",
+    "simulations/ferroptosis-core/src/radiation.rs": "af693516919d803bef888762de27bb6c4755ac3ca4d1fb896f7f96fea97d8a6f",
+    "simulations/ferroptosis-core/src/reaction_diffusion.rs": "794075195021bf0bab2f532e97ed91f9a1e8aee72a14762e8733ace6113baac8",
+    "simulations/ferroptosis-core/src/repair.rs": "acead760f730d3d825becdb909540e2a2bacf3c308d3ee0372dbb6769f35a5f9",
+    "simulations/ferroptosis-core/src/senescence.rs": "2be624fe0730174718f772c1fa5bc8f918f1305cc6901165e1d7671b73d98986",
+    "simulations/ferroptosis-core/src/slab.rs": "6418b3aa1bde1f9c8e6db9f84c23be2dbb1bcf97549679dba72053ccc6539971",
+    "simulations/ferroptosis-core/src/sonodynamic.rs": "4b653bd16f43deafc842973f51701193141bcf4a84553cc1f5588af9850cea13",
+    "simulations/ferroptosis-core/src/spheroid.rs": "df47d2063c4ee81274173269c0fb5b9d280eaaa1de6886ce63951ebabe3ea2b3",
+    "simulations/ferroptosis-core/src/stats.rs": "871844becad66d2229843b3ce8e1ad615dde6b90df10283f3ac270c6cfb4e5f5",
+    "simulations/ferroptosis-core/src/stromal.rs": "2cd186f8c654aeade67607b6d076c1a74e92da56af1ff49bb688fb2616014c31",
+    "simulations/ferroptosis-core/src/trigger_wave.rs": "ab27f6f8e7355ad1f340cbd33c4e41df9c955812f061ee7f2efc14540b8b751b",
+    "simulations/ferroptosis-core/src/tumor_pk.rs": "f8d686ee6955a7c7af48952079f06b63b523019287b5ced8298d66166268c110",
+    "simulations/ferroptosis-core/src/vasculature.rs": "be6509bf5b0598a5dc7f5aca3d2f50b27e7cdde723132024f83c38dffb4140b2",
+    "simulations/ferroptosis-python/src/lib.rs": "8eb558bf0fd35588c37e3b8a7c07794c49540e7f97bab822a7b0a9d5b578f983",
+    "simulations/rust-toolchain.toml": "14e3882647ecdcb192664239effae80fbd23296193075a1183ecebf4658d4edf"
+  },
+  "stability": {
+    "checks": {
+      "all_runs_adequate": false,
+      "heldout_rmse_stability": false,
+      "median_stability": false,
+      "normalizer_agreement": true,
+      "same_prior_widths": true,
+      "tail_stability": false,
+      "three_prespecified_independent_runs": true
+    },
+    "heldout_rmse_median_span": 0.10665151232372316,
+    "normalizer_comparisons": [
+      {
+        "combined_mcse": 0.00018116962257244034,
+        "difference": 0.00023661729281016896,
+        "passed": true,
+        "seeds": [
+          2026091901,
+          2026091902
+        ]
+      },
+      {
+        "combined_mcse": 0.0002587601614905085,
+        "difference": 0.00041776262204246925,
+        "passed": true,
+        "seeds": [
+          2026091901,
+          2026091903
+        ]
+      },
+      {
+        "combined_mcse": 0.00029739835617821045,
+        "difference": 0.0001811453292323003,
+        "passed": true,
+        "seeds": [
+          2026091902,
+          2026091903
+        ]
+      }
+    ],
+    "parameter_spans_prior_fraction": {
+      "gpx4_rate": {
+        "median": 0.3290735907186869,
+        "q2_5": 0.43025585190742416,
+        "q97_5": 0.3645948117489116
+      },
+      "gsh_scav_efficiency": {
+        "median": 0.06882128926439754,
+        "q2_5": 0.1897585228794823,
+        "q97_5": 0.06809701525803513
+      },
+      "hill": {
+        "median": 0.1483555918739338,
+        "q2_5": 0.6018805323651376,
+        "q97_5": 0.14251105878800416
+      },
+      "k_erastin": {
+        "median": 0.07129785332578048,
+        "q2_5": 0.08252402380730084,
+        "q97_5": 0.030531982675480424
+      },
+      "k_um": {
+        "median": 0.056542973179879004,
+        "q2_5": 0.014295268487416085,
+        "q97_5": 0.12968565433563845
+      },
+      "lp_propagation": {
+        "median": 0.14723102313781045,
+        "q2_5": 0.16641569284965307,
+        "q97_5": 0.17647948209213268
+      },
+      "lp_rate": {
+        "median": 0.3039191739449529,
+        "q2_5": 0.36566782325189,
+        "q97_5": 0.3779226622005006
+      }
+    },
+    "passed": false
+  },
+  "target": {
+    "empirical_erastin": [
+      1.0077644009349758,
+      1.003569952101022,
+      0.9924027975696358,
+      0.9505599608245953,
+      0.5245657652369768,
+      0.4258264118956729
+    ],
+    "empirical_heldout": [
+      0.9952769088457382,
+      0.9848098729696396,
+      0.955692088937454,
+      0.8574958874765037,
+      0.5343545608207255,
+      0.23221134305174632,
+      0.1522275475335611
+    ],
+    "empirical_rsl3": [
+      1.0089190192569037,
+      1.0058030192596805,
+      0.979508863384436,
+      0.8440658541992442,
+      0.3412631552698026,
+      0.07023116473720219,
+      0.040360023553120704
+    ],
+    "epsilon": 0.17447979628221513,
+    "erastin_doses_um": [
+      0.1,
+      0.3,
+      1.0,
+      3.0,
+      10.0,
+      30.0
+    ],
+    "priors": [
+      [
+        "lp_propagation",
+        0.05,
+        1.0
+      ],
+      [
+        "lp_rate",
+        0.03,
+        1.0
+      ],
+      [
+        "gpx4_rate",
+        0.15,
+        0.6
+      ],
+      [
+        "gsh_scav_efficiency",
+        0.2,
+        0.9
+      ],
+      [
+        "k_um",
+        0.1,
+        4.0
+      ],
+      [
+        "k_erastin",
+        3.0,
+        50.0
+      ],
+      [
+        "hill",
+        1.0,
+        6.0
+      ]
+    ],
+    "reference_distance": 0.15861799662019557,
+    "reference_simulator_dose_calls": 13,
+    "reference_vector": {
+      "gpx4_rate": 0.3,
+      "gsh_scav_efficiency": 0.5,
+      "hill": 6.0,
+      "k_erastin": 3.0,
+      "k_um": 0.25,
+      "lp_propagation": 0.7,
+      "lp_rate": 0.4
+    },
+    "rsl3_doses_um": [
+      0.01,
+      0.03,
+      0.1,
+      0.3,
+      1.0,
+      3.0,
+      10.0
+    ],
+    "simulation_n": 2000,
+    "simulation_seed": 42,
+    "source": {
+      "file": "ctrpv2_ferroptosis_curves.csv",
+      "sha256": "37856d90187d7d4fe8b8c02442b0d1cc0b51c1908bc51b572628e5d087892622",
+      "target_kind": "median of fitted CTRPv2 curves within recorded dose ranges"
+    },
+    "support": {
+      "ERASTIN": {
+        "compound": "ERASTIN",
+        "excluded_rows": [
+          {
+            "ModelID": "ACH-000028",
+            "maximum_dose_um": 8.3,
+            "minimum_dose_um": 0.0081,
+            "reasons": [
+              "requested_dose_above_maximum"
+            ],
+            "row_index": 16
+          },
+          {
+            "ModelID": "ACH-000094",
+            "maximum_dose_um": 8.3,
+            "minimum_dose_um": 0.002,
+            "reasons": [
+              "requested_dose_above_maximum"
+            ],
+            "row_index": 59
+          },
+          {
+            "ModelID": "ACH-000296",
+            "maximum_dose_um": 17.0,
+            "minimum_dose_um": 0.002,
+            "reasons": [
+              "requested_dose_above_maximum"
+            ],
+            "row_index": 201
+          },
+          {
+            "ModelID": "ACH-000317",
+            "maximum_dose_um": 0.26,
+            "minimum_dose_um": 0.002,
+            "reasons": [
+              "requested_dose_above_maximum"
+            ],
+            "row_index": 218
+          },
+          {
+            "ModelID": "ACH-000364",
+            "maximum_dose_um": 4.2,
+            "minimum_dose_um": 0.002,
+            "reasons": [
+              "requested_dose_above_maximum"
+            ],
+            "row_index": 255
+          },
+          {
+            "ModelID": "ACH-000454",
+            "maximum_dose_um": 66.0,
+            "minimum_dose_um": 0.52,
+            "reasons": [
+              "requested_dose_below_minimum"
+            ],
+            "row_index": 325
+          },
+          {
+            "ModelID": "ACH-000578",
+            "maximum_dose_um": 17.0,
+            "minimum_dose_um": 0.002,
+            "reasons": [
+              "requested_dose_above_maximum"
+            ],
+            "row_index": 412
+          },
+          {
+            "ModelID": "ACH-000720",
+            "maximum_dose_um": 17.0,
+            "minimum_dose_um": 0.002,
+            "reasons": [
+              "requested_dose_above_maximum"
+            ],
+            "row_index": 515
+          },
+          {
+            "ModelID": "ACH-000752",
+            "maximum_dose_um": 17.0,
+            "minimum_dose_um": 0.002,
+            "reasons": [
+              "requested_dose_above_maximum"
+            ],
+            "row_index": 543
+          },
+          {
+            "ModelID": "ACH-002820",
+            "maximum_dose_um": 17.0,
+            "minimum_dose_um": 0.002,
+            "reasons": [
+              "requested_dose_above_maximum"
+            ],
+            "row_index": 776
+          }
+        ],
+        "n_excluded": 10,
+        "n_original": 795,
+        "n_retained": 785,
+        "per_dose_support": [
+          {
+            "dose_um": 0.1,
+            "n_supported": 794
+          },
+          {
+            "dose_um": 0.3,
+            "n_supported": 793
+          },
+          {
+            "dose_um": 1.0,
+            "n_supported": 794
+          },
+          {
+            "dose_um": 3.0,
+            "n_supported": 794
+          },
+          {
+            "dose_um": 10.0,
+            "n_supported": 791
+          },
+          {
+            "dose_um": 30.0,
+            "n_supported": 786
+          }
+        ],
+        "policy": "entire_grid_within_recorded_dose_range",
+        "requested_doses_um": [
+          0.1,
+          0.3,
+          1.0,
+          3.0,
+          10.0,
+          30.0
+        ]
+      },
+      "ML162": {
+        "compound": "ML162",
+        "excluded_rows": [
+          {
+            "ModelID": "ACH-000317",
+            "maximum_dose_um": 33.0,
+            "minimum_dose_um": 0.26,
+            "reasons": [
+              "requested_dose_below_minimum"
+            ],
+            "row_index": 222
+          },
+          {
+            "ModelID": "ACH-000598",
+            "maximum_dose_um": 33.0,
+            "minimum_dose_um": 0.065,
+            "reasons": [
+              "requested_dose_below_minimum"
+            ],
+            "row_index": 427
+          }
+        ],
+        "n_excluded": 2,
+        "n_original": 795,
+        "n_retained": 793,
+        "per_dose_support": [
+          {
+            "dose_um": 0.01,
+            "n_supported": 793
+          },
+          {
+            "dose_um": 0.03,
+            "n_supported": 793
+          },
+          {
+            "dose_um": 0.1,
+            "n_supported": 794
+          },
+          {
+            "dose_um": 0.3,
+            "n_supported": 795
+          },
+          {
+            "dose_um": 1.0,
+            "n_supported": 795
+          },
+          {
+            "dose_um": 3.0,
+            "n_supported": 795
+          },
+          {
+            "dose_um": 10.0,
+            "n_supported": 795
+          }
+        ],
+        "policy": "entire_grid_within_recorded_dose_range",
+        "requested_doses_um": [
+          0.01,
+          0.03,
+          0.1,
+          0.3,
+          1.0,
+          3.0,
+          10.0
+        ]
+      },
+      "ML210": {
+        "compound": "ML210",
+        "excluded_rows": [
+          {
+            "ModelID": "ACH-000110",
+            "maximum_dose_um": 33.0,
+            "minimum_dose_um": 0.26,
+            "reasons": [
+              "requested_dose_below_minimum"
+            ],
+            "row_index": 69
+          },
+          {
+            "ModelID": "ACH-000753",
+            "maximum_dose_um": 8.3,
+            "minimum_dose_um": 0.001,
+            "reasons": [
+              "requested_dose_above_maximum"
+            ],
+            "row_index": 525
+          },
+          {
+            "ModelID": "ACH-000881",
+            "maximum_dose_um": 8.3,
+            "minimum_dose_um": 0.001,
+            "reasons": [
+              "requested_dose_above_maximum"
+            ],
+            "row_index": 620
+          }
+        ],
+        "n_excluded": 3,
+        "n_original": 762,
+        "n_retained": 759,
+        "per_dose_support": [
+          {
+            "dose_um": 0.01,
+            "n_supported": 761
+          },
+          {
+            "dose_um": 0.03,
+            "n_supported": 761
+          },
+          {
+            "dose_um": 0.1,
+            "n_supported": 761
+          },
+          {
+            "dose_um": 0.3,
+            "n_supported": 762
+          },
+          {
+            "dose_um": 1.0,
+            "n_supported": 762
+          },
+          {
+            "dose_um": 3.0,
+            "n_supported": 762
+          },
+          {
+            "dose_um": 10.0,
+            "n_supported": 760
+          }
+        ],
+        "policy": "entire_grid_within_recorded_dose_range",
+        "requested_doses_um": [
+          0.01,
+          0.03,
+          0.1,
+          0.3,
+          1.0,
+          3.0,
+          10.0
+        ]
+      }
+    },
+    "tolerance_factor": 1.1
+  }
+}
