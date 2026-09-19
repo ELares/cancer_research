@@ -68,7 +68,7 @@ context to read the caveats. Every quantitative output should be read alongside
 Do **NOT** use this model for, or cite it as evidence of, any of the following:
 
 - **Patient-specific or clinical decisions.** No part of this is calibrated to or validated against patient data.
-- **Precise quantitative predictions.** The specific numbers in the manuscript (1.99x Bliss synergy, 53% pH-driven reduction, 104:1 immune ratio, depth-kill percentages) are explicitly order-of-magnitude estimates from the 2D engine with estimated parameters; they are predictions to test, not measurements.
+- **Precise quantitative predictions.** The specific numbers in the manuscript (1.99x observed-to-Bliss ratio, 53% pH-driven reduction, 104:1 total immune-kill ratio, depth-kill percentages) are explicitly order-of-magnitude estimates from the 2D engine with estimated parameters; they are predictions to test, not measurements.
 - **Dosing, scheduling, or safety guidance.**
 - **Absence claims about biology.** The model not producing an effect is not evidence the effect does not exist; the model only includes the mechanisms that were coded.
 - **Any uncalibrated 3D realism layer as a quantitative result.** The 3D `sim-tme-3d` layers (vasculature, slab, spheroid, clonal, persister + locking, suppressor, multi-checkpoint, contact, nutrient, senescence, dynamic iron, immunosuppressive ferroptosis, ...) are off-by-default, uncalibrated, and deliberately excluded from every quantitative claim in the manuscript.
@@ -152,7 +152,7 @@ uncalibrated layers feed the manuscript's quantitative claims.
 
 - **Magnitudes are not trustworthy.** Read direction and order of magnitude only.
 - **The hypoxia / SDT leg is contested.** SDT is modeled as oxygen-independent (optimistic upper bound); the lead clinical agent is oxygen-dependent. An off-by-default oxygen-dependent SDT mode and a dynamic-iron hypoxia coupling exist to test the reverse, but the magnitude of the SDT-vs-RSL3 hypoxia gap is unresolved.
-- **The immune-coupling ratio is geometry-sensitive** (104:1 in 2D shrinks to roughly 4:1 in 3D), and the net sign can flip once the off-by-default immunosuppressive-ferroptosis arm is enabled.
+- **The total immune-kill ratio is geometry-sensitive** (104:1 in 2D shrinks to roughly 4:1 in 3D), and the net sign can flip once the off-by-default immunosuppressive-ferroptosis arm is enabled. Those counts do not establish a DAMP or DC-maturation ratio per dead cell; the historical P5 readout label is corrected in manuscript Section 8.2.
 - **Several directions are genuinely contested in the literature** and the model encodes them as configurable/bidirectional rather than single-signed (e.g. ether-lipid plasmalogen sub-step, nutrient stress, and senescence, which is a senolytic target under direct GPX4 inhibition but resistant to upstream triggers).
 - **Corpus limitations:** open-access skew, missing landmark full text, taxonomy-dependent gap counts, 55% tagger recall.
 

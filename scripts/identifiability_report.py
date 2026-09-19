@@ -32,10 +32,12 @@ Run `python scripts/identifiability_report.py` to (re)write the committed report
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 PRCC = REPO_ROOT / "analysis" / "prcc-results.json"
+BLISS_UNCERTAINTY = REPO_ROOT / "analysis" / "headline-uncertainty-report.md"
 OUT_MD = REPO_ROOT / "analysis" / "identifiability-report.md"
 OUT_JSON = REPO_ROOT / "analysis" / "identifiability-report.json"
 
@@ -71,10 +73,7 @@ HEADLINES = [
         "observable": "RSL3 + FSP1i Bliss synergy_score (the ~1.99x)",
         "drivers": ["lp_propagation", "gsh_scav_efficiency", "gpx4_rate"],
         "non_identifiable_params": ["sdt_ros (structural zero, no SDT in the pair)", "rsl3_gpx4_inhib (structural zero, fixed DrugEffect)"],
-        "prior_predictive": "point ~1.99x, 95% prior-predictive ~[1.0x, 5.2x], median ~1.35x; strongly interaction-laden (Morris sigma > mu* for every active parameter)",
         "data_conditioned": "no (prior-predictive; the combo fit is not data-conditioned)",
-        "verdict": "direction_robust_magnitude_not",
-        "rationale": "the supra-additive DIRECTION holds at the lower bound (interval stays >= 1.0x), so dual-pathway depletion beating single-pathway is defensible; the 1.99x magnitude is not",
         "source": "headline-sensitivity-report.md (#331); headline-uncertainty-report.md (#332)",
     },
     {
@@ -113,6 +112,66 @@ HEADLINES = [
 ]
 
 
+def _bliss_verdict() -> dict:
+    """Read the reported precision and sampled range, not a rounded headline.
+
+    A ratio of one is Bliss independence, not synergy. A positive combination
+    benefit over either single agent is also a different comparison.
+    """
+    source = BLISS_UNCERTAINTY.read_text(encoding="utf-8")
+    rows = {}
+    for line in source.splitlines():
+        cells = [cell.strip() for cell in line.strip().strip("|").split("|")]
+        if line.startswith("|") and len(cells) == 2:
+            rows[cells[0]] = cells[1]
+
+    def numbers(label, count):
+        value = rows.get(label, "")
+        pattern = r"\d+(?:\.\d+)?"
+        expected = pattern if count == 1 else rf"\[({pattern}), ({pattern})\]"
+        if not re.fullmatch(expected, value):
+            raise ValueError(f"Missing or malformed Bliss uncertainty row: {label}")
+        return [float(v) for v in re.findall(pattern, value)]
+
+    point, = numbers("default point estimate (no perturbation)", 1)
+    median, = numbers("prior-predictive median", 1)
+    lower, upper = numbers("95% prior-predictive interval", 2)
+    minimum, maximum = numbers("full range (min, max)", 2)
+    if not minimum <= lower <= median <= upper <= maximum:
+        raise ValueError("Bliss uncertainty interval and sampled range are inconsistent")
+    uniformly_supra_additive = minimum > 1.0
+    if uniformly_supra_additive:
+        direction = (
+            "every sampled ratio exceeds the additive null of 1 at the reported precision; "
+            "this supports supra-additivity in the sampled ensemble, not a guarantee for "
+            "unsampled parameters or biological experiments. "
+        )
+    elif minimum < 1.0:
+        direction = (
+            "the reported sampled range includes sub-additive draws, so "
+            "supra-additivity is not uniform across the sampled ensemble. "
+        )
+    else:
+        direction = (
+            "the sampled minimum is reported as the additive null of 1.000; "
+            "that precision does not establish whether every sampled ratio exceeds the null. "
+        )
+    return {
+        "prior_predictive": (
+            f"point {point:.3f}x, 95% prior-predictive [{lower:.3f}, {upper:.3f}], "
+            f"median {median:.3f}x; full sampled range [{minimum:.3f}, {maximum:.3f}]; "
+            "nonlinearity and/or interactions (Morris sigma > mu* for every active parameter)"
+        ),
+        "verdict": ("direction_robust_magnitude_not" if uniformly_supra_additive
+                    else "direction_and_magnitude_uncertain"),
+        "rationale": (
+            direction + "A bound rounded to 1.000 cannot establish strict exclusion of the null; "
+            "outperforming a single agent is not equivalent to exceeding Bliss independence. "
+            "The magnitude is not point-estimable or data-conditioned"
+        ),
+    }
+
+
 def build() -> dict:
     prcc = json.loads(PRCC.read_text(encoding="utf-8"))
     params = prcc["metadata"]["parameters"]
@@ -124,6 +183,14 @@ def build() -> dict:
         assert p in params, f"non-identifiable param {p!r} not in the PRCC parameter set"
     for p in SOBOL_DOMINANT:
         assert p in params, f"dominant param {p!r} not in the PRCC parameter set"
+    bliss = _bliss_verdict()
+    headlines = [{**h, **bliss} if h["key"] == "bliss_synergy" else dict(h)
+                 for h in HEADLINES]
+    bliss_summary = (
+        "Bliss supra-additivity holds across the sampled ensemble, with an uncalibrated magnitude. "
+        if bliss["verdict"] == "direction_robust_magnitude_not" else
+        "Uniform Bliss supra-additivity is not established by the reported ensemble, and its magnitude is uncalibrated. "
+    )
     return {
         "degrees_of_freedom": dof,
         "swept_parameters": params,
@@ -141,12 +208,13 @@ def build() -> dict:
             "posterior is numerically DISJOINT from the in-vivo/spatial regime that carries the "
             "headlines. So zero of the headline outputs are conditioned on data."
         ),
-        "headlines": HEADLINES,
+        "headlines": headlines,
         "overall": (
             "No headline output is fully point-estimable. The single-cell kill rate "
-            "and the immune ratio are directional-only; the Bliss synergy, the "
-            "hypoxia asymmetry, and the penetration gap are direction-robust but "
-            "magnitude-uncalibrated. With 11 free rate constants, 6 non-identifiable "
+            "and the immune ratio are directional-only. " + bliss_summary +
+            "The hypoxia asymmetry (under the O2-independent assumption) and the "
+            "penetration ordering are direction-robust but magnitude-uncalibrated. "
+            "With 11 free rate constants, 6 non-identifiable "
             "from the kill rate, and 0 of the headlines data-conditioned in the "
             "production regime, the honest reading of every reported magnitude is "
             "order-of-magnitude / directional, exactly as the manuscript labels them."

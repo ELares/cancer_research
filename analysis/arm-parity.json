@@ -13,7 +13,7 @@
    "rust_tests": 268,
    "calibration": null,
    "spatial": "by default",
-   "book_words": 5273,
+   "book_words": 5294,
    "book_sections": [
     "Chapter 5: The Ferroptosis Engine"
    ],
@@ -78,7 +78,7 @@
    "parity_lines": 0.017,
    "parity_fns": 0.044,
    "parity_tests": 0.037,
-   "parity_words": 0.217,
+   "parity_words": 0.216,
    "lines_short_of_parity": 3754
   },
   {
@@ -112,7 +112,7 @@
    "parity_lines": 0.065,
    "parity_fns": 0.049,
    "parity_tests": 0.22,
-   "parity_words": 0.217,
+   "parity_words": 0.216,
    "lines_short_of_parity": 3568
   },
   {
@@ -146,7 +146,7 @@
    "parity_lines": 0.069,
    "parity_fns": 0.126,
    "parity_tests": 0.123,
-   "parity_words": 0.493,
+   "parity_words": 0.491,
    "lines_short_of_parity": 3554
   },
   {
@@ -162,7 +162,7 @@
    "rust_tests": 10,
    "calibration": "INADMISSIBLE",
    "spatial": "as modifier",
-   "book_words": 4301,
+   "book_words": 4406,
    "book_sections": [
     "6.8 Checkpoint Blockade, and What a Ratio Can Constrain",
     "6.19 Checkpoint Blockade, and a Number With No Denominator",
@@ -182,7 +182,7 @@
    "parity_lines": 0.032,
    "parity_fns": 0.038,
    "parity_tests": 0.037,
-   "parity_words": 0.816,
+   "parity_words": 0.832,
    "lines_short_of_parity": 3695
   },
   {
@@ -216,7 +216,7 @@
    "parity_lines": 0.043,
    "parity_fns": 0.071,
    "parity_tests": 0.06,
-   "parity_words": 0.355,
+   "parity_words": 0.353,
    "lines_short_of_parity": 3651
   },
   {
@@ -251,7 +251,7 @@
    "parity_lines": 0.043,
    "parity_fns": 0.06,
    "parity_tests": 0.052,
-   "parity_words": 0.379,
+   "parity_words": 0.378,
    "lines_short_of_parity": 3652
   },
   {
@@ -285,7 +285,7 @@
    "parity_lines": 0.034,
    "parity_fns": 0.049,
    "parity_tests": 0.037,
-   "parity_words": 0.376,
+   "parity_words": 0.375,
    "lines_short_of_parity": 3688
   },
   {
@@ -319,7 +319,7 @@
    "parity_lines": 0.074,
    "parity_fns": 0.104,
    "parity_tests": 0.056,
-   "parity_words": 0.435,
+   "parity_words": 0.433,
    "lines_short_of_parity": 3535
   },
   {
@@ -355,15 +355,15 @@
    "parity_lines": 0.032,
    "parity_fns": 0.071,
    "parity_tests": 0.041,
-   "parity_words": 0.354,
+   "parity_words": 0.352,
    "lines_short_of_parity": 3694
   }
  ],
  "shared_modules": 5,
  "shared_code_lines": 818,
  "shared_pub_fns": 58,
- "manuscript_words_in_sections": 73651,
- "manuscript_words_attributed": 24473,
+ "manuscript_words_in_sections": 73836,
+ "manuscript_words_attributed": 24599,
  "sections_naming_more_than_one_arm": {
   "6.13 Photodynamic and Sonodynamic Therapy, the Two the Project Started With": 2
  },

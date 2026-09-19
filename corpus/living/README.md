@@ -37,6 +37,8 @@ increments or from the census.
 `python scripts/corpus_identity_index.py` includes each local dated
 `index.jsonl` when rebuilding the download-deduplication index. Its PMID, PMC ID
 and DOI keys count as held metadata, without claiming that full text is held.
+Detected changes during a scan leave the file eligible for a later build;
+identifiers already learned are retained.
 
 ## Cadence
 

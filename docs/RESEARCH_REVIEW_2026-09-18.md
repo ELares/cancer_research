@@ -68,6 +68,42 @@ supported by [Chou (2010)](https://pubmed.ncbi.nlm.nih.gov/20068163/).
 These corrections improve the inference drawn from existing evidence. They do
 not add a new experimental validation or fit the model to biological data.
 
+The follow-up review also found the withdrawn Bliss robustness claim still in
+the simulation-design verdict and the conclusion, and a confidence-tier
+definition that would confer that robustness on every medium-confidence claim.
+Those passages now distinguish mechanistic support from the sign of the
+particular interaction, with guards covering each summary.
+
+The immune experiment still required twofold HMGB1/ATP release per dead cell
+after the per-cell model statistic had been withdrawn. That unsupported
+expectation is now withdrawn too. Equal release per death can still yield
+different local concentrations when geometry and transport differ; it does not
+refute spatial immune amplification. Section 8.2 explicitly corrects the
+historical P5 label: 104:1 and approximately 4:1 describe total immune-kill
+ratios, not DAMP or dendritic-cell maturation per dead cell. The original P5
+text and its within-1.5x falsification threshold remain in `PREREGISTRATION.md`;
+no replacement threshold is inferred from the total-kill outputs.
+
+### Follow-up software review
+
+The living-review scanner could read one file version, then record a newer
+replacement's modification time and size as already scanned. It now captures
+the opened file's metadata and leaves detected changes eligible for another
+build, retaining identifiers already learned. Ten plain/gzip regression cases
+cover rewrites, replacements, disappearance, and changes around final cache
+validation; all ten fail against the original scanner. As before, the persistent
+cache uses size and modification time, rather than content hashes.
+
+The declaration-lookup repair initially stopped at multiline Rust attributes
+and block comments. The parser now masks complete attributes and comments,
+including nested comments and brackets inside literals, while still stopping
+at unrelated declarations. The focused audit suite passes 41 cases.
+
+The identifiability-report generator retained a hard-coded claim of robust
+Bliss supra-additivity. It now reads the reported sampled range, distinguishes
+values below, at, and above the additive null, and refuses missing evidence.
+The generated Markdown and JSON agree with the corrected manuscript.
+
 ## Verification
 
 The regressions use isolated fixtures, analytic expectations, and committed
@@ -85,9 +121,12 @@ Rust formatting and Clippy, manuscript regeneration, and release-manifest
 freshness. Use the pinned Rust toolchain and Python dependencies. Build output
 and temporary experiment logs belong outside the checkout.
 
-The full local Python run passed 2,143 tests with 22 skips; the Rust workspace
+The initial local Python run passed 2,143 tests with 22 skips; the Rust workspace
 passed 656 tests with one ignored. Formatting, Clippy, and the C integration
 smoke test also passed. Existing Clippy and Python dependency warnings remain.
+The follow-up fixes add 22 collected Python cases. Claim-surface guards also
+recognize the new uncertain-direction verdict while continuing to reject
+point-estimable and unknown verdicts.
 
 The corrected conceptual diagram was rendered with Graphviz on the local Linux
 host using Ubuntu's packages extracted into a temporary user directory (no

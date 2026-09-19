@@ -86,6 +86,7 @@ Usage:
 """
 
 import argparse
+import importlib.util
 import json
 import re
 from pathlib import Path
@@ -530,6 +531,46 @@ def _reaches_by_default(binary_dir, symbol):
     return False
 
 
+_ATTRIBUTE_START = re.compile(r"#\s*!?\s*\[")
+
+
+def _pricing_code_lines(text):
+    """Mask comments and complete attributes without changing line numbers."""
+    # Reuse the Rust scanners also used by the modality audits. In particular,
+    # brackets inside literals and nested block comments are not delimiters.
+    spec = importlib.util.spec_from_file_location(
+        "modality_coverage", Path(__file__).with_name("modality_coverage.py"))
+    rust = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(rust)
+    code = rust.strip_rust_comments(text)
+    out, i = [], 0
+    while i < len(code):
+        end = rust._skip_literal(code, i)
+        if end != i:
+            out.append(code[i:end])
+            i = end
+            continue
+        attr = _ATTRIBUTE_START.match(code, i)
+        if not attr:
+            out.append(code[i])
+            i += 1
+            continue
+        start, depth = i, 1
+        i = attr.end()
+        while i < len(code) and depth:
+            end = rust._skip_literal(code, i)
+            if end != i:
+                i = end
+                continue
+            if code[i] == "[":
+                depth += 1
+            elif code[i] == "]":
+                depth -= 1
+            i += 1
+        out.append(" " + "\n" * code.count("\n", start, i))
+    return "".join(out).split("\n")
+
+
 def _pricing_symbols(module, binding_lines):
     """The public items a module's wall-clock binding is attached to.
 
@@ -538,7 +579,7 @@ def _pricing_symbols(module, binding_lines):
     a rename cannot leave this pointing at nothing.
     """
     text = _path_for(module).read_text(errors="ignore")
-    lines = text.split("\n")
+    lines = _pricing_code_lines(text)
     out = set()
     for ln in binding_lines:
         found = None
@@ -567,8 +608,7 @@ def _pricing_symbols(module, binding_lines):
                         found = s.group(1)
                         break
                 break
-            stripped = lines[j].strip()
-            if stripped and not stripped.startswith(("//", "#[", "#![")):
+            if lines[j].strip():
                 break
         if found:
             out.add(found)

@@ -78,7 +78,8 @@ def test_the_premise_still_holds():
     """If anything ever becomes point-estimable, this guard must be revisited."""
     v = _verdicts()
     assert v, "identifiability-report.json no longer records per-headline verdicts"
-    assert all(x in ("directional_only", "direction_robust_magnitude_not") for x in v), (
+    assert all(x in ("directional_only", "direction_robust_magnitude_not",
+                    "direction_and_magnitude_uncertain") for x in v), (
         f"a headline now carries a verdict this guard does not know about: {set(v)}. "
         "If something became point-estimable, the surfaces below may legitimately "
         "state it as a magnitude.")

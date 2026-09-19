@@ -60,12 +60,23 @@ def test_uncertainty_summary_does_not_reinstate_robust_supra_additivity():
     if lo > 1 and minimum > 1:
         pytest.fail("The artifact changed to uniformly supra-additive draws; review the claim")
     text = MANUSCRIPT.read_text()
-    abstract = _section(text, "## Abstract")
-    design = _section(text, "### 5.2 Simulation Design")
-    for body in (abstract, design):
+    summaries = (
+        "## Abstract",
+        "### 5.2 Simulation Design",
+        "### 10.2 Confidence Tiers",
+        "### 11.1 Conclusion",
+    )
+    for heading in summaries:
+        body = _section(text, heading)
         assert "supra-additive direction is robust" not in body
+        assert not re.search(r"Bliss synergy[^.;\n]*\bdirection-robust\b", body), (
+            f"{heading} still classifies the interaction as direction-robust")
         assert f"{minimum:.3f}" in body, (
             "The sub-additive sampled tail is missing from an uncertainty summary")
+    tiers = _section(text, "### 10.2 Confidence Tiers")
+    medium = re.search(r"^- \*\*Medium confidence\*\*: (.+)$", tiers, re.M).group(1)
+    assert "direction is robust" not in medium, (
+        "The tier definition cannot grant robustness to the Bliss interaction")
 
 
 def test_protocol_keeps_the_registered_threshold_and_limits_its_interpretation():
@@ -125,6 +136,16 @@ def test_immune_claim_does_not_infer_a_per_dead_cell_ratio_from_population_means
     assert "No treatment-specific per-dead-cell LP or DAMP ratio is established" in body
     for unsupported in ("~7.8", "~2.6× more DAMPs", "LP reaches ~20"):
         assert unsupported not in body
+    assert not re.search(r"release at least \d+(?:\.\d+)?-fold more[^\n]*per dead cell", body), (
+        "An unmeasured per-cell ratio cannot set the expected assay response")
+    assert "immune activation depends on total kill count, not kill geometry" not in body, (
+        "Equal per-death release does not rule out concentration/geometry effects")
+    registration = (ROOT / "PREREGISTRATION.md").read_text()
+    p5 = registration.split("**P5.", 1)[1].split("**P6.", 1)[0]
+    tolerance = re.search(r"agree within ([\d.]+)x", p5).group(1)
+    assert f"does not amend P5's registered within-{tolerance}x falsification threshold" in body
+    assert "These are total immune-kill ratios" in body, (
+        "The historical P5 per-cell label must be explicitly corrected")
     caption_source = (ROOT / "scripts/generate_latex.py").read_text()
     caption = next(line for line in caption_source.splitlines()
                    if "'16': ('fig19_immune_coupling_flow'" in line)

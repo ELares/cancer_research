@@ -9,6 +9,7 @@ ultimately about that.
 """
 import gzip
 import json
+import os
 import sqlite3
 import sys
 from pathlib import Path
@@ -218,6 +219,111 @@ def test_jsonl_counts_bad_records_and_keeps_valid_neighbors(tmp_path, compressed
     assert c.execute("SELECT COUNT(*) FROM held WHERE has_fulltext=1").fetchone() == (0,)
     assert c.execute("SELECT records, bad FROM scanned WHERE path=?",
                      (str(p),)).fetchone() == (3, 4)
+
+
+def _write_jsonl(path, pmids):
+    data = "".join(json.dumps({"pmid": p, "text": "Held full text."}) + "\n"
+                   for p in pmids).encode()
+    path.write_bytes(gzip.compress(data, mtime=0) if path.suffix == ".gz" else data)
+
+
+@pytest.mark.parametrize("compressed", [False, True])
+@pytest.mark.parametrize("change", ["rewrite", "replace", "disappear"])
+def test_a_file_changed_during_scan_remains_eligible(tmp_path, monkeypatch, compressed, change):
+    """A producer can finish a new version while SQLite flushes the old one.
+
+    Retain the identifiers actually read, but let the next build see every
+    record in the replacement. Removing a path must not abort the build.
+    """
+    c = _mem()
+    path = tmp_path / ("index.jsonl.gz" if compressed else "index.jsonl")
+    scan = ix.scan_jsonl_gz if compressed else ix.scan_jsonl
+    _write_jsonl(path, ["42"])
+    assert scan(c, path, "test", fulltext=True, verbose=False) == 1
+    assert scan(c, path, "test", fulltext=True, verbose=False) == 0
+    _write_jsonl(path, ["43"])
+    scanned_stat = path.stat()
+    flush = ix._flush
+    final_pmids = ["44", "45"] if change == "rewrite" else ["44"]
+
+    def finish_producer(connection, rows):
+        flush(connection, rows)
+        if change == "disappear":
+            path.unlink()
+        elif change == "replace":
+            replacement = path.with_name("other" + "".join(path.suffixes))
+            _write_jsonl(replacement, final_pmids)
+            # Same size and mtime cannot disguise a different opened file.
+            assert replacement.stat().st_size == scanned_stat.st_size
+            os.utime(replacement, ns=(scanned_stat.st_atime_ns, scanned_stat.st_mtime_ns))
+            replacement.replace(path)
+        else:
+            _write_jsonl(path, final_pmids)
+
+    with monkeypatch.context() as patch:
+        patch.setattr(ix, "_flush", finish_producer)
+        assert scan(c, path, "test", fulltext=True, verbose=False) == 1
+    assert c.execute("SELECT 1 FROM scanned WHERE path=?", (str(path),)).fetchone() is None
+    for pmid in ("42", "43"):
+        assert ix.is_held(c, pmid=pmid)
+        assert c.execute("SELECT has_fulltext FROM held WHERE kind='pmid' AND key=?",
+                         (pmid,)).fetchone() == (1,)
+    if change == "disappear":
+        _write_jsonl(path, final_pmids)
+    assert scan(c, path, "test", fulltext=False, verbose=False) == len(final_pmids)
+    assert all(ix.is_held(c, pmid=p) for p in final_pmids)
+    assert scan(c, path, "test", fulltext=False, verbose=False) == 0
+
+
+@pytest.mark.parametrize("compressed", [False, True])
+def test_a_rewrite_after_validation_does_not_cache_unread_contents(tmp_path, monkeypatch, compressed):
+    """The completion insert must use the captured stat, not stat again."""
+    c = _mem()
+    path = tmp_path / ("index.jsonl.gz" if compressed else "index.jsonl")
+    scan = ix.scan_jsonl_gz if compressed else ix.scan_jsonl
+    _write_jsonl(path, ["42"])
+    scanned_stat = path.stat()
+    record = ix._record
+
+    def rewrite_then_record(*args, **kwargs):
+        _write_jsonl(path, ["42", "43"])
+        record(*args, **kwargs)
+
+    with monkeypatch.context() as patch:
+        patch.setattr(ix, "_record", rewrite_then_record)
+        assert scan(c, path, "test", fulltext=False, verbose=False) == 1
+    assert c.execute("SELECT mtime,size FROM scanned WHERE path=?", (str(path),)).fetchone() == (
+        scanned_stat.st_mtime, scanned_stat.st_size)
+    assert not ix.is_held(c, pmid="43")
+    assert scan(c, path, "test", fulltext=False, verbose=False) == 2
+    assert ix.is_held(c, pmid="43")
+    assert scan(c, path, "test", fulltext=False, verbose=False) == 0
+
+
+@pytest.mark.parametrize("compressed", [False, True])
+def test_a_replacement_after_open_is_not_the_version_read(tmp_path, monkeypatch, compressed):
+    """Opening a file pins its inode, even if its pathname is then replaced."""
+    c = _mem()
+    path = tmp_path / ("index.jsonl.gz" if compressed else "index.jsonl")
+    scan = ix.scan_jsonl_gz if compressed else ix.scan_jsonl
+    _write_jsonl(path, ["42"])
+    replacement = path.with_name("other" + "".join(path.suffixes))
+    _write_jsonl(replacement, ["43", "44"])
+    opener = gzip.open if compressed else open
+
+    def open_then_replace(*args, **kwargs):
+        fh = opener(*args, **kwargs)
+        replacement.replace(path)
+        return fh
+
+    with monkeypatch.context() as patch:
+        patch.setattr(gzip if compressed else ix, "open", open_then_replace, raising=False)
+        assert scan(c, path, "test", fulltext=False, verbose=False) == 1
+    assert ix.is_held(c, pmid="42")
+    assert c.execute("SELECT 1 FROM scanned WHERE path=?", (str(path),)).fetchone() is None
+    assert scan(c, path, "test", fulltext=False, verbose=False) == 2
+    assert ix.is_held(c, pmid="43") and ix.is_held(c, pmid="44")
+    assert scan(c, path, "test", fulltext=False, verbose=False) == 0
 
 
 def test_the_live_index_actually_covers_the_census():

@@ -32,9 +32,9 @@ The production simulation matrix uses fixed in-vivo defaults; the only data-cond
 
 - **Drivers:** lp_propagation, gsh_scav_efficiency, gpx4_rate
 - **Non-identifiable:** sdt_ros (structural zero, no SDT in the pair), rsl3_gpx4_inhib (structural zero, fixed DrugEffect)
-- **Prior-predictive spread:** point ~1.99x, 95% prior-predictive ~[1.0x, 5.2x], median ~1.35x; strongly interaction-laden (Morris sigma > mu* for every active parameter)
+- **Prior-predictive spread:** point 1.992x, 95% prior-predictive [1.000, 5.242], median 1.348x; full sampled range [0.953, 7.800]; nonlinearity and/or interactions (Morris sigma > mu* for every active parameter)
 - **Data-conditioned:** no (prior-predictive; the combo fit is not data-conditioned)
-- **Verdict:** `direction_robust_magnitude_not` (the supra-additive DIRECTION holds at the lower bound (interval stays >= 1.0x), so dual-pathway depletion beating single-pathway is defensible; the 1.99x magnitude is not)
+- **Verdict:** `direction_and_magnitude_uncertain` (the reported sampled range includes sub-additive draws, so supra-additivity is not uniform across the sampled ensemble. A bound rounded to 1.000 cannot establish strict exclusion of the null; outperforming a single agent is not equivalent to exceeding Bliss independence. The magnitude is not point-estimable or data-conditioned)
 - **Source:** headline-sensitivity-report.md (#331); headline-uncertainty-report.md (#332)
 ### SDT-minus-RSL3 hypoxic-zone kill gap (the kill-collapse asymmetry)
 
@@ -64,7 +64,7 @@ The production simulation matrix uses fixed in-vivo defaults; the only data-cond
 
 ## Overall
 
-No headline output is fully point-estimable. The single-cell kill rate and the immune ratio are directional-only; the Bliss synergy, the hypoxia asymmetry, and the penetration gap are direction-robust but magnitude-uncalibrated. With 11 free rate constants, 6 non-identifiable from the kill rate, and 0 of the headlines data-conditioned in the production regime, the honest reading of every reported magnitude is order-of-magnitude / directional, exactly as the manuscript labels them.
+No headline output is fully point-estimable. The single-cell kill rate and the immune ratio are directional-only. Uniform Bliss supra-additivity is not established by the reported ensemble, and its magnitude is uncalibrated. The hypoxia asymmetry (under the O2-independent assumption) and the penetration ordering are direction-robust but magnitude-uncalibrated. With 11 free rate constants, 6 non-identifiable from the kill rate, and 0 of the headlines data-conditioned in the production regime, the honest reading of every reported magnitude is order-of-magnitude / directional, exactly as the manuscript labels them.
 
 ## What would make a headline point-estimable
 
