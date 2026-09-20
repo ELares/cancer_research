@@ -177,7 +177,13 @@ calibration tier changes, update both this card and `CALIBRATION_STATUS.md`. The
 machine-checked authorities (source code for defaults, `parameter_provenance.md`,
 `targets.yaml`) take precedence over prose if they ever disagree.
 
-The corrected joint ML162/erastin ABC run is underpowered (4 accepted draws of
-40,000; minimum 20). Joint credible intervals and generalization claims are
-withheld. Single-inducer fits remain separate provisional results; see
-[the dose-support audit](docs/CALIBRATION_DOSE_SUPPORT.md).
+The corrected uniform joint ML162/erastin ABC run was underpowered (4 accepted
+draws of 40,000; minimum 20), and the first frozen-Gaussian importance design also
+failed its screens. The [revised bounded-proposal study](analysis/calibration/joint-resample-sampling.md)
+passed all prespecified per-run and across-run operational checks in three
+independent runs, with effective sample sizes of 728–844. No pooled posterior is
+published. These sampling checks do not establish independent assay validation,
+complete parameter-region coverage, or calibration of the spatial headlines;
+the calibration tiers remain unchanged. ML210 is a same-screen compound holdout
+with overlapping cell lines. Single-inducer fits remain separate provisional
+results; see [the dose-support audit](docs/CALIBRATION_DOSE_SUPPORT.md).
