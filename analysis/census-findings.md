@@ -11,7 +11,7 @@ believes?
 
 ## 0. Five manuscript findings changed their ANSWER
 
-* **Growth was measured against the wrong denominator.** The retrieved corpus's rise was compared against the WHOLE cancer literature (x1.1), which a corpus of emerging-therapy queries outgrows whether or not anything unusual happened. The matched denominator -- those same mechanisms in the census -- is **x2.77**, so the claim SPLITS: the mechanisms really did outgrow the literature they sit in (x2.52) and the rest belongs to the retrieval.
+* **Growth was measured against the wrong denominator.** The retrieved corpus's rise was compared against the WHOLE cancer literature (x1.1), which a corpus of emerging-therapy queries outgrows whether or not anything unusual happened. The matched denominator -- those same mechanisms in the census -- is **x2.77**, so the claim SPLITS: the mechanisms really did outgrow the literature they sit in (x2.51) and the rest belongs to the retrieval.
 
 * **Half of the tissue claim failed and half was strengthened.** Physical-modality research was reported as concentrated in epithelial and neuroectodermal contexts. Brain/CNS sits at 0.92x for the physical class against 0.91x for the pharmacological -- indistinguishable -- so the neuroectodermal half does not survive. The haematologic half does, and is strengthened by a contrast it never had: leukaemia 0.30x against 1.30x.
 
