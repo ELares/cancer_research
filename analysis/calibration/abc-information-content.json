@@ -1,54 +1,11 @@
 [
   {
     "artifact": "analysis/calibration/joint-posterior.json",
-    "n_accepted": 31,
+    "min_posterior": 20,
+    "n_accepted": 4,
     "n_draws": 40000,
-    "null_median_width": 0.898,
-    "null_p5_width": 0.797,
-    "parameters": {
-      "gpx4_rate": {
-        "informed": true,
-        "legacy_flag_unconstrained": true,
-        "null_percentile": 1.5,
-        "width_frac_of_prior": 0.759
-      },
-      "gsh_scav_efficiency": {
-        "informed": true,
-        "legacy_flag_unconstrained": false,
-        "null_percentile": 0.0,
-        "width_frac_of_prior": 0.365
-      },
-      "hill": {
-        "informed": false,
-        "legacy_flag_unconstrained": true,
-        "null_percentile": 67.6,
-        "width_frac_of_prior": 0.919
-      },
-      "k_erastin": {
-        "informed": true,
-        "legacy_flag_unconstrained": false,
-        "null_percentile": 0.0,
-        "width_frac_of_prior": 0.391
-      },
-      "k_um": {
-        "informed": true,
-        "legacy_flag_unconstrained": false,
-        "null_percentile": 0.0,
-        "width_frac_of_prior": 0.163
-      },
-      "lp_propagation": {
-        "informed": true,
-        "legacy_flag_unconstrained": false,
-        "null_percentile": 0.0,
-        "width_frac_of_prior": 0.573
-      },
-      "lp_rate": {
-        "informed": true,
-        "legacy_flag_unconstrained": true,
-        "null_percentile": 0.0,
-        "width_frac_of_prior": 0.615
-      }
-    }
+    "unassessable": "underpowered: 4 accepted draws; minimum required 20",
+    "underpowered": true
   },
   {
     "artifact": "analysis/calibration/abc-posterior.json",
@@ -59,15 +16,15 @@
     "parameters": {
       "gpx4_rate": {
         "informed": true,
-        "legacy_flag_unconstrained": true,
+        "legacy_flag_unconstrained": false,
         "null_percentile": 0.0,
-        "width_frac_of_prior": 0.619
+        "width_frac_of_prior": 0.592
       },
       "k_um": {
         "informed": true,
         "legacy_flag_unconstrained": false,
         "null_percentile": 0.0,
-        "width_frac_of_prior": 0.174
+        "width_frac_of_prior": 0.204
       },
       "lp_propagation": {
         "informed": true,

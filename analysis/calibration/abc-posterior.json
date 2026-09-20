@@ -1,8 +1,156 @@
 {
+  "target_source": {
+    "file": "ctrpv2_ferroptosis_curves.csv",
+    "sha256": "37856d90187d7d4fe8b8c02442b0d1cc0b51c1908bc51b572628e5d087892622",
+    "target_kind": "median of fitted CTRPv2 curves within recorded dose ranges"
+  },
+  "target_support": {
+    "ML162": {
+      "policy": "entire_grid_within_recorded_dose_range",
+      "n_original": 795,
+      "n_retained": 793,
+      "n_excluded": 2,
+      "requested_doses_um": [
+        0.01,
+        0.03,
+        0.1,
+        0.3,
+        1.0,
+        3.0,
+        10.0
+      ],
+      "per_dose_support": [
+        {
+          "dose_um": 0.01,
+          "n_supported": 793
+        },
+        {
+          "dose_um": 0.03,
+          "n_supported": 793
+        },
+        {
+          "dose_um": 0.1,
+          "n_supported": 794
+        },
+        {
+          "dose_um": 0.3,
+          "n_supported": 795
+        },
+        {
+          "dose_um": 1.0,
+          "n_supported": 795
+        },
+        {
+          "dose_um": 3.0,
+          "n_supported": 795
+        },
+        {
+          "dose_um": 10.0,
+          "n_supported": 795
+        }
+      ],
+      "excluded_rows": [
+        {
+          "row_index": 222,
+          "minimum_dose_um": 0.26,
+          "maximum_dose_um": 33.0,
+          "reasons": [
+            "requested_dose_below_minimum"
+          ],
+          "ModelID": "ACH-000317"
+        },
+        {
+          "row_index": 427,
+          "minimum_dose_um": 0.065,
+          "maximum_dose_um": 33.0,
+          "reasons": [
+            "requested_dose_below_minimum"
+          ],
+          "ModelID": "ACH-000598"
+        }
+      ],
+      "compound": "ML162"
+    },
+    "ML210": {
+      "policy": "entire_grid_within_recorded_dose_range",
+      "n_original": 762,
+      "n_retained": 759,
+      "n_excluded": 3,
+      "requested_doses_um": [
+        0.01,
+        0.03,
+        0.1,
+        0.3,
+        1.0,
+        3.0,
+        10.0
+      ],
+      "per_dose_support": [
+        {
+          "dose_um": 0.01,
+          "n_supported": 761
+        },
+        {
+          "dose_um": 0.03,
+          "n_supported": 761
+        },
+        {
+          "dose_um": 0.1,
+          "n_supported": 761
+        },
+        {
+          "dose_um": 0.3,
+          "n_supported": 762
+        },
+        {
+          "dose_um": 1.0,
+          "n_supported": 762
+        },
+        {
+          "dose_um": 3.0,
+          "n_supported": 762
+        },
+        {
+          "dose_um": 10.0,
+          "n_supported": 760
+        }
+      ],
+      "excluded_rows": [
+        {
+          "row_index": 69,
+          "minimum_dose_um": 0.26,
+          "maximum_dose_um": 33.0,
+          "reasons": [
+            "requested_dose_below_minimum"
+          ],
+          "ModelID": "ACH-000110"
+        },
+        {
+          "row_index": 525,
+          "minimum_dose_um": 0.001,
+          "maximum_dose_um": 8.3,
+          "reasons": [
+            "requested_dose_above_maximum"
+          ],
+          "ModelID": "ACH-000753"
+        },
+        {
+          "row_index": 620,
+          "minimum_dose_um": 0.001,
+          "maximum_dose_um": 8.3,
+          "reasons": [
+            "requested_dose_above_maximum"
+          ],
+          "ModelID": "ACH-000881"
+        }
+      ],
+      "compound": "ML210"
+    }
+  },
   "n_draws": 2000,
   "n_accepted": 40,
   "accept_frac": 0.02,
-  "epsilon_rmse": 0.1042,
+  "epsilon_rmse": 0.1068,
   "fit_compound": "ML162",
   "heldout_compound": "ML210",
   "priors": {
@@ -26,22 +174,22 @@
   "posterior": {
     "lp_propagation": {
       "q2_5": 0.3789,
-      "median": 0.7916,
+      "median": 0.8158,
       "q97_5": 0.9538
     },
     "lp_rate": {
       "q2_5": 0.2804,
-      "median": 0.6498,
+      "median": 0.66,
       "q97_5": 0.9453
     },
     "k_um": {
-      "q2_5": 0.1131,
-      "median": 0.3673,
-      "q97_5": 0.7908
+      "q2_5": 0.1136,
+      "median": 0.3769,
+      "q97_5": 0.9073
     },
     "gpx4_rate": {
-      "q2_5": 0.2999,
-      "median": 0.432,
+      "q2_5": 0.3118,
+      "median": 0.4411,
       "q97_5": 0.5783
     }
   },
@@ -51,7 +199,7 @@
         0.05,
         0.2
       ],
-      "posterior_median": 0.7916,
+      "posterior_median": 0.8158,
       "posterior_q2_5": 0.3789,
       "posterior_above_invivo_range": true
     },
@@ -60,7 +208,7 @@
         0.03,
         0.12
       ],
-      "posterior_median": 0.6498,
+      "posterior_median": 0.66,
       "posterior_q2_5": 0.2804,
       "posterior_above_invivo_range": true
     }
@@ -78,26 +226,26 @@
     "empirical_heldout": [
       0.9953,
       0.9848,
-      0.9559,
-      0.8582,
-      0.5357,
-      0.2326,
-      0.1523
+      0.9557,
+      0.8575,
+      0.5344,
+      0.2322,
+      0.1522
     ],
     "post_pred_median": [
-      0.955,
-      0.9492,
+      0.9537,
+      0.9477,
       0.9235,
       0.8263,
-      0.4045,
+      0.418,
       0.114,
-      0.045
+      0.0438
     ],
     "post_pred_q2_5": [
       0.8874,
       0.88,
       0.8554,
-      0.6514,
+      0.7227,
       0.2087,
       0.0372,
       0.0108

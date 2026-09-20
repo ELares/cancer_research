@@ -61,6 +61,12 @@ _PATTERN = re.compile(
 
 # module -> (streams it reads, why that set is the right one)
 REGISTRY = {
+    "census_input.py": (
+        {"records"},
+        "Shared reader for analyses of the indexed census. Its default root "
+        "selects records/ only, preserving the MeSH and publication-type "
+        "denominators declared by its callers. Input availability checks must "
+        "not silently add recovered or update streams to published analyses."),
     "corpus_identity_index.py": (
         {"records", "records_unindexed", "records_updates"},
         "Deliberately ALL THREE, and this is the one script where the frozen "

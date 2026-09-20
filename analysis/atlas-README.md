@@ -464,6 +464,24 @@ Bulk data is gitignored. `FERRO_ATLAS_ROOT` and `FERRO_ATLAS_FULLTEXT` move it t
 external storage. Unit guards that need neither network nor data:
 `pytest tests/test_atlas.py`.
 
+The mechanism-growth, mechanism-sites, unnamed-modalities, modality-comparison,
+normal-tissue, and protocol-precedent census reports use the shared
+[`census_input.py`](../scripts/census_input.py) reader. It honors
+`FERRO_ATLAS_ROOT` and reads the indexed `records/` stream. Missing shards,
+empty sampled inputs, and invalid sampling strides stop before either report
+is written. A readable census with zero scientific matches remains a valid
+result. `--stride` samples sorted shard files, not individual records.
+
+To rebuild report prose from committed counts without downloading the census:
+
+```bash
+python scripts/census_mechanism_growth.py --render-only
+python scripts/census_mechanism_sites.py --render-only
+```
+
+The other four reports support the same option. Both JSON and Markdown are
+rendered before writing, so a rendering error also preserves the existing pair.
+
 ## What the atlas is not
 
 It is not a knowledge base and not a source of truth. It is a map of what the

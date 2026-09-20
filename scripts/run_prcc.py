@@ -35,7 +35,8 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 OUTPUT_FILE = PROJECT_ROOT / "analysis" / "prcc-results.json"
 
 # 11 parameters matching the existing local sensitivity analysis (sim-original).
-# Ranges: ±50% of default, capped at biologically meaningful bounds.
+# Sensitivity ranges around the defaults; bounds are not uniformly ±50%.
+# In particular, both LP cascade ranges span 0.5–2 times their defaults.
 PARAM_RANGES = {
     "fenton_rate":              (0.01, 0.04),
     "gsh_scav_efficiency":      (0.25, 1.0),

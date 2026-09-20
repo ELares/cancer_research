@@ -1,22 +1,14 @@
-"""Guards for the ABC acceptance diagnostic.
+"""Keep acceptance-rule compliance separate from posterior sample adequacy.
 
-THE FINDING
------------
-The joint ABC returned a posterior whose median fits worse than a vector already
-committed in the repository. The cause is not a truncated prior and not a small
-sample: acceptance is a fixed 2% FRACTION, so the run always keeps its best 2%
-however bad they are, and the reported epsilon is an output rather than a
-criterion. With uniform draws almost never reaching the good region in seven
-dimensions, that cut lands well above what is achievable.
-
-These guards pin the three claims separately, because they fail in different
-ways: the numbers come from the committed artifact, the "not a truncated prior"
-conclusion has to follow from its own test rather than be asserted, and the
-report must keep saying what the finding does NOT overturn.
+The original fixed-quota defect is historical. Current probes must be reported
+as measured, and a favorable four-draw median must not hide an underpowered run.
 """
 
+import importlib.util
 import json
 from pathlib import Path
+
+import pytest
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 CAL = REPO_ROOT / "analysis" / "calibration"
@@ -30,65 +22,71 @@ def diag() -> dict:
     return json.loads(DIAG_JSON.read_text())
 
 
-def test_the_fix_holds_and_the_document_reports_it_as_resolved():
-    """The defect is fixed; this now guards the FIX rather than the bug.
+def renderer():
+    spec = importlib.util.spec_from_file_location(
+        "abc_acceptance_diagnostic", REPO_ROOT / "scripts" / "abc_acceptance_diagnostic.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module.render
 
-    Written first as "the committed vector beats the posterior median", which was
-    the observation at the time. Changing the acceptance rule inverted it, and
-    the guard fired -- correctly, because a document describing a live defect
-    must not survive the defect's removal unchanged.
-    """
+
+def test_the_rule_fix_does_not_hide_the_recorded_sampling_shortfall():
     d = diag()
-    assert d["posterior_median_distance"] < d["committed_distance"], (
-        "the posterior median is worse than the reference again; the acceptance "
-        "fix has regressed")
-    assert d["reported_epsilon"] <= d["committed_distance"] * 1.15, (
-        f"epsilon {d['reported_epsilon']} is no longer anchored near the "
-        f"achievable {d['committed_distance']}; it has drifted back toward being "
-        "an output rather than a criterion")
-    assert "Status: RESOLVED" in DIAG_MD.read_text()
+    joint = json.loads(JOINT.read_text())
+    assert d["acceptance_rule"] == joint["acceptance_rule"] == "tolerance"
+    assert d["n_accepted_now"] == joint["n_accepted"]
+    assert d["min_posterior"] == joint["min_posterior"]
+    assert d["underpowered"] == joint["underpowered"]
+    assert d["sampling"]["draws_of_record"] == joint["n_draws"]
+    assert d["reported_epsilon"] == joint["epsilon_joint_distance"]
+    assert d["target_source"] == joint["target_source"]
+    assert d["target_dose_grids_um"] == {
+        "ML162": joint["curves"]["rsl3_doses_um"],
+        "ERASTIN": joint["curves"]["erastin_doses_um"],
+    }
+    text = DIAG_MD.read_text()
+    assert "Status: ACCEPTANCE RULE FIXED" in text
+    if d["underpowered"] or d["n_accepted_now"] < d["min_posterior"]:
+        assert "POSTERIOR UNDERPOWERED" in text
+        assert "not reliable\nposterior estimates" in text
+    assert renderer()(d) == text
 
 
-def test_the_prior_is_not_what_truncates_the_fit():
-    """The conclusion must FOLLOW from the test, not sit beside it.
-
-    The committed vector sits on two prior bounds, which looks like clipping.
-    Stepping outside has to show the fit not improving, or the document's
-    "it is not a truncated prior" section is wrong.
-    """
+def test_boundary_probe_conclusion_follows_the_measured_distances():
     t = diag()["prior_truncation_test"]
     at_bound = t["k_erastin"]["3.0"]
     outside = [v for k, v in t["k_erastin"].items() if float(k) < 3.0]
     assert outside, "the k_erastin truncation test no longer probes outside the bound"
-    assert all(v >= at_bound for v in outside), (
-        "k_erastin improves outside its prior bound, so the prior IS truncating "
-        "and the diagnostic's central negative claim is wrong")
+    text = DIAG_MD.read_text()
+    expected = ("tested lower `k_erastin` values do not improve" if all(
+        v >= at_bound for v in outside) else
+        "`k_erastin` value outside the prior improves")
+    assert expected in text
+    assert "do not search for a global optimum outside the prior" in text
 
 
-def test_hill_is_inert_rather_than_merely_unidentified():
-    """A parameter that changes nothing is a stronger statement than a wide CrI."""
+def test_hill_probe_does_not_claim_inertness_throughout_the_prior():
     hl = diag()["prior_truncation_test"]["hill"]
-    assert len(set(hl.values())) == 1, (
-        f"hill now changes the joint distance ({hl}); the report says it is inert, "
-        "which is why the information-content analysis found it uninformed")
+    text = DIAG_MD.read_text()
+    if len(set(hl.values())) == 1:
+        assert "unchanged at the probed values 6, 8 and 10" in text
+        assert "does not establish that the parameter is inert throughout its prior" in text
+    else:
+        assert "distances differ across the tested values" in text
 
 
-def test_the_good_region_is_rare_but_reachable():
-    """A RATE, not an absolute zero.
-
-    The first version asserted 0 draws beat the reference, taken from a 300-draw
-    sample that was simply too small to see the region. At 20,000 draws nine do.
-    "Never" and "about 5 in 10,000" support the same argument -- a 1,500-draw run
-    lands in the region essentially never -- but only one of them is true.
-    """
+def test_fresh_search_reports_its_rate_without_augmenting_the_posterior():
     s_ = diag()["sampling"]
     rate = s_["n_beating_committed"] / s_["draws"]
-    assert rate < 1e-3, (
-        f"the good region is now reached at {rate:.1e} per draw; a plain "
-        "rejection sampler would find it readily and the diagnosis needs redoing")
+    assert 0 <= s_["n_beating_committed"] <= s_["draws"]
+    assert 0 <= s_["n_inside_epsilon"] <= s_["draws"]
+    assert s_["frac_inside_epsilon"] == round(s_["n_inside_epsilon"] / s_["draws"], 4)
     assert s_["draws"] >= 10000, (
         "the rate is measured on too few draws to distinguish 'rare' from "
         "'absent' -- the earlier 300-draw sample reported zero and was wrong")
+    text = DIAG_MD.read_text()
+    assert f"about {rate:.1e} per draw" in text
+    assert "not added to the joint posterior" in text
 
 
 def test_epsilon_is_now_anchored_rather_than_floating():
@@ -137,3 +135,44 @@ def test_the_acceptance_rule_is_a_tolerance_not_a_quantile():
     assert "underpowered" in src, (
         "the run no longer reports a shortfall; padding back to a quota is the "
         "behaviour that produced the original defect")
+
+
+@pytest.mark.parametrize("median_distance", [0.05, 0.3])
+@pytest.mark.parametrize("reported_underpowered", [True, False])
+def test_four_draw_median_cannot_override_a_sampling_shortfall(
+        median_distance, reported_underpowered):
+    d = diag()
+    d.update(acceptance_rule="tolerance", n_accepted_now=4, min_posterior=20,
+             underpowered=reported_underpowered, committed_distance=0.2,
+             posterior_median_distance=median_distance)
+    text = renderer()(d)
+    assert "Status: ACCEPTANCE RULE FIXED; POSTERIOR UNDERPOWERED" in text
+    assert "4 accepted draws; recorded minimum\n20" in text
+    assert "not reliable\nposterior estimates" in text
+    assert "favorable median-vector distance cannot resolve" in text
+
+
+def test_recorded_shortfall_is_not_overridden_by_count_alone():
+    d = diag()
+    d.update(acceptance_rule="tolerance", n_accepted_now=25, min_posterior=20,
+             underpowered=True)
+    assert "POSTERIOR UNDERPOWERED" in renderer()(d)
+
+
+def test_meeting_minimum_is_not_presented_as_validating_the_posterior():
+    d = diag()
+    d.update(acceptance_rule="tolerance", n_accepted_now=25, min_posterior=20,
+             underpowered=False)
+    text = renderer()(d)
+    assert "POSTERIOR UNDERPOWERED" not in text
+    assert "accepted count meets the recorded minimum of 20" in text
+    assert "minimum alone does not establish Monte Carlo stability" in text
+
+
+@pytest.mark.parametrize("missing", ["underpowered", "min_posterior"])
+def test_missing_metadata_cannot_establish_sampling_adequacy(missing):
+    d = diag()
+    d.update(acceptance_rule="tolerance", n_accepted_now=25, min_posterior=20,
+             underpowered=False)
+    d.pop(missing)
+    assert "SAMPLING ADEQUACY UNKNOWN" in renderer()(d)

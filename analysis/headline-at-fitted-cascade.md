@@ -19,6 +19,10 @@ posterior lies *entirely above* the in-vivo priors for both cascade
 parameters. So the reported numbers rest on parameters that are unfalsified
 because untested in their own regime — not because a test cleared them.
 
+The `posterior_median` row is the fixed historical vector recorded in this
+script and JSON, not the latest supported-dose joint posterior. Its
+admissibility result does not establish that of a newly refitted vector.
+
 This does **not** calibrate the spatial headlines: an in-vitro posterior
 conditions an in-vitro switch, and carrying it into in-vivo spatial models
 does not make them data-conditioned. What it bounds is how much each

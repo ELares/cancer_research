@@ -59,8 +59,10 @@ def test_error_metrics():
 def test_empirical_median_viability_synthetic():
     # Two cell lines with EC50 0.3 and 3.0; at dose 1.0 median is between them.
     rows = [
-        {"LowerAsymptote": "0.0", "UpperAsymptote": "1.0", "EC50": "0.3", "Slope": "-4"},
-        {"LowerAsymptote": "0.0", "UpperAsymptote": "1.0", "EC50": "3.0", "Slope": "-4"},
+        {"LowerAsymptote": "0.0", "UpperAsymptote": "1.0", "EC50": "0.3", "Slope": "-4",
+         "MinimumDose": "0.01", "MaximumDose": "100", "DoseUnit": "uM"},
+        {"LowerAsymptote": "0.0", "UpperAsymptote": "1.0", "EC50": "3.0", "Slope": "-4",
+         "MinimumDose": "0.01", "MaximumDose": "100", "DoseUnit": "uM"},
     ]
     med = ck.empirical_median_viability(rows, doses=(0.01, 1.0, 100.0))
     assert med[0] == pytest.approx(1.0, abs=0.05)   # both ~alive at low dose

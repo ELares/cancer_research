@@ -83,10 +83,10 @@ def model_dose_response(doses, params, phenotype=ck.PHENOTYPE, n=SIM_N, seed=SIM
 
 
 def run(args):
-    curves = ck.load_curves()
+    curves, source = ck.load_target_data()
     doses = list(ck.DOSE_GRID_UM)
-    emp_fit = ck.empirical_median_viability(curves[ck.FIT_COMPOUND], doses)
-    emp_heldout = ck.empirical_median_viability(curves[ck.HELDOUT_GPX4I], doses)
+    emp_fit, fit_support = ck.empirical_target(curves[ck.FIT_COMPOUND], doses)
+    emp_heldout, heldout_support = ck.empirical_target(curves[ck.HELDOUT_GPX4I], doses)
 
     rng = np.random.default_rng(RNG_SEED)
     names = [p[0] for p in PRIORS]
@@ -150,6 +150,8 @@ def run(args):
     covered_tol = _coverage(HELDOUT_TOL)
 
     result = {
+        "target_source": source,
+        "target_support": {ck.FIT_COMPOUND: fit_support, ck.HELDOUT_GPX4I: heldout_support},
         "n_draws": args.n_draws,
         "n_accepted": int(n_accept),
         "accept_frac": ACCEPT_FRAC,
@@ -191,13 +193,18 @@ def write_report(r):
         "extension; not run in CI). This is the DATA-CONDITIONED posterior #332 asks for,",
         "and it is necessarily an **in-vitro** posterior (see the disjunction below).",
         "",
+        "## Dose support",
+        "",
+        ck.support_markdown(r["target_support"]),
+        "",
         "## Method",
         "",
         f"ABC rejection: {r['n_draws']} draws from in-vitro-spanning uniform priors, the",
         f"closest **{r['n_accepted']}** (lowest RMSE to the CTRPv2 {r['fit_compound']} median",
-        f"viability curve, acceptance fraction {r['accept_frac']}, epsilon RMSE",
-        f"{r['epsilon_rmse']}) form the posterior. Posterior-predictive-checked on the",
-        f"held-out GPX4 inhibitor {r['heldout_compound']}.",
+        f"fitted viability curve, acceptance fraction {r['accept_frac']}, epsilon RMSE",
+        f"{r['epsilon_rmse']}) form the posterior. Here epsilon is an output of the",
+        "fixed-fraction selection, unlike the reference-based tolerance used by the",
+        f"joint-inducer ABC. The held-out check uses {r['heldout_compound']}.",
         "",
         "## Posterior (95% credible intervals)",
         "",
@@ -210,8 +217,7 @@ def write_report(r):
         "",
         "## The in-vivo / in-vitro disjunction (the load-bearing finding)",
         "",
-        "The in-vivo PRCC prior ranges used for the prior-predictive intervals do NOT",
-        "overlap the in-vitro posterior:",
+        "Compare the reported in-vitro intervals with the PRCC sensitivity ranges:",
         "",
         "| parameter | in-vivo PRCC range | in-vitro posterior (2.5% .. median) | posterior entirely above in-vivo max? |",
         "|---|---|---|---|",
@@ -223,8 +229,9 @@ def write_report(r):
         )
     lines += [
         "",
-        "The in-vitro GPX4-inhibitor kill requires a lipid-peroxidation cascade 3 to 4x",
-        "stronger than the in-vivo plausible ranges allow. So:",
+        "These PRCC ranges are sensitivity bands around chosen defaults. Separation",
+        "from them does not independently validate an in-vivo regime. This calibration",
+        "does not establish a transfer from the in-vitro target to spatial outcomes:",
         "",
         "1. The data-conditioned posterior is **in-vitro only**; it puts credible bands on",
         "   the #330 point calibration.",
@@ -236,19 +243,20 @@ def write_report(r):
         "",
         "## Posterior-predictive check on held-out " + r["heldout_compound"],
         "",
-        f"Coverage of the empirical {r['heldout_compound']} median by the 95%",
-        f"posterior-predictive band: **{r['heldout_coverage_strict']}** strictly inside the",
+        f"Coverage of the fitted-curve {r['heldout_compound']} target by the central 95%",
+        f"parameter-draw band: **{r['heldout_coverage_strict']}** strictly inside the",
         f"band, **{r['heldout_coverage_tolerant']}** within a {r['heldout_tolerance']} viability",
-        "tolerance. Both are reported because the tolerance is doing real work: the CTRPv2",
-        "curves are cell-line MEDIANS and the model is single-cell, and the RMSE summary",
-        "statistic discards curve shape, so a small viability offset is expected. The honest",
-        "reading is that the posterior-predictive band is in the right place (tolerant",
-        "coverage high) but not tight enough to bracket every point strictly, consistent with",
-        "the single-cell-vs-median-curve mismatch and the limited 7-point summary statistic.",
+        "tolerance. The relaxed count is a separate descriptive check, not nominal 95%",
+        "coverage. Bands vary accepted parameters at a fixed simulation seed and population",
+        "size; they omit fitted-curve uncertainty, cell-line variability and measurement",
+        "error. They are not calibrated intervals for experimental outcomes. The target",
+        "values share fitted curves, so dose-wise coverage checks are not independent",
+        "validation observations. Compound holdout within this screen does not test",
+        "generalization to unseen cell lines or an independent assay.",
         "",
         "| dose (µM) | " + " | ".join(str(d) for d in pp["dose_um"]) + " |",
         "|---|" + "---|" * len(pp["dose_um"]),
-        "| empirical median | " + " | ".join(f"{v:.2f}" for v in pp["empirical_heldout"]) + " |",
+        "| fitted-curve median | " + " | ".join(f"{v:.2f}" for v in pp["empirical_heldout"]) + " |",
         "| post-pred median | " + " | ".join(f"{v:.2f}" for v in pp["post_pred_median"]) + " |",
         "| post-pred 2.5% | " + " | ".join(f"{v:.2f}" for v in pp["post_pred_q2_5"]) + " |",
         "| post-pred 97.5% | " + " | ".join(f"{v:.2f}" for v in pp["post_pred_q97_5"]) + " |",

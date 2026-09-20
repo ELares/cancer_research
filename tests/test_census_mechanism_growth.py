@@ -31,10 +31,11 @@ def d():
 def test_the_shrinking_set_is_derived_not_described(d):
     """Recompute it from the rows rather than trusting the stored field."""
     expected = sorted(r["mechanism"] for r in d["rows"]
-                      if r["growth"] is not None and r["growth"] < 1.0)
+                      if r["start"] >= d["min_base"] and r["end"] < r["start"])
     assert sorted(d["shrinking"]) == expected
     expected_recent = sorted(r["mechanism"] for r in d["rows"]
-                             if r["recent_pct"] is not None and r["recent_pct"] < 0)
+                             if r["recent_start"] >= 20
+                             and r["recent_end"] < r["recent_start"])
     assert sorted(d["recent_shrinking"]) == expected_recent
 
 
@@ -80,8 +81,9 @@ def test_the_recent_window_claim_names_its_base_threshold(d):
 def test_the_matched_denominator_is_present_and_beats_the_field(d):
     """The row this analysis exists to supply, and the comparison it replaces."""
     assert d["union_growth"] and d["field_growth"]
-    assert d["mechanisms_over_field"] == pytest.approx(
-        d["union_growth"] / d["field_growth"], abs=0.01)
+    assert d["mechanisms_over_field"] == round(
+        (d["union_end"] / d["union_start"]) /
+        (d["field_end"] / d["field_start"]), 2)
     md = MD.read_text()
     assert "denominator a growth claim needs" in md
     assert f"x{d['union_growth']}" in md and f"x{d['field_growth']}" in md

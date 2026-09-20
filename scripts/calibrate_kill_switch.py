@@ -46,11 +46,15 @@ Writes analysis/calibration/kill-switch-calibration.md + .json.
 
 import argparse
 import csv
+import hashlib
+import io
 import json
 import math
 import statistics
 import sys
 from pathlib import Path
+
+from ctrp_dose_support import select_supported_cohort
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 CURVES_CSV = REPO_ROOT / "analysis" / "calibration" / "ctrpv2_ferroptosis_curves.csv"
@@ -81,7 +85,7 @@ def _fc():
 
 def ctrp_viability(dose, lower, upper, ec50, slope):
     """4-parameter logistic viability (mirrors fetch_calibration_data.predicted_viability)."""
-    log_term = (-slope) * math.log(dose / ec50)
+    log_term = (-slope) * (math.log(dose) - math.log(ec50))
     if log_term > 700:
         return lower
     if log_term < -700:
@@ -90,24 +94,71 @@ def ctrp_viability(dose, lower, upper, ec50, slope):
 
 
 def load_curves(path=CURVES_CSV):
+    return load_target_data(path)[0]
+
+
+def load_target_data(path=CURVES_CSV):
+    """Parse and hash the same bytes before a potentially long fitting run."""
+    path = Path(path)
+    data = path.read_bytes()
     rows = {}
-    with open(path, newline="") as f:
-        for r in csv.DictReader(f):
-            rows.setdefault(r["CompoundName"], []).append(r)
-    return rows
+    for r in csv.DictReader(io.StringIO(data.decode("utf-8"), newline="")):
+        rows.setdefault(r["CompoundName"], []).append(r)
+    source = {"file": path.name, "sha256": hashlib.sha256(data).hexdigest(),
+              "target_kind": "median of fitted CTRPv2 curves within recorded dose ranges"}
+    return rows, source
 
 
 def empirical_median_viability(curve_rows, doses=DOSE_GRID_UM):
-    """Median viability across cell lines at each dose, from the per-line fits."""
+    """Median fitted viability from one cohort supported across the whole grid."""
+    return empirical_target(curve_rows, doses)[0]
+
+
+def empirical_target(curve_rows, doses=DOSE_GRID_UM):
+    """Return curve-derived targets and their fixed-cohort dose support."""
+    curve_rows, support = select_supported_cohort(curve_rows, doses)
+    coefficients = []
+    for i, row in enumerate(curve_rows):
+        try:
+            values = tuple(float(row[key]) for key in
+                           ("LowerAsymptote", "UpperAsymptote", "EC50", "Slope"))
+        except (KeyError, TypeError, ValueError, OverflowError) as exc:
+            raise ValueError(f"retained curve {i}: invalid logistic coefficients") from exc
+        if not all(math.isfinite(value) for value in values) or values[2] <= 0:
+            raise ValueError(f"retained curve {i}: coefficients must be finite and EC50 positive")
+        coefficients.append(values)
     out = []
-    for d in doses:
-        vs = [
-            ctrp_viability(d, float(r["LowerAsymptote"]), float(r["UpperAsymptote"]),
-                           float(r["EC50"]), float(r["Slope"]))
-            for r in curve_rows
-        ]
-        out.append(statistics.median(vs))
-    return out
+    for d in support["requested_doses_um"]:
+        vs = [ctrp_viability(d, *values) for values in coefficients]
+        if not all(math.isfinite(value) for value in vs):
+            raise ValueError(f"nonfinite fitted viability at {d:g} uM")
+        median = statistics.median(vs)
+        if not math.isfinite(median):
+            raise ValueError(f"nonfinite median fitted viability at {d:g} uM")
+        out.append(median)
+    return out, support
+
+
+def support_markdown(support):
+    lines = [
+        "Targets are medians of published fitted curves evaluated within each retained",
+        "cell line's recorded dose range; they are not raw observations at every requested dose.",
+        "A fixed cohort covers the entire grid for each compound, so its denominator",
+        "does not change with dose. Excluded lines can differ biologically from retained",
+        "lines; the result applies to this supported cohort, not the entire screen.",
+        "",
+        "| compound | curves available | retained across full grid | excluded | dose range (µM) |",
+        "|---|---:|---:|---:|---|",
+    ]
+    for compound, s in support.items():
+        doses = s["requested_doses_um"]
+        lines.append(f"| {compound} | {s['n_original']} | {s['n_retained']} | "
+                     f"{s['n_excluded']} | {min(doses):g}–{max(doses):g} |")
+    lines.extend(["", "The JSON records the input CSV hash, dose support and excluded rows."])
+    if HELDOUT_GPX4I in support:
+        lines.extend(["ML210 is held out by compound within the same screen; cell lines overlap",
+                      "with training. This is not validation on unseen cell lines or an independent assay."])
+    return "\n".join(lines)
 
 
 def dose_to_inhib(dose_um, k_um):
@@ -151,12 +202,12 @@ def grid_search(empirical, lp_prop_grid=LP_PROP_GRID, lp_rate_grid=LP_RATE_GRID,
 
 
 def run(args):
-    curves = load_curves(args.curves)
+    curves, source = load_target_data(args.curves)
     doses = list(DOSE_GRID_UM)
 
-    emp_fit = empirical_median_viability(curves[FIT_COMPOUND], doses)
-    emp_heldout = empirical_median_viability(curves[HELDOUT_GPX4I], doses)
-    emp_cross = empirical_median_viability(curves[CROSS_MECHANISM], doses)
+    emp_fit, fit_support = empirical_target(curves[FIT_COMPOUND], doses)
+    emp_heldout, heldout_support = empirical_target(curves[HELDOUT_GPX4I], doses)
+    emp_cross, cross_support = empirical_target(curves[CROSS_MECHANISM], doses)
 
     # Baseline (uncalibrated default) for the gap report.
     default_model = model_viability(doses, 0.1, 0.06, 0.5)  # default lp params, mid K
@@ -175,6 +226,9 @@ def run(args):
     cross_rmse = rmse(cross_model, emp_cross)
 
     result = {
+        "target_source": source,
+        "target_support": {FIT_COMPOUND: fit_support, HELDOUT_GPX4I: heldout_support,
+                           CROSS_MECHANISM: cross_support},
         "fit_compound": FIT_COMPOUND,
         "heldout_compound": HELDOUT_GPX4I,
         "cross_mechanism_compound": CROSS_MECHANISM,
@@ -225,10 +279,14 @@ Generated by `scripts/calibrate_kill_switch.py` (needs the compiled
 `analysis/calibration/ctrpv2_ferroptosis_curves.csv` (see
 `calibration-targets-ctrpv2.md`).
 
+## Dose support
+
+{support_markdown(r['target_support'])}
+
 ## Result
 
 Fit the model RSL3 kill switch (phenotype **{r['phenotype']}**) to the **{r['fit_compound']}**
-median viability(dose), then validated held-out on **{r['heldout_compound']}** (same
+pointwise median of fitted viability curves, then evaluated on **{r['heldout_compound']}** (same
 GPX4-inhibition mechanism, same CTRPv2 dataset and assay — a held-out *compound*,
 NOT cross-platform or cross-mechanism validation, so "held-out" should be read as
 held-out-compound generalization within one in-vitro screen).
@@ -240,31 +298,23 @@ held-out-compound generalization within one in-vitro screen).
 - **Default (uncalibrated) RMSE vs {r['fit_compound']}**: {r['default_uncalibrated_rmse']}
   (grid search over {r['grid_evals']} parameter combinations)
 
-The default (in-vivo-tuned) kill switch is far too RSL3-resistant for in-vitro
-cell-line data (its Glycolytic RSL3 death is ~0 even at saturating dose, so its
-viability stays ~1 across the dose range). Turning up the lipid-peroxidation
-cascade (the top PRCC/Sobol kill-rate drivers) reproduces the in-vitro
-GPX4-inhibitor dose-response. The SAME fitted parameters predict the held-out
-GPX4 inhibitor at comparable error (held-out RMSE only ~1.4x the fit RMSE),
-which confirms the fit is not degenerate / overfit to one compound. It is NOT a
-claim that the model captures why the two GPX4 inhibitors differ: ML210 is
-systematically ~50% less sensitive than ML162 at the 1 to 3 uM mid-dose, and the
-single-phenotype kill-rate fit reproduces the overall dose-response magnitude but
-not that compound-specific difference in steepness, so the underlying mechanism is
-only partially resolved by kill-rate calibration alone. That residual
-between-compound shape difference is the largest part of the held-out error and is
-the honest limit of this fit.
+The tables compare the calibrated and default predictions against the supported
+targets. The SAME fitted parameters and dose-to-inhibition map are applied to
+the held-out GPX4 inhibitor. Its error measures transfer between compounds in
+this screen; it does not rule out overfitting or establish that the model
+captures the reasons the compounds differ. Their distinct fitted-curve shapes
+remain visible in the dose-wise residuals.
 
 ## Fit ({r['fit_compound']})
 
-{table(c['empirical_fit'], c['model_fit'], 'empirical median', 'model (calibrated)')}
+{table(c['empirical_fit'], c['model_fit'], 'fitted-curve median', 'model (calibrated)')}
 
 ## Held-out ({r['heldout_compound']})
 
-{table(c['empirical_heldout'], c['model_heldout'], 'empirical median', 'model (calibrated)')}
+{table(c['empirical_heldout'], c['model_heldout'], 'fitted-curve median', 'model (calibrated)')}
 
 Default uncalibrated model viability vs {r['fit_compound']} (the gap this closes):
-{table(c['empirical_fit'], c['default_uncalibrated_model'], 'empirical median', 'model (default)')}
+{table(c['empirical_fit'], c['default_uncalibrated_model'], 'fitted-curve median', 'model (default)')}
 
 ## Cross-mechanism contrast ({r['cross_mechanism_compound']})
 
@@ -273,7 +323,7 @@ DIFFERENT mechanism from direct GPX4 inhibition, so a GPX4i-calibrated model is
 expected to fit it less well. RMSE vs {r['cross_mechanism_compound']}:
 **{r['cross_mechanism_rmse']}** (reported as a contrast, not a validation target).
 
-{table(c['empirical_cross'], c['model_heldout'], 'empirical median', 'model (GPX4i-calibrated)')}
+{table(c['empirical_cross'], c['model_heldout'], 'fitted-curve median', 'model (GPX4i-calibrated)')}
 
 ## Caveats (what this calibration is and is NOT)
 
@@ -281,10 +331,10 @@ expected to fit it less well. RMSE vs {r['cross_mechanism_compound']}:
    quantifies, rather than removes, the in-vivo-default resistance: the production
    simulations keep their defaults; this is a separate documented anchoring of the
    single-cell switch to in-vitro data.
-2. **Distributional approximation.** One representative phenotype is fit to the
-   MEDIAN cell line. The cell-line spread (an order of magnitude in EC50) maps to
-   the model's phenotype/parameter heterogeneity and is not reproduced here; that
-   is the documented next extension.
+2. **Distributional approximation.** One representative phenotype is fit to
+   pointwise medians across the retained cell lines' fitted curves. The resulting
+   target need not describe any individual cell line. Between-line variation and
+   uncertainty in the source curve fits are not reproduced by this objective.
 3. **K is a fitted nuisance**, not a physical constant: it absorbs the µM-to-
    dimensionless-intensity unit gap. Identifiability between `lp_propagation` and
    `lp_rate` is limited (both drive the same cascade; PRCC/Sobol already flag

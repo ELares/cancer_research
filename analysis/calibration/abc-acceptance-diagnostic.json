@@ -1,5 +1,6 @@
 {
-  "committed_distance": 0.2202,
+  "acceptance_rule": "tolerance",
+  "committed_distance": 0.1586,
   "committed_vector": {
     "gpx4_rate": 0.3,
     "gsh_scav_efficiency": 0.5,
@@ -9,28 +10,56 @@
     "lp_propagation": 0.7,
     "lp_rate": 0.4
   },
-  "epsilon_excess_over_committed": 0.1,
-  "n_accepted_now": 31,
-  "posterior_median_distance": 0.1548,
+  "epsilon_excess_over_committed": 0.1001,
+  "min_posterior": 20,
+  "n_accepted_now": 4,
+  "posterior_median_distance": 0.1224,
   "prior_truncation_test": {
     "hill": {
-      "10.0": 0.2202,
-      "6.0": 0.2202,
-      "8.0": 0.2202
+      "10.0": 0.1586,
+      "6.0": 0.1586,
+      "8.0": 0.1586
     },
     "k_erastin": {
-      "1.0": 0.2536,
-      "2.0": 0.2399,
-      "3.0": 0.2202
+      "1.0": 0.2123,
+      "2.0": 0.1916,
+      "3.0": 0.1586
     }
   },
-  "reported_epsilon": 0.2422,
+  "reported_epsilon": 0.1745,
   "sampling": {
-    "best": 0.1506,
+    "best": 0.1412,
     "draws": 20000,
     "draws_of_record": 40000,
-    "frac_inside_epsilon": 0.0011,
-    "n_beating_committed": 9,
-    "quantile_2pct": 0.3652
-  }
+    "frac_inside_epsilon": 0.0003,
+    "n_beating_committed": 3,
+    "n_inside_epsilon": 5,
+    "quantile_2pct": 0.3445,
+    "seed": 7
+  },
+  "target_dose_grids_um": {
+    "ERASTIN": [
+      0.1,
+      0.3,
+      1.0,
+      3.0,
+      10.0,
+      30.0
+    ],
+    "ML162": [
+      0.01,
+      0.03,
+      0.1,
+      0.3,
+      1.0,
+      3.0,
+      10.0
+    ]
+  },
+  "target_source": {
+    "file": "ctrpv2_ferroptosis_curves.csv",
+    "sha256": "37856d90187d7d4fe8b8c02442b0d1cc0b51c1908bc51b572628e5d087892622",
+    "target_kind": "median of fitted CTRPv2 curves within recorded dose ranges"
+  },
+  "underpowered": true
 }

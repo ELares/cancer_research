@@ -115,7 +115,7 @@ attention. The census can rule two confounds in or out.
 one it originally lacked.** Measuring the corpus against the whole
 field attributes all of x30.71 to the mechanisms.
 The mechanisms themselves grew x2.77, which is
-x2.52 the field -- a real result, and the
+x2.51 the field -- a real result, and the
 part of the manuscript's growth story that survives. The remaining
 factor of roughly
 11 belongs to the
