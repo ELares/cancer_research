@@ -1,94 +1,463 @@
 <!doctype html>
 <html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Cancer-research corpus dashboard — live demo</title>
-  <meta name="description" content="In-browser (stlite/Pyodide) demo of the census dashboard for ELares/cancer_research. Runs entirely client-side on committed aggregates over 5,187,265 cancer articles — no server, no install." />
-  <!--
-    Live demo for issue #565. This runs scripts/dashboard.py ENTIRELY IN THE
-    BROWSER via stlite (Streamlit compiled to WebAssembly/Pyodide) — no Streamlit
-    Cloud account and no backend server. GitHub Pages just serves this static
-    page; the Python, the dashboard code, and the 3.35 MB corpus index are all
-    fetched from `main` (raw.githubusercontent, CORS-enabled) and executed in the
-    visitor's browser.
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#f5f5ef" />
+    <title>Cancer Research Atlas — evidence, models & open questions</title>
+    <meta
+      name="description"
+      content="Explore the cancer-literature evidence map, inspect reproducible model checks, and find the next open research question. An open, source-linked research atlas."
+    />
+    <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="assets/site.css" />
+    <script src="assets/site.js" defer></script>
+    <noscript
+      ><style>
+        .metrics-strip,
+        .checkpoint-score,
+        #hero-trials,
+        .atlas-toolbar,
+        #sort-note,
+        .atlas-workspace,
+        #sampling-summary,
+        #challenge-summary,
+        .challenge-output,
+        .geometry-buttons,
+        #open-sources,
+        .trial-denominators {
+          display: none !important;
+        }
+        .challenge-lab {
+          display: block;
+        }
+      </style></noscript
+    >
+  </head>
+  <body>
+    <a class="skip-link" href="#main-content">Skip to content</a>
+    <header class="site-header">
+      <a class="brand" href="./" aria-label="Cancer Research Atlas home">
+        <svg class="brand-mark" viewBox="0 0 36 36" aria-hidden="true">
+          <path d="M9 10 26 8 28 26 10 28Z M9 10 28 26 M26 8 10 28" />
+          <circle cx="9" cy="10" r="4" />
+          <circle cx="26" cy="8" r="4" />
+          <circle cx="28" cy="26" r="4" />
+          <circle cx="10" cy="28" r="4" />
+        </svg>
+        <span>Cancer Research<span class="brand-sub">OPEN EVIDENCE ATLAS</span></span>
+      </a>
+      <nav class="main-nav" aria-label="Main navigation">
+        <a href="#evidence">Evidence atlas</a><a href="#studies">Model checks</a><a href="#roadmap">What's next</a>
+      </nav>
+      <a class="repo-link" href="https://github.com/ELares/cancer_research">GitHub <span aria-hidden="true">↗</span></a>
+    </header>
 
-    The "Corpus" tab is fully interactive (filters, mechanism/evidence/year
-    charts, the mechanism x cancer matrix, the article table). The "Simulation
-    sweep" tab shows a read-only notice pointing to the committed prior-predictive
-    intervals, because the compiled `ferroptosis_core` extension is not available
-    in the browser (dashboard.py imports it lazily and handles its absence — see
-    scripts/dashboard.py).
+    <main id="main-content">
+      <div id="data-error" class="data-error" role="alert" hidden>
+        <p>The data snapshot couldn't load. You can still read the linked reports below.</p>
+        <button id="retry-data" class="button button-small" type="button">Try again</button>
+      </div>
+      <noscript
+        ><div class="notice">
+          JavaScript enables the interactive charts. The project overview, research reports, and contribution links
+          remain available below.
+        </div></noscript
+      >
+      <section class="hero section-wrap" aria-labelledby="hero-title">
+        <div class="hero-copy">
+          <p class="eyebrow"><span class="status-dot" aria-hidden="true"></span> OPEN SCIENCE. OPEN QUESTIONS.</p>
+          <h1 id="hero-title">Follow the evidence.<br /><em>Question the result.</em></h1>
+          <p class="hero-description">
+            A shared map of cancer research, with models that put its ideas to the test. Explore the literature, inspect
+            the results, and see where the next useful question begins.
+          </p>
+          <div class="hero-actions">
+            <a class="button" href="#evidence">Explore the evidence <span aria-hidden="true">↓</span></a
+            ><a class="text-link" href="https://github.com/ELares/cancer_research/blob/main/article/drafts/v1.md"
+              >Read the manuscript <span aria-hidden="true">↗</span></a
+            >
+          </div>
+          <p class="hero-note">
+            New to the project?
+            <a href="https://github.com/ELares/cancer_research/blob/main/docs/EXPLAINER.md"
+              >Start with the plain-language guide.</a
+            >
+          </p>
+        </div>
+        <aside class="checkpoint" aria-labelledby="checkpoint-title">
+          <div class="card-kicker">
+            <span class="eyebrow">LATEST RESEARCH CHECK</span><span class="tag tag-caution">Limitation found</span>
+          </div>
+          <h2 id="checkpoint-title">A result worth <br />looking closer at.</h2>
+          <p>The sampler met its earlier checks. New geometries exposed a limit on strongly correlated targets.</p>
+          <div class="checkpoint-score">
+            <strong id="hero-pass-count">—</strong><span>learned runs passed<br /><b>Overall study: failed</b></span>
+          </div>
+          <div id="hero-trials" class="trial-overview" aria-label="Geometry challenge results">
+            <p class="loading-copy">Loading the committed study snapshot…</p>
+          </div>
+          <a class="checkpoint-link" href="#studies"
+            >See the results and their limits <span aria-hidden="true">↗</span></a
+          >
+        </aside>
+      </section>
 
-    First load downloads Pyodide + pandas/matplotlib wheels (~tens of MB) and the
-    corpus, so give it 30-60 s on first visit; it caches afterward.
-  -->
-  <link
-    rel="stylesheet"
-    href="https://cdn.jsdelivr.net/npm/@stlite/mountable@0.67.0/build/stlite.css"
-  />
-  <style>
-    html, body { margin: 0; padding: 0; height: 100%; }
-    #stlite-root { height: 100vh; }
-    #boot {
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-      padding: 1.5rem 2rem; color: #333;
-    }
-    #boot h1 { font-size: 1.15rem; margin: 0 0 .4rem; }
-    #boot p { margin: .25rem 0; color: #555; font-size: .9rem; }
-    #boot code { background: #f3f3f3; padding: .1rem .3rem; border-radius: 3px; }
-  </style>
-</head>
-<body>
-  <div id="boot">
-    <h1>Loading the cancer-research census dashboard…</h1>
-    <p>Booting Python (Pyodide) + pandas in your browser via stlite, then fetching
-       the census aggregates (<code>analysis/census-*.json</code>) and the retrieved
-       index. First load can take 30-60&nbsp;s; it caches afterward.</p>
-    <p>Nothing is installed and no server runs — everything executes client-side.
-       The Census tab reads committed aggregates over 5,187,265 cancer articles;
-       record-level browsing of the census is not offered, because it cannot be
-       loaded in a browser. Source: <code>ELares/cancer_research</code>.</p>
-  </div>
-  <div id="stlite-root"></div>
+      <section class="metrics-strip section-wrap" aria-label="Scope of the literature collection">
+        <div class="scope-intro">
+          <span class="eyebrow">THE COLLECTION</span>
+          <p>A broad map.<br />Explicit boundaries.</p>
+        </div>
+        <div class="headline-metric">
+          <strong data-stat="collection-total">—</strong><span>records in the collection</span
+          ><small>Indexed + text-recovered streams</small>
+        </div>
+        <div class="headline-metric">
+          <strong data-stat="indexed">—</strong><span>indexed records in these charts</span
+          ><small>MeSH-defined census and adjacent descriptors</small>
+        </div>
+        <div class="headline-metric">
+          <strong data-stat="mechanisms">—</strong><span>measurable mechanisms</span
+          ><small>Within the current descriptor mapping</small>
+        </div>
+      </section>
 
-  <script src="https://cdn.jsdelivr.net/npm/@stlite/mountable@0.67.0/build/stlite.js"></script>
-  <script>
-    const RAW = "https://raw.githubusercontent.com/ELares/cancer_research/main";
-    stlite.mount(
-      {
-        // pandas + matplotlib (the mechanism x cancer matrix uses
-        // DataFrame.style.background_gradient, which needs matplotlib).
-        requirements: ["pandas", "matplotlib"],
-        entrypoint: "scripts/dashboard.py",
-        // Mirror the repo layout so dashboard.py / dashboard_data.py resolve
-        // `REPO_ROOT/corpus/INDEX.jsonl` (parents[1]) the same way they do locally.
-        files: {
-          "scripts/dashboard.py": { url: `${RAW}/scripts/dashboard.py` },
-          "scripts/dashboard_data.py": { url: `${RAW}/scripts/dashboard_data.py` },
-          "corpus/INDEX.jsonl": { url: `${RAW}/corpus/INDEX.jsonl` },
-          // The census aggregates the Census tab reads. WITHOUT THESE THE
-          // FRONT DOOR RENDERS ITS "aggregates missing" warning -- the
-          // fail-soft path working correctly and looking like a broken page.
-          // ~62 KB total, so they cost nothing next to Pyodide itself.
-          "analysis/census-diagnostic-chains.json": { url: `${RAW}/analysis/census-diagnostic-chains.json` },
-          "analysis/census-evidence-design.json": { url: `${RAW}/analysis/census-evidence-design.json` },
-          "analysis/census-mechanism-growth.json": { url: `${RAW}/analysis/census-mechanism-growth.json` },
-          "analysis/census-mechanism-profile.json": { url: `${RAW}/analysis/census-mechanism-profile.json` },
-          "analysis/census-mechanism-sites.json": { url: `${RAW}/analysis/census-mechanism-sites.json` },
-        },
-      },
-      document.getElementById("stlite-root"),
-    );
-    // Remove the boot placeholder once Streamlit paints (best-effort).
-    const _boot = document.getElementById("boot");
-    const _obs = new MutationObserver(() => {
-      if (document.querySelector("#stlite-root .stApp")) {
-        if (_boot) _boot.style.display = "none";
-        _obs.disconnect();
-      }
-    });
-    _obs.observe(document.getElementById("stlite-root"), { childList: true, subtree: true });
-  </script>
-</body>
+      <section class="section-wrap evidence-section" id="evidence" aria-labelledby="evidence-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">01 / THE LITERATURE</p>
+            <h2 id="evidence-title">Explore the evidence atlas.</h2>
+          </div>
+          <a
+            class="text-link"
+            href="https://github.com/ELares/cancer_research/blob/main/analysis/census-mechanism-profile.md"
+            >Methods & source report <span aria-hidden="true">↗</span></a
+          >
+        </div>
+        <p class="section-description">
+          Compare publication patterns across the indexed census. Clinical-trial shares describe how papers are
+          labelled, <strong>not how effective a treatment is.</strong>
+        </p>
+        <noscript
+          ><p class="notice">
+            Enable JavaScript to search and compare mechanisms, or
+            <a href="https://github.com/ELares/cancer_research/blob/main/analysis/census-mechanism-profile.md"
+              >read the full mechanism tables in the source report</a
+            >. You can also <a href="assets/research-data.json">inspect the snapshot and source hashes</a>.
+          </p></noscript
+        >
+        <div class="atlas-toolbar">
+          <div class="search-field">
+            <label for="mechanism-search">Find a mechanism</label>
+            <div class="search-input">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <circle cx="10.5" cy="10.5" r="6.5" />
+                <path d="m16 16 5 5" /></svg
+              ><input
+                id="mechanism-search"
+                type="search"
+                placeholder="Try CAR T-cell, antibodies, CRISPR…"
+                autocomplete="off"
+                disabled
+              />
+            </div>
+          </div>
+          <div class="sort-field">
+            <label for="mechanism-sort">Compare by</label
+            ><select id="mechanism-sort" disabled>
+              <option value="trial_share">Clinical-trial share</option>
+              <option value="articles">Article count</option>
+              <option value="name">Mechanism name</option>
+            </select>
+          </div>
+        </div>
+        <p id="sort-note" class="fine-print">
+          Trial share = trial-labelled records / all records tagged with that mechanism. Tags can overlap.
+        </p>
+        <div class="atlas-workspace">
+          <div class="atlas-list-panel">
+            <div class="list-caption">
+              <span id="mechanism-count" role="status" aria-live="polite">Loading mechanisms…</span
+              ><span>TRIAL SHARE</span>
+            </div>
+            <div id="mechanism-list" class="mechanism-list"></div>
+            <button id="show-all" class="show-all" type="button" hidden>
+              Show all mechanisms <span aria-hidden="true">↓</span>
+            </button>
+          </div>
+          <section id="mechanism-detail" class="mechanism-detail" aria-label="Selected mechanism">
+            <div class="panel-placeholder">
+              <span class="eyebrow">FOLLOW A QUESTION</span>
+              <h3>How does a mechanism appear in the literature?</h3>
+              <p>Select a mechanism to inspect its trial share, publication trend, and associated cancer sites.</p>
+            </div>
+          </section>
+        </div>
+        <p id="selection-announcement" class="sr-only" role="status" aria-live="polite"></p>
+        <details class="method-note">
+          <summary>What this map can—and cannot—tell you <span aria-hidden="true">+</span></summary>
+          <div>
+            <p>
+              These charts use <strong data-stat="indexed">the indexed census</strong> records. The broader collection
+              includes <strong data-stat="recovered">additional</strong> text-recovered records that are not part of
+              these aggregates. Record-level browsing of the census is not offered.
+            </p>
+            <p>
+              Descriptor widths vary: a larger count can reflect a broader label. Mechanism and cancer-site tags
+              overlap. Missing descriptors, including those for TTFields and bioelectric modulation, mean “not
+              measurable here,” not zero research.
+            </p>
+            <p class="trial-denominators">
+              <strong data-stat="trial-count">—</strong> records are labelled as clinical trials:
+              <strong data-stat="trial-census-share">—</strong> of the indexed census, or
+              <strong data-stat="trial-classifiable-share">—</strong> of the
+              <span data-stat="classifiable">—</span> records with informative study-design labels. Both denominators
+              matter.
+            </p>
+            <a href="https://github.com/ELares/cancer_research/blob/main/analysis/census-evidence-design.md"
+              >Inspect the study-design classification ↗</a
+            >
+          </div>
+        </details>
+      </section>
+
+      <section class="studies-section" id="studies" aria-labelledby="studies-title">
+        <div class="section-wrap">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">02 / THE MODELS</p>
+              <h2 id="studies-title">Show the checks.<br /><em>Keep the failures.</em></h2>
+            </div>
+            <p class="section-description narrow">
+              A useful model has to survive more than a convincing plot. Here is where the current sampling work stands.
+            </p>
+          </div>
+          <div class="research-status-grid">
+            <article class="research-status">
+              <span class="step-number">01</span><span class="tag tag-positive">Computational screens passed</span>
+              <h3>Sampling the biological model</h3>
+              <p>
+                Three independent runs passed their fixed sampling checks. This supports computation under the specified
+                model, not independent biological validation.
+              </p>
+              <div id="sampling-summary" class="status-metric">Loading study data…</div>
+              <a
+                href="https://github.com/ELares/cancer_research/blob/main/analysis/calibration/joint-resample-sampling.md"
+                >Read the sampling report <span aria-hidden="true">↗</span></a
+              >
+            </article>
+            <article class="research-status">
+              <span class="step-number">02</span><span class="tag tag-caution">Overall study failed</span>
+              <h3>Challenging new geometries</h3>
+              <p>
+                Two rotated-box runs failed weight-concentration checks; one also failed regional-mass accuracy. Every
+                declared region was observed.
+              </p>
+              <div id="challenge-summary" class="status-metric">Loading study data…</div>
+              <a href="https://github.com/ELares/cancer_research/blob/main/docs/COVERAGE_CHALLENGE_RESULTS.md"
+                >Read the failure analysis <span aria-hidden="true">↗</span></a
+              >
+            </article>
+            <article class="research-status">
+              <span class="step-number">03</span><span class="tag tag-neutral">Independent validation pending</span>
+              <h3>Connecting to an actual assay</h3>
+              <p>
+                A candidate ML210 assay is identified. Raw replicate identities and a model-to-assay mapping are still
+                needed before evaluation.
+              </p>
+              <div class="status-metric">
+                <strong>Still an open question</strong><span>Experimental validity remains unresolved</span>
+              </div>
+              <a href="https://github.com/ELares/cancer_research/blob/main/docs/INDEPENDENT_ASSAY_CANDIDATE.md"
+                >See the missing inputs <span aria-hidden="true">↗</span></a
+              >
+            </article>
+          </div>
+          <div class="challenge-lab">
+            <div class="challenge-intro">
+              <p class="eyebrow">INSPECT THE LATEST CHECK</p>
+              <h3>One sampler. <br />Three harder shapes.</h3>
+              <p>Nine independent learned runs. Fixed seeds and budgets. All results retained.</p>
+              <div class="geometry-buttons" role="group" aria-label="Choose a challenge geometry">
+                <button type="button" disabled data-geometry="rotated_box" aria-pressed="true">Rotated box</button
+                ><button type="button" disabled data-geometry="annular_cylinder" aria-pressed="false">
+                  Annular cylinder</button
+                ><button type="button" disabled data-geometry="unequal_balls" aria-pressed="false">
+                  Unequal balls
+                </button>
+              </div>
+              <a
+                class="text-link"
+                href="https://github.com/ELares/cancer_research/blob/main/docs/COVERAGE_CHALLENGE_PLAN.md"
+                >Protocol frozen before evaluation <span aria-hidden="true">↗</span></a
+              >
+            </div>
+            <div class="challenge-output">
+              <div id="geometry-visual" class="geometry-visual" aria-hidden="true"></div>
+              <div id="challenge-detail"><p>Loading the committed results…</p></div>
+            </div>
+          </div>
+          <p class="study-scope">
+            These are synthetic sampling checks, not treatment comparisons. Passing finite moment and region checks
+            cannot establish complete target coverage, precise tails, or clinical validity. No pooled posterior is
+            published.
+            <a href="https://github.com/ELares/cancer_research/blob/main/simulations/calibration/CALIBRATION_STATUS.md"
+              >View the calibration ledger ↗</a
+            >
+          </p>
+        </div>
+      </section>
+
+      <section class="section-wrap roadmap-section" id="roadmap" aria-labelledby="roadmap-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">03 / THE NEXT QUESTIONS</p>
+            <h2 id="roadmap-title">A roadmap you can help move.</h2>
+          </div>
+          <a class="text-link" href="https://github.com/ELares/cancer_research/blob/main/docs/RESEARCH_NEXT_STEPS.md"
+            >Full research roadmap <span aria-hidden="true">↗</span></a
+          >
+        </div>
+        <p class="section-description">
+          Progress means resolving a specific uncertainty. These are the next useful contributions, with the evidence
+          needed to call them complete.
+        </p>
+        <div class="roadmap-list">
+          <a
+            class="roadmap-row"
+            href="https://github.com/ELares/cancer_research/blob/main/docs/COVERAGE_CHALLENGE_RESULTS.md"
+            ><span class="roadmap-number">01</span>
+            <div>
+              <h3>Make sampling robust to correlation.</h3>
+              <p>
+                Develop a proposal revision, freeze a separate protocol, and compare it with the unchanged baseline.
+              </p>
+            </div>
+            <span class="discipline">Computational methods</span><span class="row-arrow" aria-hidden="true">↗</span></a
+          >
+          <a
+            class="roadmap-row"
+            href="https://github.com/ELares/cancer_research/blob/main/docs/INDEPENDENT_ASSAY_CANDIDATE.md"
+            ><span class="roadmap-number">02</span>
+            <div>
+              <h3>Validate one independent observable.</h3>
+              <p>
+                Resolve raw replicate metadata, assay timing, and the mapping between measurements and model outputs.
+              </p>
+            </div>
+            <span class="discipline">Experimental validation</span
+            ><span class="row-arrow" aria-hidden="true">↗</span></a
+          >
+          <a class="roadmap-row" href="https://github.com/ELares/cancer_research/blob/main/docs/RESEARCH_NEXT_STEPS.md"
+            ><span class="roadmap-number">03</span>
+            <div>
+              <h3>Measure the immune comparison directly.</h3>
+              <p>Track death, release, and immune eligibility in matched scenarios with explicit denominators.</p>
+            </div>
+            <span class="discipline">Model instrumentation</span><span class="row-arrow" aria-hidden="true">↗</span></a
+          >
+          <a
+            class="roadmap-row"
+            href="https://github.com/ELares/cancer_research/blob/main/analysis/atlas-discovery-headroom.md"
+            ><span class="roadmap-number">04</span>
+            <div>
+              <h3>Earn better discovery claims.</h3>
+              <p>Measure evidence quality and test candidate ranking against popularity and random baselines.</p>
+            </div>
+            <span class="discipline">Evidence & discovery</span><span class="row-arrow" aria-hidden="true">↗</span></a
+          >
+        </div>
+      </section>
+
+      <section class="resource-section section-wrap" id="resources" aria-labelledby="resources-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">GO ONE LEVEL DEEPER</p>
+            <h2 id="resources-title">Start where your curiosity is.</h2>
+          </div>
+        </div>
+        <div class="resource-grid">
+          <a class="resource-card" href="https://github.com/ELares/cancer_research/blob/main/article/drafts/v1.md"
+            ><span class="resource-icon" aria-hidden="true">01 / READ</span>
+            <h3>The manuscript <span>↗</span></h3>
+            <p>The full argument, quantitative results, and limitations, with citations you can follow.</p></a
+          >
+          <a class="resource-card" href="dashboard.html"
+            ><span class="resource-icon" aria-hidden="true">02 / EXPLORE</span>
+            <h3>The Python dashboard <span>↗</span></h3>
+            <p>
+              Browse the historical 4,830-article archive and census aggregates. Starts only when you choose to launch
+              it.
+            </p></a
+          >
+          <a class="resource-card" href="https://github.com/ELares/cancer_research/blob/main/analysis/atlas-README.md"
+            ><span class="resource-icon" aria-hidden="true">03 / REPRODUCE</span>
+            <h3>Data & methods <span>↗</span></h3>
+            <p>
+              Acquisition instructions, committed reports, and the boundary between public artifacts and bulk data.
+            </p></a
+          >
+          <a class="resource-card" href="https://github.com/ELares/cancer_research/blob/main/CONTRIBUTING.md"
+            ><span class="resource-icon" aria-hidden="true">04 / CONTRIBUTE</span>
+            <h3>Help test an idea <span>↗</span></h3>
+            <p>
+              Bring a missing paper, a counterexample, a better method, or an experiment that could change the
+              conclusion.
+            </p></a
+          >
+        </div>
+      </section>
+      <section class="closing section-wrap">
+        <div>
+          <p class="eyebrow">THE WORK IS OPEN</p>
+          <h2>Good questions belong here.</h2>
+          <p>Built for people willing to follow the evidence—including where it says we don't know.</p>
+        </div>
+        <a class="button" href="https://github.com/ELares/cancer_research/issues/new/choose"
+          >Ask a question or contribute <span aria-hidden="true">↗</span></a
+        >
+      </section>
+    </main>
+    <footer class="site-footer section-wrap">
+      <div>
+        <a class="footer-brand" href="./">Cancer Research Atlas</a>
+        <p>
+          An open research project by Ezequiel Lares.
+          <a href="https://github.com/ELares/cancer_research/blob/main/LICENSE">MIT-licensed code.</a>
+        </p>
+      </div>
+      <div class="footer-links">
+        <a href="https://github.com/ELares/cancer_research/blob/main/MODEL_CARD.md">Model card</a
+        ><a href="https://github.com/ELares/cancer_research/blob/main/CITATION.cff">Cite this work</a
+        ><button id="open-sources" class="link-button" type="button">Snapshot & sources</button>
+      </div>
+      <p class="snapshot-label">
+        Research snapshot <time id="snapshot-date" datetime="2026-09-20">20 September 2026</time
+        ><span>Committed results, not a live feed.</span>
+      </p>
+    </footer>
+    <dialog id="sources-dialog" aria-labelledby="sources-title">
+      <div class="dialog-heading">
+        <div>
+          <p class="eyebrow">TRACE THE NUMBERS</p>
+          <h2 id="sources-title">Snapshot & sources</h2>
+        </div>
+        <button id="close-sources" class="icon-button" type="button" aria-label="Close sources">×</button>
+      </div>
+      <p>
+        The displayed numbers come from committed research artifacts. Their hashes are recorded in the downloadable
+        snapshot so a result can be checked against its source.
+      </p>
+      <a class="button button-small" href="assets/research-data.json" download
+        >Download the snapshot <span aria-hidden="true">↓</span></a
+      >
+      <ul id="source-list">
+        <li>Source records load with the interactive snapshot.</li>
+      </ul>
+      <p class="fine-print">
+        An update to a source artifact requires regenerating this snapshot. See
+        <a href="https://github.com/ELares/cancer_research/blob/main/docs/PAGES.md">site maintenance instructions</a>.
+      </p>
+    </dialog>
+  </body>
 </html>

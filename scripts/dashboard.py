@@ -80,7 +80,9 @@ def corpus_tab(records):
         # the stlite/Pyodide demo (#565) bundles Streamlit 1.39, where the string
         # `width` API does not exist; use_container_width works 1.39->current
         # (deprecation-warned, not an error, in the newest pinned local Streamlit).
-        st.dataframe(df.style.background_gradient(cmap="Blues"), use_container_width=True)
+        # Keep numeric counts readable without pandas Styler's matplotlib
+        # dependency: the browser's bundled versions disagree on get_cmap.
+        st.dataframe(df, use_container_width=True)
 
     st.markdown(f"**Articles** ({len(filt):,})")
     cols = ["pmid", "year", "title", "journal", "mechanisms", "cancer_types", "evidence_level", "cited_by_count"]
@@ -163,11 +165,11 @@ def census_tab():
         )
 
     st.caption(
-        "Record-level browsing of the census is deliberately not offered: it is "
-        "5,187,265 records and gitignored. These panels read the committed "
-        "aggregates under `analysis/`, which is what a reader of a census "
-        "actually wants. The Corpus tab browses the 4,830-record retrieved "
-        "archive, retained as a method-comparison arm."
+        "These aggregate panels summarize 4,403,994 records indexed under neoplasms "
+        "and adjacent descriptors, within a broader 5,187,265-record archive. "
+        "Record-level browsing of the "
+        "census is not offered. The Corpus tab browses the separate 4,830-record "
+        "historical archive, retained as a method-comparison arm."
     )
 
 
@@ -221,8 +223,11 @@ def simulation_tab():
         if intervals:
             st.json(intervals)
         else:
-            st.write("Committed analysis outputs are under `analysis/`; the prior-predictive "
-                     "intervals are documented in `analysis/uncertainty-intervals-report.md`.")
+            report = REPO_ROOT / "analysis/uncertainty-intervals-report.md"
+            if report.exists():
+                st.markdown(report.read_text(encoding="utf-8"))
+            else:
+                st.warning("The committed prior-predictive report is unavailable.")
 
 
 def main():
@@ -238,6 +243,7 @@ def main():
         corpus_tab(_records())
     with tab2:
         simulation_tab()
+    st.caption("All dashboard panels are ready. Article filters apply to the historical archive in the Corpus tab.")
 
 
 if __name__ == "__main__":

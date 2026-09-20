@@ -182,17 +182,106 @@ def test_the_browser_demo_ships_every_census_artifact_the_dashboard_reads():
     is the code working correctly and the front door looking broken. It shipped
     that way until this guard existed.
     """
-    html = (Path(__file__).resolve().parent.parent / "docs" / "index.html").read_text()
+    from html.parser import HTMLParser
+
+    class ScriptSources(HTMLParser):
+        def __init__(self):
+            super().__init__()
+            self.sources = []
+
+        def handle_starttag(self, tag, attrs):
+            attrs = dict(attrs)
+            if tag == "script" and attrs.get("src"):
+                self.sources.append(attrs["src"])
+
+    docs = REPO_ROOT / "docs"
+    html = (docs / "dashboard.html").read_text()
+    parser = ScriptSources()
+    parser.feed(html)
+    assert parser.sources, "The optional dashboard must load its launch controller"
+    assert all(not src.startswith(("http:", "https:", "//")) for src in parser.sources), (
+        "External Python/CDN scripts must load only after explicit launch")
+    scripts = "\n".join((docs / src).read_text() for src in parser.sources)
     missing = [fn for fn in dd.CENSUS_ARTIFACTS.values()
-               if f"analysis/{fn}" not in html]
+               if f'"analysis/{fn}"' not in scripts]
     assert not missing, (
-        f"docs/index.html does not fetch {missing}; the hosted Census tab will "
+        f"docs/dashboard.html does not fetch {missing}; the hosted Census tab will "
         "render its missing-artifact warning for them")
+    for rel in ("scripts/dashboard.py", "scripts/dashboard_data.py", "corpus/INDEX.jsonl",
+                "analysis/uncertainty-intervals-report.md"):
+        assert f'"{rel}"' in scripts, f"The browser dashboard does not ship {rel}"
+        assert (REPO_ROOT / rel).is_file(), f"The browser dashboard references missing {rel}"
 
 
 def test_the_demo_does_not_promise_record_level_census_browsing():
     """5,187,265 records cannot be loaded client-side, and the page must not
     imply otherwise -- a reader who expects to browse them will read the
     aggregate panels as a subset rather than as the whole census."""
-    html = (Path(__file__).resolve().parent.parent / "docs" / "index.html").read_text()
+    html = (REPO_ROOT / "docs" / "dashboard.html").read_text()
     assert "record-level browsing of the census is not offered" in html.lower()
+    assert all(count in html for count in ("4,403,994", "5,187,265", "4,830"))
+    assert 'id="launch-dashboard"' in html
+    assert "read-only in this browser" in html
+
+
+def test_corpus_matrix_renders_numeric_counts_without_matplotlib():
+    """The browser's pandas/matplotlib combination crashed in Styler.get_cmap.
+
+    Exercise the real UI function without optional UI packages: the matrix must
+    reach Streamlit as numeric counts without asking pandas for a Styler.
+    """
+    import ast
+    from types import SimpleNamespace
+
+    class Frame:
+        def __init__(self, data, index=None, columns=None):
+            self.counts = {}
+            self.loc = self
+
+        def __setitem__(self, key, value):
+            self.counts[key] = value
+
+        def __contains__(self, key):
+            return False
+
+        @property
+        def style(self):
+            raise AssertionError("The numeric matrix must not require matplotlib styling")
+
+    class UI:
+        def __init__(self):
+            self.sidebar = self
+            self.frames = []
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args):
+            return False
+
+        def __getattr__(self, name):
+            return lambda *args, **kwargs: None
+
+        def columns(self, count):
+            return [self] * count
+
+        def multiselect(self, *args):
+            return []
+
+        def slider(self, label, low, high, value):
+            return value
+
+        def dataframe(self, data, **kwargs):
+            self.frames.append(data)
+
+    tree = ast.parse((SCRIPTS_DIR / "dashboard.py").read_text())
+    function = next(node for node in tree.body
+                    if isinstance(node, ast.FunctionDef) and node.name == "corpus_tab")
+    ui = UI()
+    namespace = {"dd": dd, "st": ui,
+                 "pd": SimpleNamespace(DataFrame=Frame, Series=lambda values: values)}
+    exec(compile(ast.Module(body=[function], type_ignores=[]), "dashboard.py", "exec"), namespace)
+    namespace["corpus_tab"](SYNTH)
+    assert len(ui.frames) == 2  # mechanism matrix followed by article records
+    assert ui.frames[0].counts[("immunotherapy", "lung")] == 2
+    assert ui.frames[0].counts[("car-t", "lung")] == 1

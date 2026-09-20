@@ -40,7 +40,7 @@ The [external assay acquisition review](docs/INDEPENDENT_ASSAY_CANDIDATE.md)
 records candidate observations and the metadata still needed for validation.
 
 This project reads the cancer literature at census scale. It holds **5,187,265
-cancer articles** — the 4,403,994 that MeSH indexes under the neoplasms tree,
+cancer articles** — 4,403,994 MeSH-indexed records selected through the neoplasms tree and adjacent descriptors,
 plus 783,271 more recovered by text-matching because MeSH has not indexed them
 yet — with **1,116,481 open-access full texts**, **10,700,928 typed entity
 relations** over 2,129,080 articles, and 289 million sentences mined for
@@ -226,7 +226,7 @@ These are computational predictions with documented assumptions and caveats, not
 | `corpus/` | Frozen full text by PubMed ID + INDEX.jsonl; `corpus/atlas/` holds the census (bulk gitignored, committed artifacts in `analysis/`); `corpus/living/` documents the frozen-versus-living split (the monthly deltas themselves are uploaded as workflow artifacts, never committed) |
 | `tags/` | Precomputed tag indexes (mechanism, cancer type, tissue, evidence level, diagnostic-therapy) |
 | `news/` | News source scaffolding: fetched articles, extracted claims, verification results, credibility scores |
-| `tests/` | 3261 Python tests (pipeline smoke + figure traceability + calibration-status ref guard + manuscript-inventory drift guard + depth-kill physics-constant guard + flagship-figure data guard + quantitative-figure drift guards (Figs 21/22/23) + invariant/integration + calibrate-extractor + MeSH evidence-fallback + gold-set precision-floor regression (#346) + Bliss/sim-tme/penetration prior-predictive intervals + ABC posterior (#332) + non-circular mechanism-recall (#412) + CTRPv2 calibration target + in-vitro kill-switch fit (#330) + System Xc-/erastin fit (#502) + joint multi-inducer posterior (#500) + spheroid structure validation (#333) + embedding evidence leg (#411) + RD-vs-BioFVM cross-check (#408) + dashboard data layer (#354) + tumor-PK measured-data anchor (#334) + Krogh penetration validation (#335) + spheroid size-aware zone thresholds (#333) + spheroid kill-vs-size direction (#333) + gene-symbol ambiguity/FSP1 sense disambiguation (#ATLAS-AMBIG) + rare-event Poisson intervals + tail-resolution classification + corpus identity/dedup index + expansion-crawl licence gating + duplicate-audit non-circularity + ferroptosis-python bindings) |
+| `tests/` | 3277 Python tests (pipeline smoke + figure traceability + calibration-status ref guard + manuscript-inventory drift guard + depth-kill physics-constant guard + flagship-figure data guard + quantitative-figure drift guards (Figs 21/22/23) + invariant/integration + calibrate-extractor + MeSH evidence-fallback + gold-set precision-floor regression (#346) + Bliss/sim-tme/penetration prior-predictive intervals + ABC posterior (#332) + non-circular mechanism-recall (#412) + CTRPv2 calibration target + in-vitro kill-switch fit (#330) + System Xc-/erastin fit (#502) + joint multi-inducer posterior (#500) + spheroid structure validation (#333) + embedding evidence leg (#411) + RD-vs-BioFVM cross-check (#408) + dashboard data layer (#354) + tumor-PK measured-data anchor (#334) + Krogh penetration validation (#335) + spheroid size-aware zone thresholds (#333) + spheroid kill-vs-size direction (#333) + gene-symbol ambiguity/FSP1 sense disambiguation (#ATLAS-AMBIG) + rare-event Poisson intervals + tail-resolution classification + corpus identity/dedup index + expansion-crawl licence gating + duplicate-audit non-circularity + ferroptosis-python bindings) |
 
 Start with the files in `analysis/` if you want to see what we've concluded so far—and where we're still uncertain.
 
@@ -287,16 +287,24 @@ a live `ferroptosis_core.sim_batch` sweep when the bindings above are built, and
 otherwise degrades to the committed prior-predictive intervals. Self-hosting: behind
 auth, `streamlit run scripts/dashboard.py --server.address 0.0.0.0 --server.port 8501`.
 
-**Live demo: https://elares.github.io/cancer_research/** — the Corpus tab runs
-entirely in your browser via [stlite](https://github.com/whitphx/stlite) (Streamlit
-compiled to WebAssembly/Pyodide): it executes `scripts/dashboard.py` on the committed
-census aggregates and `corpus/INDEX.jsonl` client-side, with **no server and no install** (first load ~30-60 s
-while Pyodide + pandas + matplotlib download, then cached). The Simulation-sweep tab
-shows a read-only notice pointing to the committed prior-predictive intervals (the
-compiled `ferroptosis_core` extension is not available under Pyodide). The page is
-`docs/index.html`, served by GitHub Pages;
-alternatively the app deploys 1-click on Streamlit Community Cloud by pointing it at
-`scripts/dashboard.py`.
+**Research atlas: https://elares.github.io/cancer_research/** — a fast static
+front page with a searchable mechanism explorer, publication trends, per-run
+sampling checks, current research limits and the next contribution opportunities.
+Its compact snapshot is generated from committed artifacts with source hashes;
+the displayed 4,403,994-record census is distinct from the broader collection.
+The site records the latest challenge's failed overall outcome and keeps
+independent biological validation visibly pending.
+
+The [optional Python dashboard](https://elares.github.io/cancer_research/dashboard.html)
+launches only when requested. It uses [stlite](https://github.com/whitphx/stlite)
+to browse census aggregates and the separate 4,830-record historical archive,
+with no server or installation. First launch may take 30–60 seconds to download
+Python and pandas; the simulation tab displays a committed read-only report
+because the compiled simulator is unavailable under Pyodide. The same app can
+run locally with Streamlit or on Streamlit Community Cloud.
+
+GitHub Pages serves `docs/`. See [site maintenance and local preview instructions](docs/PAGES.md)
+for snapshot regeneration, accessibility checks and deployment details.
 
 **New here / not a specialist?** Start with the one-page plain-language explainer:
 [`docs/EXPLAINER.md`](docs/EXPLAINER.md) — what ferroptosis is, what the three

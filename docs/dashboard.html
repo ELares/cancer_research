@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Optional research dashboard: census aggregates, a historical article archive, and committed simulation reports."
+    />
+    <title>Research dashboard · Cancer Research Atlas</title>
+    <link rel="stylesheet" href="assets/dashboard.css" />
+    <script src="assets/dashboard.js" defer></script>
+    <noscript
+      ><style>
+        .launch-row {
+          display: none;
+        }
+      </style></noscript
+    >
+  </head>
+  <body>
+    <header class="dashboard-header">
+      <a href="./" class="atlas-link"><span aria-hidden="true">←</span> Cancer Research Atlas</a>
+      <span class="header-note">Optional dashboard</span>
+    </header>
+    <main>
+      <section class="dashboard-intro" aria-labelledby="dashboard-title">
+        <p class="eyebrow">Research workspace</p>
+        <h1 id="dashboard-title">Explore the historical archive.</h1>
+        <p class="lead">
+          Filter articles by mechanism, cancer type, evidence and year. Compare the published census summaries and read
+          the committed simulation reports.
+        </p>
+        <div class="scope-note">
+          <p>
+            The census panels summarize
+            <strong>4,403,994 records indexed under neoplasms and adjacent descriptors</strong> within a broader archive
+            of <strong>5,187,265 records</strong>. Record-level browsing of the census is not offered.
+          </p>
+          <p>
+            Article filters apply only to the separate <strong>4,830-record historical archive</strong>. The simulation
+            tab is read-only in this browser.
+          </p>
+        </div>
+        <p id="launch-explanation">
+          Launching downloads Python and the dashboard data into your browser. First load can take 30–60 seconds and
+          uses tens of megabytes. Nothing is installed.
+        </p>
+        <div class="launch-row">
+          <button id="launch-dashboard" type="button" aria-describedby="launch-explanation">
+            Launch research dashboard <span aria-hidden="true">↗</span>
+          </button>
+          <p id="dashboard-status" role="status" aria-live="polite">
+            Ready when you are. No dashboard data has been downloaded.
+          </p>
+        </div>
+        <noscript
+          ><p>
+            JavaScript is needed to launch the dashboard. <a href="./">Return to the atlas</a> to read the research
+            summaries.
+          </p></noscript
+        >
+      </section>
+      <section id="dashboard-container" aria-label="Interactive research dashboard" hidden></section>
+    </main>
+    <footer>
+      Explore the evidence; read the limits.
+      <a href="https://github.com/ELares/cancer_research/blob/main/MODEL_CARD.md"
+        >Model scope and caveats <span aria-hidden="true">↗</span></a
+      >
+    </footer>
+  </body>
+</html>
