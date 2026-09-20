@@ -184,11 +184,9 @@ def census_headline(design):
 def census_mechanism_rows(profile):
     """Per-mechanism rows for display, sorted by trial share.
 
-    SORTED BY TRIAL SHARE, NOT BY VOLUME, and the reason is a finding rather
-    than a preference: descriptor breadth varies enormously across mechanisms,
-    so a volume ordering is substantially an ordering of how broad each
-    descriptor is. Trial share is a ratio within a mechanism and does not have
-    that problem.
+    Trial share is the fraction of each mechanism's tagged records carrying
+    a trial label. Descriptor breadth and overlapping tags still limit these
+    comparisons; neither this ratio nor article volume measures efficacy.
     """
     if not profile:
         return []
@@ -197,7 +195,7 @@ def census_mechanism_rows(profile):
         rows.append({
             "mechanism": r["mechanism"],
             "census articles": r["census"],
-            "clinical trials": r["trials"],
+            "trial-labelled records": r["trials"],
             "trial share %": r["trial_share"],
             "growth 2015-2025": r.get("growth"),
             "top site": (r["top_sites"][0]["site"] if r.get("top_sites") else None),

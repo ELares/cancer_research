@@ -8,6 +8,7 @@ on:
       - 'scripts/dashboard.py'
       - 'scripts/dashboard_data.py'
       - 'tests/test_pages_*.py'
+      - 'tests/test_pages_*.cjs'
       - 'tests/test_dashboard_data.py'
       - 'analysis/**'
       - 'corpus/INDEX.jsonl'
@@ -20,6 +21,7 @@ on:
       - 'scripts/dashboard.py'
       - 'scripts/dashboard_data.py'
       - 'tests/test_pages_*.py'
+      - 'tests/test_pages_*.cjs'
       - 'tests/test_dashboard_data.py'
       - 'analysis/**'
       - 'corpus/INDEX.jsonl'
@@ -48,3 +50,5 @@ jobs:
         run: |
           node --check docs/assets/site.js
           node --check docs/assets/dashboard.js
+      - name: Check dashboard download and retry behavior
+        run: node --test tests/test_pages_*.cjs

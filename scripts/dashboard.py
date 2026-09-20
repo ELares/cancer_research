@@ -119,8 +119,8 @@ def census_tab():
         return
 
     a, b, d = st.columns(3)
-    a.metric("Cancer articles (MeSH-indexed)", f"{head['census']:,}")
-    b.metric("Clinical trials", f"{head['trials']:,}")
+    a.metric("Indexed census records", f"{head['census']:,}")
+    b.metric("Trial-labelled records", f"{head['trials']:,}")
     d.metric("Undetermined design", f"{head['undetermined']:,}")
     st.caption(
         f"The trial share has two denominators and both are shown because "
@@ -129,26 +129,23 @@ def census_tab():
         f"**{head['share_of_classifiable']}%** of the "
         f"{head['classifiable']:,} records carrying a design-informative "
         f"label at all. Study design is read from NLM publication types and "
-        f"MeSH check tags -- labels assigned by professional indexers, not by "
-        f"a detector this project wrote."
+        f"MeSH check tags. Counts describe labelled publications, not distinct "
+        f"clinical trials or treatment effectiveness."
     )
 
     rows = dd.census_mechanism_rows(c.get("profile"))
     if rows:
         st.markdown("#### Mechanisms, ordered by clinical-trial share")
         st.caption(
-            "Ordered by trial share rather than by volume, and that is a "
-            "finding rather than a display preference: descriptor breadth "
-            "varies enormously between mechanisms, so a volume ranking is "
-            "substantially a ranking of how broad each descriptor is. A ratio "
-            "computed within one mechanism does not have that problem."
+            "Trial share is the proportion of records carrying a trial label "
+            "within each mapped mechanism. Descriptor breadth and overlapping "
+            "tags still affect these comparisons. Neither trial share nor "
+            "publication volume ranks treatment effectiveness."
         )
         st.dataframe(pd.DataFrame(rows), use_container_width=True, hide_index=True)
         st.caption(
-            "Two mechanisms this book discusses are absent because MeSH has no "
-            "descriptor for them: TTFields and bioelectric modulation. They are "
-            "unmeasurable here, NOT zero -- TTFields has FDA approval in two "
-            "indications and completed Phase III trials."
+            "TTFields and bioelectric modulation are absent from this "
+            "descriptor mapping. They are unmeasurable here, not zero research."
         )
 
     growth = c.get("growth")
@@ -218,6 +215,15 @@ def simulation_tab():
             "The compiled `ferroptosis_core` extension is not installed, so showing the "
             "committed prior-predictive death-rate intervals (read-only). Build the extension "
             "(see simulations/ferroptosis-python/) for the live sweep."
+        )
+        st.markdown(
+            "**Historical prior-predictive analysis.** This report predates the "
+            "current calibration studies; its statements about unavailable "
+            "calibration data describe that earlier stage. These intervals are "
+            "not a calibrated posterior. See the [current calibration ledger]"
+            "(https://github.com/ELares/cancer_research/blob/main/"
+            "simulations/calibration/CALIBRATION_STATUS.md) for the latest "
+            "fits, sampling checks and remaining validation limits."
         )
         intervals = _load_json("analysis/uncertainty-intervals.json")
         if intervals:

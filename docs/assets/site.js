@@ -131,8 +131,15 @@
         renderMechanismDetail();
         $("#selection-announcement").textContent =
           `Showing details for ${snapshot.mechanisms.find((row) => row.id === selected).label}.`;
-        if (window.matchMedia("(max-width: 600px)").matches) {
-          $("#detail-heading").focus({ preventScroll: true });
+        const heading = $("#detail-heading");
+        const headingBounds = heading.getBoundingClientRect();
+        const headerBottom = $(".site-header").getBoundingClientRect().bottom;
+        if (
+          window.matchMedia("(max-width: 600px)").matches ||
+          headingBounds.top < headerBottom ||
+          headingBounds.bottom > window.innerHeight
+        ) {
+          heading.focus({ preventScroll: true });
           $("#mechanism-detail").scrollIntoView({
             behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth",
             block: "start",

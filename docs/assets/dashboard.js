@@ -21,6 +21,24 @@
   let attempt = 0;
   let observer;
   let timer;
+  let downloads;
+
+  function validateFile(file, content) {
+    if (!content.trim()) throw new Error("The downloaded file is empty.");
+    const isObject = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
+    if (file.endsWith(".json")) {
+      const data = JSON.parse(content);
+      if (!isObject(data)) throw new Error("Expected a JSON object.");
+    } else if (file.endsWith(".jsonl")) {
+      for (const line of content
+        .trim()
+        .split(/\r?\n/)
+        .filter((value) => value.trim())) {
+        const record = JSON.parse(line);
+        if (!isObject(record)) throw new Error("Expected an archive record object.");
+      }
+    }
+  }
 
   function setStatus(message, state) {
     status.textContent = message;
@@ -31,6 +49,9 @@
     const currentAttempt = ++attempt;
     observer?.disconnect();
     clearTimeout(timer);
+    downloads?.abort();
+    const controller = new AbortController();
+    downloads = controller;
     button.disabled = true;
     button.textContent = "Launching dashboard…";
     setStatus(
@@ -53,6 +74,7 @@
       if (currentAttempt !== attempt) return;
       failed = true;
       clearTimeout(timer);
+      controller.abort();
       button.disabled = false;
       button.textContent = "Retry dashboard";
       setStatus(message + " You can retry or return to the atlas above.", "error");
@@ -66,6 +88,13 @@
     });
     observer = new MutationObserver(() => {
       if (currentAttempt !== attempt) return;
+      // Pinned stlite reports Pyodide/worker boot failures in an error toast,
+      // without reliably forwarding them to the iframe's window events.
+      const bootError = doc.querySelector(".Toastify__toast--error");
+      if (bootError?.textContent.includes("Error during booting up")) {
+        fail("The dashboard could not finish loading Python. Details are shown below.");
+        return;
+      }
       const exception = doc.querySelector('[data-testid="stException"]');
       if (exception) {
         fail("The dashboard reported an error. Details are shown below.");
@@ -80,15 +109,43 @@
         setStatus("Dashboard ready. Article filters apply to the 4,830-record historical archive.", "ready");
       }
     });
-    observer.observe(doc.body, { childList: true, subtree: true, characterData: true });
+    observer.observe(doc.body, {
+      childList: true,
+      subtree: true,
+      characterData: true,
+    });
     timer = setTimeout(() => {
       if (currentAttempt !== attempt || status.dataset.state !== "loading") return;
       button.disabled = false;
       button.textContent = "Retry dashboard";
-      setStatus("Still loading. A slow connection can take longer; you may wait or retry.", "loading");
+      setStatus(
+        "The dashboard has not finished loading. Downloads may be slow or blocked; you can retry or keep waiting.",
+        "error",
+      );
     }, 90000);
 
     try {
+      // stlite's worker does not propagate every file-download failure to this
+      // window. Fetch here so HTTP/network errors immediately enable Retry, and
+      // reject invalid data before Python can silently omit an affected panel.
+      const files = Object.fromEntries(
+        await Promise.all(
+          FILES.map(async (file) => {
+            try {
+              const response = await fetch(`${RAW}/${file}`, {
+                signal: controller.signal,
+              });
+              if (!response.ok) throw new Error(`HTTP ${response.status}`);
+              const content = await response.text();
+              validateFile(file, content);
+              return [file, content];
+            } catch (error) {
+              throw new Error(`Could not load dashboard file ${file}: ${error.message || String(error)}`);
+            }
+          }),
+        ),
+      );
+      if (currentAttempt !== attempt) return;
       await new Promise((resolve, reject) => {
         const css = doc.createElement("link");
         css.rel = "stylesheet";
@@ -109,7 +166,7 @@
         {
           requirements: ["pandas"],
           entrypoint: "scripts/dashboard.py",
-          files: Object.fromEntries(FILES.map((file) => [file, { url: `${RAW}/${file}` }])),
+          files,
         },
         doc.getElementById("stlite-root"),
       );

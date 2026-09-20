@@ -134,6 +134,7 @@ def test_census_rows_order_by_trial_share_not_volume():
     ]}
     rows = dd.census_mechanism_rows(profile)
     assert [r["mechanism"] for r in rows] == ["small-and-clinical", "big-and-preclinical"]
+    assert rows[0]["trial-labelled records"] == 96
     assert rows[0]["top site"] == "cervix/uterus"
     assert rows[0]["top partner"] == "nanoparticle"
     # a mechanism with no site or partner data renders as None, not as a crash

@@ -20,7 +20,8 @@ required to explore it. `.nojekyll` keeps these files as ordinary static assets.
   inputs, the manuscript, the model card and contribution instructions.
 - **Optional Python dashboard:** `dashboard.html` loads stlite only after the
   visitor clicks Launch. It provides the historical 4,830-record archive,
-  census aggregates and a committed read-only simulation report. It requires a
+  census aggregates and a historical read-only simulation report, explicitly
+  distinguished from current calibration studies. It requires a
   network connection for its pinned stlite runtime and repository files; a
   first launch may take 30–60 seconds. It does not run the compiled simulator.
 
@@ -60,6 +61,7 @@ python3 -m http.server 8000 --directory docs
 python3 -m unittest discover -s tests -p 'test_pages_*.py' -v
 node --check docs/assets/site.js
 node --check docs/assets/dashboard.js
+node --test tests/test_pages_*.cjs
 ```
 
 Use an HTTP server, not `file://`, because browsers restrict local JSON fetches.
@@ -69,15 +71,19 @@ For a matching subpath preview, serve a parent directory containing a
 
 For a browser review, check desktop, tablet, 390px and 320px layouts; keyboard
 focus and Escape in the sources dialog; search/no-results/clear; sorting and
-mechanism selection; geometry switching; JSON failure/retry; and no-JavaScript
+mechanism selection (including the last row after expanding the list); geometry
+switching; JSON failure/retry; and no-JavaScript
 navigation. Run an accessibility audit in the main and dialog states. Check that
 no external resource is downloaded from the atlas or before launching the
 optional dashboard. The dashboard uses files from `main`; to test a pending
 Python change, intercept those raw GitHub requests with the local files in a
 browser harness or use a temporary test branch URL, without committing that URL.
+Check source-download HTTP errors and network failures, then retry: incomplete
+files must not launch a partial dashboard or remain labelled as loading.
 
 The dedicated Pages workflow checks the snapshot, site contracts, optional
-dashboard file mounts and JavaScript syntax. The regular Python suite includes
-these tests too. After edits, refresh
+dashboard file mounts, JavaScript syntax, and download/retry behavior through
+Node's built-in test runner. The regular Python suite includes the Python tests
+too. After edits, refresh
 `MANIFEST.sha256` using the instructions in `CONTRIBUTING.md`. A PR changes the
 previewable files; the public site updates only after merge into `main`.
