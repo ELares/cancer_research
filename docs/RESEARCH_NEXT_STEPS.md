@@ -12,14 +12,26 @@ not require another simulation mechanism or a larger unmeasured corpus.
    exceeded every recorded maximum. The corrected joint run accepted only
    4 of 40,000 draws, below the unchanged minimum of 20; its earlier interval
    claims are superseded. See the [methods and results](CALIBRATION_DOSE_SUPPORT.md).
-   **Next deliverable:** compare a more efficient sampler with the fixed prior,
-   target construction, reference vector, and tolerance; report independent-run
-   stability, accepted counts, and held-out errors. Do not widen the criterion
-   to fill a quota. A favorable result is not a completion requirement.
-   **Complete when:** the joint inference meets its documented sampling minimum
-   and repeated-run diagnostics, or the remaining sampling/model mismatch is
-   documented without posterior claims. Independent validation is a separate
-   requirement below.
+   **Sampling experiment completed:** a
+   [plan committed before production](JOINT_SAMPLING_PLAN.md) evaluated three
+   independently fitted, frozen importance proposals with the same prior,
+   targets, reference vector, and final tolerance. The
+   [results](../analysis/calibration/joint-importance-sampling.md) accepted
+   1, 4, and 4 of 8,192 production attempts, with ESS 1.0, 3.6, and 4.0.
+   Every run failed all four per-run adequacy screens; parameter and held-out
+   error stability also failed. All attempts, weights, code/data provenance,
+   and report reconstruction are archived. No pooled posterior is published.
+   This documents an insufficient sampling design, not an empty target or
+   established biological model failure.
+   **Next deliverable:** design a proposal that concentrates enough mass near
+   the final acceptance region while testing coverage of separated modes on
+   synthetic targets. Prespecify a new budget and independent-run evaluation
+   before further production runs. Do not widen the criterion, pool these
+   underpowered runs, or select a favorable seed to fill a quota.
+   **Complete when:** the joint inference meets its documented adequacy and
+   repeated-run screens, or the new design's specific shortfall is reported
+   without posterior claims. Independent validation is a separate requirement
+   below.
 
 2. **Census input protection is implemented in six analysis entry points.**
    The shared [streaming helper](../scripts/census_input.py) honors
@@ -66,15 +78,17 @@ not require another simulation mechanism or a larger unmeasured corpus.
 
    **Acquisition candidate checked in September 2026:**
    [Lee et al., Nature Metabolism (2024)](https://www.nature.com/articles/s42255-024-00974-4)
-   provides an accessible [Extended Data Fig. 2 workbook](https://media.springernature.com/original/springer-static/esm/art%3A10.1038%2Fs42255-024-00974-4/MediaObjects/42255_2024_974_MOESM11_ESM.xlsx)
-   with ML210 dose curves and normalized RSL3/erastin replicate values. It is
-   a candidate, not an ingested validation set: dose-curve sheets have two
-   columns per condition while the caption states three replicates, and the
-   dose header says “nmol” rather than concentration. The erastin sheet is a
-   single 6 µM, 72-hour condition. Units, control encoding, replicate identities,
-   and exposure-time compatibility must be resolved before evaluating a fit.
-   The inspected workbook was 20,728 bytes, SHA256
-   `27faf22389ea08063cda6e86d18c9c0c6ef126f83d427b41f64dd87802dee491`.
+   supplies three normalized observations for SK-Hep1 treated with 0.1 µM
+   ML210 for 24 hours, with vehicle and ferrostatin controls. This single-dose
+   endpoint is a bounded candidate; the erastin endpoint uses 6 µM for 72 hours
+   and a different assay. See the [acquisition findings](INDEPENDENT_ASSAY_CANDIDATE.md)
+   for source links, workbook hash and cell ranges, and descriptive summaries.
+   The ML210 curves remain unresolved: both workbook and figure say “nmol”,
+   two columns conflict with the caption's three replicates, and zero-dose
+   control encoding is implicit. Raw readings and experiment identities are
+   unavailable in the reviewed materials. Model-to-assay and exposure-time
+   mappings must be specified before comparison; no validation set has been
+   ingested and independent raw-replicate validation remains pending.
 
 5. **Measure evidence quality before promoting discovery candidates.** Deliver
    a bounded, independently adjudicated census sample with sentence-attributed
