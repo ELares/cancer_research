@@ -762,14 +762,21 @@
           "2026": 63
         }
       },
-      "mechanisms_over_field": 2.52,
+      "mechanisms_over_field": 2.51,
       "min_base": 30,
+      "recent_shrinking": [
+        "electrochemical-therapy"
+      ],
+      "recent_start_year": 2020,
       "rows": [
         {
           "base_sufficient": true,
           "end": 5390,
           "growth": 11.62,
           "mechanism": "immunotherapy",
+          "recent_end": 5390,
+          "recent_pct": 74.0,
+          "recent_start": 3102,
           "start": 464
         },
         {
@@ -777,6 +784,9 @@
           "end": 569,
           "growth": 8.13,
           "mechanism": "crispr",
+          "recent_end": 569,
+          "recent_pct": 30.0,
+          "recent_start": 437,
           "start": 70
         },
         {
@@ -784,6 +794,9 @@
           "end": 1869,
           "growth": 6.95,
           "mechanism": "car-t",
+          "recent_end": 1869,
+          "recent_pct": 85.0,
+          "recent_start": 1009,
           "start": 269
         },
         {
@@ -791,6 +804,9 @@
           "end": 574,
           "growth": 5.52,
           "mechanism": "bispecific-antibody",
+          "recent_end": 574,
+          "recent_pct": 190.0,
+          "recent_start": 198,
           "start": 104
         },
         {
@@ -798,6 +814,9 @@
           "end": 243,
           "growth": 5.28,
           "mechanism": "sonodynamic",
+          "recent_end": 243,
+          "recent_pct": 247.0,
+          "recent_start": 70,
           "start": 46
         },
         {
@@ -805,6 +824,9 @@
           "end": 607,
           "growth": 4.16,
           "mechanism": "synthetic-lethality",
+          "recent_end": 607,
+          "recent_pct": 40.0,
+          "recent_start": 435,
           "start": 146
         },
         {
@@ -812,6 +834,9 @@
           "end": 134,
           "growth": 4.06,
           "mechanism": "phagocytosis-checkpoint",
+          "recent_end": 134,
+          "recent_pct": 123.0,
+          "recent_start": 60,
           "start": 33
         },
         {
@@ -819,6 +844,9 @@
           "end": 729,
           "growth": 3.1,
           "mechanism": "antibody-drug-conjugate",
+          "recent_end": 729,
+          "recent_pct": 108.0,
+          "recent_start": 350,
           "start": 235
         },
         {
@@ -826,6 +854,9 @@
           "end": 4218,
           "growth": 2.49,
           "mechanism": "nanoparticle",
+          "recent_end": 4218,
+          "recent_pct": 52.0,
+          "recent_start": 2776,
           "start": 1693
         },
         {
@@ -833,6 +864,9 @@
           "end": 816,
           "growth": 2.16,
           "mechanism": "metabolic-targeting",
+          "recent_end": 816,
+          "recent_pct": 34.0,
+          "recent_start": 607,
           "start": 377
         },
         {
@@ -840,6 +874,9 @@
           "end": 319,
           "growth": 1.18,
           "mechanism": "oncolytic-virus",
+          "recent_end": 319,
+          "recent_pct": 9.0,
+          "recent_start": 294,
           "start": 271
         },
         {
@@ -847,6 +884,9 @@
           "end": 107,
           "growth": 1.16,
           "mechanism": "hifu",
+          "recent_end": 107,
+          "recent_pct": 37.0,
+          "recent_start": 78,
           "start": 92
         },
         {
@@ -854,6 +894,9 @@
           "end": 2006,
           "growth": 0.91,
           "mechanism": "epigenetic",
+          "recent_end": 2006,
+          "recent_pct": 2.0,
+          "recent_start": 1958,
           "start": 2200
         },
         {
@@ -861,13 +904,19 @@
           "end": 110,
           "growth": 0.81,
           "mechanism": "electrochemical-therapy",
+          "recent_end": 110,
+          "recent_pct": -21.0,
+          "recent_start": 140,
           "start": 136
         },
         {
           "base_sufficient": false,
           "end": 109,
-          "growth": 13.62,
+          "growth": null,
           "mechanism": "microbiome",
+          "recent_end": 109,
+          "recent_pct": 354.0,
+          "recent_start": 24,
           "start": 8
         },
         {
@@ -875,10 +924,17 @@
           "end": 75,
           "growth": null,
           "mechanism": "mrna-vaccine",
+          "recent_end": 75,
+          "recent_pct": null,
+          "recent_start": 1,
           "start": 0
         }
       ],
       "shards": 1334,
+      "shrinking": [
+        "epigenetic",
+        "electrochemical-therapy"
+      ],
       "start_year": 2015,
       "union_by_year": {
         "1946": 1,

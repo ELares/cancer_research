@@ -215,6 +215,133 @@ def test_growth_with_dated_input_and_no_mechanisms_has_no_ratio(scanner):
     assert "growth ratios are unavailable" in scanner.OUT_MD.read_text()
 
 
+@pytest.mark.parametrize("scanner_name", ["census_mechanism_growth"], indirect=True)
+@pytest.mark.parametrize("observations", [
+    [(2025, True)],
+    [(2015, False), (2025, True)],
+    [(2015, True)],
+    [(2020, True)],
+], ids=["missing-start-year", "zero-mechanism-start", "zero-field-end", "neither-endpoint"])
+def test_growth_unavailable_baselines_do_not_produce_comparative_claims(
+        scanner, observations):
+    _write_shard(scanner.RECORDS / "part.jsonl.gz", [
+        {"pmid": str(i), "year": year,
+         "mesh": ["Gene Editing"] if matched else UNMATCHED["mesh"]}
+        for i, (year, matched) in enumerate(observations)
+    ])
+
+    assert scanner.main() == 0
+
+    result = json.loads(scanner.OUT_JSON.read_text())
+    markdown = scanner.OUT_MD.read_text()
+    assert result["rows"], "Exercise matched input rather than the no-matches guard."
+    assert result["mechanisms_over_field"] is None
+    assert "growth comparison is unavailable" in markdown
+    assert "None" not in markdown
+    assert "The mechanisms this project tracks grew" not in markdown
+    assert "field is close to flat" not in markdown
+    assert "No mechanism is smaller" not in markdown
+
+
+@pytest.mark.parametrize("scanner_name", ["census_mechanism_growth"], indirect=True)
+@pytest.mark.parametrize("field_counts,mechanism_counts,ratio,direction", [
+    ((100, 200), (40, 20), 0.25, "lower than"),
+    ((100, 200), (30, 60), 1.0, "equal to"),
+    ((100, 200), (30, 90), 1.5, "higher than"),
+    ((200, 100), (100, 80), 1.6, "higher than"),
+    ((100, 100), (30, 30), 1.0, "equal to"),
+    ((100, 100), (30, 0), 0.0, "lower than"),
+], ids=["mechanisms-decline-field-grows", "equal-growth", "faster-growth",
+        "both-decline", "both-constant", "observed-zero-mechanisms-at-end"])
+def test_growth_comparison_follows_observed_factors(
+        scanner, field_counts, mechanism_counts, ratio, direction):
+    records = []
+    for year, field, mechanism in zip((2015, 2025), field_counts, mechanism_counts):
+        records.extend(
+            {"pmid": f"{year}-{i}", "year": year,
+             "mesh": ["Gene Editing"] if i < mechanism else UNMATCHED["mesh"]}
+            for i in range(field)
+        )
+    _write_shard(scanner.RECORDS / "part.jsonl.gz", records)
+
+    assert scanner.main() == 0
+
+    result = json.loads(scanner.OUT_JSON.read_text())
+    markdown = scanner.OUT_MD.read_text()
+    assert result["mechanisms_over_field"] == ratio
+    assert f"**x{ratio}** the field growth factor, {direction}" in markdown
+    assert "does not by itself establish" in markdown
+    assert "growth comparison is unavailable" not in markdown
+    assert "field is close to flat" not in markdown
+    assert "The mechanisms this project tracks grew" not in markdown
+    if not mechanism_counts[1]:
+        assert result["union_growth"] == 0.0
+        assert "**x0.0**" in markdown
+
+
+@pytest.mark.parametrize("scanner_name", ["census_mechanism_growth"], indirect=True)
+@pytest.mark.parametrize("assessable", [False, True])
+def test_growth_absence_of_assessed_declines_does_not_include_thin_baselines(
+        scanner, assessable):
+    mechanisms = {"thin-declining": {"2015": 20, "2025": 10}}
+    if assessable:
+        mechanisms["stable"] = {"2015": 30, "2025": 30}
+    result = scanner.assemble({
+        "census": 200, "shards": 1, "start_year": 2015, "end_year": 2025,
+        "field_by_year": {"2015": 100, "2025": 100},
+        "union_by_year": {"2015": 50 if assessable else 20,
+                          "2025": 40 if assessable else 10},
+        "mechanism_by_year": mechanisms,
+    })
+
+    markdown = scanner.render(result)
+
+    assert "No mechanism is smaller" not in markdown
+    if assessable:
+        assert "Among mechanisms meeting the 30-article starting baseline" in markdown
+    else:
+        assert "No mechanism meets the 30-article starting baseline" in markdown
+
+
+@pytest.mark.parametrize("scanner_name", ["census_mechanism_growth"], indirect=True)
+@pytest.mark.parametrize("field,mechanisms,expected", [
+    ((100000, 499), (10000, 100), 2.0),
+    ((133204, 147008), (6050, 16776), 2.51),
+], ids=["small-positive-field-factor", "round-final-ratio-only"])
+def test_growth_comparison_uses_raw_endpoints(scanner, field, mechanisms, expected):
+    result = scanner.assemble({
+        "census": sum(field), "shards": 1, "start_year": 2015, "end_year": 2025,
+        "field_by_year": dict(zip(("2015", "2025"), field)),
+        "union_by_year": dict(zip(("2015", "2025"), mechanisms)),
+        "mechanism_by_year": {"ferroptosis": dict(zip(("2015", "2025"), mechanisms))},
+    })
+
+    assert result["mechanisms_over_field"] == expected
+    markdown = scanner.render(result)
+    assert "growth comparison is unavailable" not in markdown
+    if field[1] < field[0] / 200:
+        assert "x0.00499" in markdown
+
+
+@pytest.mark.parametrize("scanner_name", ["census_mechanism_growth"], indirect=True)
+def test_growth_detects_small_declines_hidden_by_display_rounding(scanner):
+    result = scanner.assemble({
+        "census": 120000, "shards": 1, "start_year": 2015, "end_year": 2025,
+        "field_by_year": {"2015": 40000, "2020": 40000, "2025": 40000},
+        "union_by_year": {"2015": 20029, "2020": 20019, "2025": 20017},
+        "mechanism_by_year": {
+            "slightly-declining": {"2015": 20000, "2020": 20000, "2025": 19999},
+            "below-both-floors": {"2015": 29, "2020": 19, "2025": 18},
+        },
+    })
+
+    assert result["shrinking"] == ["slightly-declining"]
+    assert result["recent_shrinking"] == ["slightly-declining"]
+    markdown = scanner.render(result)
+    assert "1 mechanism(s) are SMALLER" in markdown
+    assert "No mechanism is smaller" not in markdown
+
+
 @pytest.mark.parametrize("scanner_name", ["census_normal_tissue"], indirect=True)
 def test_normal_tissue_reassembly_does_not_reuse_another_samples_labels(scanner):
     committed = REPO / "analysis/census-normal-tissue.json"
