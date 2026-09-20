@@ -13,7 +13,7 @@
    "rust_tests": 268,
    "calibration": null,
    "spatial": "by default",
-   "book_words": 5360,
+   "book_words": 5433,
    "book_sections": [
     "Chapter 5: The Ferroptosis Engine"
    ],
@@ -78,7 +78,7 @@
    "parity_lines": 0.017,
    "parity_fns": 0.044,
    "parity_tests": 0.037,
-   "parity_words": 0.213,
+   "parity_words": 0.211,
    "lines_short_of_parity": 3754
   },
   {
@@ -112,7 +112,7 @@
    "parity_lines": 0.065,
    "parity_fns": 0.049,
    "parity_tests": 0.22,
-   "parity_words": 0.213,
+   "parity_words": 0.211,
    "lines_short_of_parity": 3568
   },
   {
@@ -146,7 +146,7 @@
    "parity_lines": 0.069,
    "parity_fns": 0.126,
    "parity_tests": 0.123,
-   "parity_words": 0.485,
+   "parity_words": 0.478,
    "lines_short_of_parity": 3554
   },
   {
@@ -182,7 +182,7 @@
    "parity_lines": 0.032,
    "parity_fns": 0.038,
    "parity_tests": 0.037,
-   "parity_words": 0.822,
+   "parity_words": 0.811,
    "lines_short_of_parity": 3695
   },
   {
@@ -216,7 +216,7 @@
    "parity_lines": 0.043,
    "parity_fns": 0.071,
    "parity_tests": 0.06,
-   "parity_words": 0.349,
+   "parity_words": 0.344,
    "lines_short_of_parity": 3651
   },
   {
@@ -251,7 +251,7 @@
    "parity_lines": 0.043,
    "parity_fns": 0.06,
    "parity_tests": 0.052,
-   "parity_words": 0.373,
+   "parity_words": 0.368,
    "lines_short_of_parity": 3652
   },
   {
@@ -285,7 +285,7 @@
    "parity_lines": 0.034,
    "parity_fns": 0.049,
    "parity_tests": 0.037,
-   "parity_words": 0.37,
+   "parity_words": 0.365,
    "lines_short_of_parity": 3688
   },
   {
@@ -319,7 +319,7 @@
    "parity_lines": 0.074,
    "parity_fns": 0.104,
    "parity_tests": 0.056,
-   "parity_words": 0.428,
+   "parity_words": 0.422,
    "lines_short_of_parity": 3535
   },
   {
@@ -355,15 +355,15 @@
    "parity_lines": 0.032,
    "parity_fns": 0.071,
    "parity_tests": 0.041,
-   "parity_words": 0.348,
+   "parity_words": 0.343,
    "lines_short_of_parity": 3694
   }
  ],
  "shared_modules": 5,
  "shared_code_lines": 818,
  "shared_pub_fns": 58,
- "manuscript_words_in_sections": 73902,
- "manuscript_words_attributed": 24665,
+ "manuscript_words_in_sections": 73975,
+ "manuscript_words_attributed": 24738,
  "sections_naming_more_than_one_arm": {
   "6.13 Photodynamic and Sonodynamic Therapy, the Two the Project Started With": 2
  },

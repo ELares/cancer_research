@@ -1,0 +1,33 @@
+{
+  "development_only": true,
+  "source_git_commit": "91ca37aae10e2f22c19d0c6c4a2923bc4220b61c",
+  "candidate_source_sha256": "380b147c26bfe31fe20bedad42c93bdc7d600efe350d00d1c8120c35776522a5",
+  "candidate_source_path": "scripts/resample_move_local.py",
+  "checks": [
+    {
+      "seed": 2026092301,
+      "pilot_exact": true,
+      "island_history_original_fields_exact": true,
+      "proposal_exact": true,
+      "production_points_ids_density_exact": true,
+      "assessment_exact": true
+    },
+    {
+      "seed": 2026092302,
+      "pilot_exact": true,
+      "island_history_original_fields_exact": true,
+      "proposal_exact": true,
+      "production_points_ids_density_exact": true,
+      "assessment_exact": true
+    },
+    {
+      "seed": 2026092303,
+      "pilot_exact": true,
+      "island_history_original_fields_exact": true,
+      "proposal_exact": true,
+      "production_points_ids_density_exact": true,
+      "assessment_exact": true
+    }
+  ],
+  "method": "Fresh interpreter; direct candidate import; no scratch monkeypatches imported or installed."
+}
