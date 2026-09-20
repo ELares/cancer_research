@@ -6,7 +6,7 @@ increments should make existing claims reproducible and independently testable.
 This order follows the [research review](RESEARCH_REVIEW_2026-09-18.md); it does
 not require another simulation mechanism or a larger unmeasured corpus.
 
-1. **Joint sampling passes its operational screens; biological validation remains pending.**
+1. **Joint sampling passes its biological-run screens; broader geometry challenges expose a limitation.**
    The regenerated fits now use one supported cohort per compound, with input
    hashes, grids, and exclusions recorded. The former 100 µM erastin target
    exceeded every recorded maximum. The corrected joint run accepted only
@@ -39,14 +39,25 @@ not require another simulation mechanism or a larger unmeasured corpus.
    width, the largest tail-quantile span 2.72%, and held-out median-RMSE span
    0.00262. Every evaluated production curve, weight, decision and cost is
    archived, and no pooled posterior is published.
-   **Next deliverable:** test coverage on additional geometries selected before
-   seeing their results, and carry a frozen model-to-assay mapping into the
-   independent validation work below. These development fixtures and three
-   agreeing biological runs cannot rule out a shared unseen region. Do not
-   translate operational sampling success into precise-tail or clinical claims.
-   **Complete when:** the new coverage challenges and independent observable
-   have named inputs, fixed error criteria and published outcomes, including
-   failures. The historical underpowered experiments remain separate.
+   **Additional geometry challenge completed:** a
+   [protocol committed before evaluation](COVERAGE_CHALLENGE_PLAN.md) tested
+   the unchanged sampler on a correlated rotated box, an annular cylinder,
+   and unequal disconnected balls. [Seven of nine learned runs passed](../analysis/calibration/proposal-coverage-challenges.md).
+   Two rotated-box runs exceeded the maximum-weight limit; one also exceeded
+   the regional-mass error limit, despite ESS above 200 in both. Every declared
+   region was observed. All nine full-target oracle controls passed; all nine
+   deliberately restricted controls passed usual screens but failed truth checks.
+   The [interpretation](COVERAGE_CHALLENGE_RESULTS.md) separates these finite-budget
+   failures from evidence of omitted support or a biological model defect.
+   **Next deliverable:** develop and separately freeze a proposal revision
+   addressing correlated targets, with a normalized, evaluable full density
+   and a prospective evaluation that discloses these now-seen fixtures.
+   Keep this completed failure study unchanged. In parallel, establish the
+   model-to-assay mapping and missing independent replicate metadata below.
+   **Complete when:** the revision and independent observable have fixed inputs,
+   error criteria and published outcomes, including failures. Finite moment
+   checks cannot establish complete within-region distributions or precise tails;
+   agreeing biological runs cannot rule out a shared unseen region.
 
 2. **Census input protection is implemented in six analysis entry points.**
    The shared [streaming helper](../scripts/census_input.py) honors
