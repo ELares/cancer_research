@@ -125,9 +125,13 @@ def assemble(d: dict) -> dict:
     out["union_growth"] = union_growth
     out["field_start"] = field.get(s, 0)
     out["field_end"] = field.get(e, 0)
+    # Compare the raw endpoint counts, rounding only the final ratio. Dividing
+    # rounded growth factors can change the conclusion or turn a small positive
+    # field factor into an unavailable comparison.
     out["mechanisms_over_field"] = (
-        round(union_growth / field_growth, 2)
-        if union_growth is not None and field_growth else None
+        round(out["union_end"] * out["field_start"] /
+              (out["union_start"] * out["field_end"]), 2)
+        if out["field_start"] and out["union_start"] and out["field_end"] else None
     )
     out["min_base"] = MIN_BASE
     out["recent_start_year"] = RECENT_START
@@ -137,9 +141,10 @@ def assemble(d: dict) -> dict:
     # false: epigenetic declines too (x0.91). The set is computed here so the
     # prose beside it cannot name the wrong number of members.
     out["shrinking"] = [r["mechanism"] for r in rows
-                        if r["growth"] is not None and r["growth"] < 1.0]
+                        if r["base_sufficient"] and r["end"] < r["start"]]
     out["recent_shrinking"] = [r["mechanism"] for r in rows
-                               if r["recent_pct"] is not None and r["recent_pct"] < 0]
+                               if r["recent_pct"] is not None
+                               and r["recent_end"] < r["recent_start"]]
     return out
 
 
@@ -161,29 +166,43 @@ def render(d: dict) -> str:
         )
         return "\n".join(L)
     L.append("## The denominator a growth claim needs\n")
+    def growth_label(value, start, end):
+        if value == 0 and start and end:
+            return f"x{end / start:.3g}"
+        return f"x{value}" if value is not None else "unavailable"
+
     L.append(f"| | {s} | {e} | growth |")
     L.append("|---|--:|--:|--:|")
     L.append(f"| cancer literature (census) | {d['field_start']:,} | "
-             f"{d['field_end']:,} | x{d['field_growth']} |")
+             f"{d['field_end']:,} | "
+             f"{growth_label(d['field_growth'], d['field_start'], d['field_end'])} |")
     L.append(f"| **articles carrying any mechanism descriptor** | "
              f"{d['union_start']:,} | {d['union_end']:,} | "
-             f"**x{d['union_growth']}** |")
+             f"**{growth_label(d['union_growth'], d['union_start'], d['union_end'])}** |")
     L.append("")
+    comparison = d["mechanisms_over_field"]
+    if comparison is None:
+        L.append(
+            "The mechanism-to-field growth comparison is unavailable. "
+            "A zero starting count has no defined growth factor, and a zero "
+            "field growth factor cannot be used as a divisor. These counts "
+            "do not establish faster mechanism growth.\n"
+        )
+    else:
+        direction = ("higher than" if comparison > 1 else
+                     "lower than" if comparison < 1 else "equal to")
+        L.append(
+            f"The mechanism growth factor is **x{comparison}** the field "
+            f"growth factor, {direction} the field's factor at the reported "
+            "precision. This compares changes in indexed article counts; "
+            "a higher relative factor does not by itself establish that "
+            "either literature increased in absolute size.\n"
+        )
     L.append(
-        f"The mechanisms this project tracks grew "
-        f"**x{d['mechanisms_over_field']}** faster than cancer literature as a "
-        f"whole. That is a real result and it is the part of the manuscript's "
-        f"growth story that survives: these are not simply riding a rising tide, "
-        f"because there is no rising tide -- the field is close to flat.\n"
-    )
-    L.append(
-        f"It is also the denominator `manuscript_vs_census.py` should have used "
-        f"and did not. Comparing the retrieved corpus against the whole field "
-        f"attributes ALL of the corpus's rise to the mechanisms, when the "
-        f"mechanisms account for x{d['union_growth']} of it. A corpus built from "
-        f"queries about emerging therapies outgrows all of cancer research "
-        f"whether or not anything unusual happened; the question a growth claim "
-        f"is asking is whether it outgrew the thing it is about.\n"
+        "Use the matched mechanism denominator when comparing retrieval growth "
+        "with literature growth. The overall cancer field contains many topics "
+        "outside these mechanisms; its trend alone cannot identify how much "
+        "of a retrieved corpus's increase comes from retrieval.\n"
     )
     rs = d["recent_start_year"]
     L.append("## Per mechanism\n")
@@ -203,6 +222,16 @@ def render(d: dict) -> str:
             + ". The count is derived rather than described, because an "
             "extremum stated over a set nobody enumerated is how a second "
             "member goes unnoticed.\n"
+        )
+    elif not ok:
+        L.append(
+            f"No mechanism meets the {d['min_base']}-article starting baseline "
+            "required to assess growth or decline.\n"
+        )
+    elif thin:
+        L.append(
+            f"Among mechanisms meeting the {d['min_base']}-article starting "
+            f"baseline, none is smaller in {e} than in {s}.\n"
         )
     else:
         L.append(f"No mechanism is smaller in {e} than in {s}.\n")
