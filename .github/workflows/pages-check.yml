@@ -1,0 +1,54 @@
+name: Pages checks
+
+on:
+  pull_request:
+    paths:
+      - 'docs/**'
+      - 'scripts/build_pages_data.py'
+      - 'scripts/dashboard.py'
+      - 'scripts/dashboard_data.py'
+      - 'tests/test_pages_*.py'
+      - 'tests/test_pages_*.cjs'
+      - 'tests/test_dashboard_data.py'
+      - 'analysis/**'
+      - 'corpus/INDEX.jsonl'
+      - '.github/workflows/pages-check.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'docs/**'
+      - 'scripts/build_pages_data.py'
+      - 'scripts/dashboard.py'
+      - 'scripts/dashboard_data.py'
+      - 'tests/test_pages_*.py'
+      - 'tests/test_pages_*.cjs'
+      - 'tests/test_dashboard_data.py'
+      - 'analysis/**'
+      - 'corpus/INDEX.jsonl'
+      - '.github/workflows/pages-check.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  pages:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          lfs: false
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+      - name: Check the published snapshot
+        run: python scripts/build_pages_data.py --check
+      - name: Install the test runner
+        run: python -m pip install pytest==9.1.1
+      - name: Check site, data and optional dashboard contracts
+        run: python -m pytest tests/test_pages_data.py tests/test_pages_site.py tests/test_dashboard_data.py -q
+      - name: Check browser JavaScript syntax
+        run: |
+          node --check docs/assets/site.js
+          node --check docs/assets/dashboard.js
+      - name: Check dashboard download and retry behavior
+        run: node --test tests/test_pages_*.cjs
