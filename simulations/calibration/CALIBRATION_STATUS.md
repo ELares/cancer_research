@@ -326,6 +326,17 @@ held-out error stability and normalizer agreement passed. This improves sampling
 under the fixed deterministic target. It does not establish complete region
 coverage, precise tails, experimental validity or a new calibration tier. No
 pooled posterior is published; historical results remain unchanged.
+A later [geometry challenge](../../analysis/calibration/proposal-coverage-challenges.md),
+frozen before evaluation, passed seven of nine learned runs. Two correlated
+rotated-box runs failed the maximum-weight screen (0.0223 and 0.0272 against
+0.02); one also failed regional-mass accuracy (0.0823 against 0.075).
+Both had ESS above 200 and observed every declared region. This is a limitation
+at the fixed computational budget, not evidence that a biological region was
+missed. All full-target oracle controls passed, while deliberately restricted
+controls exposed how high ESS can coexist with missing support. The
+[interpretation](../../docs/COVERAGE_CHALLENGE_RESULTS.md) retains all outcomes
+and the limits of finite moment checks. The historical biological scores and
+calibration tier remain unchanged.
 Independent raw-replicate validation also remains pending; the
 [external assay acquisition review](../../docs/INDEPENDENT_ASSAY_CANDIDATE.md)
 documents candidate observations and the missing metadata and endpoint mapping.

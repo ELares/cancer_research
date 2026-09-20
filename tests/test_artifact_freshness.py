@@ -17,7 +17,7 @@ committed `.md` is byte-for-byte what the generator's own `--render-only`
 branch produces -- replicating that branch rather than assuming its shape,
 because two generators turn out not to re-assemble at all. Second, that the
 committed `.json` is what the generator would write, which is how a
-formatting drift was found. The two synthetic importance studies permit only
+formatting drift was found. The three synthetic importance studies permit only
 bounded floating-point differences in recomputed assessment fields across
 platforms; their formatting, raw inputs, decisions and provenance remain exact.
 Third, and structurally rather than by calling
@@ -194,7 +194,7 @@ LIVE = [g[0] for g in GENERATORS
 # Pinned EXACTLY, not as a floor. A floor with slack lets a generator drop out
 # of the gate silently: at `>= 25` against 26, deleting the marker from one
 # script left the suite green with two parametrised cases quietly gone.
-EXPECTED_GENERATORS = 82
+EXPECTED_GENERATORS = 83
 
 
 def test_the_generator_list_is_discovered_not_listed():
@@ -480,6 +480,7 @@ def test_dump_options_follow_the_expression_written(source, expected, tmp_path, 
 # source hashes, analytic truth, or any other generator's byte comparison.
 NUMERICAL_REASSEMBLY = frozenset({
     "proposal_synthetic_validation", "proposal_synthetic_validation_v2",
+    "proposal_coverage_challenges",
 })
 
 
@@ -489,6 +490,9 @@ def _assert_reassembled_json(name, produced_text, committed_text):
             raise AssertionError(f"{name}: generated JSON bytes differ from the committed artifact")
         return
     produced, committed = json.loads(produced_text), json.loads(committed_text)
+    assessment_branches = {"positive_runs", "negative_controls"}
+    if name == "proposal_coverage_challenges":
+        assessment_branches.add("oracle_controls")
     for label, value, text in (("produced", produced, produced_text),
                                ("committed", committed, committed_text)):
         try:
@@ -513,7 +517,7 @@ def _assert_reassembled_json(name, produced_text, committed_text):
             for index, (left, right) in enumerate(zip(actual, expected)):
                 check(left, right, (*path, index))
         elif (isinstance(expected, float) and len(path) >= 4 and
-              path[0] in {"positive_runs", "negative_controls"} and
+              path[0] in assessment_branches and
               isinstance(path[1], int) and path[2] == "assessment"):
             if (not math.isfinite(actual) or not math.isfinite(expected) or
                     not math.isclose(actual, expected, rel_tol=1e-12, abs_tol=1e-14)):

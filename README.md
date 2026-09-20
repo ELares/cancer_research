@@ -29,8 +29,13 @@ with 1,269 / 1,323 / 1,236 accepted attempts and importance-weight ESS 728–844
 The target and tolerance remain unchanged. The first failed bounded design and
 all 18 development trials are retained; the revision passed six prospective
 [known-target checks](analysis/calibration/proposal-synthetic-validation-v2.md)
-before biological production. These checks do not establish complete region
-coverage or independent biological validity, and no pooled posterior is published.
+before biological production. A subsequent
+[frozen geometry challenge](analysis/calibration/proposal-coverage-challenges.md)
+passed seven of nine learned runs but failed two correlated rotated-box runs
+on weight concentration, with one also failing a regional-mass check.
+Every outcome is retained; see the [interpretation and limits](docs/COVERAGE_CHALLENGE_RESULTS.md).
+These checks do not establish complete region coverage or independent biological
+validity, and no pooled posterior is published.
 The [external assay acquisition review](docs/INDEPENDENT_ASSAY_CANDIDATE.md)
 records candidate observations and the metadata still needed for validation.
 
@@ -221,7 +226,7 @@ These are computational predictions with documented assumptions and caveats, not
 | `corpus/` | Frozen full text by PubMed ID + INDEX.jsonl; `corpus/atlas/` holds the census (bulk gitignored, committed artifacts in `analysis/`); `corpus/living/` documents the frozen-versus-living split (the monthly deltas themselves are uploaded as workflow artifacts, never committed) |
 | `tags/` | Precomputed tag indexes (mechanism, cancer type, tissue, evidence level, diagnostic-therapy) |
 | `news/` | News source scaffolding: fetched articles, extracted claims, verification results, credibility scores |
-| `tests/` | 2940 Python tests (pipeline smoke + figure traceability + calibration-status ref guard + manuscript-inventory drift guard + depth-kill physics-constant guard + flagship-figure data guard + quantitative-figure drift guards (Figs 21/22/23) + invariant/integration + calibrate-extractor + MeSH evidence-fallback + gold-set precision-floor regression (#346) + Bliss/sim-tme/penetration prior-predictive intervals + ABC posterior (#332) + non-circular mechanism-recall (#412) + CTRPv2 calibration target + in-vitro kill-switch fit (#330) + System Xc-/erastin fit (#502) + joint multi-inducer posterior (#500) + spheroid structure validation (#333) + embedding evidence leg (#411) + RD-vs-BioFVM cross-check (#408) + dashboard data layer (#354) + tumor-PK measured-data anchor (#334) + Krogh penetration validation (#335) + spheroid size-aware zone thresholds (#333) + spheroid kill-vs-size direction (#333) + gene-symbol ambiguity/FSP1 sense disambiguation (#ATLAS-AMBIG) + rare-event Poisson intervals + tail-resolution classification + corpus identity/dedup index + expansion-crawl licence gating + duplicate-audit non-circularity + ferroptosis-python bindings) |
+| `tests/` | 3261 Python tests (pipeline smoke + figure traceability + calibration-status ref guard + manuscript-inventory drift guard + depth-kill physics-constant guard + flagship-figure data guard + quantitative-figure drift guards (Figs 21/22/23) + invariant/integration + calibrate-extractor + MeSH evidence-fallback + gold-set precision-floor regression (#346) + Bliss/sim-tme/penetration prior-predictive intervals + ABC posterior (#332) + non-circular mechanism-recall (#412) + CTRPv2 calibration target + in-vitro kill-switch fit (#330) + System Xc-/erastin fit (#502) + joint multi-inducer posterior (#500) + spheroid structure validation (#333) + embedding evidence leg (#411) + RD-vs-BioFVM cross-check (#408) + dashboard data layer (#354) + tumor-PK measured-data anchor (#334) + Krogh penetration validation (#335) + spheroid size-aware zone thresholds (#333) + spheroid kill-vs-size direction (#333) + gene-symbol ambiguity/FSP1 sense disambiguation (#ATLAS-AMBIG) + rare-event Poisson intervals + tail-resolution classification + corpus identity/dedup index + expansion-crawl licence gating + duplicate-audit non-circularity + ferroptosis-python bindings) |
 
 Start with the files in `analysis/` if you want to see what we've concluded so far—and where we're still uncertain.
 
