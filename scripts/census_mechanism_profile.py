@@ -160,6 +160,8 @@ def assemble(d: dict) -> dict:
             "census": n,
             "trials": d["trials"].get(k, 0),
             "trial_share": round(100 * d["trials"].get(k, 0) / n, 2) if n else None,
+            # Legacy field name: this is a sum of site assignments, not a
+            # unique article count. One article may match several sites.
             "site_assigned": assigned,
             "top_sites": enr[:TOP_N],
             "top_partners": sorted(
@@ -208,16 +210,23 @@ def render(d: dict) -> str:
         "A growth ratio is reported only where the start year holds at least 30 "
         "articles; below that it measures the handful.\n"
     )
+    L.append(
+        "Site enrichment divides a site's share of a mechanism's site assignments "
+        "by its share of all census site assignments. Each article contributes "
+        "once to each matching site; sites can overlap, so assignment totals are "
+        "not unique article counts. The legacy JSON field `site_assigned` stores "
+        "this assignment total. Trial shares retain an article denominator.\n"
+    )
     for r in d["rows"]:
         L.append(f"## {r['mechanism']}\n")
         L.append(
             f"{r['census']:,} census articles, {r['trials']:,} carrying a "
             f"clinical-trial publication type ({r['trial_share']}%). "
-            f"{r['site_assigned']:,} are assignable to a site.\n"
+            f"These articles contribute {r['site_assigned']:,} site assignments.\n"
         )
         if r["top_sites"]:
-            L.append("Concentrates in (enrichment against the site's own share "
-                     "of site-assigned records): "
+            L.append("Highest site enrichments (relative to the site's share "
+                     "of all census site assignments): "
                      + ", ".join(f"{s['site']} {s['enrichment']}x ({s['n']:,})"
                                  for s in r["top_sites"]) + ".\n")
         else:

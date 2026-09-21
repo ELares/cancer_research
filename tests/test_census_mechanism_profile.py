@@ -98,9 +98,64 @@ def test_render_only_works_without_raw_census(tmp_path, monkeypatch):
     assert "4,403,994 census records" in profile.OUT_MD.read_text()
 
 
+@pytest.mark.parametrize("has_sites", [True, False], ids=["overlapping-sites", "no-sites"])
+def test_site_assignment_units_from_scan_to_report(tmp_path, monkeypatch, has_sites):
+    """Twenty articles can contribute forty assignments but only five trials."""
+    profile = _load_profile()
+    records = tmp_path / "records"
+    records.mkdir()
+    monkeypatch.setattr(profile, "RECORDS", records)
+    monkeypatch.setattr(profile, "load_sites", lambda: {
+        "site-a": {"site a"}, "site-b": {"site b"},
+    })
+    mech_map = tmp_path / "mechanisms.yaml"
+    mech_map.write_text("mechanisms:\n  mechanism-a:\n    descriptors: [Mechanism A]\n")
+    monkeypatch.setattr(profile, "MECH_MAP", mech_map)
+    with gzip.open(records / "part.jsonl.gz", "wt", encoding="utf-8") as fh:
+        for i in range(20):
+            fh.write(json.dumps({
+                "pmid": str(i),
+                "mesh": ["Mechanism A"] + (["Site A", "Site B"] if has_sites else []),
+                "pub_types": ["Clinical Trial"] if i < 5 else [],
+            }) + "\n")
+
+    result = profile.assemble(profile.scan())
+    row, = result["rows"]
+    assert result["census"] == row["census"] == 20
+    assert row["trials"] == 5
+    assert row["trial_share"] == 25.0  # Articles remain the trial-share denominator.
+    expected_sites = {"site-a": 20, "site-b": 20} if has_sites else {}
+    assert result["site_totals"] == expected_sites
+    assert result["by_site"].get("mechanism-a", {}) == expected_sites
+    assert row["site_assigned"] == (40 if has_sites else 0)
+    assert row["top_sites"] == [
+        {"site": site, "n": n, "enrichment": 1.0}
+        for site, n in expected_sites.items()
+    ]
+    report = profile.render(result)
+    assert f"{row['site_assigned']} site assignments" in report
+    assert "5 carrying a clinical-trial publication type (25.0%)" in report
+    assert "a site's share of a mechanism's site assignments" in report
+    assert "by its share of all census site assignments" in report
+    assert "assignment totals are not unique article counts" in report
+    assert "are assignable to a site" not in report
+    assert "site-assigned records" not in report
+
+
 @pytest.fixture(scope="module")
 def d():
     return json.loads(JSON.read_text())
+
+
+def test_committed_report_uses_current_assignment_units(d):
+    profile = _load_profile()
+    report = MD.read_text()
+    assert report == profile.render(profile.assemble(d))
+    for row in d["rows"]:
+        assert f"{row['site_assigned']:,} site assignments" in report
+    assert "`site_assigned` stores this assignment total" in report
+    assert "are assignable to a site" not in report
+    assert "site-assigned records" not in report
 
 
 def test_trial_share_recomputes_from_its_own_counts(d):

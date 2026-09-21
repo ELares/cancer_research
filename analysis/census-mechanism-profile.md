@@ -25,130 +25,132 @@ Volume is NOT comparable across mechanisms and no cross-mechanism ranking is dra
 
 A growth ratio is reported only where the start year holds at least 30 articles; below that it measures the handful.
 
+Site enrichment divides a site's share of a mechanism's site assignments by its share of all census site assignments. Each article contributes once to each matching site; sites can overlap, so assignment totals are not unique article counts. The legacy JSON field `site_assigned` stores this assignment total. Trial shares retain an article denominator.
+
 ## epigenetic
 
-41,278 census articles, 1,307 carrying a clinical-trial publication type (3.17%). 33,630 are assignable to a site.
+41,278 census articles, 1,307 carrying a clinical-trial publication type (3.17%). These articles contribute 33,630 site assignments.
 
-Concentrates in (enrichment against the site's own share of site-assigned records): leukaemia 1.79x (4,673), colorectal 1.6x (4,131), stomach 1.36x (1,610), brain/CNS 1.23x (3,118), ovary 1.14x (1,123), oesophagus 1.03x (655).
+Highest site enrichments (relative to the site's share of all census site assignments): leukaemia 1.79x (4,673), colorectal 1.6x (4,131), stomach 1.36x (1,610), brain/CNS 1.23x (3,118), ovary 1.14x (1,123), oesophagus 1.03x (655).
 
 Most frequent co-occurring mechanisms: immunotherapy (236), synthetic-lethality (120), crispr (98), nanoparticle (97), metabolic-targeting (66), car-t (56).
 
 ## nanoparticle
 
-36,788 census articles, 182 carrying a clinical-trial publication type (0.49%). 15,875 are assignable to a site.
+36,788 census articles, 182 carrying a clinical-trial publication type (0.49%). These articles contribute 15,875 site assignments.
 
-Concentrates in (enrichment against the site's own share of site-assigned records): breast 2.25x (3,938), liver 1.6x (1,576), brain/CNS 1.53x (1,828), pancreas 1.44x (680), ovary 1.33x (621), lung 1.2x (1,699).
+Highest site enrichments (relative to the site's share of all census site assignments): breast 2.25x (3,938), liver 1.6x (1,576), brain/CNS 1.53x (1,828), pancreas 1.44x (680), ovary 1.33x (621), lung 1.2x (1,699).
 
 Most frequent co-occurring mechanisms: immunotherapy (517), sonodynamic (310), car-t (116), crispr (111), antibody-drug-conjugate (106), epigenetic (97).
 
 ## immunotherapy
 
-31,890 census articles, 1,430 carrying a clinical-trial publication type (4.48%). 26,341 are assignable to a site.
+31,890 census articles, 1,430 carrying a clinical-trial publication type (4.48%). These articles contribute 26,341 site assignments.
 
-Concentrates in (enrichment against the site's own share of site-assigned records): lung 3.09x (7,237), skin/melanoma 2.13x (3,740), bladder 1.81x (954), kidney 1.66x (1,166), oesophagus 1.27x (637), stomach 1.12x (1,037).
+Highest site enrichments (relative to the site's share of all census site assignments): lung 3.09x (7,237), skin/melanoma 2.13x (3,740), bladder 1.81x (954), kidney 1.66x (1,166), oesophagus 1.27x (637), stomach 1.12x (1,037).
 
 Most frequent co-occurring mechanisms: nanoparticle (517), car-t (512), antibody-drug-conjugate (277), oncolytic-virus (263), epigenetic (236), bispecific-antibody (235).
 
 ## car-t
 
-15,358 census articles, 1,020 carrying a clinical-trial publication type (6.64%). 9,817 are assignable to a site.
+15,358 census articles, 1,020 carrying a clinical-trial publication type (6.64%). These articles contribute 9,817 site assignments.
 
-Concentrates in (enrichment against the site's own share of site-assigned records): lymphoma 4.33x (2,438), leukaemia 2.99x (2,284), skin/melanoma 1.86x (1,216), kidney 1.14x (297), brain/CNS 1.0x (742), ovary 0.92x (265).
+Highest site enrichments (relative to the site's share of all census site assignments): lymphoma 4.33x (2,438), leukaemia 2.99x (2,284), skin/melanoma 1.86x (1,216), kidney 1.14x (297), brain/CNS 1.0x (742), ovary 0.92x (265).
 
 Most frequent co-occurring mechanisms: immunotherapy (512), bispecific-antibody (377), crispr (230), antibody-drug-conjugate (133), oncolytic-virus (131), nanoparticle (116).
 
 ## metabolic-targeting
 
-8,809 census articles, 45 carrying a clinical-trial publication type (0.51%). 5,900 are assignable to a site.
+8,809 census articles, 45 carrying a clinical-trial publication type (0.51%). These articles contribute 5,900 site assignments.
 
-Concentrates in (enrichment against the site's own share of site-assigned records): liver 1.98x (724), pancreas 1.82x (319), ovary 1.31x (226), colorectal 1.24x (560), breast 1.16x (755), lung 1.12x (587).
+Highest site enrichments (relative to the site's share of all census site assignments): liver 1.98x (724), pancreas 1.82x (319), ovary 1.31x (226), colorectal 1.24x (560), breast 1.16x (755), lung 1.12x (587).
 
 Most frequent co-occurring mechanisms: nanoparticle (70), epigenetic (66), immunotherapy (64), car-t (29), crispr (25), synthetic-lethality (12).
 
 ## antibody-drug-conjugate
 
-6,019 census articles, 580 carrying a clinical-trial publication type (9.64%). 4,270 are assignable to a site.
+6,019 census articles, 580 carrying a clinical-trial publication type (9.64%). These articles contribute 4,270 site assignments.
 
-Concentrates in (enrichment against the site's own share of site-assigned records): lymphoma 4.42x (1,083), breast 2.06x (971), ovary 1.75x (219), bladder 1.58x (135), pancreas 0.98x (124), lung 0.91x (344).
+Highest site enrichments (relative to the site's share of all census site assignments): lymphoma 4.42x (1,083), breast 2.06x (971), ovary 1.75x (219), bladder 1.58x (135), pancreas 0.98x (124), lung 0.91x (344).
 
 Most frequent co-occurring mechanisms: immunotherapy (277), bispecific-antibody (190), car-t (133), nanoparticle (106), synthetic-lethality (35), epigenetic (22).
 
 ## synthetic-lethality
 
-5,437 census articles, 342 carrying a clinical-trial publication type (6.29%). 4,265 are assignable to a site.
+5,437 census articles, 342 carrying a clinical-trial publication type (6.29%). These articles contribute 4,265 site assignments.
 
-Concentrates in (enrichment against the site's own share of site-assigned records): ovary 11.85x (1,481), prostate 2.23x (451), breast 2.05x (963), pancreas 1.34x (170), cervix/uterus 0.58x (116), leukaemia 0.57x (188).
+Highest site enrichments (relative to the site's share of all census site assignments): ovary 11.85x (1,481), prostate 2.23x (451), breast 2.05x (963), pancreas 1.34x (170), cervix/uterus 0.58x (116), leukaemia 0.57x (188).
 
 Most frequent co-occurring mechanisms: immunotherapy (133), epigenetic (120), crispr (87), nanoparticle (36), antibody-drug-conjugate (35), metabolic-targeting (12).
 
 ## oncolytic-virus
 
-5,006 census articles, 201 carrying a clinical-trial publication type (4.02%). 3,077 are assignable to a site.
+5,006 census articles, 201 carrying a clinical-trial publication type (4.02%). These articles contribute 3,077 site assignments.
 
-Concentrates in (enrichment against the site's own share of site-assigned records): brain/CNS 2.91x (674), pancreas 2.59x (236), skin/melanoma 2.51x (516), ovary 1.61x (145), liver 1.42x (271), bladder 1.04x (64).
+Highest site enrichments (relative to the site's share of all census site assignments): brain/CNS 2.91x (674), pancreas 2.59x (236), skin/melanoma 2.51x (516), ovary 1.61x (145), liver 1.42x (271), bladder 1.04x (64).
 
 Most frequent co-occurring mechanisms: immunotherapy (263), car-t (131), nanoparticle (40), epigenetic (39), crispr (24), bispecific-antibody (22).
 
 ## crispr
 
-3,674 census articles, 6 carrying a clinical-trial publication type (0.16%). 1,940 are assignable to a site.
+3,674 census articles, 6 carrying a clinical-trial publication type (0.16%). These articles contribute 1,940 site assignments.
 
-Concentrates in (enrichment against the site's own share of site-assigned records): leukaemia 1.88x (284), ovary 1.53x (87), liver 1.21x (146), lung 1.21x (209), pancreas 1.16x (67), breast 1.09x (233).
+Highest site enrichments (relative to the site's share of all census site assignments): leukaemia 1.88x (284), ovary 1.53x (87), liver 1.21x (146), lung 1.21x (209), pancreas 1.16x (67), breast 1.09x (233).
 
 Most frequent co-occurring mechanisms: car-t (230), nanoparticle (111), epigenetic (98), synthetic-lethality (87), immunotherapy (85), metabolic-targeting (25).
 
 ## bispecific-antibody
 
-3,462 census articles, 326 carrying a clinical-trial publication type (9.42%). 2,230 are assignable to a site.
+3,462 census articles, 326 carrying a clinical-trial publication type (9.42%). These articles contribute 2,230 site assignments.
 
-Concentrates in (enrichment against the site's own share of site-assigned records): leukaemia 4.06x (705), lymphoma 3.84x (491), ovary 1.35x (88), lung 1.01x (201), colorectal 0.76x (130), pancreas 0.73x (48).
+Highest site enrichments (relative to the site's share of all census site assignments): leukaemia 4.06x (705), lymphoma 3.84x (491), ovary 1.35x (88), lung 1.01x (201), colorectal 0.76x (130), pancreas 0.73x (48).
 
 Most frequent co-occurring mechanisms: car-t (377), immunotherapy (235), antibody-drug-conjugate (190), phagocytosis-checkpoint (33), nanoparticle (32), oncolytic-virus (22).
 
 ## electrochemical-therapy
 
-2,515 census articles, 142 carrying a clinical-trial publication type (5.65%). 1,894 are assignable to a site.
+2,515 census articles, 142 carrying a clinical-trial publication type (5.65%). These articles contribute 1,894 site assignments.
 
-Concentrates in (enrichment against the site's own share of site-assigned records): pancreas 4.0x (225), skin/melanoma 3.8x (480), liver 2.31x (271), prostate 1.6x (144), kidney 1.19x (60), colorectal 0.71x (103).
+Highest site enrichments (relative to the site's share of all census site assignments): pancreas 4.0x (225), skin/melanoma 3.8x (480), liver 2.31x (271), prostate 1.6x (144), kidney 1.19x (60), colorectal 0.71x (103).
 
 Most frequent co-occurring mechanisms: car-t (64), nanoparticle (27), hifu (26), immunotherapy (16), crispr (15), sonodynamic (11).
 
 ## sonodynamic
 
-2,513 census articles, 114 carrying a clinical-trial publication type (4.54%). 1,611 are assignable to a site.
+2,513 census articles, 114 carrying a clinical-trial publication type (4.54%). These articles contribute 1,611 site assignments.
 
-Concentrates in (enrichment against the site's own share of site-assigned records): prostate 2.6x (199), liver 2.25x (225), brain/CNS 1.71x (207), kidney 1.7x (73), cervix/uterus 1.64x (123), pancreas 1.42x (68).
+Highest site enrichments (relative to the site's share of all census site assignments): prostate 2.6x (199), liver 2.25x (225), brain/CNS 1.71x (207), kidney 1.7x (73), cervix/uterus 1.64x (123), pancreas 1.42x (68).
 
 Most frequent co-occurring mechanisms: nanoparticle (310), hifu (21), immunotherapy (21), electrochemical-therapy (11), antibody-drug-conjugate (4), car-t (3).
 
 ## hifu
 
-1,352 census articles, 96 carrying a clinical-trial publication type (7.1%). 1,119 are assignable to a site.
+1,352 census articles, 96 carrying a clinical-trial publication type (7.1%). These articles contribute 1,119 site assignments.
 
-Concentrates in (enrichment against the site's own share of site-assigned records): cervix/uterus 6.48x (338), prostate 4.63x (246), pancreas 2.56x (85), liver 2.1x (146), thyroid 2.03x (45), kidney 1.11x (33).
+Highest site enrichments (relative to the site's share of all census site assignments): cervix/uterus 6.48x (338), prostate 4.63x (246), pancreas 2.56x (85), liver 2.1x (146), thyroid 2.03x (45), kidney 1.11x (33).
 
 Most frequent co-occurring mechanisms: nanoparticle (37), electrochemical-therapy (26), sonodynamic (21), immunotherapy (8), antibody-drug-conjugate (1), car-t (1).
 
 ## phagocytosis-checkpoint
 
-918 census articles, 13 carrying a clinical-trial publication type (1.42%). 606 are assignable to a site.
+918 census articles, 13 carrying a clinical-trial publication type (1.42%). These articles contribute 606 site assignments.
 
-Concentrates in (enrichment against the site's own share of site-assigned records): lymphoma 1.9x (66), leukaemia 1.68x (79), ovary 1.58x (28), skin/melanoma 1.46x (59), pancreas 1.45x (26), lung 1.36x (73).
+Highest site enrichments (relative to the site's share of all census site assignments): lymphoma 1.9x (66), leukaemia 1.68x (79), ovary 1.58x (28), skin/melanoma 1.46x (59), pancreas 1.45x (26), lung 1.36x (73).
 
 Most frequent co-occurring mechanisms: immunotherapy (97), nanoparticle (52), bispecific-antibody (33), car-t (18), oncolytic-virus (11), crispr (10).
 
 ## microbiome
 
-380 census articles, 12 carrying a clinical-trial publication type (3.16%). 205 are assignable to a site.
+380 census articles, 12 carrying a clinical-trial publication type (3.16%). These articles contribute 205 site assignments.
 
-Concentrates in (enrichment against the site's own share of site-assigned records): colorectal 4.58x (72), skin/melanoma 2.27x (31), liver 2.04x (26).
+Highest site enrichments (relative to the site's share of all census site assignments): colorectal 4.58x (72), skin/melanoma 2.27x (31), liver 2.04x (26).
 
 Most frequent co-occurring mechanisms: immunotherapy (73), car-t (2), epigenetic (2), nanoparticle (1).
 
 ## mrna-vaccine
 
-301 census articles, 2 carrying a clinical-trial publication type (0.66%). 130 are assignable to a site.
+301 census articles, 2 carrying a clinical-trial publication type (0.66%). These articles contribute 130 site assignments.
 
-Concentrates in (enrichment against the site's own share of site-assigned records): skin/melanoma 2.77x (24).
+Highest site enrichments (relative to the site's share of all census site assignments): skin/melanoma 2.77x (24).
 
 Most frequent co-occurring mechanisms: nanoparticle (49), immunotherapy (12), car-t (5), oncolytic-virus (3), crispr (2), bispecific-antibody (1).
