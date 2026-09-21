@@ -1,10 +1,9 @@
 """Guards for the mechanism-class-by-site analysis.
 
-THE ANALYSIS EXISTS TO OVERTURN HALF OF A MANUSCRIPT CLAIM and confirm the
-other half, so the guards protect the thing that makes either verdict
-possible: the two classes are measured over the SAME sites with the SAME
-denominator. Whatever inflates or deflates a site in the tagged literature
-generally is then common-mode, and only a sign DISAGREEMENT carries.
+The two classes use the same sites and census assignment denominator.
+Opposite enrichment directions depend on that baseline; sharing it does not
+adjust for indexing or selection bias. The ratio between class enrichments
+cancels the baseline mathematically, while the opposite-direction flag does not.
 
 The caveat is load-bearing on exactly one row and is guarded as such: this
 physical class holds three mechanisms and omits radiotherapy, which is central
@@ -141,42 +140,56 @@ def test_enrichment_is_recomputable_from_the_stored_counts(d):
 
 
 def test_the_opposed_set_is_derived(d):
-    """Sign disagreement is the reading that does not depend on the base rate,
-    so it must be computed rather than listed."""
+    """Opposite directions are derived relative to the current census baseline."""
     expect = sorted(r["site"] for r in d["rows"]
                     if (r["physical_enrichment"] - 1)
                     * (r["pharmacological_enrichment"] - 1) < 0)
     assert sorted(d["opposed_sites"]) == expect
     md = MD.read_text()
     if expect:
-        assert f"{len(expect)} site(s) where the two classes move in OPPOSITE" in md
+        assert f"At {len(expect)} site(s) the two classes move in OPPOSITE" in md
+    assert "Opposite-direction flags depend on the chosen baseline" in md
+    assert "not bias-adjusted effects" in md
+    assert "does not depend on the base rate" not in md
 
 
-def test_the_haematologic_verdict_rests_on_the_contrast_not_the_base_rate(d):
-    """If the pharmacological class were ALSO depleted there, the finding would
-    be about how those sites are written about rather than about modality."""
+def test_opposed_flags_depend_on_baseline_but_class_enrichment_ratios_do_not():
+    """Moving the baseline alone can remove every opposite-direction flag."""
+    sites = _load_sites()
+    class_counts = {
+        "physical": {"a": 60, "b": 40},
+        "pharmacological": {"a": 30, "b": 70},
+    }
+    results = [sites.assemble({"site_totals": baseline, "class_by_site": class_counts})
+               for baseline in ({"a": 450, "b": 550}, {"a": 650, "b": 350})]
+    assert set(results[0]["opposed_sites"]) == {"a", "b"}
+    assert results[1]["opposed_sites"] == []
+    assert results[0]["class_by_site"] == results[1]["class_by_site"] == class_counts
+    for result in results:
+        ratios = {row["site"]: row["physical_enrichment"] / row["pharmacological_enrichment"]
+                  for row in result["rows"]}
+        assert ratios == pytest.approx({"a": 2.0, "b": 4 / 7})
+
+
+def test_haematologic_description_reports_current_enrichment_values(d):
+    """The descriptive contrast must quote both classes at the current baseline."""
     md = MD.read_text()
-    if "haematologic half SURVIVES" not in md:
-        pytest.skip("the report no longer makes the haematologic claim")
     for site in ("leukaemia", "lymphoma"):
         r = next(x for x in d["rows"] if x["site"] == site)
         assert r["physical_enrichment"] < 1.0, f"{site} is not depleted for physical"
-        assert r["pharmacological_enrichment"] > 1.0, (
-            f"{site} is not ENRICHED for pharmacological, so the contrast the "
-            "report leans on does not hold and the claim reduces to a base-rate "
-            "observation")
+        assert r["pharmacological_enrichment"] > 1.0, f"{site} is not enriched for pharmacological"
+        assert (f"{site} {r['physical_enrichment']:.2f}x physical against "
+                f"{r['pharmacological_enrichment']:.2f}x pharmacological") in md
 
 
 def test_the_brain_row_carries_the_radiotherapy_caveat(d):
     """The class omits radiotherapy, and brain is where that bites hardest."""
     md = MD.read_text()
-    if "neuroectodermal half does NOT survive" in md:
-        assert "radiotherapy is outside this physical class" in md
-        r = next(x for x in d["rows"] if x["site"] == "brain/CNS")
-        assert abs(r["physical_enrichment"] - r["pharmacological_enrichment"]) < 0.15, (
-            "the report calls the two classes indistinguishable at brain/CNS "
-            f"but they are {r['physical_enrichment']} and "
-            f"{r['pharmacological_enrichment']}")
+    assert "Radiotherapy is outside this physical class" in md
+    r = next(x for x in d["rows"] if x["site"] == "brain/CNS")
+    assert (f"brain/CNS sits at {r['physical_enrichment']:.2f}x for the physical class "
+            f"against {r['pharmacological_enrichment']:.2f}x for the pharmacological one") in md
+    assert "indistinguishable" not in md
 
 
 def test_the_class_lists_are_imported_not_restated():

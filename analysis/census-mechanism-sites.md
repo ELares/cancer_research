@@ -29,15 +29,17 @@ Enrichment divides a site's share of a class's site assignments by its share of 
 
 ## What the ordering tracks
 
-The physical class runs from pancreas at 2.76x down to stomach at 0.20x, a factor of 13.9. The enriched end is solid organs a probe, a fibre or an electrode can be placed in or on; the depleted end is disseminated and luminal disease. That is what these three modalities ARE -- each needs a physically reachable target -- so the ordering is a consistency check on the site assignment as much as a finding about the field.
+The physical class runs from pancreas at 2.76x down to stomach at 0.20x, a factor of 13.9. The ordering describes indexed assignment shares, not treatment performance.
 
-The reading that does not depend on the base rate is the 11 site(s) where the two classes move in OPPOSITE directions: bladder, cervix/uterus, colorectal, leukaemia, liver, lung, lymphoma, ovary, pancreas, prostate, stomach. Whatever makes a site over- or under-represented in the tagged literature generally is common to both classes; a sign disagreement is not.
+At 11 site(s) the two classes move in OPPOSITE directions relative to the chosen census assignment-share baseline: bladder, cervix/uterus, colorectal, leukaemia, liver, lung, lymphoma, ovary, pancreas, prostate, stomach.
+
+Opposite-direction flags depend on the chosen baseline: changing its site shares can change the flags even when the class counts stay fixed. The within-site ratio of the two enrichments cancels that shared baseline, but neither comparison rules out class-specific indexing or descriptor-coverage differences. These are descriptive contrasts, not bias-adjusted effects.
 
 ## Against the manuscript's Section 4.2
 
-The haematologic half SURVIVES and is strengthened by the contrast: leukaemia 0.30x physical against 1.30x pharmacological, lymphoma 0.22x physical against 1.26x pharmacological. The pharmacological class is enriched in exactly the sites the physical class is depleted in, so this is not a property of how much those sites are written about.
+The haematologic rows report leukaemia 0.30x physical against 1.30x pharmacological, lymphoma 0.22x physical against 1.26x pharmacological. Each enrichment compares the site's share of class assignments with its share of all census site assignments; these values do not establish a biological or clinical difference between classes.
 
-The neuroectodermal half does NOT survive. brain/CNS sits at 0.92x for the physical class against 0.91x for the pharmacological one -- both at the site's own weight, and indistinguishable from each other. The concentration the manuscript reported was a property of a corpus retrieved around mechanism keywords. THE CAVEAT MATTERS MOST HERE: radiotherapy is outside this physical class by construction and is central to brain practice, so this row reads on sonodynamic, HIFU and electrochemical therapy, not on physically delivered treatment.
+brain/CNS sits at 0.92x for the physical class against 0.91x for the pharmacological one relative to the census assignment-share baseline. The earlier retrieved-corpus comparison uses a different population and taxonomy, so it cannot isolate the effect of retrieval. Radiotherapy is outside this physical class by construction and is central to brain practice, so this row reads on sonodynamic, HIFU and electrochemical therapy, not on physically delivered treatment.
 
 ## Limits
 

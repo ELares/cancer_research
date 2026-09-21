@@ -11,15 +11,14 @@ The census can test that on an axis this project did not draw. Site assignment
 comes from `analysis/site-descriptor-map.tsv`, which is every C04 descriptor at
 or beneath the tree nodes the 18-site shallow list already occupies -- NLM's own
 hierarchy, not a rule written here (#729). So the question becomes: where does
-each mechanism class sit relative to the site's own share of the census?
+each mechanism class sit relative to the site's share of census site assignments?
 
-THE COMPARISON THAT CARRIES THE RESULT IS BETWEEN THE TWO CLASSES, not between a
-class and the base rate. A site can be over- or under-represented in the tagged
-literature for reasons that have nothing to do with modality (indexing depth,
-how much of a site's literature is therapeutic at all). Running both classes over
-the same sites with the same denominator makes those reasons common-mode: where
-the two classes move in OPPOSITE directions, something about the modality is
-doing the work.
+Both classes use the same census assignment-share baseline. Opposite-direction
+flags identify sites whose baseline share lies between the two class shares;
+changing that baseline can change the flags even when class counts stay fixed.
+The ratio of the two enrichments within a site cancels the shared baseline,
+but neither comparison removes class-specific indexing or descriptor-coverage
+differences. These are descriptive contrasts, not bias-adjusted effects.
 
 WHAT THIS CLASS IS NOT. `PHYSICAL` holds three mechanisms and omits radiotherapy,
 its largest real member, because radiotherapy has no mechanism tag in this
@@ -127,7 +126,8 @@ def assemble(d: dict) -> dict:
             row[f"{cname}_enrichment"] = (n / ctot) / (st[site] / base_tot) if n else 0.0
         rows.append(row)
     rows.sort(key=lambda r: -r["physical_enrichment"])
-    # Sites where the two classes disagree in DIRECTION -- the common-mode-free signal.
+    # The two class shares straddle this census baseline. This flag depends on
+    # the baseline; it is not a bias-adjusted or baseline-independent signal.
     opposed = [
         r["site"]
         for r in rows
@@ -198,12 +198,9 @@ def render(d: dict) -> str:
             f"The physical class runs from {top['site']} at "
             f"{top['physical_enrichment']:.2f}x down to {bot['site']} at "
             f"{bot['physical_enrichment']:.2f}x, a factor of "
-            f"{top['physical_enrichment'] / bot['physical_enrichment']:.1f}. The enriched "
-            f"end is solid organs a probe, a fibre or an electrode can be placed in or "
-            f"on; the depleted end is disseminated and luminal disease. That is what "
-            f"these three modalities ARE -- each needs a physically reachable target -- "
-            f"so the ordering is a consistency check on the site assignment as much as a "
-            f"finding about the field.\n"
+            f"{top['physical_enrichment'] / bot['physical_enrichment']:.1f}. "
+            "The ordering describes indexed assignment shares, not treatment "
+            "performance.\n"
         )
     else:
         L.append(
@@ -212,12 +209,18 @@ def render(d: dict) -> str:
         )
     if d["opposed_sites"]:
         L.append(
-            f"The reading that does not depend on the base rate is the "
-            f"{len(d['opposed_sites'])} site(s) where the two classes move in "
-            f"OPPOSITE directions: {', '.join(sorted(d['opposed_sites']))}. Whatever "
-            f"makes a site over- or under-represented in the tagged literature "
-            f"generally is common to both classes; a sign disagreement is not.\n"
+            f"At {len(d['opposed_sites'])} site(s) the two classes move in "
+            f"OPPOSITE directions relative to the chosen census assignment-share "
+            f"baseline: {', '.join(sorted(d['opposed_sites']))}.\n"
         )
+    L.append(
+        "Opposite-direction flags depend on the chosen baseline: changing its "
+        "site shares can change the flags even when the class counts stay fixed. "
+        "The within-site ratio of the two enrichments cancels that shared "
+        "baseline, but neither comparison rules out class-specific indexing or "
+        "descriptor-coverage differences. These are descriptive contrasts, "
+        "not bias-adjusted effects.\n"
+    )
     L.append("## Against the manuscript's Section 4.2\n")
     if haem:
         parts = ", ".join(
@@ -226,20 +229,20 @@ def render(d: dict) -> str:
             for s, r in sorted(haem.items())
         )
         L.append(
-            f"The haematologic half SURVIVES and is strengthened by the contrast: "
-            f"{parts}. The pharmacological class is enriched in exactly the sites "
-            f"the physical class is depleted in, so this is not a property of how "
-            f"much those sites are written about.\n"
+            f"The haematologic rows report {parts}. Each enrichment compares "
+            "the site's share of class assignments with its share of all census "
+            "site assignments; these values do not establish a biological or "
+            "clinical difference between classes.\n"
         )
     if brain:
         L.append(
-            f"The neuroectodermal half does NOT survive. brain/CNS sits at "
+            f"brain/CNS sits at "
             f"{brain['physical_enrichment']:.2f}x for the physical class against "
             f"{brain['pharmacological_enrichment']:.2f}x for the pharmacological one "
-            f"-- both at the site's own weight, and indistinguishable from each "
-            f"other. The concentration the manuscript reported was a property of a "
-            f"corpus retrieved around mechanism keywords. THE CAVEAT MATTERS MOST "
-            f"HERE: radiotherapy is outside this physical class by construction and "
+            f"relative to the census assignment-share baseline. The earlier "
+            f"retrieved-corpus comparison uses a different population and "
+            f"taxonomy, so it cannot isolate the effect of retrieval. "
+            f"Radiotherapy is outside this physical class by construction and "
             f"is central to brain practice, so this row reads on sonodynamic, HIFU "
             f"and electrochemical therapy, not on physically delivered treatment.\n"
         )

@@ -340,9 +340,9 @@ def fig9c_design_composition():
 def fig14c_class_by_site():
     """Enrichment per site, physical against pharmacological.
 
-    Plotted as enrichment rather than as counts because a count chart
-    reproduces the ordering of the SITES, not of the modality. The 1.0 line is
-    drawn because it is the only value that means anything on its own.
+    Enrichment compares each class's site-assignment share with the chosen
+    census site-assignment baseline. Bold labels straddle 1.0; those flags
+    depend on the baseline and do not rule out indexing or descriptor differences.
     """
     d = _load(SITES)
     rows = sorted(d["rows"], key=lambda r: -r["physical_enrichment"])
@@ -370,10 +370,10 @@ def fig14c_class_by_site():
     # text, so an unwrapped footnote silently stretched this panel to a 2.2:1
     # aspect and shrank every bar.
     fig.text(0.5, -0.03,
-             f"1.0 is the site's own weight. Bold labels mark the "
-             f"{len(opposed)} sites where the two classes move in OPPOSITE\n"
-             f"directions -- the reading that does not depend on how much a "
-             f"site is written about.\nThe physical class holds "
+             f"1.0 marks the census assignment-share baseline. Bold labels mark "
+             f"the {len(opposed)} sites whose class enrichments\n"
+             f"straddle 1.0. Flags depend on the chosen baseline and do not rule "
+             f"out indexing or descriptor differences.\nThe physical class holds "
              f"{len(d['physical_members'])} mechanisms and omits radiotherapy, "
              f"its largest real member.\n"
              f"Sites can overlap; assignment totals are not unique-article coverage.",
