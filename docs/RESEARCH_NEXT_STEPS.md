@@ -59,7 +59,7 @@ not require another simulation mechanism or a larger unmeasured corpus.
    checks cannot establish complete within-region distributions or precise tails;
    agreeing biological runs cannot rule out a shared unseen region.
 
-2. **Census input protection is implemented in twelve analysis entry points.**
+2. **Census input protection is implemented in fourteen analysis entry points.**
    The shared [streaming helper](../scripts/census_input.py) honors
    `FERRO_ATLAS_ROOT`, validates shard stride, and rejects missing or empty
    inputs before replacing reports. Valid records with zero scientific matches
@@ -75,12 +75,18 @@ not require another simulation mechanism or a larger unmeasured corpus.
    requests, and the diagnostic comparison also requires a readable frozen
    corpus. Committed census counts have not been rerun or replaced.
    See the [acquisition instructions](../analysis/atlas-README.md).
-   **Next deliverable:** audit remaining census scanners and adopt the helper
-   where they share these input semantics. In particular, the hypoxia and thesis
-   direction reports need checks that their fixed adjudications apply to the
-   scanned population; input availability alone cannot establish that link.
-   The evidence-design and open-access-bias reports also need to distinguish
-   valid zero matches from unavailable input. Preserve each sampling design.
+   The hypoxia and thesis direction reports now use the same reader and require
+   exact record/cohort fingerprints and complete candidate coverage before
+   applying new adjudication. Their historical title-only CSVs cannot establish
+   record identity and are no longer reused on fresh scans. Offline rendering
+   preserves the embedded historical numbers without reloading labels or
+   rewriting JSON. See the [adjudication workflow](CENSUS_DIRECTION_ADJUDICATION.md).
+   **Next deliverable:** acquire the intended census snapshot and review the
+   complete exported direction candidates, preferably with independent readers
+   and documented disagreements. This code change supplies no new biological
+   adjudications. The evidence-design and open-access-bias reports also need
+   to distinguish valid zero matches from unavailable input. Preserve each
+   sampling design when extending the shared reader.
    **Complete when:** each migrated entry point distinguishes unavailable input
    from an observed zero and its offline rendering remains reproducible.
 
