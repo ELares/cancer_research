@@ -54,6 +54,8 @@ use std::time::Instant;
 
 mod immune_measurements;
 mod npy;
+#[path = "../../observers/immune_measurements.rs"]
+mod passive_immune_measurements;
 mod snapshot;
 
 use ferroptosis_core::ablation;

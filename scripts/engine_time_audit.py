@@ -190,7 +190,7 @@ def logical_lines(text: str):
 SOLVER_MODULES = {"trigger_wave", "reaction_diffusion"}
 
 def _rust_sources():
-    """Every Rust source the engine ships, LIBRARY AND BINARIES.
+    """Library sources, binary sources, and their shared observer helpers.
 
     The first version globbed `ferroptosis-core/src` only, so "exactly one
     wall-clock binding exists anywhere in the engine" was measured over the
@@ -205,6 +205,9 @@ def _rust_sources():
     sims = SRC.parent.parent
     for d in sorted(sims.glob("sim-*/src")):
         out.extend(sorted(d.glob("*.rs")))
+    # The passive collector is included by both spatial binaries via #[path].
+    # It is simulator instrumentation, not a ferroptosis-core module.
+    out.extend(sorted((sims / "observers").glob("*.rs")))
     return sorted(out, key=lambda q: (q.parent.parent.name, q.name))
 
 
@@ -214,8 +217,11 @@ def _key(path) -> str:
     Keying on `p.name` collapsed twelve `main.rs` files into one entry, so the
     binary the whole reconciliation is about vanished from the modules table
     and a caller list pointed at all twelve at once. Library files keep their
-    bare name; a binary is qualified by its crate.
+    bare name; a binary is qualified by its crate. Shared observer helpers
+    retain their directory, distinct from each binary's same-named wrapper.
     """
+    if path.parent.name == "observers":
+        return f"observers/{path.name}"
     crate = path.parent.parent.name
     return path.name if crate == "ferroptosis-core" else f"{crate}/{path.name}"
 
@@ -430,11 +436,12 @@ def _orphan_timescales():
         names = set(field.findall(p.read_text(errors="ignore")))
         for nm in sorted(names):
             refs = []
-            for q in list(SRC.glob("*.rs")) + list(SIMS.glob("sim-*/src/*.rs")):
+            for q in _rust_sources():
                 if q == p:
                     continue
                 if re.search(rf"\b{re.escape(nm)}\b", q.read_text(errors="ignore")):
-                    refs.append(q.parts[-3] if "sim-" in str(q) else q.name)
+                    refs.append(_key(q) if q.parent.name == "observers" else
+                                q.parts[-3] if q.parent.parent.name.startswith("sim-") else q.name)
             out.setdefault(_key(p), {})[nm] = sorted(set(refs))
     return out
 
@@ -918,7 +925,8 @@ def render(d: dict) -> str:
               f"{'prices' if len(conv) == 1 else 'price'} a "
               f"simulation step in wall-clock time** "
               f"({', '.join(f'`{m}`' for m in mods) or 'none'}), out of {n} "
-              f"scanned Rust modules (library and binaries; the implied "
+              f"scanned Rust modules (library, binaries, and shared observer "
+              f"helpers; the implied "
               f"windows below also read each crate's README), plus {nsolv} "
               f"numerical-integrator "
               f"timestep{'' if nsolv == 1 else 's'} that "

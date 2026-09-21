@@ -1,7 +1,7 @@
 //! Canonical 3D condition gate for the dimension-neutral passive ledger.
 
+pub use crate::passive_immune_measurements::Measurements;
 use crate::{Condition, DoseSchedule, Treatment};
-pub use ferroptosis_core::immune_measurements::Measurements;
 
 /// The public measured entry point supplies only default Overrides. Restrict
 /// its condition as well, so this ledger cannot silently mislabel a different

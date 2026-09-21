@@ -32,7 +32,7 @@
    "window_hours": 48.0
   }
  ],
- "library_modules": 42,
+ "library_modules": 41,
  "modules": {
   "ablation.rs": {
    "examples": [

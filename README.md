@@ -108,7 +108,7 @@ literature and describing a search.
   [`simulations/ferroptosis-core/README.md`](simulations/ferroptosis-core/README.md)
 - **Calibration infrastructure** linking simulation parameters to published experimental data
 - **[Model card](MODEL_CARD.md)** with the simulation suite's intended use, out-of-scope cases, assumptions/scope checklist, and per-layer calibration/validation status (the honest "broad but mostly uncalibrated" accounting, consolidated from [`CALIBRATION_STATUS.md`](simulations/calibration/CALIBRATION_STATUS.md))
-- **Book-format manuscript (~270 pp at 6x9 trim)** with 12 chapters, 3 appendices, and 47 figures (~81,500 words), cross-referenced against all analysis outputs and indexed in [`FIGURES.yaml`](FIGURES.yaml)
+- **Book-format manuscript (~270 pp at 6x9 trim)** with 12 chapters, 3 appendices, and 47 figures (~81,600 words), cross-referenced against all analysis outputs and indexed in [`FIGURES.yaml`](FIGURES.yaml)
 
 ## What the work is actually about
 
@@ -117,11 +117,11 @@ than leaving you to count files.**
 
 | | ferroptosis / physical-ROS | other therapy | method & tooling |
 |---|--:|--:|--:|
-| committed analyses | 22 | **1** | 125 |
+| committed analyses | 23 | **1** | 125 |
 | preregistered predictions | **10 of 29** | 0 | — |
-| engine modules mentioning it anywhere | **37 of 41** | — | — |
-| engine modules mentioning it in code | **22 of 41** | — | — |
-| engine modules mentioning it in PRODUCTION code | **16 of 41** | — | — |
+| engine modules mentioning it anywhere | **36 of 40** | — | — |
+| engine modules mentioning it in code | **21 of 40** | — | — |
+| engine modules mentioning it in PRODUCTION code | **15 of 40** | — | — |
 
 The module rows read `33 of 33` until 2026-08-17 — the same number on both
 sides of "of", produced by counting `.rs` files without opening one. Measured,
@@ -137,7 +137,7 @@ therapy vocabulary admits 50 -- but 10 of those sit in this table's own
 ferroptosis column, so 50 is not a bound either. Neither rule measures subject. See
 [`analysis/scope-audit.md`](analysis/scope-audit.md).
 
-8 of 20 preregistered predictions, and 33 of 38 modules of the simulation engine, concern ferroptosis or the physical-ROS modalities (PDT and
+10 of 29 preregistered predictions, and 36 of 40 modules of the simulation engine, concern ferroptosis or the physical-ROS modalities (PDT and
 SDT). That first count read "every falsifiable commitment this project makes" until P9 to P13 registered predictions for the modality arms, and it sat sixteen lines below a table this same change had already updated to 8 of 13 -- the file contradicted itself. One committed analysis is FILED as taking another therapy as its subject, and that filing is a filename match rather than a measurement -- see the scope audit for what the rules do and do not establish.
 
 A narrow thesis on a broad corpus is how most good science works, and the census

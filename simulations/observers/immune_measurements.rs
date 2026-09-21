@@ -5,7 +5,7 @@
 //! and additional killing routes. Every floating-point aggregate uses stable
 //! cell-index order, independently of the simulation's Rayon scheduling.
 
-use crate::grid::GridCell;
+use ferroptosis_core::grid::GridCell;
 use serde::Serialize;
 
 #[derive(Clone, Debug, Serialize)]
@@ -348,7 +348,7 @@ impl Measurements {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::grid::TumorGrid3D;
+    use ferroptosis_core::grid::TumorGrid3D;
     const IMMUNE_START_STEP: u32 = 60;
     const DAMP_KILL_THRESHOLD: f64 = 0.01;
 

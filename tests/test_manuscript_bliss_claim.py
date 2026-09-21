@@ -10,7 +10,9 @@ the tests. They guard the interpretation and decision-rule distinction in the
 reader-facing sections, without modifying the historical preregistration.
 """
 
+import gzip
 import json
+import math
 import re
 from pathlib import Path
 
@@ -132,8 +134,27 @@ def test_immune_claim_does_not_infer_a_per_dead_cell_ratio_from_population_means
     threshold = re.search(r"death_threshold: ([\d.]+)", default).group(1)
     body = _section(MANUSCRIPT.read_text(), "### 8.2 Immune Coupling: DAMP-Mediated T Cell Activation")
     assert f"default threshold of {threshold}" in body
-    assert "not LP conditional on death in this matched spatial run" in body
-    assert "No treatment-specific per-dead-cell LP or DAMP ratio is established" in body
+    # The matched spatial ledger now measures the cohort that was previously
+    # missing. Bind each stated mean to completed releases, so an all-cell
+    # population mean cannot be substituted and presented as LP per death.
+    archive = ROOT / "analysis/immune-2d-measurements/observations.json.gz"
+    observations = json.loads(gzip.decompress(archive.read_bytes()))
+    arms = {row["condition_name"]: row for row in observations["conditions"]}
+    for treatment in ("RSL3", "SDT"):
+        events = arms[f"immune_{treatment}"]["measurements"]["ferroptotic_events"]
+        completed = [event for event in events if event["release_step"] is not None]
+        mean_lp = math.fsum(event["release_lp"] for event in completed) / len(completed)
+        claim = re.search(
+            rf"{treatment} has ([\d,]+) completed releases with mean release LP ([\d.]+)",
+            body,
+        )
+        assert claim, f"{treatment}'s LP mean must name its completed-release cohort"
+        assert int(claim.group(1).replace(",", "")) == len(completed)
+        assert float(claim.group(2)) == pytest.approx(mean_lp, rel=5e-6)
+    assert "means over completed-release cohorts, not all dead cells" in body
+    assert "neither the LP values nor their ratio measures biological DAMP potency" in body
+    assert "a model quantity, not a biological per-dead-cell DAMP or DC-maturation effect" in body
+    assert "terminal DAMP only after the final immune update" in body
     for unsupported in ("~7.8", "~2.6× more DAMPs", "LP reaches ~20"):
         assert unsupported not in body
     assert not re.search(r"release at least \d+(?:\.\d+)?-fold more[^\n]*per dead cell", body), (
@@ -150,4 +171,4 @@ def test_immune_claim_does_not_infer_a_per_dead_cell_ratio_from_population_means
     caption = next(line for line in caption_source.splitlines()
                    if "'16': ('fig19_immune_coupling_flow'" in line)
     assert "total immune-kill ratio" in caption
-    assert "not a per-dead-cell DAMP or immunogenicity ratio" in caption
+    assert "not a DAMP potency or per-dead-cell immunogenicity ratio" in caption

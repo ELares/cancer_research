@@ -92,3 +92,10 @@ records source and binary hashes, toolchain, baseline identity, and capture
 time. Raw observations record geometry and runtime seeds. The archived raw
 events and aggregates support reconciliation;
 individual DAMP values for every eligible cell-step are not archived.
+
+After capture, the shared observer was moved to
+`simulations/observers/immune_measurements.rs`, keeping the biological core
+sources identical to those used by the older frozen sampling studies. Full
+compatibility reruns preserved the complete 2D baseline and both 2D and 3D
+observation JSON files byte for byte. The capture's source archive still
+records the original implementation and layout.

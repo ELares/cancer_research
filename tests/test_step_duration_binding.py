@@ -55,6 +55,16 @@ def test_the_audit_scans_the_binaries_not_only_the_library():
         f"the audit does not scan {sorted(on_disk - scanned)}, so a binding "
         "living there is invisible to every claim it makes")
     assert "ferroptosis-core" in scanned
+    observers = set((SIMS / "observers").glob("*.rs"))
+    assert observers, "the shared simulator observer source is missing"
+    assert observers <= set(files), (
+        "the audit omits the observer helpers included by the spatial binaries")
+    for observer in observers:
+        assert m._key(observer) == f"observers/{observer.name}"
+        assert m._path_for(m._key(observer)) == observer
+        assert observer.parent != CORE, "passive helpers are not biochemical library modules"
+    keys = [m._key(path) for path in files]
+    assert len(keys) == len(set(keys)), "shared and binary helper filenames collide"
     # And the file list must be deterministic: the artifact is byte-compared
     # in CI on two filesystems.
     assert files == m._rust_sources()

@@ -29,6 +29,8 @@
 //! Usage: `cargo run --release --bin sim-tme`
 
 mod immune_measurements;
+#[path = "../../observers/immune_measurements.rs"]
+mod passive_immune_measurements;
 
 use std::fs;
 use std::path::Path;
@@ -545,7 +547,7 @@ fn run_spatial_with_immune(
 /// Snapshot buffers exist solely in tests and capture exact f64 bit patterns.
 #[derive(Default)]
 struct ImmuneDiagnostics<'a> {
-    measurements: Option<&'a mut ferroptosis_core::immune_measurements::Measurements>,
+    measurements: Option<&'a mut passive_immune_measurements::Measurements>,
     #[cfg(test)]
     snapshots: Option<&'a mut Vec<Vec<u8>>>,
 }

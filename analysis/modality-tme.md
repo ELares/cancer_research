@@ -108,15 +108,15 @@ Clonal heterogeneity is the only axis here that can raise an arm's kill rather t
 
 **An earlier version of this page could not have reported that.** It took the absolute value of every change and called the result a loss, which produced the impossible line that an arm had lost 121% of its kill. Collapsing the sign did not just mislabel a number; it hid a result, because an axis that can help is not the same kind of thing as one that only hurts.
 
-## Immune amplification is a COUNT effect, not a quality effect
+## Post-death LP does not identify the cause of immune amplification
 
-The manuscript reports that sonodynamic therapy generates far more immune kills than the pharmacologic inducer, and it does. This measures WHY, and the answer refines the claim rather than confirming it.
+This is a separate modality-panel scenario from `sim-modality-panel --tme-sweep`, not the canonical 2D spatial immune comparison behind the historical 104:1 ratio.
 
-In the unstressed persister state, DAMP release PER DEATH is 20.06 for SDT against 17.73 for RSL3 — a ratio of **1.13×**. The two death modes are not very different in quality. What differs is how many cells they kill, and there the ratio is 2.35×. The amplification advantage is overwhelmingly a count effect.
+In the unstressed persister state, the panel's DAMP-per-death surrogate is 20.06 for SDT against 17.73 for RSL3 — a ratio of **1.13×**. It is LP multiplied by the model's DAMP-per-LP factor. The corresponding kill-fraction ratio is 2.35×. These are model quantities, not biological DAMP potency. The comparison does not isolate how death counts, release kinetics, spatial exposure, or remaining target cells contribute to immune kills.
 
-**And the first version of this measurement got it wrong in an instructive way.** It read lipid peroxidation at the moment of death, which returns approximately the death threshold FOR EVERY ARM by construction — death IS the threshold crossing. Measured that way both arms reported ~10.2 and the quality difference vanished entirely. It had not vanished; it was being measured before it happens. The spatial binaries read `lp_at_grace_end` rather than `lp` for exactly this reason, and the field name says so: an arm delivering exogenous ROS keeps climbing through the post-death grace period while one that merely disabled a repair enzyme does not.
+The panel records LP after the configured post-death grace period, or at the simulation horizon if that period is incomplete. Its mean combines those outcomes. Death-time LP instead records threshold crossing; it is a distinct readout, not a substitute for later release LP. Both SDT and RSL3 can accumulate LP after death in this model.
 
-A quantity that is equal for every arm by construction is not a measurement of anything, and the tell was that it came out suspiciously close to a threshold the model defines.
+The [canonical 2D event report](immune-2d-measurement-report.md) separately measures completed and censored release cohorts, living-cell eligibility and exposure during immune updates. Those observations belong to their own scenario and do not turn this panel's surrogate ratio into a causal explanation of the historical immune-kill ratio.
 
 ## What this does not say
 

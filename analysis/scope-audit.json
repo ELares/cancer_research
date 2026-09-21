@@ -8,6 +8,7 @@
    "distilled-hypotheses-final",
    "engine-selectivity",
    "hypothesis-sdt-ferroptosis-icd",
+   "immune-2d-measurement-report",
    "immune-measurement-report",
    "key-findings",
    "modality-calibration",
@@ -156,10 +157,10 @@
   ]
  },
  "engine_modules": {
-  "in_code": 22,
-  "in_production_code": 16,
-  "mention": 37,
-  "modules": 41,
+  "in_code": 21,
+  "in_production_code": 15,
+  "mention": 36,
+  "modules": 40,
   "silent": [
    "adoptive.rs",
    "reaction_diffusion.rs",
@@ -177,7 +178,7 @@
   "top_mechanism": "immunotherapy",
   "top_n": 2297
  },
- "n_analyses": 148,
+ "n_analyses": 149,
  "n_predictions": 29,
  "n_predictions_ferroptosis": 10,
  "n_therapy_subject": 1,

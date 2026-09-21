@@ -740,7 +740,7 @@ def test_the_artifact_is_fresh_against_the_live_sources():
     # leaving it out let five mutations ship false text with the suite green --
     # a fabricated 999-hour threshold, a fabricated span, and a stale
     # PREREGISTRATION.md edit the report never followed.
-    for key in ("modules_total", "library_modules", "implied_windows",
+    for key in ("modules_total", "library_modules", "modules", "implied_windows",
                 "wall_clock_conventions", "distinct_minutes_per_step",
                 "step_counts", "p3", "p3_modelled", "p3_order",
                 "n_solver_timestep_conventions", "solver_timestep_conventions",

@@ -214,7 +214,9 @@ claimed there was only one and that
 issue #727 had overcounted. That was wrong, and it was wrong for an instructive
 reason: `scripts/engine_time_audit.py` globbed `ferroptosis-core/src` only, so
 "exactly one binding anywhere in the engine" was measured over the LIBRARY
-while a second reading sat in a binary. The audit now scans `sim-*/src` too.
+while a second reading sat in a binary. The audit now scans `sim-*/src` and
+the binaries' shared `simulations/observers` helpers too. The latter are passive
+simulator instrumentation, not additional biochemical library modules.
 
 | reading | source | minutes/step | 180 steps |
 |---|---|--:|--:|
