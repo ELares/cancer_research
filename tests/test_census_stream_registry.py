@@ -61,6 +61,12 @@ _PATTERN = re.compile(
 
 # module -> (streams it reads, why that set is the right one)
 REGISTRY = {
+    "paired_partner_agreement.py": (
+        set(),
+        "The records key stores frozen PMID/label snapshots, not a census "
+        "stream path. This analysis reads INDEX.jsonl, article frontmatter "
+        "and the descriptor map, or its embedded snapshot in render-only mode; "
+        "it never opens a census stream."),
     "census_adjudication.py": (
         set(),
         "The records literal is a cohort member count and hash input, not a "

@@ -162,7 +162,8 @@ def test_pair_ordering_requires_a_paired_comparison_not_an_aggregate_rate():
     _claim(r"pair counts and ordering.*describe co-tagging under the current MeSH descriptor map", text)
     _claim(r"aggregate co-occurrence-rate comparison does not establish ranking stability", text)
     _claim(r"paired comparison of partner rankings on the same articles using both labelling methods", text)
-    _claim(r"no such comparison is reported", text)
+    assert "no such comparison is reported" not in text
+    _claim(r"does not establish ranking stability across the full census", text)
     _claim(r"historical retrieved corpus", text)
     _claim(r"selected historical examples, not a ranking", text)
     assert "stable in ordering under both instruments" not in text
@@ -229,6 +230,9 @@ def test_growth_windows_and_starting_count_floors_follow_the_analysis():
 def test_keyword_ladder_and_old_matrix_are_explicitly_historical():
     history = _paragraph("3.4", "Historical comparison")
     _claim(r"frozen retrieved corpus", history)
+    paired = _data("paired-partner-agreement")
+    frozen_labels = {label for row in paired["snapshot"]["records"] for label in row["keyword"]}
+    assert int(_claim(r"corpus span (\d+) mechanism categories", history)[1]) == len(frozen_labels)
     _claim(r"instrument-comparison arm", history)
     _claim(r"do not define the current census classifications or their denominators", history)
     active = _section("3.4").split("**Historical comparison.**", 1)[0] + _section("3.5")
@@ -241,3 +245,51 @@ def test_keyword_ladder_and_old_matrix_are_explicitly_historical():
     limitations = " ".join(_section("3.6").split())
     _claim(r"both the population and the taxonomy differ from the historical matrix", limitations)
     _claim(r"comparison cannot isolate the effect of retrieval", limitations)
+
+
+def test_paired_methods_use_the_observed_mesh_cohort_and_fixed_common_groups():
+    data = _data("paired-partner-agreement")
+    text = _paragraph("3.5", "Paired partner agreement")
+    assert _integer(_claim(r"supplies ([\d,]+) PMID-matched", text)[1]) == data["cohorts"]["all"]["n"]
+    assert _integer(_claim(r"keeps the ([\d,]+) with nonempty MeSH", text)[1]) == data["primary"]["n"]
+    assert _integer(_claim(r"([\d,]+) records without MeSH", text)[1]) == data["missing_mesh"]["n"]
+    assert int(_claim(r"same (\d+) nonempty descriptor groups", text)[1]) == len(data["snapshot"]["vocabulary"])
+    method = data["method"]
+    assert int(_claim(r"all (\d+) other groups", text)[1]) == method["candidate_partners_per_focal"]
+    assert int(_claim(r"at least (\d+) focal articles", text)[1]) == method["minimum_target_count_each_arm"]
+    assert method["top_k"] == method["minimum_positive_partners_each_arm"] == 3
+    for phrase in ("not treated as negative labels", "average ranks for ties",
+                   "boundary tie equally", "zero-count partners cannot enter",
+                   "constant vectors leave Spearman undefined", "not independent",
+                   "reporting floors, not precision guarantees"):
+        assert phrase in text
+
+
+def test_paired_results_retain_sparse_profiles_and_name_both_denominators():
+    data = _data("paired-partner-agreement")
+    text = " ".join(_section("3.13").split())
+    rows = data["primary"]["rows"]
+    supported = [r for r in rows if r["scored"]]
+    words = {14: "Fourteen"}
+    count = _claim(r"(Fourteen) of (\d+) focal profiles meet both reporting floors", text)
+    assert count[1] == words[len(supported)] and int(count[2]) == len(rows)
+    for field, pattern in (("spearman", r"correlations range from ([\d.]+) to ([\d.]+)"),
+                           ("top_k_overlap", r"overlaps from ([\d.]+) to ([\d.]+)")):
+        bounds = _claim(pattern, text)
+        values = [r[field] for r in supported]
+        assert [float(x.rstrip('.')) for x in bounds.groups()] == [round(min(values), 3), round(max(values), 3)]
+    kw, ms = (data["primary"]["arms"][arm] for arm in ("keyword", "mesh"))
+    for arm, lead in ((kw, "Frozen keywords tag"), (ms, "MeSH tags")):
+        claim = _claim(lead + r" ([\d,]+).*?including ([\d,]+) with multiple labels \(([\d.]+)%", text)
+        assert _integer(claim[1]) == arm["tagged"]
+        assert _integer(claim[2]) == arm["multi_tagged"]
+        assert float(claim[3]) == round(100 * arm["multi_tagged"] / arm["tagged"], 2)
+    row = next(r for r in rows if r["mechanism"] == "immunotherapy")
+    claim = _claim(r"selects ([\d,]+) focal articles and its MeSH arm ([\d,]+).*?correlate at ([\d.]+), with top-three overlap ([\d.]+)", text)
+    assert [_integer(claim[i]) for i in (1, 2)] == [row["target_counts"][arm] for arm in ("keyword", "mesh")]
+    assert [float(claim[i].rstrip('.')) for i in (3, 4)] == [round(row[field], 3) for field in ("spearman", "top_k_overlap")]
+    claim = _claim(r"to the ([\d,]+) articles assigned immunotherapy by both methods gives correlation ([\d.]+) and overlap ([\d.]+)", text)
+    assert _integer(claim[1]) == row["shared_focal"]["n"]
+    assert [float(claim[i].rstrip('.')) for i in (2, 3)] == [round(row["shared_focal"][field], 3) for field in ("spearman", "top_k_overlap")]
+    assert "microbiome" in text.lower() and "phagocytosis-checkpoint" in text
+    assert "not a causal estimate" in text

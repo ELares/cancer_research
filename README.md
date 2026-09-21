@@ -49,6 +49,12 @@ No eligible opportunity reaches half-maximal activation: the former deep
 saturation explanation is unsupported in this realization. See the
 [findings and limits](docs/IMMUNE_2D_MEASUREMENT_RESULTS.md); independent assay
 validation remains pending.
+The [paired partner comparison](analysis/paired-partner-agreement.md) now
+measures frozen-keyword versus MeSH ranking agreement on 3,889 shared articles
+and 16 common mechanism groups. It reports complete pair counts, tie-aware
+rank comparisons, sparse profiles and a shared-focal sensitivity. The label
+methods share metadata; this is descriptive agreement within the retrieved
+corpus, not independent validation or census-wide ranking stability.
 
 This project reads the cancer literature at census scale. It holds **5,187,265
 cancer articles** — 4,403,994 MeSH-indexed records selected through the neoplasms tree and adjacent descriptors,
@@ -108,7 +114,7 @@ literature and describing a search.
   [`simulations/ferroptosis-core/README.md`](simulations/ferroptosis-core/README.md)
 - **Calibration infrastructure** linking simulation parameters to published experimental data
 - **[Model card](MODEL_CARD.md)** with the simulation suite's intended use, out-of-scope cases, assumptions/scope checklist, and per-layer calibration/validation status (the honest "broad but mostly uncalibrated" accounting, consolidated from [`CALIBRATION_STATUS.md`](simulations/calibration/CALIBRATION_STATUS.md))
-- **Book-format manuscript (~270 pp at 6x9 trim)** with 12 chapters, 3 appendices, and 47 figures (~82,100 words), cross-referenced against all analysis outputs and indexed in [`FIGURES.yaml`](FIGURES.yaml)
+- **Book-format manuscript (~270 pp at 6x9 trim)** with 12 chapters, 3 appendices, and 47 figures (~82,400 words), cross-referenced against all analysis outputs and indexed in [`FIGURES.yaml`](FIGURES.yaml)
 
 ## What the work is actually about
 
@@ -117,7 +123,7 @@ than leaving you to count files.**
 
 | | ferroptosis / physical-ROS | other therapy | method & tooling |
 |---|--:|--:|--:|
-| committed analyses | 23 | **1** | 125 |
+| committed analyses | 23 | **1** | 126 |
 | preregistered predictions | **10 of 29** | 0 | — |
 | engine modules mentioning it anywhere | **36 of 40** | — | — |
 | engine modules mentioning it in code | **21 of 40** | — | — |
@@ -133,8 +139,8 @@ rather than by anyone editing this sentence. And the `1` is
 a filename marker rather than a subject measurement: the therapy bucket matches
 on filenames only while the ferroptosis bucket also reads body text, so the
 count moves on a rename. Applying the ferroptosis rule's body route to a
-therapy vocabulary admits 50 -- but 10 of those sit in this table's own
-ferroptosis column, so 50 is not a bound either. Neither rule measures subject. See
+therapy vocabulary admits 54 -- but 14 of those sit in this table's own
+ferroptosis column, so 54 is not a bound either. Neither rule measures subject. See
 [`analysis/scope-audit.md`](analysis/scope-audit.md).
 
 10 of 29 preregistered predictions, and 36 of 40 modules of the simulation engine, concern ferroptosis or the physical-ROS modalities (PDT and
@@ -237,7 +243,7 @@ These are computational predictions with documented assumptions and caveats, not
 | `corpus/` | Frozen full text by PubMed ID + INDEX.jsonl; `corpus/atlas/` holds the census (bulk gitignored, committed artifacts in `analysis/`); `corpus/living/` documents the frozen-versus-living split (the monthly deltas themselves are uploaded as workflow artifacts, never committed) |
 | `tags/` | Precomputed tag indexes (mechanism, cancer type, tissue, evidence level, diagnostic-therapy) |
 | `news/` | News source scaffolding: fetched articles, extracted claims, verification results, credibility scores |
-| `tests/` | 3759 Python tests (pipeline smoke + figure traceability + calibration-status ref guard + manuscript-inventory drift guard + depth-kill physics-constant guard + flagship-figure data guard + quantitative-figure drift guards (Figs 21/22/23) + invariant/integration + calibrate-extractor + MeSH evidence-fallback + gold-set precision-floor regression (#346) + Bliss/sim-tme/penetration prior-predictive intervals + ABC posterior (#332) + non-circular mechanism-recall (#412) + CTRPv2 calibration target + in-vitro kill-switch fit (#330) + System Xc-/erastin fit (#502) + joint multi-inducer posterior (#500) + spheroid structure validation (#333) + embedding evidence leg (#411) + RD-vs-BioFVM cross-check (#408) + dashboard data layer (#354) + tumor-PK measured-data anchor (#334) + Krogh penetration validation (#335) + spheroid size-aware zone thresholds (#333) + spheroid kill-vs-size direction (#333) + gene-symbol ambiguity/FSP1 sense disambiguation (#ATLAS-AMBIG) + rare-event Poisson intervals + tail-resolution classification + corpus identity/dedup index + expansion-crawl licence gating + duplicate-audit non-circularity + ferroptosis-python bindings) |
+| `tests/` | 3793 Python tests (pipeline smoke + figure traceability + calibration-status ref guard + manuscript-inventory drift guard + depth-kill physics-constant guard + flagship-figure data guard + quantitative-figure drift guards (Figs 21/22/23) + invariant/integration + calibrate-extractor + MeSH evidence-fallback + gold-set precision-floor regression (#346) + Bliss/sim-tme/penetration prior-predictive intervals + ABC posterior (#332) + non-circular mechanism-recall (#412) + CTRPv2 calibration target + in-vitro kill-switch fit (#330) + System Xc-/erastin fit (#502) + joint multi-inducer posterior (#500) + spheroid structure validation (#333) + embedding evidence leg (#411) + RD-vs-BioFVM cross-check (#408) + dashboard data layer (#354) + tumor-PK measured-data anchor (#334) + Krogh penetration validation (#335) + spheroid size-aware zone thresholds (#333) + spheroid kill-vs-size direction (#333) + gene-symbol ambiguity/FSP1 sense disambiguation (#ATLAS-AMBIG) + rare-event Poisson intervals + tail-resolution classification + corpus identity/dedup index + expansion-crawl licence gating + duplicate-audit non-circularity + ferroptosis-python bindings) |
 
 Start with the files in `analysis/` if you want to see what we've concluded so far—and where we're still uncertain.
 

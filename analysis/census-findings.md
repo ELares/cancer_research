@@ -17,7 +17,7 @@ believes?
 
 * **The manuscript's own disclaimer was right on every count.** It warned that two diagnostic-therapy chains returned zero because of how the corpus was retrieved, and that one chain read far below its true volume. Both zeros populate on the census, and `her2-testing-to-trastuzumab` -- 28 in the corpus -- reads 5,190. The corpus arm reproduces its published figure exactly, so the same matcher is being read on two populations.
 
-* **The multi-mechanism co-occurrence rate is withdrawn as a finding.** Running both labelling instruments over the SAME articles moves it from 45.6% of tagged records to 16.6%, and census selection takes it to 3.2%. Neither endpoint measures how often researchers combine mechanisms.
+* **The multi-mechanism co-occurrence rate is withdrawn as a finding.** Co-tagging fractions depend on the label definitions, their tagged-article denominators and the selected population. The [paired frozen-corpus comparison](paired-partner-agreement.md) now holds the article cohort and mechanism vocabulary fixed, reports both denominators, and measures partner-rank agreement separately. The label arms share metadata and do not identify a causal decomposition of the historical rate gap. Neither fraction measures how often researchers combine mechanisms.
 
 * **The missing-landmark exhibit dissolved.** All five papers named as confirmed missing are in the census, and the two trials among them are indexed Phase III -- so the claim they supported, that a non-detection was an artifact rather than a statement about the modality, is now demonstrable rather than suspected.
 
