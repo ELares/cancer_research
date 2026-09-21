@@ -97,3 +97,129 @@ def test_the_layers_limit_survives_the_scale_up(d):
     limit travels with it."""
     md = MD.read_text()
     assert "does not say the paper USES one to select the other" in md
+
+
+@pytest.fixture
+def scanner(tmp_path, monkeypatch):
+    import importlib.util
+    import sys
+
+    monkeypatch.setenv("FERRO_ATLAS_ROOT", str(tmp_path / "atlas"))
+    monkeypatch.syspath_prepend(str(REPO / "scripts"))
+    spec = importlib.util.spec_from_file_location(
+        "diagnostic_input_test", REPO / "scripts/census_diagnostic_chains.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    assert module.RECORDS == tmp_path / "atlas/records"
+    monkeypatch.setattr(module, "OUT_JSON", tmp_path / "report.json")
+    monkeypatch.setattr(module, "OUT_MD", tmp_path / "report.md")
+    module.OUT_JSON.write_text('{"published": true}\n')
+    module.OUT_MD.write_text("Published interpretation.\n")
+    monkeypatch.setattr(sys, "argv", ["census_diagnostic_chains.py"])
+    import tag_articles
+
+    monkeypatch.setattr(tag_articles, "PMID_DIR", tmp_path / "frozen-corpus")
+    return module
+
+
+def _write_input(path, records):
+    import gzip
+
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with gzip.open(path, "wt", encoding="utf-8") as fh:
+        for record in records:
+            fh.write(json.dumps(record) + "\n")
+
+
+def test_missing_census_precedes_corpus_scan(scanner, monkeypatch):
+    monkeypatch.setattr(scanner, "scan_corpus_without_annotations",
+                        lambda: pytest.fail("corpus scan reached"))
+    before = scanner.OUT_JSON.read_bytes(), scanner.OUT_MD.read_bytes()
+    with pytest.raises(SystemExit, match="No census records"):
+        scanner.main()
+    assert (scanner.OUT_JSON.read_bytes(), scanner.OUT_MD.read_bytes()) == before
+
+
+def test_selected_shards_preserve_chain_counts_and_abstract_channel(scanner):
+    record = {"title": "HER2 testing and trastuzumab", "abstract": "Observed response"}
+    _write_input(scanner.RECORDS / "a.jsonl.gz", [record])
+    _write_input(scanner.RECORDS / "b.jsonl.gz", [record] * 4)
+    _write_input(scanner.RECORDS / "c.jsonl.gz", [{"title": "Unmatched article"}])
+    result = scanner.scan_census(2)
+    assert result["shards"] == 2
+    assert result["records"] == 2
+    assert result["with_abstract"] == 1
+    assert result["matched"] == 1
+    assert result["per_chain"] == {"her2-testing-to-trastuzumab": 1}
+
+
+@pytest.mark.parametrize("state", ["missing", "empty", "unreadable"])
+def test_unavailable_corpus_preserves_reports(scanner, state):
+    import tag_articles
+
+    _write_input(scanner.RECORDS / "a.jsonl.gz", [{"title": "Unmatched article"}])
+    corpus = Path(tag_articles.PMID_DIR)
+    if state != "missing":
+        corpus.mkdir()
+    if state == "unreadable":
+        (corpus / "article.md").write_text("No article frontmatter.\n")
+    before = scanner.OUT_JSON.read_bytes(), scanner.OUT_MD.read_bytes()
+    with pytest.raises(SystemExit, match="No readable frozen-corpus articles"):
+        scanner.main()
+    assert (scanner.OUT_JSON.read_bytes(), scanner.OUT_MD.read_bytes()) == before
+
+
+def test_valid_zero_matches_do_not_claim_historical_reproduction(scanner):
+    import tag_articles
+
+    _write_input(scanner.RECORDS / "a.jsonl.gz", [{"title": "Unmatched article"}])
+    corpus = Path(tag_articles.PMID_DIR)
+    corpus.mkdir()
+    (corpus / "article.md").write_text("---\ntitle: Unmatched article\n---\n\n")
+    assert scanner.main() == 0
+    result = json.loads(scanner.OUT_JSON.read_text())
+    assert result["census_records"] == result["corpus_records"] == 1
+    assert result["census_matched"] == result["corpus_matched_production_text"] == 0
+    markdown = scanner.OUT_MD.read_text()
+    assert "does not reproduce the historical corpus result" in markdown
+    assert "ordering comparison is unavailable" in markdown
+    assert "rank the chains the same way" not in markdown
+    assert "does not establish absence elsewhere in the indexed literature" in markdown
+    assert "this one is a claim about the indexed literature" not in markdown
+
+
+def test_frozen_corpus_comparison_keeps_the_annotation_channel(scanner):
+    import tag_articles
+
+    corpus = Path(tag_articles.PMID_DIR)
+    corpus.mkdir()
+    (corpus / "article.md").write_text(
+        "---\ntitle: HER2 testing\ndrugs:\n- trastuzumab\n---\n\n")
+    result = scanner.scan_corpus_without_annotations()
+    assert result["records"] == 1
+    assert result["matched_production_text"] == 1
+    assert result["matched_without_annotations"] == 0
+
+
+def test_render_failure_preserves_both_diagnostic_reports(scanner, monkeypatch):
+    import tag_articles
+
+    _write_input(scanner.RECORDS / "a.jsonl.gz", [{"title": "Unmatched article"}])
+    corpus = Path(tag_articles.PMID_DIR)
+    corpus.mkdir()
+    (corpus / "article.md").write_text("---\ntitle: Unmatched article\n---\n\n")
+
+    def broken_render(_):
+        raise ValueError("render failure")
+
+    monkeypatch.setattr(scanner, "render", broken_render)
+    before = scanner.OUT_JSON.read_bytes(), scanner.OUT_MD.read_bytes()
+    with pytest.raises(ValueError, match="render failure"):
+        scanner.main()
+    assert (scanner.OUT_JSON.read_bytes(), scanner.OUT_MD.read_bytes()) == before
+
+
+def test_aggregate_agreement_does_not_certify_matcher_or_cohort(d):
+    markdown = MD.read_text()
+    assert "does not establish an identical matcher or article cohort" in markdown
+    assert "so the matcher is the one the manuscript reported" not in markdown

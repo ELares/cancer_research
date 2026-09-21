@@ -178,3 +178,64 @@ def test_mechanisms_mesh_cannot_express_are_absent_not_zero(d):
     assert "ABSENT rather than empty" in md, (
         "the report reports the zero count falling without saying that the "
         "mechanisms MeSH cannot express contribute no zeros to it")
+
+
+@pytest.fixture
+def scanner(monkeypatch):
+    import importlib.util
+
+    monkeypatch.syspath_prepend(str(REPO / "scripts"))
+    spec = importlib.util.spec_from_file_location(
+        "cancer_matrix_sparse_test", SCRIPT)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+@pytest.mark.parametrize("meshes", [
+    [[]], [["Breast Neoplasms"]], [["Ferroptosis"]],
+    [["Breast Neoplasms"], ["Ferroptosis"]],
+], ids=["neither-axis", "site-only", "mechanism-only", "axes-on-different-records"])
+def test_records_without_both_axes_do_not_form_empty_matrix_cells(
+        scanner, tmp_path, monkeypatch, meshes):
+    import gzip
+
+    monkeypatch.setattr(scanner, "RECORDS", tmp_path)
+    with gzip.open(tmp_path / "part.jsonl.gz", "wt") as fh:
+        for mesh in meshes:
+            fh.write(json.dumps({"mesh": mesh}) + "\n")
+    result = scanner.assemble(scanner.scan())
+    markdown = scanner.render(result)
+
+    assert result["census"] == len(meshes)
+    assert result["universe"] == 0
+    assert result["rows"] == []
+    assert result["census_zero_share"] is None
+    assert "No records matched both axes" in markdown
+    assert "unavailable" in markdown
+    assert "None" not in markdown
+    assert "RETIRES" not in markdown
+
+
+def test_sparse_matrix_reports_its_own_zero_share(scanner):
+    result = scanner.assemble({
+        "census": 2, "universe": 2,
+        "mechanism_totals": {"one": 1, "two": 1},
+        "site_totals": {"first": 1, "second": 1},
+        "cells": {"one": {"first": 1}, "two": {"second": 1}},
+        "min_expected": 20,
+    })
+    markdown = scanner.render(result)
+
+    assert result["n_cells"] == 4
+    assert result["census_zero_share"] == 50.0
+    assert result["n_interpretable"] == 0
+    assert "2 of 4 (50.0%)" in markdown
+    assert "4.4 million" not in markdown
+    assert "returns 2%" not in markdown
+    assert "overwhelmingly a property of the retrieval" not in markdown
+    assert "does not establish why" in markdown
+
+
+def test_reassembly_preserves_published_matrix_counts(scanner, d):
+    assert scanner.assemble(d) == d

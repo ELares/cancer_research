@@ -59,15 +59,28 @@ not require another simulation mechanism or a larger unmeasured corpus.
    checks cannot establish complete within-region distributions or precise tails;
    agreeing biological runs cannot rule out a shared unseen region.
 
-2. **Census input protection is implemented in six analysis entry points.**
+2. **Census input protection is implemented in twelve analysis entry points.**
    The shared [streaming helper](../scripts/census_input.py) honors
    `FERRO_ATLAS_ROOT`, validates shard stride, and rejects missing or empty
    inputs before replacing reports. Valid records with zero scientific matches
    remain valid results; `--render-only` works without raw data. Regression
    coverage includes preservation of both outputs, malformed later records,
-   and render failures. See the [acquisition instructions](../analysis/atlas-README.md).
+   and render failures. The latest group covers the full-text ceiling,
+   mechanism/cancer matrix, external PubMed check, translation lag, synergy
+   metrics, and diagnostic/therapy chains. Their original shard sampling is
+   preserved, including the synergy report's separate every-40th-shard control.
+   Sparse inputs now report unavailable comparisons explicitly; zero metric
+   counts do not create a leader, and a missing stability threshold is not
+   classified as stable. The external check validates local input before making
+   requests, and the diagnostic comparison also requires a readable frozen
+   corpus. Committed census counts have not been rerun or replaced.
+   See the [acquisition instructions](../analysis/atlas-README.md).
    **Next deliverable:** audit remaining census scanners and adopt the helper
-   where they share these input semantics, preserving their sampling behavior.
+   where they share these input semantics. In particular, the hypoxia and thesis
+   direction reports need checks that their fixed adjudications apply to the
+   scanned population; input availability alone cannot establish that link.
+   The evidence-design and open-access-bias reports also need to distinguish
+   valid zero matches from unavailable input. Preserve each sampling design.
    **Complete when:** each migrated entry point distinguishes unavailable input
    from an observed zero and its offline rendering remains reproducible.
 

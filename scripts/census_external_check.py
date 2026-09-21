@@ -30,22 +30,26 @@ WHAT A RESIDUAL DISAGREEMENT MEANS is not obvious and the report does not
 pretend otherwise. PubMed's live index is not the baseline plus time -- records
 are re-indexed, descriptors are added and withdrawn, and a record's entry date
 is not its indexing date. So a few per cent in either direction is expected and
-is NOT evidence of a parser defect; a large or one-sided gap is.
+does not by itself establish a parser defect. A large or one-sided gap calls
+for investigation; its direction alone does not identify its cause.
 
 OFFLINE CONTRACT: the fetch runs locally and writes a committed artifact. CI
 reads only the artifact and never touches the network.
 """
 import argparse
-import gzip
 import json
 import statistics
+import sys
 import time
 import urllib.parse
 import urllib.request
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from census_input import atlas_root, iter_census_records  # noqa: E402
+
 REPO = Path(__file__).resolve().parent.parent
-RECORDS = REPO / "corpus/atlas/records"
+RECORDS = atlas_root() / "records"
 MECH_MAP = REPO / "analysis/mesh-mechanism-map.yaml"
 OUT_MD = REPO / "analysis/census-external-check.md"
 OUT_JSON = REPO / "analysis/census-external-check.json"
@@ -87,23 +91,20 @@ def census_counts(stride: int = 1) -> dict:
     counts = {k: 0 for k in mech}
     years = {k: [] for k in mech}
     n = core = 0
-    for f in sorted(RECORDS.glob("*.jsonl.gz"))[::stride]:
-        with gzip.open(f, "rt", encoding="utf-8") as fh:
-            for line in fh:
-                r = json.loads(line)
-                n += 1
-                if r.get("cancer_basis") != "C04":
-                    continue
-                core += 1
-                ms = {m.lower() for m in (r.get("mesh") or [])}
-                if not ms:
-                    continue
-                y = r.get("year")
-                for k, d in mech.items():
-                    if ms & d:
-                        counts[k] += 1
-                        if isinstance(y, int):
-                            years[k].append(y)
+    for r in iter_census_records(RECORDS, stride):
+        n += 1
+        if r.get("cancer_basis") != "C04":
+            continue
+        core += 1
+        ms = {m.lower() for m in (r.get("mesh") or [])}
+        if not ms:
+            continue
+        y = r.get("year")
+        for k, d in mech.items():
+            if ms & d:
+                counts[k] += 1
+                if isinstance(y, int):
+                    years[k].append(y)
     return {"census": n, "c04_core": core, "counts": counts,
             "median_year": {k: (int(statistics.median(v)) if v else None)
                             for k, v in years.items()},
@@ -153,7 +154,7 @@ def assemble(d: dict) -> dict:
             r["rel_gap"] = None
             r["flagged"] = False
     d = dict(d)
-    d["compared"] = sum(1 for r in d["rows"] if r["pubmed"])
+    d["compared"] = sum(1 for r in d["rows"] if r["pubmed"] is not None)
     # Two different reasons a row has no PubMed count, kept apart: a mechanism
     # with no descriptor CANNOT be compared, while a failed request should have
     # been. Pooling them would let a network outage read as a taxonomy gap.
@@ -168,11 +169,13 @@ def assemble(d: dict) -> dict:
     gaps = [r["rel_gap"] for r in d["rows"] if r["rel_gap"] is not None]
     d["median_rel_gap"] = round(statistics.median(gaps), 3) if gaps else None
     d["max_rel_gap"] = round(max(gaps), 3) if gaps else None
-    # Direction matters: a scatter around zero is noise, a one-sided gap is a
-    # systematic difference and needs an explanation rather than a tolerance.
-    higher = sum(1 for r in d["rows"] if r["ratio"] and r["ratio"] > 1)
+    # Report the observed direction without treating it as a causal diagnosis.
+    # Exact agreements belong to neither directional count.
+    higher = sum(1 for r in d["rows"]
+                 if r["pubmed"] and r["census"] > r["pubmed"])
     d["census_higher"] = higher
-    d["census_lower"] = len(gaps) - higher
+    d["census_lower"] = sum(1 for r in d["rows"]
+                            if r["pubmed"] and r["census"] < r["pubmed"])
     d["recency_test"] = _recency_test(d["rows"])
     return d
 
@@ -216,8 +219,8 @@ def _recency_test(rows) -> dict:
     them. That predicts the gap should grow with a mechanism's recency, and the
     prediction is stated here BEFORE the number so it can fail.
 
-    A near-zero or negative correlation would leave the one-sided gap
-    unexplained, which is a different and worse position than an explained one.
+    This is a check of a directional prediction, not identification of its
+    cause. Other indexing changes or parser errors can share the association.
     """
     pairs = [(r["median_year"], r["rel_gap"]) for r in rows
              if r.get("median_year") and r.get("rel_gap") is not None]
@@ -255,34 +258,59 @@ def render(d: dict) -> str:
             why = "*not comparable*" if r["query"] is None else "*unresolved*"
             L.append(f"| {r['mechanism']} | {r['census']:,} | {why} | - | - |")
             continue
+        if r["pubmed"] == 0:
+            L.append(f"| {r['mechanism']} | {r['census']:,} | 0 | - | - |")
+            continue
         mark = "**" if r["flagged"] else ""
         L.append(f"| {r['mechanism']} | {r['census']:,} | {r['pubmed']:,} | "
                  f"{r['ratio']} | {mark}{100 * r['rel_gap']:.1f}%{mark} |")
     L.append("")
     L.append("## What the agreement says\n")
     balanced = abs(d["census_higher"] - d["census_lower"]) <= 2
-    L.append(
-        f"Median relative gap **{100 * d['median_rel_gap']:.1f}%** across "
-        f"{d['compared']} mechanisms, with the census reading higher on "
-        f"{d['census_higher']} and lower on {d['census_lower']}. "
-        + ("The direction is close to balanced, which is what independent "
-           "noise looks like: re-indexing, descriptor additions and the "
-           "difference between a record's entry date and its indexing date all "
-           "move counts in both directions.\n"
-           if balanced else
-           "The gap is ONE-SIDED, which noise does not produce. That is a "
-           "systematic difference between the build and PubMed's index, and it "
-           "needs an explanation rather than a tolerance.\n")
-    )
+    if d["median_rel_gap"] is None:
+        L.append(
+            "Relative comparison is unavailable: no mechanism has a positive "
+            "PubMed count. Zero counts are observed zeros; failed requests are "
+            "unresolved. Neither supplies a denominator for a relative gap.\n"
+        )
+    else:
+        relative_comparisons = sum(r["rel_gap"] is not None for r in d["rows"])
+        if relative_comparisons < 4:
+            direction = (
+                "There are fewer than four comparable mechanisms; this sparse "
+                "tally does not establish a directional pattern.\n"
+            )
+        elif not d["census_higher"] and not d["census_lower"]:
+            direction = "All comparable counts agree in this run.\n"
+        elif balanced:
+            direction = "The directional tally is close to balanced.\n"
+        else:
+            direction = "The directional tally is ONE-SIDED.\n"
+        L.append(
+            f"Median relative gap **{100 * d['median_rel_gap']:.1f}%** across "
+            f"{relative_comparisons} mechanisms, with the census reading higher on "
+            f"{d['census_higher']} and lower on {d['census_lower']}. "
+            + direction
+        )
+        L.append(
+            "These are descriptive comparisons of the observed counts. Their "
+            "direction does not identify a cause, distinguish noise from a "
+            "parser defect, or validate the build.\n"
+        )
+    zero_counts = sum(r["pubmed"] == 0 for r in d["rows"])
+    if zero_counts:
+        L.append(f"{zero_counts} successful PubMed count(s) are zero; their "
+                 "ratios and relative gaps are undefined and excluded from "
+                 "the relative comparison.\n")
     rt = d.get("recency_test") or {}
     if not balanced and rt.get("spearman_year_vs_gap") is not None:
-        L.append("### The explanation, tested\n")
+        L.append("### A candidate explanation and its observed association\n")
         L.append(
             "The candidate cause is that MeSH indexing keeps being applied to "
             "records whose ENTRY date already precedes the baseline. A fixed "
-            "snapshot misses them; a query filtered on entry date catches them. "
-            "That is not a defect in the build -- it is what comparing a "
-            "snapshot against a live index does.\n"
+            "snapshot can miss them while a query filtered on entry date "
+            "catches them. This is a candidate explanation, not a measured "
+            "record-level account of the differences.\n"
         )
         L.append(
             f"The prediction was stated before the number: if that is the "
@@ -290,23 +318,25 @@ def render(d: dict) -> str:
             f"over {rt['n']} mechanisms, Spearman rank correlation between "
             f"median year and relative gap is "
             f"**{rt['spearman_year_vs_gap']:+.2f}**"
-            + (" -- the prediction holds, and the one-sided gap is accounted "
-               "for.\n" if rt["supported"] else
-               " -- the prediction FAILS, so the one-sided gap remains "
-               "unexplained and this build should not be trusted until it is.\n")
+            + (" -- the prediction holds as an association, but does not "
+               "establish retrospective indexing as the cause or exclude a "
+               "parser defect.\n" if rt["supported"] else
+               " -- the prediction FAILS its stated correlation screen; "
+               "this comparison supplies no support for that proposed "
+               "explanation.\n")
         )
         if rt["supported"]:
             worst = max((r for r in d["rows"] if r["rel_gap"] is not None),
                         key=lambda r: r["rel_gap"])
             L.append(
-                f"The practical consequence is a bound, not a correction: the "
-                f"census under-counts the most recent literature relative to "
-                f"today's index by up to {100 * worst['rel_gap']:.0f}% "
+                f"The largest observed relative count gap is "
+                f"{100 * worst['rel_gap']:.0f}% "
                 f"(`{worst['mechanism']}`, median year "
-                f"{worst['median_year']}), and older literature by 2-3%. Every "
-                f"growth figure computed to the present is therefore a LOWER "
-                f"bound, and the newest mechanisms are the ones most "
-                f"under-stated.\n"
+                f"{worst['median_year']}). This comparison of cumulative "
+                f"counts does not establish a lower bound on growth rates. "
+                f"That would require year-specific differences and their "
+                f"causes; the reported gaps should not be applied as a "
+                f"correction to a growth figure.\n"
             )
     if d["not_comparable"]:
         L.append(
@@ -325,26 +355,25 @@ def render(d: dict) -> str:
             f"descriptors are few and small moves several per cent on a handful "
             f"of records.\n"
         )
-    else:
+    elif d["median_rel_gap"] is not None:
         L.append(
             f"No mechanism exceeds the {100 * d['flag_threshold']:.0f}% flag "
             f"threshold.\n"
         )
     L.append("## What this does not establish\n")
     L.append(
-        "Agreement on counts is agreement on ADMISSION, not on content. It says "
-        "the build admits the same records PubMed would return for the same "
-        "descriptors, which is the property every prevalence claim in this "
-        "project depends on. It says nothing about whether a descriptor means "
+        "Agreement on counts is agreement on ADMISSION, not on content. This "
+        "compares aggregate admission totals; equal totals do not establish "
+        "that the same records were admitted. It says nothing about whether a descriptor means "
         "what an analysis takes it to mean -- that is the breadth problem "
         "reported separately, and no amount of count agreement touches it.\n"
     )
     L.append(
         "PubMed's live index is also not the baseline plus elapsed time. "
         "Records are re-indexed, descriptors are added and withdrawn, and entry "
-        "date is not indexing date, so a few per cent in either direction is "
-        "expected. The check is powered to find a parser defect, not to certify "
-        "an exact match.\n"
+        "date is not indexing date, so counts can move in either direction. "
+        "This check can flag count discrepancies for investigation; it does "
+        "not certify the parser or census completeness.\n"
     )
     return "\n".join(L)
 
@@ -360,10 +389,14 @@ def main() -> int:
         cen = census_counts(a.stride)
         print(f"census C04 core: {cen['c04_core']:,}")
         d = assemble(fetch(cen))
-    OUT_JSON.write_text(json.dumps(d, indent=1) + "\n")
-    OUT_MD.write_text(render(d))
+    json_text = json.dumps(d, indent=1) + "\n"
+    md_text = render(d)
+    OUT_JSON.write_text(json_text)
+    OUT_MD.write_text(md_text)
     print(f"wrote {OUT_MD}")
-    print(f"  median gap {100 * d['median_rel_gap']:.1f}%  flagged "
+    median_gap = (f"{100 * d['median_rel_gap']:.1f}%"
+                  if d["median_rel_gap"] is not None else "unavailable")
+    print(f"  median gap {median_gap}  flagged "
           f"{len(d['flagged'])}  higher/lower {d['census_higher']}/"
           f"{d['census_lower']}")
     return 0

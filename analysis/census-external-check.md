@@ -26,15 +26,17 @@ The query has to match the build on three axes or the comparison measures the qu
 
 ## What the agreement says
 
-Median relative gap **5.4%** across 16 mechanisms, with the census reading higher on 0 and lower on 16. The gap is ONE-SIDED, which noise does not produce. That is a systematic difference between the build and PubMed's index, and it needs an explanation rather than a tolerance.
+Median relative gap **5.4%** across 16 mechanisms, with the census reading higher on 0 and lower on 16. The directional tally is ONE-SIDED.
 
-### The explanation, tested
+These are descriptive comparisons of the observed counts. Their direction does not identify a cause, distinguish noise from a parser defect, or validate the build.
 
-The candidate cause is that MeSH indexing keeps being applied to records whose ENTRY date already precedes the baseline. A fixed snapshot misses them; a query filtered on entry date catches them. That is not a defect in the build -- it is what comparing a snapshot against a live index does.
+### A candidate explanation and its observed association
 
-The prediction was stated before the number: if that is the cause, the gap should grow with a mechanism's recency. Measured over 16 mechanisms, Spearman rank correlation between median year and relative gap is **+0.92** -- the prediction holds, and the one-sided gap is accounted for.
+The candidate cause is that MeSH indexing keeps being applied to records whose ENTRY date already precedes the baseline. A fixed snapshot can miss them while a query filtered on entry date catches them. This is a candidate explanation, not a measured record-level account of the differences.
 
-The practical consequence is a bound, not a correction: the census under-counts the most recent literature relative to today's index by up to 14% (`microbiome`, median year 2023), and older literature by 2-3%. Every growth figure computed to the present is therefore a LOWER bound, and the newest mechanisms are the ones most under-stated.
+The prediction was stated before the number: if that is the cause, the gap should grow with a mechanism's recency. Measured over 16 mechanisms, Spearman rank correlation between median year and relative gap is **+0.92** -- the prediction holds as an association, but does not establish retrospective indexing as the cause or exclude a parser defect.
+
+The largest observed relative count gap is 14% (`microbiome`, median year 2023). This comparison of cumulative counts does not establish a lower bound on growth rates. That would require year-specific differences and their causes; the reported gaps should not be applied as a correction to a growth figure.
 
 1 mechanism(s) have no MeSH descriptor at all and cannot be compared in either direction: `frequency-therapy`. Not a disagreement and not a zero -- there is no query to ask.
 
@@ -42,6 +44,6 @@ The practical consequence is a bound, not a correction: the census under-counts 
 
 ## What this does not establish
 
-Agreement on counts is agreement on ADMISSION, not on content. It says the build admits the same records PubMed would return for the same descriptors, which is the property every prevalence claim in this project depends on. It says nothing about whether a descriptor means what an analysis takes it to mean -- that is the breadth problem reported separately, and no amount of count agreement touches it.
+Agreement on counts is agreement on ADMISSION, not on content. This compares aggregate admission totals; equal totals do not establish that the same records were admitted. It says nothing about whether a descriptor means what an analysis takes it to mean -- that is the breadth problem reported separately, and no amount of count agreement touches it.
 
-PubMed's live index is also not the baseline plus elapsed time. Records are re-indexed, descriptors are added and withdrawn, and entry date is not indexing date, so a few per cent in either direction is expected. The check is powered to find a parser defect, not to certify an exact match.
+PubMed's live index is also not the baseline plus elapsed time. Records are re-indexed, descriptors are added and withdrawn, and entry date is not indexing date, so counts can move in either direction. This check can flag count discrepancies for investigation; it does not certify the parser or census completeness.

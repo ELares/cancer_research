@@ -99,11 +99,9 @@ def test_the_flag_threshold_is_the_pinned_one(d):
 
 
 def test_the_direction_verdict_follows_the_counts(d):
-    """A scatter around zero is noise; a one-sided gap is systematic and needs
-    an explanation rather than a tolerance. The report must not call a
-    one-sided gap 'balanced'."""
-    higher = sum(1 for r in d["rows"] if r["ratio"] and r["ratio"] > 1)
-    lower = sum(1 for r in d["rows"] if r["ratio"] and r["ratio"] <= 1)
+    """The directional tally describes counts, not the cause of the gap."""
+    higher = sum(1 for r in d["rows"] if r["pubmed"] and r["census"] > r["pubmed"])
+    lower = sum(1 for r in d["rows"] if r["pubmed"] and r["census"] < r["pubmed"])
     assert d["census_higher"] == higher
     assert d["census_lower"] == lower
     md = MD.read_text()
@@ -114,7 +112,9 @@ def test_the_direction_verdict_follows_the_counts(d):
     else:
         assert "ONE-SIDED" in md, (
             f"the census reads higher on {higher} and lower on {lower}, which "
-            "noise does not produce, and the report calls it balanced")
+            "is a directional difference the report must describe")
+    assert "direction does not identify a cause" in md
+    assert "which noise does not produce" not in md
 
 
 def test_a_failed_request_is_not_pooled_with_a_missing_descriptor(d):
@@ -139,11 +139,10 @@ def test_a_failed_request_is_not_pooled_with_a_missing_descriptor(d):
         assert f"| {m} |" in md and "*unresolved*" in md
 
 
-def test_the_one_sided_gap_is_explained_and_the_explanation_is_tested(d):
-    """A one-sided gap is the finding this check exists to surface.
+def test_the_recency_association_is_not_promoted_to_a_cause_or_growth_bound(d):
+    """Test a proposed explanation without claiming to identify its cause.
 
-    Leaving it flagged but unexplained would be the honest half of the job; the
-    other half is a prediction that could have failed. The candidate cause --
+    The candidate cause --
     MeSH indexing applied after the snapshot to records that entered PubMed
     before it -- predicts the shortfall grows with a mechanism's recency, and
     the correlation must be computed rather than asserted.
@@ -162,9 +161,9 @@ def test_the_one_sided_gap_is_explained_and_the_explanation_is_tested(d):
     assert f"**{rho:+.2f}**" in md
     if rt["supported"]:
         assert "the prediction holds" in md
-        # The consequence a reader needs: a bound on growth claims, not a
-        # correction to apply.
-        assert "LOWER bound" in md
+        assert "does not establish a lower bound on growth rates" in md
+        assert "does not establish retrospective indexing as the cause" in md
+        assert "gap is accounted for" not in md
     else:
         assert "the prediction FAILS" in md, (
             "the recency prediction failed, so the one-sided gap is "
@@ -200,17 +199,17 @@ def test_the_recency_correlation_recomputes(d):
     assert rt["spearman_year_vs_gap"] == pytest.approx(num / den, abs=0.02)
 
 
-def test_the_manuscript_carries_the_measured_bound():
-    """The growth section says recent years are under-counted. It must say by
-    how much, or the caveat is unactionable."""
+def test_the_manuscript_carries_the_count_gap_without_an_unsupported_bound():
+    """Retain measured gaps while withdrawing the causal growth inference."""
     md = (REPO / "article/drafts/v1.md").read_text()
-    if "lower bound" not in md.lower():
-        pytest.skip("the manuscript no longer states the growth bound")
     d = json.loads(JSON.read_text())
     assert f"{100 * d['median_rel_gap']:.1f}%" in md, (
         "the manuscript states the direction of the under-count but not the "
         "measured size")
     assert "census-external-check.md" in md
+    paragraph = next(p for p in md.split("\n\n") if "census-external-check.md" in p)
+    assert "Every growth figure here is therefore a lower bound" not in paragraph
+    assert "not a defect in the build" not in paragraph
 
 
 def test_it_does_not_claim_the_descriptors_mean_what_we_take_them_to_mean():
@@ -220,6 +219,7 @@ def test_it_does_not_claim_the_descriptors_mean_what_we_take_them_to_mean():
     taking it for something it cannot be."""
     md = MD.read_text()
     assert "agreement on ADMISSION, not on content" in md
+    assert "equal totals do not establish that the same records were admitted" in md
     for overclaim in ("validates the taxonomy", "the census is correct",
                       "confirms the descriptors"):
         assert overclaim not in md.lower()
@@ -234,3 +234,118 @@ def test_the_worked_explosion_example_is_present():
     md = MD.read_text()
     assert "4,371" in md and "[mh:noexp]" in SCRIPT.read_text()
     assert re.search(r"EXPLODES", md)
+
+
+@pytest.fixture
+def scanner(tmp_path, monkeypatch):
+    import importlib.util
+    import sys
+
+    monkeypatch.setenv("FERRO_ATLAS_ROOT", str(tmp_path / "atlas"))
+    monkeypatch.syspath_prepend(str(REPO / "scripts"))
+    spec = importlib.util.spec_from_file_location("external_check_input_test", SCRIPT)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    assert module.RECORDS == tmp_path / "atlas/records"
+    monkeypatch.setattr(module, "OUT_JSON", tmp_path / "report.json")
+    monkeypatch.setattr(module, "OUT_MD", tmp_path / "report.md")
+    module.OUT_JSON.write_text('{"published": true}\n')
+    module.OUT_MD.write_text("Published interpretation.\n")
+    monkeypatch.setattr(sys, "argv", [str(SCRIPT)])
+    # No test may make a real request, even if input validation regresses.
+    monkeypatch.setattr(module, "pubmed_count", lambda *_: pytest.fail("network reached"))
+    monkeypatch.setattr(module.time, "sleep", lambda _: None)
+    return module
+
+
+def _write_input(path, records):
+    import gzip
+
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with gzip.open(path, "wt", encoding="utf-8") as fh:
+        for record in records:
+            fh.write(json.dumps(record) + "\n")
+
+
+@pytest.mark.parametrize("state", ["missing", "empty", "invalid-later"])
+def test_input_failure_precedes_external_requests_and_preserves_reports(scanner, state):
+    if state == "empty":
+        _write_input(scanner.RECORDS / "a.jsonl.gz", [])
+    elif state == "invalid-later":
+        _write_input(scanner.RECORDS / "a.jsonl.gz", [{"mesh": []}])
+        (scanner.RECORDS / "b.jsonl.gz").write_bytes(b"invalid gzip")
+    before = scanner.OUT_JSON.read_bytes(), scanner.OUT_MD.read_bytes()
+    with pytest.raises((SystemExit, OSError)):
+        scanner.main()
+    assert (scanner.OUT_JSON.read_bytes(), scanner.OUT_MD.read_bytes()) == before
+
+
+def test_core_filter_and_selected_shards_remain_distinct(scanner):
+    record = {"mesh": ["Immune Checkpoint Inhibitors"], "cancer_basis": "C04", "year": 2020}
+    _write_input(scanner.RECORDS / "a.jsonl.gz", [record])
+    _write_input(scanner.RECORDS / "b.jsonl.gz", [record] * 4)
+    _write_input(scanner.RECORDS / "c.jsonl.gz", [dict(record, cancer_basis="adjacent")])
+    result = scanner.census_counts(2)
+    assert result["census"] == 2
+    assert result["c04_core"] == 1
+    assert result["counts"]["immunotherapy"] == 1
+
+
+@pytest.mark.parametrize("response", [0, "failed"])
+def test_zero_and_failed_pubmed_counts_do_not_invent_relative_agreement(
+        scanner, monkeypatch, response):
+    _write_input(scanner.RECORDS / "a.jsonl.gz", [{"mesh": [], "cancer_basis": "C04"}])
+
+    def count(_):
+        if response == "failed":
+            raise OSError("offline fixture")
+        return response
+
+    monkeypatch.setattr(scanner, "pubmed_count", count)
+    assert scanner.main() == 0
+    result = json.loads(scanner.OUT_JSON.read_text())
+    markdown = scanner.OUT_MD.read_text()
+    assert result["median_rel_gap"] is None
+    assert "Relative comparison is unavailable" in markdown
+    assert "direction is close to balanced" not in markdown
+    assert "No mechanism exceeds" not in markdown
+    if response == 0:
+        assert result["compared"] > 0 and not result["unresolved"]
+        assert "successful PubMed count(s) are zero" in markdown
+    else:
+        assert result["compared"] == 0 and result["unresolved"]
+        assert "*unresolved*" in markdown
+
+
+def test_render_failure_preserves_both_external_reports(scanner, monkeypatch):
+    _write_input(scanner.RECORDS / "a.jsonl.gz", [{"mesh": [], "cancer_basis": "C04"}])
+    monkeypatch.setattr(scanner, "pubmed_count", lambda _: 1)
+
+    def broken_render(_):
+        raise ValueError("render failure")
+
+    monkeypatch.setattr(scanner, "render", broken_render)
+    before = scanner.OUT_JSON.read_bytes(), scanner.OUT_MD.read_bytes()
+    with pytest.raises(ValueError, match="render failure"):
+        scanner.main()
+    assert (scanner.OUT_JSON.read_bytes(), scanner.OUT_MD.read_bytes()) == before
+
+
+@pytest.mark.parametrize("counts", [[100], [99], [101], [100, 100, 100, 100]])
+def test_sparse_or_equal_counts_do_not_diagnose_the_build(scanner, counts):
+    raw = {"baseline_date": scanner.BASELINE_DATE, "census_records": sum(counts),
+           "c04_core": sum(counts), "rows": [
+               {"mechanism": f"test-{i}", "census": value, "pubmed": 100,
+                "query": "fixture", "error": None}
+               for i, value in enumerate(counts)]}
+    result = scanner.assemble(raw)
+    assert result["census_higher"] == sum(value > 100 for value in counts)
+    assert result["census_lower"] == sum(value < 100 for value in counts)
+    markdown = scanner.render(result)
+    assert "direction does not identify a cause" in markdown
+    assert "independent noise" not in markdown
+    if len(counts) < 4:
+        assert "sparse tally does not establish a directional pattern" in markdown
+        assert "close to balanced" not in markdown
+    else:
+        assert "All comparable counts agree" in markdown
