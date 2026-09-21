@@ -164,7 +164,9 @@ def test_pair_ordering_requires_a_paired_comparison_not_an_aggregate_rate():
     _claim(r"paired comparison of partner rankings on the same articles using both labelling methods", text)
     _claim(r"no such comparison is reported", text)
     _claim(r"historical retrieved corpus", text)
+    _claim(r"selected historical examples, not a ranking", text)
     assert "stable in ordering under both instruments" not in text
+    assert "co-occurs with every other mechanism" not in text
 
 
 def test_profile_site_enrichment_keeps_its_assignment_denominator_and_observed_floor():
