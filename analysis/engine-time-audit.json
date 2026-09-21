@@ -14,21 +14,11 @@
   {
    "binary": "sim-tme",
    "kind": "implied-window",
-   "line": 138,
+   "line": 135,
    "minutes_per_step": 16.0,
    "module": "README.md",
    "n_steps": 180,
-   "text": "- Immune model captures only the resident T cell phase (0-48h), not systemic lymph node priming (1-7 days)",
-   "window_hours": 48.0
-  },
-  {
-   "binary": "sim-tme",
-   "kind": "implied-window",
-   "line": 14,
-   "minutes_per_step": 16.0,
-   "module": "main.rs",
-   "n_steps": 180,
-   "text": "//! - Spatial immune model valid for resident T cell phase (0-48h);",
+   "text": "- The historical scope description says the immune model captures only the resident T cell phase (0-48h), not systemic lymph node priming (1-7 days); these labe",
    "window_hours": 48.0
   },
   {
@@ -42,7 +32,7 @@
    "window_hours": 48.0
   }
  ],
- "library_modules": 41,
+ "library_modules": 42,
  "modules": {
   "ablation.rs": {
    "examples": [
@@ -350,35 +340,22 @@
    "per_step_mentions": 3,
    "real_time_mentions": 0
   },
+  "sim-tme/immune_measurements.rs": {
+   "examples": [],
+   "per_step_mentions": 1,
+   "real_time_mentions": 0
+  },
   "sim-tme/main.rs": {
    "examples": [
     {
-     "context": "//! - Spatial immune model valid for resident T cell phase (0-48h);",
-     "form": "magnitude",
-     "line": 14,
-     "value": "48h"
-    },
-    {
-     "context": "//!   systemic lymph node priming (1-7 days) is NOT modeled",
+     "context": "//!   priming is not modeled. The historical 0\u201348 h description is a scope",
      "form": "magnitude",
      "line": 15,
-     "value": "7 days"
-    },
-    {
-     "context": "//!   systemic lymph node priming (1-7 days) is NOT modeled",
-     "form": "bare-unit",
-     "line": 15,
-     "value": "(1-7 days)"
-    },
-    {
-     "context": "eprintln!(\"Immune model: resident T cell phase only (0-48h), not systemic.\\n\");",
-     "form": "magnitude",
-     "line": 1259,
-     "value": "48h"
+     "value": "48 h"
     }
    ],
    "per_step_mentions": 7,
-   "real_time_mentions": 4
+   "real_time_mentions": 1
   },
   "sim-tumor-pk/main.rs": {
    "examples": [
@@ -494,7 +471,7 @@
    "real_time_mentions": 16
   }
  },
- "modules_total": 56,
+ "modules_total": 59,
  "n_solver_timestep_conventions": 1,
  "n_solver_timestep_matches": 3,
  "n_step_bindings": 6,
@@ -617,6 +594,7 @@
   "repair.rs",
   "sim-tme-3d/main.rs",
   "sim-tme-3d/snapshot.rs",
+  "sim-tme/immune_measurements.rs",
   "stromal.rs"
  ],
  "pricing_symbols": {

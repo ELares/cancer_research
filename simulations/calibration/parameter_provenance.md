@@ -205,11 +205,12 @@ Sobol total-effect screening at the Persister+RSL3 operating point (see `analysi
 ## What one step is worth in real time (#727a)
 
 Prediction P3 is stated in days and the model runs in steps, so scoring it
-needs a conversion. This records the conversion, what disagrees with it, and
-what adopting it makes unreachable.
+needs a conversion. This records two candidate readings, their source limits,
+and what adopting either would make unreachable.
 
-**Two wall-clock readings compete for the same 180-step loop, and they are 16x
-apart.** An earlier draft of this section claimed there was only one and that
+**Two candidate wall-clock readings compete for an interpretation of the
+180-step loop, and they are 16x apart.** An earlier draft of this section
+claimed there was only one and that
 issue #727 had overcounted. That was wrong, and it was wrong for an instructive
 reason: `scripts/engine_time_audit.py` globbed `ferroptosis-core/src` only, so
 "exactly one binding anywhere in the engine" was measured over the LIBRARY
@@ -218,24 +219,31 @@ while a second reading sat in a binary. The audit now scans `sim-*/src` too.
 | reading | source | minutes/step | 180 steps |
 |---|---|--:|--:|
 | explicit declaration | `tumor_pk.rs:365` -- "Time points in minutes (one per simulation step)." | **1.0** | 3.0 h |
-| implied window | `sim-tme/src/main.rs:14` -- "resident T cell phase (0-48h)"; `sim-tme/README.md:138` -- "the resident T cell phase (0-48h)"; `sim-tme-3d/README.md:157` -- "a 0–48 h resident T-cell cascade". Each crate declares `const N_STEPS: u32 = 180` in its own `main.rs`. | **16.0** | 48 h |
+| implied window (conditional historical reading) | `sim-tme/README.md:135` -- "the resident T cell phase (0-48h)"; `sim-tme-3d/README.md:157` -- "a 0–48 h resident T-cell cascade". Each crate declares `const N_STEPS: u32 = 180` in its own `main.rs`. | **16.0** | 48 h |
 
-The two are different KINDS of claim. `tumor_pk` declares a clock; the immune
-sources state which biology is in range and let a loop length imply one. The
-second is weaker evidence about intent and it is not weaker about consequence:
+The two are different KINDS of claim. `tumor_pk` declares a clock; dividing
+the immune scope window by the loop length gives the second number only IF
+the scope is interpreted as the duration of the run. The 2D README now
+explicitly calls these scope labels historical and says they do not calibrate
+the biochemical step duration. Its Rust header likewise preserves a historical,
+uncalibrated scope note rather than claiming a 0–48 h validity window. The
+remaining README matches are textual evidence of the historical reading, not
+evidence that it has been measured or adopted. This distinction matters because
 `sim-tme` produced this book's published Chapter 7 immune numbers, and its
-60-step immune activation delay reads as 16 hours under it and one hour under
-the other.
+60-step immune activation delay conditionally reads as 16 hours under that
+interpretation and one hour under the other. The simulation still specifies
+the delay in model steps.
 
 **Neither is adopted as correct, and that is the finding.** The engine does not
-have a step duration; it has two, and no measurement distinguishes them.
+have a measured biochemical step duration. These two source readings do not
+establish one, and no measurement distinguishes them.
 
 **And they are not cleanly separable by binary.** An earlier draft of this
 section said to use 1 min/step for `sim-tme-3d` and 16 min/step for `sim-tme`.
 That was wrong: `sim-tme-3d` states the same 0-48h immune window in its own
 README while also being the binary that reaches the PK solver under
 `--dose-sweep`, so it carries BOTH readings depending on which subsystem you
-are reading. The honest rule is narrower than a per-binary one:
+are reading. The scope of each candidate is narrower than a per-binary rule:
 
 - **1 min/step** applies to the PK trajectory specifically: `sim-tumor-pk`, and
   the drug-availability series `sim-tme-3d` derives from `tumor_pk` under the
@@ -244,8 +252,9 @@ are reading. The honest rule is narrower than a per-binary one:
   protocols (`Constant`, `Bolus`, `MultiDose`, `Infusion`) are step-indexed
   schedules `tumor_pk` declares no clock for, and every protocol in that sweep
   runs `immune_on: true`, so the run combines both readings.
-- **16 min/step** applies to the immune cascade specifically, wherever it is
-  read, because that is the window the immune model states as its own scope.
+- **16 min/step** is the conditional reading of the historical immune scope
+  window divided by 180 steps. It is not an assigned duration for the immune
+  cascade or the biochemical loop.
 - Anything combining the two is unconvertible until one is measured.
 
 ### What this section previously claimed, and why it was wrong
@@ -306,15 +315,18 @@ Recorded because a binding that silences an existing anchor has to say so.
 
 ### Status
 
-**Unresolved, and now measured rather than assumed.** No figure in this book is
-computed from a step duration, so nothing reported here moves either way; what
+**Unresolved; the source text is audited, not a physical step duration.** No
+figure in this book is computed from a step duration, so nothing reported here
+moves either way; what
 changes is that the disagreement is written down with both sources named, and
 `scripts/engine_time_audit.py` will find a third READING IN THE SOURCE
 within the shape it looks for -- ONE window per line, the scope verb and
 the window on the same line, and `sim-*` crates only. That shape is
-narrower than "any third reading": `sim-tme/README.md:138` already
+narrower than "any third reading": `sim-tme/README.md:135` already
 carries a second window on the same line (`1-7 days`, which would price a
-step at 48 min) and the detector takes only the first. Stating the reach
+step at 48 min if mechanically divided by 180) and the detector takes only
+the first. The second window describes systemic priming that is not modeled;
+neither historical label establishes a clock. Stating the reach
 rather than the aspiration, because a claim is only as wide as the sweep
 behind it and this section says so two screens above.
 

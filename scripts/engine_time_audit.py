@@ -28,7 +28,13 @@ false headline.
 WHAT IS ACTUALLY TRUE
 ----------------------
 The CORE biochemical loop states no step duration -- that part survives.
-ONE module DECLARES a step duration in wall-clock time (`tumor_pk`, one minute), and a SECOND reading is implied without declaring one: the immune model states a 0-48h scope over a 180-step loop in `sim-tme` and `sim-tme-3d`, pricing a step at 16 minutes. The two are 16x apart, neither is measured, and the reconciliation is the step-duration section of `simulations/calibration/parameter_provenance.md`.
+ONE module DECLARES a step duration in wall-clock time (`tumor_pk`, one minute).
+A SECOND candidate reading comes from immune scope labels in the `sim-tme`
+and `sim-tme-3d` READMEs: dividing 48 hours by 180 steps gives 16 minutes.
+The 2D README explicitly marks those labels as historical and uncalibrated;
+the textual detector still reports the match, not an adopted clock. The two
+candidate readings are 16x apart, neither is measured, and their limits are
+recorded in `simulations/calibration/parameter_provenance.md`.
 
 `trigger_wave`'s `dt_min` is NOT a second binding. It is a CFL-constrained
 integrator timestep -- the module asserts `dt < h^2/(2D)` on the next line --
@@ -271,23 +277,19 @@ _WINDOW_UNIT_H = {"h": 1.0, "hr": 1.0, "hrs": 1.0, "hour": 1.0, "hours": 1.0,
 
 
 def find_implied_windows():
-    """Bindings a binary IMPLIES without ever declaring a per-step duration.
+    """Textual scope-window candidates, not declared or calibrated bindings.
 
-    `sim-tme` states no minutes-per-step anywhere. It states a validity WINDOW
-    for the biology it models -- "spatial immune model valid for resident T
-    cell phase (0-48h)" -- and a loop length, `N_STEPS = 180`. Together those
-    price a step at 16 minutes, in the binary that produced this book's
-    published immune numbers.
+    The `sim-tme` and `sim-tme-3d` READMEs retain a 0-48h immune scope label,
+    and each binary declares `N_STEPS = 180`. Their quotient is 16 minutes
+    per step IF that scope window is read as the full run's duration. The
+    2D README explicitly identifies it as historical and uncalibrated; its
+    source header no longer claims a validity window. This detector matches
+    the README text without resolving such qualifications.
 
     This is the form issue #727 pointed at, and the form an audit looking for
-    `dt_min` or "N minutes per step" cannot see. Reported SEPARATELY from an
-    explicit declaration because it is weaker evidence about intent -- a scope
-    claim about which biology is in range is not the same act as declaring a
-    clock -- and not weaker about consequence.
-
-    READMEs are scanned too. The same 0-48h claim appears in `sim-tme-3d`'s and
-    `sim-tme`'s README, and reading only `.rs` attributed the window to one
-    binary while the doc assigned the other a different conversion.
+    `dt_min` or "N minutes per step" cannot see. It is reported SEPARATELY
+    from an explicit declaration: a scope label does not establish a clock.
+    Reading only `.rs` would also miss the remaining README matches.
     """
     out = []
     sims = SRC.parent.parent
@@ -925,13 +927,18 @@ def render(d: dict) -> str:
         if iw:
             mins = sorted({w["minutes_per_step"] for w in iw})
             srcs = sorted({f"`{w['binary']}/{w['module']}`" for w in iw})
-            L += [f"**A second reading is IMPLIED and never declared.** "
+            L += [f"**A second candidate reading comes from scope-window text.** "
                   f"{len(iw)} site{'' if len(iw) == 1 else 's'} "
-                  f"({', '.join(srcs)}) state a scope window over a "
-                  f"{iw[0]['n_steps']}-step loop, pricing a step at "
-                  f"{', '.join(str(m) for m in mins)} min -- against the "
+                  f"({', '.join(srcs)}) match the textual detector. Dividing "
+                  f"their windows by a {iw[0]['n_steps']}-step loop gives "
+                  f"{', '.join(str(m) for m in mins)} min/step -- against the "
                   f"declared "
                   f"{', '.join(str(x) for x in sorted({c['minutes_per_step'] for c in conv}))} min. "
+                  f"This quotient is conditional on treating the scope as the "
+                  f"run duration; it is not a calibrated binding. The 2D "
+                  f"README explicitly labels its window historical and "
+                  f"uncalibrated, and the detector does not resolve that "
+                  f"qualification. "
                   f"Counting only declarations is how an earlier version of "
                   f"this audit reported exactly one binding while scanning the "
                   f"library alone. Neither reading is measured; the "
@@ -1010,11 +1017,9 @@ def render(d: dict) -> str:
                 L += ["Of those, "
                       + ", ".join(f"`{s['binary']}`" for s in with_w)
                       + (" states" if len(with_w) == 1 else " state")
-                      + " a scope window that IMPLIES one anyway, reported "
-                        "above. So 'cannot be converted' is true of what these "
-                        "binaries declare and false of what they imply -- which "
-                        "is the distinction this page existed for a while "
-                        "without making, contradicting its own headline.", ""]
+                      + " a scope-window label yielding the conditional "
+                        "reading reported above. The label does not establish "
+                        "a calibrated conversion for the biochemical loop.", ""]
             if without:
                 L += [", ".join(f"`{s['binary']}`" for s in without)
                       + (" declares" if len(without) == 1 else " declare")
@@ -1136,11 +1141,11 @@ def render(d: dict) -> str:
               "the timescale inside it is not.", ""]
 
     L += ["## What this does not do", ""]
-    L += ["* It does not choose a step duration -- and it now MEASURES that "
-          "there are two competing readings rather than one, an explicit "
-          "`tumor_pk` declaration at 1 min/step and an implied window in "
-          "`sim-tme` at 16 min/step. The reconciliation, which adopts neither "
-          "and says which applies where, is the step-duration section of "
+    L += ["* It does not choose a step duration. It records an explicit "
+          "`tumor_pk` declaration at 1 min/step and a conditional reading of "
+          "immune scope labels at 16 min/step. Neither establishes a measured "
+          "duration for a biochemical step. The reconciliation, which adopts "
+          "neither across the engine, is the step-duration section of "
           "`simulations/calibration/parameter_provenance.md`. Adopting one across the "
           "engine would move every calibrated layer and the committed "
           "byte-identity gates, and belongs to whoever owns those "

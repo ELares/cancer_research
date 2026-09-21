@@ -84,9 +84,13 @@ def condition_seed(name: str) -> int:
     return (h + 42) & ((1 << 64) - 1)
 
 
-def reconcile_condition(row: dict, cfg: dict) -> dict:
+def reconcile_condition(row: dict, cfg: dict, *, n_cells: int | None = None,
+                        final_damp: float | None = None,
+                        runtime_seed: int | None = None) -> dict:
     """Recompute totals from events; reject internally inconsistent archives."""
     result, obs = row["result"], row["measurements"]
+    cell_count = cfg["grid_dim"] ** 3 if n_cells is None else n_cells
+    damp_total = result["total_damp"] if final_damp is None else final_damp
     n_steps, delay = cfg["n_steps"], cfg["immune_start_step"]
     grace, threshold = cfg["post_death_steps"], cfg["damp_kill_threshold"]
     factor = cfg["immune"]["damp_per_lp"]
@@ -98,7 +102,7 @@ def reconcile_condition(row: dict, cfg: dict) -> dict:
 
     def cell_id(value):
         integer(value, "cell index")
-        require(value < cfg["grid_dim"] ** 3, "cell index outside grid")
+        require(value < cell_count, "cell index outside grid")
         return value
 
     def index(rows):
@@ -222,9 +226,10 @@ def reconcile_condition(row: dict, cfg: dict) -> dict:
     close(terminal_damp, terminal["terminal_damp"], "terminal DAMP sum")
     close(terminal["damp_before_terminal"] + terminal_damp, terminal["damp_after_terminal"],
           "terminal DAMP balance")
-    close(terminal["damp_after_terminal"], result["total_damp"], "final DAMP census")
+    close(terminal["damp_after_terminal"], damp_total, "final DAMP census")
     return {
-        "condition": row["condition_name"], "condition_seed": row["condition_seed"],
+        "condition": row["condition_name"],
+        "condition_seed": row["condition_seed"] if runtime_seed is None else runtime_seed,
         "total_tumor": result["total_tumor"], "ferroptotic_deaths": len(events),
         "completed_releases": len(completed), "censored_deaths": len(censored),
         "death_lp_all_deaths": mean([e["death_lp"] for e in events]),
@@ -440,20 +445,20 @@ def render(manifest: dict, summaries: list[dict], archive: Path = ARCHIVE,
     return "\n".join(lines) + "\n"
 
 
-def build_binary(cargo: list[str], sim: Path) -> Path:
+def build_binary(cargo: list[str], sim: Path, binary_name: str = "sim-tme-3d") -> Path:
     """Use Cargo's actual executable path, including configured build targets."""
-    build = subprocess.run([*cargo, "build", "--locked", "--release", "-p", "sim-tme-3d",
+    build = subprocess.run([*cargo, "build", "--locked", "--release", "-p", binary_name,
                             "--message-format=json-render-diagnostics"],
                            cwd=sim, check=True, stdout=subprocess.PIPE, text=True)
     executables = set()
     for line in build.stdout.splitlines():
         message = json.loads(line)
         if (message.get("reason") == "compiler-artifact"
-                and message["target"]["name"] == "sim-tme-3d"
+                and message["target"]["name"] == binary_name
                 and "bin" in message["target"]["kind"]
                 and message.get("executable")):
             executables.add(Path(message["executable"]))
-    require(len(executables) == 1, "Cargo must identify one sim-tme-3d executable")
+    require(len(executables) == 1, f"Cargo must identify one {binary_name} executable")
     binary = executables.pop()
     require(binary.is_file(), "Cargo executable does not exist")
     return binary

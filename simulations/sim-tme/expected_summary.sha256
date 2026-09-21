@@ -1,0 +1,7 @@
+# Uninstrumented full 33-condition 2D matrix, frozen before passive observation.
+# Source commit: e9ec92c022ede1b00258789fecdcb9a46d9481d8
+# Binary SHA-256: 8acc5804528c436f60f0a4b5ce8923ed4807bd6869249d6fd61ab7c1ffa00f35
+# Toolchain: rustc 1.96.0 (ac68faa20 2026-05-25); aarch64-apple-darwin; serial execution.
+# Canonical Control/RSL3/SDT immune_on rows exactly match tests/fixtures/flagship_tme_rows.json.
+# Never update this golden to accommodate passive instrumentation.
+e04f9699ddca9b84145cdecbcd8e21abb0bc760dc3d909908358d4554a5eee98  tme_summary.json

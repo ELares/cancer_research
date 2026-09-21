@@ -2,7 +2,12 @@
 
 WHAT THIS DOCUMENT NOW CLAIMS
 ------------------------------
-ONE module DECLARES a step duration in wall-clock time (`tumor_pk`, one minute), and a SECOND reading is implied without declaring one: the immune model states a 0-48h scope over a 180-step loop in `sim-tme` and `sim-tme-3d`, pricing a step at 16 minutes. The two are 16x apart, neither is measured, and the reconciliation is the step-duration section of `simulations/calibration/parameter_provenance.md`.
+ONE module DECLARES a step duration in wall-clock time (`tumor_pk`, one minute).
+A SECOND candidate reading comes from the immune scope labels in the `sim-tme`
+and `sim-tme-3d` READMEs: 48 hours divided by 180 steps gives 16 minutes.
+The 2D label is explicitly historical and uncalibrated. The two candidate
+readings are 16x apart, neither is measured, and their limits are recorded in
+`simulations/calibration/parameter_provenance.md`.
 The line this file replaced said EXACTLY ONE, and rotted exactly as this
 docstring warns prose does.
 `trigger_wave`'s `dt_min` is a CFL-constrained integrator timestep, not a
@@ -724,8 +729,8 @@ def test_the_artifact_is_fresh_against_the_live_sources():
     not help: it re-renders from the same committed JSON, so changing a Rust
     source and not regenerating stays invisible to it.
 
-    The scan is a text walk over 33 files and takes well under a second, so
-    there is no reason for this gate not to exist.
+    The scan is a bounded text walk over the library and binary sources, so
+    it can check the current module counts and scope-window matches too.
     """
     m = _mod()
     # round-trip through JSON so tuples compare as the lists they serialise to
@@ -735,7 +740,8 @@ def test_the_artifact_is_fresh_against_the_live_sources():
     # leaving it out let five mutations ship false text with the suite green --
     # a fabricated 999-hour threshold, a fabricated span, and a stale
     # PREREGISTRATION.md edit the report never followed.
-    for key in ("wall_clock_conventions", "distinct_minutes_per_step",
+    for key in ("modules_total", "library_modules", "implied_windows",
+                "wall_clock_conventions", "distinct_minutes_per_step",
                 "step_counts", "p3", "p3_modelled", "p3_order",
                 "n_solver_timestep_conventions", "solver_timestep_conventions",
                 "step_bindings", "orphan_timescale_fields",

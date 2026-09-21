@@ -1072,6 +1072,9 @@ fn run_measured_condition(
         run_cfg.grid_dim.pow(3),
         Params::default().post_death_steps,
         SpatialImmuneConfig::for_3d().damp_per_lp,
+        IMMUNE_START_STEP,
+        DAMP_KILL_THRESHOLD,
+        None,
     );
     let result = run_one_condition_impl(
         condition,
@@ -1079,7 +1082,12 @@ fn run_measured_condition(
         snapshot,
         RunMode::Measured(&mut measurements),
     );
-    measurements.validate_result(&result);
+    measurements.validate_totals(
+        result.ferroptosis_kills.expect("ferroptosis count"),
+        result.immune_kills.expect("immune count"),
+        result.total_dead,
+        result.total_damp,
+    );
     (result, measurements)
 }
 
@@ -2455,7 +2463,7 @@ fn run_one_condition_impl(
         ferroptosis_kills += died_this_step;
 
         if let Some(observer) = measurements.as_deref_mut() {
-            observer.after_biochemistry(&grid, step);
+            observer.after_biochemistry(&grid.cells, step);
         }
 
         // --- Ionizing radiation, DNA-damage channel (#844) ---
@@ -2938,7 +2946,7 @@ fn run_one_condition_impl(
             }
 
             if let Some(observer) = measurements.as_deref_mut() {
-                observer.before_immune(&grid, &damp_field, step);
+                observer.before_immune(&grid.cells, &damp_field, step);
             }
 
             // Immune kill (after delay). Parallelized over cells with rayon
@@ -3146,7 +3154,7 @@ fn run_one_condition_impl(
         }
 
         if let Some(observer) = measurements.as_deref_mut() {
-            observer.after_immune(&grid, &damp_field, step);
+            observer.after_immune(&grid.cells, &damp_field, step);
         }
 
         // Spatial clonal expansion (#266 item 3): after all deaths this step,
@@ -3223,7 +3231,7 @@ fn run_one_condition_impl(
     }
 
     if let Some(observer) = measurements.as_deref_mut() {
-        observer.before_terminal(&grid, &damp_field, run_cfg.n_steps);
+        observer.before_terminal(&grid.cells, &damp_field, run_cfg.n_steps);
     }
 
     // Late DAMP release for cells still in their post-death grace period at
