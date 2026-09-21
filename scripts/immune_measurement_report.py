@@ -124,6 +124,8 @@ def reconcile_condition(row: dict, cfg: dict) -> dict:
             close(e["terminal_damp"], e["horizon_lp"] * factor, "terminal event DAMP")
             censored.append(e)
 
+    eligible_interval_changes = Counter()
+    eligible_endpoints = Counter()
     for c in cells:
         first = integer(c["first_step"], "first eligible step")
         last = integer(c["last_step"], "last eligible step")
@@ -131,6 +133,11 @@ def reconcile_condition(row: dict, cfg: dict) -> dict:
         require(delay <= first <= last < n_steps, "eligibility timing")
         require(1 <= count <= last - first + 1, "cell opportunity count")
         require(first == last or count >= 2, "distinct eligibility endpoints need two opportunities")
+        eligible_interval_changes[first] += 1
+        eligible_interval_changes[last + 1] -= 1
+        eligible_endpoints[first] += 1
+        if last != first:
+            eligible_endpoints[last] += 1
         require(finite(c["local_damp_sum"], "eligible DAMP") >= threshold * count - 1e-8,
                 "eligible DAMP below threshold")
         if c["cell_index"] in death_by_id:
@@ -145,9 +152,10 @@ def reconcile_condition(row: dict, cfg: dict) -> dict:
         require(c["last_step"] == step, "immune cell eligible after kill")
         kill_steps[step] += 1
 
-    dead_before_immune = 0
+    dead_before_immune = possible_eligible = 0
     for s in steps:
         step = s["step"]
+        possible_eligible += eligible_interval_changes[step]
         for field in ("ferroptotic_deaths", "completed_releases", "eligible_cells", "immune_kills"):
             integer(s[field], field)
         require(s["ferroptotic_deaths"] == death_steps[step], "step death reconciliation")
@@ -157,6 +165,8 @@ def reconcile_condition(row: dict, cfg: dict) -> dict:
         dead_before_immune += s["ferroptotic_deaths"]
         require(s["immune_kills"] <= s["eligible_cells"] <= result["total_tumor"] - dead_before_immune,
                 "step eligibility count")
+        require(eligible_endpoints[step] <= s["eligible_cells"] <= possible_eligible,
+                "step eligibility outside cell observation intervals")
         dead_before_immune += s["immune_kills"]
         if step < delay:
             require(s["eligible_cells"] == 0, "eligibility before activation")

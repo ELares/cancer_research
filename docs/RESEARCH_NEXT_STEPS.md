@@ -71,22 +71,28 @@ not require another simulation mechanism or a larger unmeasured corpus.
    **Complete when:** each migrated entry point distinguishes unavailable input
    from an observed zero and its offline rendering remains reproducible.
 
-3. **Measure the immune comparison directly.** Deliver a passive report from
-   matched SDT and RSL3 scenarios using their existing per-condition seeds,
-   geometry, oxygen conditions, and immune configuration. Record ferroptotic deaths, death-time
-   LP, release-time LP, completed releases, and deaths whose release period is
-   censored by the simulation horizon. Report terminal DAMP additions
-   separately: additions after the last immune update cannot explain kills
-   already counted. Record actual immune-eligible living tumor cells after
-   the activation delay and DAMP threshold, with an explicit denominator for
-   unique cells versus cell-time opportunities, alongside total immune kills.
-   **Complete when:** event counts reconcile, every conditional mean names its
-   population, empty populations are explicit, and instrumentation preserves
-   existing simulation outcomes and random draws. The historical 104:1 total
-   immune-kill ratio supplies no per-cell DAMP ratio or replacement experimental
-   threshold. Start in [sim-tme-3d](../simulations/sim-tme-3d/src/main.rs), its
-   [immune eligibility code](../simulations/ferroptosis-core/src/immune_spatial.rs),
-   and [headline_sensitivity.py](../scripts/headline_sensitivity.py).
+3. **Passive 3D immune measurement completed; the 2D headline remains unmeasured.**
+   The [protocol committed before capture](IMMUNE_MEASUREMENT_PROTOCOL.md)
+   observes canonical Control/RSL3/SDT scenarios with their existing geometry,
+   oxygen configuration and treatment-specific seeds. The
+   [replayable report](../analysis/immune-measurement-report.md) records all
+   ferroptotic deaths, death-time LP, completed-release LP, horizon-censored
+   deaths and terminal DAMP additions separately. It counts actual eligible
+   living cells both as unique identities and repeated cell-step opportunities.
+   Every event census reconciles, empty populations are explicit, and the
+   full 24-condition production SHA is unchanged. SDT/RSL3 have 111/28 immune
+   kills, 6,068/68,916 unique eligible cells, and mean completed-release LP
+   19.69/17.98. These conditional populations differ; their ratios are not
+   causal estimates of per-cell potency. Older sensitivity reports now correctly
+   describe their final-count normalization without claiming it isolates earlier
+   immune eligibility. Their numerical results are unchanged.
+   **Next deliverable:** apply the same passive event accounting to the canonical
+   2D headline, preserving its seeds and production results, or separately freeze
+   a replicate study with a defined independent unit. This single 3D realization
+   does not retrospectively explain the historical 2D 104:1 total-kill ratio or
+   supply a replacement experimental threshold. Independent assay calibration
+   remains required. **Complete when:** the new event populations reconcile,
+   passivity is demonstrated, and all declared outcomes and limitations are published.
 
 4. **Validate one observable against independent raw assay replicates.** Deliver
    a validation report with a named source/accession, raw replicate measurements,

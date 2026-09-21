@@ -44,7 +44,7 @@ class PagesDataTests(unittest.TestCase):
     def test_committed_snapshot_is_fresh_with_exact_source_provenance(self):
         self.assertEqual((ROOT / pages.OUTPUT).read_bytes(), pages.encode_snapshot(self.snapshot))
         self.assertEqual(self.snapshot["schema_version"], 1)
-        self.assertEqual(self.snapshot["snapshot_date"], "2026-09-20")
+        self.assertEqual(self.snapshot["snapshot_date"], "2026-09-21")
         self.assertEqual({entry["path"] for entry in self.snapshot["sources"]}, set(pages.SOURCE_PATHS))
         for entry in self.snapshot["sources"]:
             with self.subTest(path=entry["path"]):

@@ -78,7 +78,7 @@ def test_empty_populations_produce_undefined_means_and_rates():
 @pytest.mark.parametrize("mutation", [
     "duplicate_death", "censor_as_complete", "wrong_release", "kill_before_delay",
     "dead_eligible", "unobserved_kill", "opportunity_total", "terminal_sum",
-    "step_count", "nonfinite_lp", "threshold", "lp_falls", "endpoint_count",
+    "step_count", "nonfinite_lp", "threshold", "lp_falls", "endpoint_count", "shift_opportunity",
 ])
 def test_corrupt_event_or_denominator_is_rejected(mutation):
     row, cfg = fixture()
@@ -109,13 +109,15 @@ def test_corrupt_event_or_denominator_is_rejected(mutation):
         obs["ferroptotic_events"][0]["release_lp"] = 9
     elif mutation == "endpoint_count":
         obs["eligible_cells"][1]["opportunities"] = 1
+    elif mutation == "shift_opportunity":
+        obs["steps"][3].update(eligible_cells=0, eligible_local_damp_sum=0)
+        obs["steps"][6].update(eligible_cells=1, eligible_local_damp_sum=.02)
     with pytest.raises(ValueError):
         report.reconcile_condition(row, cfg)
 
 
 def archive():
-    if not report.ARCHIVE.exists():
-        pytest.skip("production archive is captured after the implementation freeze")
+    assert report.ARCHIVE.is_dir(), "the frozen production archive must be committed"
     return report.ARCHIVE
 
 
