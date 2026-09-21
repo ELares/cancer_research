@@ -19,6 +19,7 @@ WHAT MAKES THIS EASY TO GET WRONG
    owed. If one appears, something has started scoring NLM against itself.
 """
 
+import gzip
 import importlib.util
 import json
 from pathlib import Path
@@ -120,10 +121,13 @@ def test_the_check_tag_classes_are_named_for_what_they_measure():
 
 
 def test_the_excluded_stream_is_named():
-    """783,271 text-recovered records carry no MeSH and no publication types."""
+    """Name the excluded stream without inventing its size for a fresh scan."""
     d, md = _doc(), MD.read_text()
-    assert "783,271" in md and f"{d['census'] + 783271:,}" in md, (
+    assert "Text-recovered census records are excluded" in md
+    assert f"{d['census']:,} indexed records read by this analysis" in md, (
         "the page does not say which census stream its denominator is")
+    assert "stream is not counted here" in md
+    assert "783,271" not in md
 
 
 def test_the_phase_column_is_real_and_derived():
@@ -144,43 +148,86 @@ def test_the_committed_report_is_what_the_generator_produces():
         "from the committed JSON -- re-run with --render-only")
 
 
-def test_an_empty_trial_column_refuses_to_render():
-    src = SCRIPT.read_text()
-    assert 'd["classes"]["trial"] == 0' in src
-    assert "is not a finding" in src and "raise SystemExit" in src
-
-
-def test_the_scan_counts_every_record_it_reads():
-    """SCAN-CONTRACT. `--render-only` cannot see a change inside `scan()`, so
-    a mutation there is invisible to every artifact-reading guard above --
-    silently redefining `census` as the classifiable subset passed all nine.
-    Runs the real scan over a few STRIDED shards (they are chronological) and
-    checks the denominator is the number of records read.
-    """
-    import gzip
-    from collections import Counter
-    records = REPO_ROOT / "corpus" / "atlas" / "records"
-    if not records.exists():
-        pytest.skip("census not present (gitignored); CI reads artifacts only")
+def _scan_records(rows, tmp_path, monkeypatch):
     m = _mod()
-    shards = sorted(records.glob("*.jsonl.gz"))[::400]
-    assert shards
-    cls, n = Counter(), 0
-    for f in shards:
-        with gzip.open(f, "rt", encoding="utf-8") as fh:
-            for line in fh:
-                r = json.loads(line)
-                n += 1
-                cls[m.classify(r.get("pub_types"), r.get("mesh"))] += 1
-    assert sum(cls.values()) == n, "a record was classified twice or not at all"
-    assert set(cls) <= set(m.ORDER), f"unknown class {set(cls) - set(m.ORDER)}"
-    # every class the artifact reports must be reachable on real data
-    d = _doc()
-    for k, v in d["classes"].items():
-        if v > 0.01 * d["census"]:
-            assert cls.get(k, 0) > 0, (
-                f"`{k}` is {100*v/d['census']:.1f}% of the committed artifact "
-                "and appears in no sampled shard")
-    # and the committed denominator must be records READ, not a subset of them
-    assert d["census"] == sum(d["classes"].values()), (
-        "the committed census figure is not the number of records classified")
+    records = tmp_path / "records"
+    records.mkdir()
+    # Multiple shards exercise the default full scan rather than a prefix.
+    for i, row in enumerate(rows):
+        with gzip.open(records / f"part-{i:03d}.jsonl.gz", "wt",
+                       encoding="utf-8") as stream:
+            stream.write(json.dumps(row) + "\n")
+    monkeypatch.setattr(m, "RECORDS", records)
+    return m, m.scan()
+
+
+@pytest.mark.parametrize("row,expected", [
+    ({"pub_types": ["Review"]}, "non-primary"),
+    ({"pub_types": ["Journal Article"], "mesh": ["Humans"]}, "undetermined"),
+])
+def test_readable_input_without_trials_renders(row, expected, tmp_path, monkeypatch):
+    m, d = _scan_records([row], tmp_path, monkeypatch)
+
+    assert d["census"] == 1
+    assert d["classes"][expected] == 1
+    assert d["classes"]["trial"] == 0
+    assert d["phased_trials"] == {}
+    md = m.render(d)
+    assert "The trial column is the strong one" not in md
+    assert "783,272" not in md
+    if expected == "undetermined":
+        assert d["classifiable"] == 0
+        assert "percentages of the classifiable set are unavailable (N/A)" in md
+        assert "1 of 1 (100.0%)" in md
+        assert md.count("| N/A |") == 6
+    else:
+        assert d["classifiable"] == 1
+        assert "N/A" not in md
+
+
+def test_the_scan_counts_every_record_and_preserves_phase_and_year_rules(
+        tmp_path, monkeypatch):
+    """Run the real reader and scan on every design class, including unknowns."""
+    _, d = _scan_records([
+        {"pub_types": ["Clinical Trial, Phase I", "Clinical Trial, Phase II",
+                       "Clinical Trial, Phase I", "Review"],
+         "mesh": ["Mice, Nude"], "year": 1975},
+        {"pub_types": ["Case Reports"], "year": 2026},
+        {"mesh": ["Disease Models, Animal", "Cell Line, Tumor"], "year": 2000},
+        {"mesh": ["Cell Line, Tumor"], "year": 1974},
+        {"mesh": ["Rats"], "year": 2027},
+        {"pub_types": ["Review"], "year": "2025"},
+        {"pub_types": ["Journal Article"], "mesh": ["Humans"]},
+        {"pub_types": [], "year": 2000},
+    ], tmp_path, monkeypatch)
+
+    assert d["census"] == 8
+    assert d["classifiable"] == 6
+    assert d["classes"] == {
+        "trial": 1, "clinical-other": 1, "animal-model": 1,
+        "cell-culture": 1, "animal-other": 1, "non-primary": 1,
+        "undetermined": 2,
+    }
+    assert d["phased_trials"] == {
+        "Clinical Trial, Phase I": 1, "Clinical Trial, Phase II": 1,
+    }
+    assert d["trial_share_by_year"] == {
+        "1975": [1, 1], "2000": [0, 2], "2026": [0, 1],
+    }
+
+
+def test_bare_count_preserves_its_original_definition_and_describes_it(
+        tmp_path, monkeypatch):
+    m, d = _scan_records([
+        {},
+        {"pub_types": ["Journal Article", "English Abstract", "Multicenter Study",
+                       "Comparative Study", "Evaluation Study"]},
+        {"pub_types": ["Journal Article", "Research Support, Non-U.S. Gov't"]},
+    ], tmp_path, monkeypatch)
+
+    assert d["bare_or_uninformative_pub_types"] == 2
+    md = m.render(d)
+    assert "2 (66.7%) carry no publication types or only these nonspecific types" in md
+    assert "funding" not in md
+    for pub_type in m.UNINFORMATIVE:
+        assert f"`{pub_type}`" in md

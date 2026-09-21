@@ -4,15 +4,16 @@ The analysis this replaced compared 4,830 full-text records against 5,586
 abstract-only ones with the full-text side 98.7% open access -- which is not a
 contrast at all, since both arms were drawn from a retrieval that had already
 selected for availability. The census version splits 936,347 against 3,467,647
-on identical expert descriptors, so only availability differs.
+by PMC identifier presence while using identical expert descriptors.
 
-THE CONFOUND IS THE POINT OF THE GUARDS, not the ranking. PMC deposition rose
-steeply over the same period the newer mechanisms grew, so a mechanism with a
-recent median year has a high OA rate for reasons that have nothing to do with
-its subject. If the median-year column is ever dropped, the OA column starts
-reading as a fact about access, and this page becomes an attribution it has no
-design to support.
+THE CONFOUND IS THE POINT OF THE GUARDS, not the ranking. Identifier coverage
+may reflect publication era as well as subject and access. Without the year
+column and qualification, the identifier column can read as a fact about
+access, an attribution this comparison has no design to support.
 """
+import copy
+import gzip
+import importlib.util
 import json
 from pathlib import Path
 
@@ -54,10 +55,10 @@ def test_both_arms_partition_the_same_articles(d):
 
 def test_the_shift_column_is_derived_from_the_two_rankings(d):
     rows = _rows(d)
-    oa = {r["mechanism"]: i for i, r in enumerate(
-        sorted(rows, key=lambda r: -r["with_fulltext"]), 1)}
-    non = {r["mechanism"]: i for i, r in enumerate(
-        sorted(rows, key=lambda r: -r["without"]), 1)}
+    oa = {r["mechanism"]: 1 + sum(other["with_fulltext"] > r["with_fulltext"]
+                                 for other in rows) for r in rows}
+    non = {r["mechanism"]: 1 + sum(other["without"] > r["without"]
+                                  for other in rows) for r in rows}
     for r in rows:
         assert r["rank_oa"] == oa[r["mechanism"]], r["mechanism"]
         assert r["rank_non_oa"] == non[r["mechanism"]], r["mechanism"]
@@ -137,3 +138,109 @@ def test_the_manuscript_quotes_this_analysis_not_the_superseded_one():
         "Section 3.3.1 does not quote the census availability split, so it may "
         "still be resting on the superseded 4,830-vs-5,586 contrast whose two "
         "arms were both drawn from a retrieval that selected for availability")
+
+
+def _module():
+    spec = importlib.util.spec_from_file_location(
+        "oa_bias_sparse", REPO / "scripts/census_oa_bias.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def _counts(pairs, with_pmcid=None, census=None):
+    rows = [dict(mechanism=name, with_fulltext=have, without=lack,
+                 total=have + lack, oa_rate=have / (have + lack), median_year=None)
+            for name, have, lack in pairs]
+    have = sum(row["with_fulltext"] for row in rows) if with_pmcid is None else with_pmcid
+    n = sum(row["total"] for row in rows) if census is None else census
+    return dict(census=n, with_pmcid=have, census_oa_rate=have / n, mechanisms=rows)
+
+
+def test_equal_counts_share_ranks_independent_of_input_order():
+    module = _module()
+    data = _counts([("a", 5, 4), ("b", 5, 5), ("c", 1, 4), ("d", 0, 1)])
+    expected = {"a": (1, 2, 1), "b": (1, 1, 0),
+                "c": (3, 2, -1), "d": (4, 4, 0)}
+    for ordered in (data["mechanisms"], list(reversed(data["mechanisms"]))):
+        result = module.derive({**data, "mechanisms": copy.deepcopy(ordered)})
+        actual = {r["mechanism"]: (r["rank_oa"], r["rank_non_oa"], r["shift"])
+                  for r in result["mechanisms"]}
+        assert actual == expected
+        assert result["moved"] == []
+
+
+@pytest.mark.parametrize("pairs,have,n,empty_rank", [
+    ([("a", 0, 3), ("b", 0, 1)], 0, 4, "rank_oa"),
+    ([("a", 3, 0), ("b", 1, 0)], 4, 4, "rank_non_oa"),
+    # Both arms contain articles, but one has no mapped mechanisms.
+    ([("a", 0, 3), ("b", 0, 1)], 5, 9, "rank_oa"),
+    ([("a", 3, 0), ("b", 1, 0)], 4, 9, "rank_non_oa"),
+])
+def test_absent_mechanism_arm_has_no_ranks_or_shift_claim(pairs, have, n, empty_rank):
+    module = _module()
+    data = module.derive(_counts(pairs, have, n))
+    assert data["moved"] is None
+    assert all(r[empty_rank] is None and r["shift"] is None for r in data["mechanisms"])
+    report = module.render(data)
+    assert "Ranking comparison unavailable" in report
+    assert "N/A" in report
+    assert "**0 of" not in report
+
+
+def test_no_mapped_mechanisms_is_a_valid_zero_match_report():
+    module = _module()
+    data = module.derive(_counts([], with_pmcid=0, census=1))
+    assert data["mechanisms"] == [] and data["moved"] is None
+    report = module.render(data)
+    assert "no mapped mechanism matched" in report
+    assert "0.0%" in report
+
+
+def test_observed_zero_shifts_remain_distinct_from_an_unavailable_comparison():
+    module = _module()
+    data = module.derive(_counts([("a", 5, 5), ("b", 2, 2)]))
+    assert data["moved"] == []
+    assert all(row["shift"] == 0 for row in data["mechanisms"])
+    assert "**0 of 2 mechanisms shift" in module.render(data)
+
+
+def test_historical_counts_and_derived_results_remain_unchanged(d):
+    assert _module().derive(copy.deepcopy(d)) == d
+
+
+def test_report_identifies_the_identifier_proxy_without_claiming_verified_access(d):
+    report = _module().render(copy.deepcopy(d))
+    assert "PMC identifier presence" in report
+    assert "does not verify current access" in report
+    assert "local full-text copy" in report
+
+
+def test_recent_records_do_not_imply_high_identifier_coverage_or_a_causal_explanation():
+    module = _module()
+    data = _counts([("recent", 0, 1)])
+    data["mechanisms"][0]["median_year"] = 2025
+    report = module.render(data)
+    assert "0.0%" in report and "2025" in report
+    assert "only availability differs" not in report
+    assert "high PMC identifier rate" not in report
+    assert "does not separate these effects or quantify an era contribution" in report
+
+
+def test_broad_ultrasound_bucket_is_not_presented_as_sonodynamic_specific(
+        tmp_path, monkeypatch):
+    module = _module()
+    records = tmp_path / "records"
+    records.mkdir()
+    with gzip.open(records / "part.jsonl.gz", "wt", encoding="utf-8") as target:
+        target.write(json.dumps({"pmid": "1", "title": "General ultrasound therapy",
+                                 "mesh": ["Ultrasonic Therapy"], "year": 2020}) + "\n")
+    monkeypatch.setattr(module, "RECORDS", records)
+    data = module.scan()
+    bucket = next(row for row in data["mechanisms"] if row["mechanism"] == "sonodynamic")
+    assert bucket["total"] == 1
+    report = module.render(data)
+    manuscript = " ".join(MANUSCRIPT.read_text().split())
+    for text in (report, manuscript):
+        assert "`Ultrasonic Therapy` descriptor" in text
+        assert "does not isolate sonodynamic therapy" in text

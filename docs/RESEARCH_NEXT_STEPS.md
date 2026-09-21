@@ -59,7 +59,7 @@ not require another simulation mechanism or a larger unmeasured corpus.
    checks cannot establish complete within-region distributions or precise tails;
    agreeing biological runs cannot rule out a shared unseen region.
 
-2. **Census input protection is implemented in fourteen analysis entry points.**
+2. **Census input protection is implemented in sixteen analysis entry points.**
    The shared [streaming helper](../scripts/census_input.py) honors
    `FERRO_ATLAS_ROOT`, validates shard stride, and rejects missing or empty
    inputs before replacing reports. Valid records with zero scientific matches
@@ -81,12 +81,20 @@ not require another simulation mechanism or a larger unmeasured corpus.
    record identity and are no longer reused on fresh scans. Offline rendering
    preserves the embedded historical numbers without reloading labels or
    rewriting JSON. See the [adjudication workflow](CENSUS_DIRECTION_ADJUDICATION.md).
+   Evidence-design and access-bias reports now share the same input protection
+   while preserving their default full scans. Valid zero-trial or zero-mechanism
+   populations succeed. An empty classifiable set has no classifiable percentage;
+   an access arm with no mapped mechanisms has no ranking or between-arm shift.
+   Tied counts share a competition rank. The access split is explicitly a PMC
+   identifier proxy, without current-access or licence verification. The
+   committed numerical snapshots are unchanged.
    **Next deliverable:** acquire the intended census snapshot and review the
    complete exported direction candidates, preferably with independent readers
    and documented disagreements. This code change supplies no new biological
-   adjudications. The evidence-design and open-access-bias reports also need
-   to distinguish valid zero matches from unavailable input. Preserve each
-   sampling design when extending the shared reader.
+   adjudications. Extend preparation-before-write protection to the remaining
+   analysis entry points, starting with mechanism-profile, whose existing
+   missing-input checks already distinguish unavailable input from zero matches.
+   Preserve each sampling design when extending the shared reader.
    **Complete when:** each migrated entry point distinguishes unavailable input
    from an observed zero and its offline rendering remains reproducible.
 
