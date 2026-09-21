@@ -306,10 +306,10 @@ def test_the_freshness_gate_uses_the_scoped_comparator(name, delta, tmp_path, mo
     monkeypatch.setitem(sys.modules, name, SimpleNamespace(OUT_JSON=committed_path))
     monkeypatch.setattr(freshness, "_reproduce", lambda mod, script: deepcopy(changed))
     if delta < 1e-9:
-        freshness.test_the_committed_json_is_what_the_generator_writes(name)
+        freshness.test_the_committed_json_is_what_the_generator_writes(name, tmp_path, monkeypatch)
     else:
         with pytest.raises(AssertionError, match="derived float differs"):
-            freshness.test_the_committed_json_is_what_the_generator_writes(name)
+            freshness.test_the_committed_json_is_what_the_generator_writes(name, tmp_path, monkeypatch)
     assert committed_path.read_text() == _dump(original)
 
 
@@ -323,8 +323,8 @@ def test_new_oracle_assessments_use_the_scoped_comparator_through_the_freshness_
     monkeypatch.setitem(sys.modules, COVERAGE_NAME, SimpleNamespace(OUT_JSON=committed_path))
     monkeypatch.setattr(freshness, "_reproduce", lambda mod, script: deepcopy(changed))
     if delta < 1e-9:
-        freshness.test_the_committed_json_is_what_the_generator_writes(COVERAGE_NAME)
+        freshness.test_the_committed_json_is_what_the_generator_writes(COVERAGE_NAME, tmp_path, monkeypatch)
     else:
         with pytest.raises(AssertionError, match="derived float differs"):
-            freshness.test_the_committed_json_is_what_the_generator_writes(COVERAGE_NAME)
+            freshness.test_the_committed_json_is_what_the_generator_writes(COVERAGE_NAME, tmp_path, monkeypatch)
     assert committed_path.read_text() == _dump(original)
