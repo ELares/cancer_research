@@ -7,21 +7,18 @@ and a CLINICAL TRIAL being indexed for it. Both ends come from NLM -- the
 articles from MeSH descriptors or from the mechanism's own vocabulary, the
 trials from publication types -- so neither end is a judgement made here.
 
-THE CONFOUND IS LARGER THAN THE EFFECT AND IS THE REASON THIS RUNS TWO ARMS.
-A MeSH descriptor has an introduction date. `Ferroptosis` became a descriptor in
-2020, so no article carries it before then however long the science existed, and
-a lag measured from a descriptor's first appearance is partly a measurement of
-when NLM minted the term. So every mechanism is measured twice:
+DESCRIPTOR AND KEYWORD COVERAGE CAN DIFFER, SO THIS RUNS TWO ARMS.
+Descriptor history, descriptor breadth, vocabulary coverage and match errors
+can all affect the first observed year. Mechanisms are assessed on both arms
+where the relevant vocabulary is available:
 
-  MeSH arm  -- descriptors, expert-assigned, precise, and blind to anything
-               before the descriptor existed.
+  MeSH arm  -- expert-assigned descriptors in the selected records.
   TEXT arm  -- this project's own keyword vocabulary over title and abstract
-               only, which can see a concept from the moment authors named it.
+               only.
 
-The GAP BETWEEN THE TWO FIRST-YEARS is the confound, measured per mechanism
-rather than assumed uniform. Where the arms agree, a lag means what it appears
-to mean; where the text arm starts much earlier, the MeSH lag is compressed by
-the descriptor's own history.
+The GAP BETWEEN THE TWO FIRST-YEARS measures the observed ordering, per
+mechanism. Its sign alone does not establish the cause of a difference, and
+agreement between arms does not verify either arm's first match.
 
 The text arm also reaches three mechanisms MeSH cannot express at all --
 TTFields, bioelectric modulation, cold atmospheric plasma -- which are reported
@@ -36,15 +33,18 @@ as censored rather than as a large lag, because a mechanism that never reaches
 a trial would otherwise score the same as one that reached it slowly.
 """
 import argparse
-import gzip
 import json
 import re
+import sys
 import statistics
 from collections import Counter, defaultdict
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from census_input import atlas_root, iter_census_records  # noqa: E402
+
 REPO = Path(__file__).resolve().parent.parent
-RECORDS = REPO / "corpus/atlas/records"
+RECORDS = atlas_root() / "records"
 MECH_MAP = REPO / "analysis/mesh-mechanism-map.yaml"
 OUT_MD = REPO / "analysis/census-translation-lag.md"
 OUT_JSON = REPO / "analysis/census-translation-lag.json"
@@ -71,8 +71,8 @@ FIRST_MIN = 1
 # as the definition. A single stray match can start the clock early, and the
 # distance between the two starts is how much that matters per mechanism.
 STABLE_MIN = 5
-# Above this many years between the two thresholds, ONE early match is carrying
-# the start year and the lag beside it is a lower bound rather than a duration.
+# Above this many years between the two thresholds, the start date is sensitive
+# to the count threshold. This does not establish whether either match is valid.
 FRAGILE_AT = 5
 LAST_FULL_YEAR = 2025
 
@@ -120,34 +120,31 @@ def scan(stride: int = 1) -> dict:
     arms = {"mesh": defaultdict(Counter), "text": defaultdict(Counter)}
     trials = {"mesh": defaultdict(Counter), "text": defaultdict(Counter)}
     n = 0
-    for f in sorted(RECORDS.glob("*.jsonl.gz"))[::stride]:
-        with gzip.open(f, "rt", encoding="utf-8") as fh:
-            for line in fh:
-                r = json.loads(line)
-                n += 1
-                y = r.get("year")
-                if not isinstance(y, int) or y > LAST_FULL_YEAR:
-                    continue
-                is_trial = bool(set(r.get("pub_types") or []) & TRIAL_TYPES)
+    for r in iter_census_records(RECORDS, stride):
+        n += 1
+        y = r.get("year")
+        if not isinstance(y, int) or y > LAST_FULL_YEAR:
+            continue
+        is_trial = bool(set(r.get("pub_types") or []) & TRIAL_TYPES)
 
-                ms = {m.lower() for m in (r.get("mesh") or [])}
-                if ms:
-                    for k, d in mesh.items():
-                        if ms & d:
-                            arms["mesh"][k][y] += 1
-                            if is_trial:
-                                trials["mesh"][k][y] += 1
+        ms = {m.lower() for m in (r.get("mesh") or [])}
+        if ms:
+            for k, d in mesh.items():
+                if ms & d:
+                    arms["mesh"][k][y] += 1
+                    if is_trial:
+                        trials["mesh"][k][y] += 1
 
-                # Title and abstract ONLY. Folding MeSH into the text arm would
-                # make the two arms partly the same instrument, and the gap
-                # between them is the whole measurement.
-                blob = f"{r.get('title') or ''} {r.get('abstract') or ''}".lower()
-                if blob and prefilter.search(blob):
-                    for k, pat in text.items():
-                        if pat.search(blob):
-                            arms["text"][k][y] += 1
-                            if is_trial:
-                                trials["text"][k][y] += 1
+        # Title and abstract ONLY. Folding MeSH into the text arm would
+        # make the two arms partly the same instrument, and the gap
+        # between them is the whole measurement.
+        blob = f"{r.get('title') or ''} {r.get('abstract') or ''}".lower()
+        if blob and prefilter.search(blob):
+            for k, pat in text.items():
+                if pat.search(blob):
+                    arms["text"][k][y] += 1
+                    if is_trial:
+                        trials["text"][k][y] += 1
     return {
         "census": n,
         "first_min": FIRST_MIN,
@@ -197,15 +194,12 @@ def assemble(d: dict) -> dict:
                 row[f"{arm}_lag"] = trial - start
             else:
                 row[f"{arm}_lag"] = None
-            # How much a single stray match moves the clock, per mechanism.
+            # Start-year sensitivity to the article-count threshold.
             row[f"{arm}_start_fragility"] = (
                 row[f"{arm}_stable_start"] - start
                 if (start and row[f"{arm}_stable_start"]) else None)
-        # NOT a measure of when a descriptor was minted, which is what a first
-        # version called it. A negative value means the DESCRIPTOR is older or
-        # broader than the term -- `Ultrasonic Therapy` runs from 1955 while
-        # the word "sonodynamic" is recent -- so this mixes introduction date
-        # with descriptor breadth and is named for what it measures.
+        # Observed first-match ordering, not a causal attribution to descriptor
+        # introduction, breadth, vocabulary coverage or match errors.
         row["arm_start_gap"] = (
             row["mesh_start"] - row["text_start"]
             if (row["mesh_start"] and row["text_start"]) else None)
@@ -218,19 +212,22 @@ def assemble(d: dict) -> dict:
     out["rows"] = rows
     out["median_text_lag"] = statistics.median(lags) if lags else None
     out["median_arm_start_gap"] = statistics.median(delays) if delays else None
-    # The rows a reader can lean on: both starts stable under the 5-article
-    # threshold. Everything else is a lower bound set by one early match.
+    # Text-start sensitivity to the five-article threshold is observable only
+    # when that threshold is reached. Stability does not validate either match.
     out["robust"] = sorted(
         r["mechanism"] for r in rows
         if r["text_lag"] is not None
-        and (r["text_start_fragility"] or 0) <= FRAGILE_AT)
+        and r["text_start_fragility"] is not None
+        and r["text_start_fragility"] <= FRAGILE_AT)
     out["fragile"] = sorted(
         r["mechanism"] for r in rows
         if r["text_lag"] is not None
-        and (r["text_start_fragility"] or 0) > FRAGILE_AT)
+        and r["text_start_fragility"] is not None
+        and r["text_start_fragility"] > FRAGILE_AT)
     rl = [r["text_lag"] for r in rows
           if r["text_lag"] is not None
-          and (r["text_start_fragility"] or 0) <= FRAGILE_AT]
+          and r["text_start_fragility"] is not None
+          and r["text_start_fragility"] <= FRAGILE_AT]
     out["median_robust_lag"] = statistics.median(rl) if rl else None
     out["mesh_older_than_text"] = sorted(
         r["mechanism"] for r in rows
@@ -243,13 +240,19 @@ def assemble(d: dict) -> dict:
 
 def render(d: dict) -> str:
     L = ["# From first literature to first trial\n"]
+    if not d["rows"]:
+        L.append(
+            f"No mechanisms matched the MeSH or text vocabulary among "
+            f"{d['census']:,} census records through {d['last_full_year']}. "
+            "First-appearance years and trial lags are unavailable; this is "
+            "an observed zero for the selected records, not missing input.\n")
+        return "\n".join(L)
     L.append(
-        "**Headline: the measurement mostly does not work, and why it does not "
-        "is the useful part.** A census can in principle date a mechanism's "
-        "literature and its first trial; doing so needs a vocabulary that is "
-        "precise at its EARLIEST match, and neither instrument here is. The "
-        "table is published with every row flagged for which failure applies "
-        "to it.\n"
+        "A census can date the earliest indexed literature and trial matched "
+        "by each vocabulary. Interpreting those dates needs a vocabulary "
+        "that is precise at its EARLIEST match. The table reports censoring "
+        "and sensitivity to the article-count threshold; these checks do not "
+        "establish the accuracy of individual matches.\n"
     )
     L.append(
         f"Generated by `scripts/census_translation_lag.py` over {d['census']:,} "
@@ -262,11 +265,12 @@ def render(d: dict) -> str:
         f"incomplete.\n"
     )
     L.append(
-        "Every mechanism is measured twice. The MeSH arm uses expert-assigned "
-        "descriptors and is blind to anything before the descriptor existed; "
+        "Mechanisms are assessed on two arms where the relevant vocabulary is "
+        "available. The MeSH arm uses expert-assigned descriptors; "
         "the text arm uses this project's keyword vocabulary over title and "
-        "abstract only. **The gap between the two start years is a measurement "
-        "of MeSH's own history, not of the field**, and it is reported per "
+        "abstract only. **The gap between the two start years measures their "
+        "observed first-match ordering.** It does not isolate descriptor "
+        "history, vocabulary coverage or match errors, and it is reported per "
         "mechanism rather than assumed uniform.\n"
     )
     L.append("| mechanism | text start | text 1st trial | lag | fragility | "
@@ -302,56 +306,68 @@ def render(d: dict) -> str:
     L.append("## What the two arms disagree about\n")
     L.append(
         f"The **arm gap** is the MeSH start minus the text start, and it is NOT "
-        f"a measure of when a descriptor was minted -- an earlier draft called "
-        f"it that and the sign refuted it. A POSITIVE gap means the text sees "
-        f"the concept first, which is the descriptor-introduction effect. A "
-        f"NEGATIVE gap means the DESCRIPTOR is older or broader than the term: "
-        f"`Ultrasonic Therapy` runs from the 1950s while the word "
-        f"\"sonodynamic\" is recent, so the descriptor arm starts decades "
-        f"earlier and is counting something wider. The column mixes both "
-        f"effects, which is why it is named for what it measures rather than "
-        f"for what it was meant to measure. Median {d['median_arm_start_gap']} "
-        f"years; read the per-mechanism column, not the median.\n"
+        f"a measure of when a descriptor was minted. A POSITIVE gap means the "
+        f"earliest text match precedes the earliest descriptor match; a "
+        f"NEGATIVE gap means the reverse. Descriptor introduction or breadth "
+        f"could contribute, as could vocabulary coverage and match errors. "
+        f"The sign alone does not identify the cause; attributing it requires "
+        f"source-level checks of the matches and descriptor history. "
+        + (f"Median {d['median_arm_start_gap']} years; "
+           if d['median_arm_start_gap'] is not None else
+           "No mechanism has both start years, so the median is unavailable; ")
+        + "read the per-mechanism column, not the median.\n"
     )
     if d["mesh_older_than_text"]:
         L.append(
             f"{len(d['mesh_older_than_text'])} mechanism(s) start EARLIER on "
             f"the descriptor arm: "
             + ", ".join(f"`{m}`" for m in d["mesh_older_than_text"])
-            + ". For these the descriptor is the broader instrument and its lag "
-              "is measured over a wider literature than the term names.\n"
+            + ". This records the observed ordering; it does not establish "
+              "that these descriptors cover broader literature than the "
+              "text vocabulary.\n"
         )
     L.append(
         "**Fragility** is how many years later the start moves if a mechanism "
         f"must reach {d['stable_min']} articles rather than 1. A large value "
-        "means one early match is carrying the start year, so the lag beside "
-        "it is an upper bound on the true duration.\n"
+        "measures sensitivity to this threshold. It does not identify false "
+        "matches or bound a true duration without checking both the first "
+        "literature and first trial matches.\n"
     )
     n_rob = len(d["robust"])
-    n_all = n_rob + len(d["fragile"])
-    L.append(
-        f"**Only {n_rob} of {n_all} mechanisms support the measurement at all.** "
-        f"Their median lag from first literature to first indexed trial is "
-        f"{d['median_robust_lag']} years: "
-        + ", ".join(f"`{m}`" for m in d["robust"]) + f". The median over all "
-        f"{n_all} is {d['median_text_lag']} years and should not be quoted -- "
-        f"it averages durations together with numbers set by a single early "
-        f"false positive.\n"
-    )
-    L.append(
-        f"That {n_rob}-of-{n_all} IS the result. The question is answerable in "
-        f"principle from a census and is not answerable with the vocabulary "
-        f"this project has, and the reason is specific enough to act on.\n"
-    )
+    n_all = sum(r["text_lag"] is not None for r in d["rows"])
+    if d["median_robust_lag"] is not None:
+        L.append(
+            f"**{'Only' if n_rob < n_all else 'All'} {n_rob} of {n_all} mechanisms "
+            f"with text-arm lags meet the declared stability screen.** "
+            f"Their median lag from first literature to first indexed trial is "
+            f"{d['median_robust_lag']} years: "
+            + ", ".join(f"`{m}`" for m in d["robust"]) + ".\n"
+        )
+        if n_rob < n_all:
+            L.append(
+                f"The median over all {n_all} is {d['median_text_lag']} years "
+                "and should not be quoted without the stability qualification: "
+                "it includes lags with unstable or unavailable threshold "
+                "comparisons. That alone does not identify false-positive matches.\n")
+    else:
+        L.append(
+            f"No robust text-arm lag is available among {n_all} mechanisms "
+            "with an indexed trial. A lag needs both start and trial years; "
+            f"its robustness also needs a year with {d['stable_min']} articles. "
+            "The robust median is unavailable.\n")
+    unknown = [r["mechanism"] for r in d["rows"]
+               if r["text_lag"] is not None and r["text_start_fragility"] is None]
+    if unknown:
+        L.append(
+            "The stability threshold was not reached for "
+            + ", ".join(f"`{m}`" for m in unknown)
+            + "; these lags are not classified as robust or fragile.\n")
     if d["fragile"]:
         L.append(
-            f"The other {len(d['fragile'])} have a start year carried by one "
-            f"early match. Their lags are UPPER BOUNDS -- a false positive "
-            f"sets the start EARLIER than the truth, which makes the computed "
-            f"lag LONGER, so the real duration is shorter than the number "
-            f"shown. (An earlier draft said lower bounds, reasoning from the "
-            f"direction of the error without carrying it through the "
-            f"subtraction.) The mechanisms: "
+            f"For {len(d['fragile'])} mechanisms, the start moves by more than "
+            f"{FRAGILE_AT} years at the stability threshold. Their observed "
+            f"lags are threshold-sensitive, not established bounds on time "
+            f"to translation. The mechanisms: "
             + ", ".join(f"`{m}`" for m in d["fragile"]) + ".\n"
         )
     L.append("## Two instrument defects found and fixed, and one that remains\n")
@@ -367,20 +383,22 @@ def render(d: dict) -> str:
         "record is also an article record.\n"
     )
     L.append(
-        "WHAT REMAINS IS POLYSEMY, which no boundary fixes. `electrolysis` "
-        "still starts in 1952 on a paper about cosmetic hair removal and iris "
+        "WHAT REMAINS IS POLYSEMY, which no boundary fixes. In the earlier full "
+        "census analysis, `electrolysis` started in 1952 on a paper about cosmetic hair removal and iris "
         "cysts -- a real use of the word, a different subject. `cuproptosis` "
-        "starts in 1982 on `copper ionophore`, a genuine term applied to "
-        "disulfiram four decades before cuproptosis was named. Those rows are "
-        "wrong in a way the fragility column flags but does not repair.\n"
+        "started in 1982 on `copper ionophore`, a genuine term applied to "
+        "disulfiram four decades before cuproptosis was named. These historical "
+        "examples required source-level checks; threshold sensitivity alone "
+        "does not establish that a match is wrong.\n"
     )
     L.append(
         "The general point is worth more than the table. **A first-appearance "
-        "statistic has no error averaging.** A prevalence estimate from an "
-        "82.5%-precise vocabulary is off by a predictable fraction; a MINIMUM "
-        "computed from the same vocabulary is decided entirely by its single "
-        "worst false positive across four million records. The same instrument "
-        "supports one statistic and not the other.\n"
+        "statistic has no error averaging.** Aggregate label counts depend on "
+        "both precision and recall; the vocabulary's measured 82.5% precision "
+        "alone does not establish the accuracy of prevalence estimates. A false "
+        "positive can move a first-appearance year earlier, while missed matches "
+        "can move it later. Threshold stability does not establish the accuracy "
+        "of either date.\n"
     )
     if d["censored_text"]:
         L.append(
@@ -396,11 +414,10 @@ def render(d: dict) -> str:
         "It is not time to approval, and it is not evidence that a mechanism "
         "translated WELL -- an indexed trial says a trial happened, not that it "
         "worked, and a fast lag can mean a low barrier to a first-in-human "
-        "study rather than a strong result. The text arm also carries this "
-        "project's keyword vocabulary, whose mechanism precision is 82.5%, so "
-        "an early stray match can start the clock early -- which is what the "
-        "fragility column measures per mechanism rather than assuming a single "
-        "threshold fixes it.\n"
+        "study rather than a strong result. The fragility column measures "
+        "sensitivity to the article-count threshold, not whether individual "
+        "matches are correct. Both stable and threshold-sensitive lags need "
+        "source-level verification of the first literature and trial matches.\n"
     )
     return "\n".join(L)
 
@@ -414,8 +431,10 @@ def main() -> int:
         d = assemble(json.loads(OUT_JSON.read_text()))
     else:
         d = assemble(scan(a.stride))
-    OUT_JSON.write_text(json.dumps(d, indent=1) + "\n")
-    OUT_MD.write_text(render(d))
+    json_text = json.dumps(d, indent=1) + "\n"
+    md_text = render(d)
+    OUT_JSON.write_text(json_text)
+    OUT_MD.write_text(md_text)
     print(f"wrote {OUT_MD}")
     print(f"  median text lag {d['median_text_lag']}  median arm gap "
           f"{d['median_arm_start_gap']}  censored {len(d['censored_text'])}")

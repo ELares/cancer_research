@@ -33,13 +33,16 @@ name any cell an opportunity -- separating "nobody has tried this" from "this
 cannot work here" needs knowledge of the mechanism, not of the counts.
 """
 import argparse
-import gzip
 import json
+import sys
 from collections import Counter, defaultdict
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from census_input import atlas_root, iter_census_records  # noqa: E402
+
 REPO = Path(__file__).resolve().parent.parent
-RECORDS = REPO / "corpus/atlas/records"
+RECORDS = atlas_root() / "records"
 SITE_MAP = REPO / "analysis/site-descriptor-map.tsv"
 MECH_MAP = REPO / "analysis/mesh-mechanism-map.yaml"
 OUT_MD = REPO / "analysis/census-mechanism-cancer-matrix.md"
@@ -80,32 +83,29 @@ def scan(stride: int = 1) -> dict:
     site_n = Counter()
     universe = 0
     n = 0
-    for f in sorted(RECORDS.glob("*.jsonl.gz"))[::stride]:
-        with gzip.open(f, "rt", encoding="utf-8") as fh:
-            for line in fh:
-                r = json.loads(line)
-                n += 1
-                ms = {m.lower() for m in (r.get("mesh") or [])}
-                if not ms:
-                    continue
-                hit_m = [k for k, d in mech.items() if ms & d]
-                if not hit_m:
-                    continue
-                hit_s = [s for s, d in sites.items() if ms & d]
-                if not hit_s:
-                    continue
-                # THE UNIVERSE IS ARTICLES CARRYING BOTH, and it has to be, or
-                # the expectation is computed against a population most of the
-                # matrix could never have entered. Marginals are counted over
-                # this same universe for the same reason.
-                universe += 1
-                for k in hit_m:
-                    mech_n[k] += 1
-                for s in hit_s:
-                    site_n[s] += 1
-                for k in hit_m:
-                    for s in hit_s:
-                        cell[k][s] += 1
+    for r in iter_census_records(RECORDS, stride):
+        n += 1
+        ms = {m.lower() for m in (r.get("mesh") or [])}
+        if not ms:
+            continue
+        hit_m = [k for k, d in mech.items() if ms & d]
+        if not hit_m:
+            continue
+        hit_s = [s for s, d in sites.items() if ms & d]
+        if not hit_s:
+            continue
+        # THE UNIVERSE IS ARTICLES CARRYING BOTH, and it has to be, or
+        # the expectation is computed against a population most of the
+        # matrix could never have entered. Marginals are counted over
+        # this same universe for the same reason.
+        universe += 1
+        for k in hit_m:
+            mech_n[k] += 1
+        for s in hit_s:
+            site_n[s] += 1
+        for k in hit_m:
+            for s in hit_s:
+                cell[k][s] += 1
     return {
         "census": n,
         "universe": universe,
@@ -186,7 +186,7 @@ def assemble(d: dict) -> dict:
     out["in_both_tails"] = sorted(dep & enr)
     # The comparison this analysis exists to make.
     out["corpus_zero_share"] = round(100 * CORPUS_ZEROS / CORPUS_CELLS, 1)
-    out["census_zero_share"] = round(100 * len(zeros) / len(rows), 1)
+    out["census_zero_share"] = round(100 * len(zeros) / len(rows), 1) if rows else None
     return out
 
 
@@ -200,26 +200,36 @@ def render(d: dict) -> str:
         f"against a population most of the matrix could never enter is not an "
         f"expectation.\n"
     )
-    L.append("## Zero cells: the original question, answered and retired\n")
+    if not d["rows"]:
+        L.append("No records matched both axes, so no mechanism-by-site cells "
+                 "can be formed. The zero-cell share, enrichment ratios and "
+                 "site-specificity comparison are unavailable. This is not "
+                 "evidence that any mechanism-site combination is absent from "
+                 "the literature.\n")
+        return "\n".join(L)
+    L.append("## Zero cells and the limits of the comparison\n")
     L.append(
         f"The manuscript counted **{CORPUS_ZEROS} of {CORPUS_CELLS} cells "
         f"({d['corpus_zero_share']}%)** empty over a retrieved corpus, and its "
         f"own sensitivity analysis found the count falls to 29-38 under a "
-        f"coarser taxonomy. At census scale it is **{d['n_zero']} of "
+        f"coarser taxonomy. In this input it is **{d['n_zero']} of "
         f"{d['n_cells']} ({d['census_zero_share']}%)**"
         + (": " + ", ".join(f"`{z}`" for z in d["zero_cells"]) if d["zero_cells"]
-           else ".")
-        + " So the empty cells were overwhelmingly a property of the retrieval, "
-          "which is what the manuscript suspected and could not show.\n"
+           else "") + "."
+        + " The populations and taxonomies differ, so this comparison alone "
+          "does not establish why their zero-cell shares differ.\n"
     )
     L.append(
-        "That also RETIRES the measure. With 4.4 million articles nearly every "
-        "mechanism-site pair has been written about at least once, so counting "
-        "zeros no longer discriminates between a neglected combination and a "
-        "well-studied one. A gap measure that returns 2% on the full "
-        "literature is not detecting gaps.\n"
+        "This RETIRES ZERO AS A MEASURE of neglect on its own. A count of empty "
+        "cells is not detecting gaps without accounting for retrieval, sample "
+        "size, descriptor coverage and the applicability of each mechanism to "
+        "each site. A nonzero cell likewise does not establish that a "
+        "combination is well studied.\n"
     )
     L.append("## What replaces it\n")
+    if not d["n_interpretable"]:
+        L.append("No cells meet the expected-count threshold in this input; "
+                 "there is no interpretable depletion or concentration ranking.\n")
     L.append(
         f"How a cell compares to what its own marginals predict. A mechanism in "
         f"tens of thousands of articles and a site carrying hundreds of "
@@ -299,18 +309,18 @@ def render(d: dict) -> str:
         "because there is nothing to ablate -- the modality working as designed, "
         "not an oversight. Separating *nobody has tried this* from *this cannot "
         "work here* needs knowledge of the mechanism, and the counts do not "
-        "carry it. What the table supplies is a ranked list of places where the "
-        "literature is thinner than arithmetic predicts, which is where such a "
-        "judgement would start.\n"
+        "carry it. Where cells meet the expected-count threshold, the table "
+        "compares their counts to their own marginals. Biological "
+        "interpretation needs evidence beyond that comparison.\n"
     )
     L.append("## Two limits inherited from the labels\n")
     L.append(
-        f"The matrix has {len(d['mechanism_totals'])} mechanisms, not the "
-        f"manuscript's 19, because a mechanism MeSH cannot express cannot "
-        f"appear in it at all. TTFields and bioelectric modulation are ABSENT "
+        f"The matrix represents {len(d['mechanism_totals'])} mechanisms observed "
+        f"in this input, compared with the manuscript's 19. A mechanism with no "
+        f"matching record contributes no row, and a mechanism MeSH cannot "
+        f"express cannot appear at all. TTFields and bioelectric modulation are ABSENT "
         f"rather than empty, and their absence is invisible in a zero count -- "
-        f"which is worth stating precisely because this page reports the zero "
-        f"count falling.\n"
+        f"which limits what this page's zero count can measure.\n"
     )
     L.append(
         "Sites come from NLM's C04 tree and mechanisms from descriptor sets of "
@@ -329,8 +339,10 @@ def main() -> int:
     a = ap.parse_args()
     d = assemble(json.loads(OUT_JSON.read_text()) if a.render_only
                  else scan(a.stride))
-    OUT_JSON.write_text(json.dumps(d, indent=1) + "\n")
-    OUT_MD.write_text(render(d))
+    json_text = json.dumps(d, indent=1) + "\n"
+    md_text = render(d)
+    OUT_JSON.write_text(json_text)
+    OUT_MD.write_text(md_text)
     print(f"wrote {OUT_MD}")
     print(f"  universe {d['universe']:,}  zeros {d['n_zero']}/{d['n_cells']}  "
           f"interpretable {d['n_interpretable']}")

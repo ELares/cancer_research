@@ -464,23 +464,40 @@ Bulk data is gitignored. `FERRO_ATLAS_ROOT` and `FERRO_ATLAS_FULLTEXT` move it t
 external storage. Unit guards that need neither network nor data:
 `pytest tests/test_atlas.py`.
 
-The mechanism-growth, mechanism-sites, unnamed-modalities, modality-comparison,
-normal-tissue, and protocol-precedent census reports use the shared
+Twelve census reports use the shared
 [`census_input.py`](../scripts/census_input.py) reader. It honors
 `FERRO_ATLAS_ROOT` and reads the indexed `records/` stream. Missing shards,
 empty sampled inputs, and invalid sampling strides stop before either report
 is written. A readable census with zero scientific matches remains a valid
 result. `--stride` samples sorted shard files, not individual records.
 
+| Reports (`scripts/census_*.py`) | Additional input or sampling requirements |
+|---|---|
+| `mechanism_growth`, `mechanism_sites`, `unnamed_modalities`, `modality_comparison`, `normal_tissue`, `protocol_precedent` | Existing shared-reader group; committed maps and supporting annotations remain inputs to each report. |
+| `fulltext_ceiling`, `mechanism_cancer_matrix`, `translation_lag` | Missing comparison populations or denominators are reported as unavailable. A measured zero remains zero. |
+| `synergy_metrics` | The subject arm uses `--stride`; the control independently uses every 40th sorted shard. Zero metric counts do not establish a leading metric. |
+| `external_check` | The complete selected census input is read before live PubMed requests begin. Use `--render-only` for offline reconstruction. |
+| `diagnostic_chains` | A scan also requires readable articles in the frozen `corpus/by-pmid/` comparison arm. An empty or unavailable corpus is not a zero-match comparison. |
+
 To rebuild report prose from committed counts without downloading the census:
 
 ```bash
 python scripts/census_mechanism_growth.py --render-only
 python scripts/census_mechanism_sites.py --render-only
+python scripts/census_external_check.py --render-only
+python scripts/census_diagnostic_chains.py --render-only
 ```
 
-The other four reports support the same option. Both JSON and Markdown are
-rendered before writing, so a rendering error also preserves the existing pair.
+All twelve reports support the same option. JSON serialization and Markdown
+rendering finish before either output is written, so parser and rendering errors
+preserve the existing pair. This does not make two filesystem writes an atomic
+transaction against disk failures or process interruption.
+
+These protections cover the listed entry points, not every atlas script. The
+hypoxia-direction and thesis-direction reports still need to bind their fixed
+adjudication samples to the scanned population; the evidence-design and
+open-access-bias reports retain separate input handling. See the
+[next steps](../docs/RESEARCH_NEXT_STEPS.md) before extending those analyses.
 
 ## What the atlas is not
 

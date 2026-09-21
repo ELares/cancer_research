@@ -74,13 +74,20 @@ def test_it_refuses_to_license_a_correction(d):
         assert overclaim not in md.lower()
 
 
-def test_the_scan_spreads_across_eras_not_a_prefix():
+def test_the_scan_spreads_across_eras_not_a_prefix(scanner, tmp_path, monkeypatch):
     """Shards are chronological. A prefix would sample one era and destroy the
     era measurement this script exists for -- a mistake this repo has already
     made once on a different scan."""
-    src = (REPO / "scripts/census_fulltext_ceiling.py").read_text()
-    assert "[::stride]" in src
-    assert "CHRONOLOGICAL" in src
+    import gzip
+
+    monkeypatch.setattr(scanner, "RECORDS", tmp_path)
+    for name, years in (("c", [2020, 2021]), ("a", [1980, 1981]), ("b", [2000])):
+        with gzip.open(tmp_path / f"{name}.jsonl.gz", "wt") as fh:
+            for year in years:
+                fh.write(json.dumps({"year": year}) + "\n")
+    result = scanner.scan(stride=2)
+    assert result["census"] == 4
+    assert set(result["undetermined_by_year"]) == {"1980", "1981", "2020", "2021"}
 
 
 def test_the_manuscript_states_the_ceiling_where_it_states_the_gap(d):
@@ -93,3 +100,62 @@ def test_the_manuscript_states_the_ceiling_where_it_states_the_gap(d):
         "the manuscript reports the design-label gap without the measured "
         "ceiling on closing it")
     assert f"{d['unreachable_records']:,}" in txt or "four-fifths" in txt
+
+
+@pytest.fixture
+def scanner(monkeypatch):
+    import importlib.util
+
+    monkeypatch.syspath_prepend(str(REPO / "scripts"))
+    spec = importlib.util.spec_from_file_location(
+        "fulltext_ceiling_sparse_test", REPO / "scripts/census_fulltext_ceiling.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+@pytest.mark.parametrize("totals,reachable,years", [
+    ({"undetermined": 1}, {}, {}),
+    ({"trial": 1}, {}, {}),
+    ({"trial": 1, "animal": 1}, {}, {}),
+    ({"trial": 1, "animal": 1}, {"trial": 1}, {}),
+    ({"undetermined": 1}, {"undetermined": 1}, {"1990": [1, 1]}),
+    ({"undetermined": 1}, {}, {"2020": [1, 0]}),
+    ({"undetermined": 2}, {"undetermined": 1}, {"1990": [1, 0], "2020": [1, 1]}),
+    ({"undetermined": 2}, {"undetermined": 1}, {"1990": [1, 1], "2020": [1, 0]}),
+], ids=["undated-unclassified", "no-undetermined", "zero-reachability",
+        "one-zero-design-rate", "only-earlier-era", "only-later-era",
+        "earlier-rate-zero", "later-rate-zero"])
+def test_sparse_populations_have_observed_counts_and_unavailable_comparisons(
+        scanner, totals, reachable, years):
+    result = scanner.assemble({
+        "census": sum(totals.values()), "by_class_total": totals,
+        "by_class_reachable": reachable, "undetermined_by_year": years,
+    })
+    markdown = scanner.render(result)
+
+    assert result["ceiling_records"] == reachable.get("undetermined", 0)
+    assert "None" not in markdown
+    assert "a fifth" not in markdown and "four-fifths" not in markdown
+    assert "this one is larger" not in markdown
+    if not totals.get("undetermined"):
+        assert result["ceiling_share_of_undetermined"] is None
+        assert result["ceiling_share_of_census"] == 0.0
+        assert "No undetermined records" in markdown
+    if len([c for c in totals if c != "undetermined"]) < 2:
+        assert result["design_skew"]["highest"] is None
+        assert "fewer than two" in markdown
+    else:
+        assert result["design_skew"]["lowest"]["rate"] == 0.0
+        assert result["design_skew"]["fold"] is None
+        assert "lowest rate is zero" in markdown
+    if not years:
+        assert result["era_skew"]["before_share_of_undetermined"] is None
+        assert "median-year shift is unavailable" in markdown
+    if years == {"1990": [1, 1], "2020": [1, 0]}:
+        assert result["era_skew"]["fold"] == 0.0
+        assert "15 years earlier" in markdown
+
+
+def test_reassembly_preserves_published_fulltext_counts(scanner, d):
+    assert scanner.assemble(d) == d
