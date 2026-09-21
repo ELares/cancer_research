@@ -521,10 +521,15 @@ def test_the_manuscript_adjacency_claim_is_checked_against_the_manuscript():
     end = next((n for n in range(start + 1, len(md))
                 if md[n].startswith(("### ", "## "))), len(md))
     bullets = [n for n in range(start, end) if md[n].startswith("**")]
-    window = next((n for n in bullets if "0-48 hour" in md[n]), None)
+    window = next((n for n in bullets if md[n].startswith("**Simplified immune layer.**")), None)
     steps = next((n for n in bullets if "180 steps within a single" in md[n]), None)
     assert window is not None and steps is not None, (
         "Section 9.4 no longer carries both bullets the doc cites")
+    assert "historical 0-48h scope label" in md[window]
+    assert "does not calibrate" in md[window]
+    roadmap = next(line for line in md if "The current immune layer models" in line)
+    assert "physical duration uncalibrated" in roadmap
+    assert "historical 0-48h label is not a time mapping" in roadmap
     later = [n for n in bullets if n > window]
     assert later and later[0] == steps, (
         f"the 0-48h bullet (line {window + 1}) is not immediately above the "

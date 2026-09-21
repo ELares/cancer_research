@@ -264,14 +264,15 @@ are reading. The scope of each candidate is narrower than a per-binary rule:
 Recorded rather than quietly deleted, because the failure is reusable.
 
 An earlier draft said the manuscript "states no per-step duration", making
-issue #727's ~16 min/step an attribution to text that did not exist. Section
-8.4 states the 0-48 hour immune window in the bullet IMMEDIATELY above the
-180-step sentence that draft quoted as evidence of silence, and the manuscript
-states it again in Chapter 9 and Chapter 12 -- NOT at two further points
-inside 8.4, which is what the earlier wording said on its grammatical reading.
-The claim was false, and the guard protecting it grepped for the literal
-string "16 min/step" -- a quotient no document would ever write -- so it could
-not have failed.
+issue #727's ~16 min/step an attribution to text that did not exist. The
+structural-limitations section carried a 0-48 hour immune-window claim in the
+bullet IMMEDIATELY above the 180-step sentence quoted as evidence of silence;
+the same scope label appeared elsewhere in the manuscript. The claim was
+false, and the guard protecting it grepped for the literal string
+"16 min/step" -- a quotient no document would ever write -- so it could not
+have failed. The current manuscript retains the label as historical context
+but explicitly states that it does not calibrate the 180 model steps to a
+physical duration. Its contributor roadmap makes the same qualification.
 
 The measurement behind the draft had the same shape: `engine_time_audit.py`
 scanned `ferroptosis-core/src` only, so "exactly one binding anywhere in the
