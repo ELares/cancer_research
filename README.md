@@ -34,6 +34,10 @@ before biological production. A subsequent
 passed seven of nine learned runs but failed two correlated rotated-box runs
 on weight concentration, with one also failing a regional-mass check.
 Every outcome is retained; see the [interpretation and limits](docs/COVERAGE_CHALLENGE_RESULTS.md).
+A [final-covariance comparison](docs/CORRELATED_PROPOSAL_RESULTS.md) then passed
+10 of 12 correlated-proposal runs, versus 7 of 12 for each diagonal arm on shared
+pilots. It improved the original rotated-box results but failed moment/CDF checks
+on one annular and one new shifted-box run; it remains experimental.
 These checks do not establish complete region coverage or independent biological
 validity, and no pooled posterior is published.
 The [external assay acquisition review](docs/INDEPENDENT_ASSAY_CANDIDATE.md)
