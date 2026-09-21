@@ -422,8 +422,12 @@ def render(res: dict) -> str:
 
     # --- tme -------------------------------------------------------------
     if all("tme" in res[s] for s in sets):
-        L += ["## Hypoxia kill-collapse gap, and immune amplification", "",
-              "| set | SDT − RSL3 hypoxic gap | SDT de-confounded immune rate |",
+        L += ["## Hypoxia kill-collapse gap, and immune kill fraction", "",
+              "The immune fraction is `immune_kills / max(total_tumor - "
+              "ferroptosis_kills, 1)`, using final non-ferroptotic counts. This "
+              "final-population normalization does not measure living cells eligible "
+              "at earlier immune windows or isolate per-cell DAMP amplification.", "",
+              "| set | SDT − RSL3 hypoxic gap | SDT final-count immune fraction |",
               "|---|--:|--:|"]
         for s in sets:
             L.append(f"| `{s}` | {_fmt(res[s]['tme']['hypoxia'])} | "

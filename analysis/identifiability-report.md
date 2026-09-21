@@ -56,7 +56,7 @@ The production simulation matrix uses fixed in-vivo defaults. The in-vitro singl
 
 - **Drivers:** lp_propagation, lp_rate, sdt_ros
 - **Non-identifiable:** none flagged for this headline
-- **Prior-predictive spread:** the 104:1 (2D, near DAMP saturation) falls to ~4:1 in 3D geometry; SDT de-confounded immune rate ~[0.009, 0.171], robustly low-but-positive
+- **Prior-predictive spread:** the 104:1 (2D, near DAMP saturation) falls to ~4:1 in 3D geometry; the separate SDT immune kill fraction using final non-ferroptotic counts spans ~[0.009, 0.171], low-but-positive within this prior-predictive interval. The listed Morris drivers describe that final-population fraction, not the SDT:RSL3 count ratio. The fraction does not measure eligibility at earlier immune windows or isolate per-cell DAMP amplification
 - **Data-conditioned:** no; geometry-dependent (the 2D-vs-3D shrink is a structural, not parametric, effect)
 - **Verdict:** `directional_only` (the ratio is presented as a directional ceiling, not a number: it changes ~25x with geometry alone, which a parametric analysis cannot capture, so only the direction (SDT >> RSL3 immune priming) is claimed)
 - **Source:** headline-sensitivity-report.md (#331); CALIBRATION_STATUS.md immune row

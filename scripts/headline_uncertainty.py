@@ -14,7 +14,9 @@ families:
   Monte-Carlo is feasible (default 300 draws).
 - `--headline sim-tme`: the two spatial `sim-tme` headlines extracted from one
   run per draw — the hypoxia kill-collapse GAP (SDT minus RSL3 hypoxic-zone kill)
-  and SDT's pool-de-confounded immune kill rate. `sim-tme` costs ~4 min/run, so
+  and SDT's immune kill fraction using final non-ferroptotic counts. This
+  normalization does not measure eligibility at earlier immune windows.
+  `sim-tme` costs ~4 min/run, so
   this uses a smaller default ensemble (100 draws) and the 2.5/97.5 TAILS are
   read cautiously (median + spread, not the exact bounds).
 - `--headline penetration`: the tissue-specific vessel-wall RSL3 kill across three
@@ -146,17 +148,18 @@ def _pctiles(values):
 
 
 # ----------------------------------------------------------------------------
-# sim-tme headlines (hypoxia kill-collapse gap + de-confounded immune rate)
+# sim-tme headlines (hypoxia kill-collapse gap + final-count immune fraction)
 # ----------------------------------------------------------------------------
 def prior_predictive_tme(n_samples, workers, binary):
     """Run sim-tme under each prior draw and extract BOTH headline observables
     from the one (costly) run, via `headline_sensitivity.run_sim_tme_observables`:
     `hypoxia` (the SDT-minus-RSL3 hypoxic-zone kill GAP) and `immune` (SDT's
-    pool-de-confounded immune kill rate, bounded [0,1]). Returns
+    immune kill fraction using final non-ferroptotic counts, bounded [0,1]). Returns
     `(hyp_array, imm_array, n_failed)`. A draw whose sim-tme run errors is dropped
     (counted in n_failed); a non-finite observable is also dropped defensively
     (the Bliss-review lesson — one NaN poisons np.percentile), though the
-    de-confounded immune rate is floored to avoid div-by-zero at the source."""
+    final-count denominator is floored to avoid div-by-zero at the source.
+    This fraction does not measure eligibility at earlier immune windows."""
     draws = sample_prior(n_samples)
 
     def _one(row):
@@ -214,8 +217,10 @@ def write_tme_report(hyp_stats, imm_stats, default_obs, n_failed, n_samples):
         "`headline_sensitivity.run_sim_tme_observables`:\n"
         "- **hypoxia**: the SDT-minus-RSL3 hypoxic-zone kill GAP (the kill-collapse "
         "asymmetry — SDT holds, RSL3 collapses);\n"
-        "- **immune**: SDT's pool-de-confounded immune kill rate "
-        "`immune_kills / (total_tumor - ferroptosis_kills)` (bounded [0,1]).\n"
+        "- **immune**: SDT's immune kill fraction using final non-ferroptotic counts, "
+        "`immune_kills / max(total_tumor - ferroptosis_kills, 1)` (bounded [0,1]). "
+        "This final-population normalization does not measure living cells eligible "
+        "at earlier immune windows or isolate per-cell DAMP amplification.\n"
     )
     lines.append("## Method\n")
     lines.append(
@@ -240,7 +245,7 @@ def write_tme_report(hyp_stats, imm_stats, default_obs, n_failed, n_samples):
     lines.append(f"| 95% prior-predictive interval | [{hyp_stats['p2_5']:.3f}, {hyp_stats['p97_5']:.3f}] |")
     lines.append(f"| full range (min, max) | [{hyp_stats['min']:.3f}, {hyp_stats['max']:.3f}] |")
     lines.append("")
-    lines.append("## Immune de-confounded kill rate (SDT, immune on)\n")
+    lines.append("## Immune kill fraction using final counts (SDT, immune on)\n")
     lines.append("| quantity | value |")
     lines.append("|---|---|")
     lines.append(f"| default point estimate | {default_obs['immune']:.3f} |")

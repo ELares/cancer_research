@@ -52,6 +52,7 @@ use std::fs;
 use std::path::Path;
 use std::time::Instant;
 
+mod immune_measurements;
 mod npy;
 mod snapshot;
 
@@ -1042,9 +1043,59 @@ fn payload_offsets(reach_cells: usize) -> Vec<(i64, i64, i64)> {
 fn run_one_condition_full(
     condition: &Condition,
     run_cfg: RunConfig,
-    mut snapshot: Option<&mut snapshot::SnapshotBuffers>,
+    snapshot: Option<&mut snapshot::SnapshotBuffers>,
     overrides: Overrides,
 ) -> ConditionResult {
+    run_one_condition_impl(condition, run_cfg, snapshot, RunMode::Standard(overrides))
+}
+
+/// A measured run cannot carry realism overrides: its only constructor uses
+/// the canonical baseline conditions and the unchanged default configuration.
+/// Keep the two modes exclusive rather than accepting an observer alongside
+/// arbitrary overrides whose death or cell-identity semantics it cannot track.
+// Overrides was already passed by value on the standard path. Keep that stack
+// allocation instead of adding a Box allocation to every existing condition.
+#[allow(clippy::large_enum_variant)]
+enum RunMode<'a> {
+    Standard(Overrides),
+    Measured(&'a mut immune_measurements::Measurements),
+}
+
+fn run_measured_condition(
+    condition: &Condition,
+    run_cfg: RunConfig,
+    snapshot: Option<&mut snapshot::SnapshotBuffers>,
+) -> (ConditionResult, immune_measurements::Measurements) {
+    immune_measurements::validate_condition(condition);
+    assert!(run_cfg.grid_dim > 0 && run_cfg.n_steps > 0);
+    let mut measurements = immune_measurements::Measurements::new(
+        run_cfg.grid_dim.pow(3),
+        Params::default().post_death_steps,
+        SpatialImmuneConfig::for_3d().damp_per_lp,
+    );
+    let result = run_one_condition_impl(
+        condition,
+        run_cfg,
+        snapshot,
+        RunMode::Measured(&mut measurements),
+    );
+    measurements.validate_result(&result);
+    (result, measurements)
+}
+
+fn run_one_condition_impl(
+    condition: &Condition,
+    run_cfg: RunConfig,
+    mut snapshot: Option<&mut snapshot::SnapshotBuffers>,
+    mode: RunMode<'_>,
+) -> ConditionResult {
+    let (overrides, mut measurements) = match mode {
+        RunMode::Standard(overrides) => (overrides, None),
+        RunMode::Measured(observer) => {
+            immune_measurements::validate_condition(condition);
+            (Overrides::default(), Some(observer))
+        }
+    };
     // Destructure the optional realism layers. All-`None` (the matrix path)
     // keeps every layer inert → summary.json byte-identical (guarded by #253).
     let persister_cfg = overrides.persister;
@@ -2403,6 +2454,10 @@ fn run_one_condition_full(
             .sum();
         ferroptosis_kills += died_this_step;
 
+        if let Some(observer) = measurements.as_deref_mut() {
+            observer.after_biochemistry(&grid, step);
+        }
+
         // --- Ionizing radiation, DNA-damage channel (#844) ---
         //
         // A SEPARATE DEATH ROUTE, and keeping it separate is the whole design
@@ -2882,6 +2937,10 @@ fn run_one_condition_full(
                 );
             }
 
+            if let Some(observer) = measurements.as_deref_mut() {
+                observer.before_immune(&grid, &damp_field, step);
+            }
+
             // Immune kill (after delay). Parallelized over cells with rayon
             // (#192) — byte-identical to the old serial triple loop: each cell
             // reads its own `damp_field[idx]` (immutable here; DAMP diffusion
@@ -3086,6 +3145,10 @@ fn run_one_condition_full(
             }
         }
 
+        if let Some(observer) = measurements.as_deref_mut() {
+            observer.after_immune(&grid, &damp_field, step);
+        }
+
         // Spatial clonal expansion (#266 item 3): after all deaths this step,
         // repopulate dead tumor sites from living Moore-neighbors so resistant
         // subclones (more survivors ⇒ more donors) grow their territory. Gated
@@ -3159,6 +3222,10 @@ fn run_one_condition_full(
         }
     }
 
+    if let Some(observer) = measurements.as_deref_mut() {
+        observer.before_terminal(&grid, &damp_field, run_cfg.n_steps);
+    }
+
     // Late DAMP release for cells still in their post-death grace period at
     // the end of the simulation. Iterate paired with damp_field by index to
     // satisfy clippy::needless_range_loop while keeping the dual-Vec access.
@@ -3177,6 +3244,10 @@ fn run_one_condition_full(
                 }
             }
         }
+    }
+
+    if let Some(observer) = measurements {
+        observer.after_terminal(&damp_field);
     }
 
     // --- Aggregate results ---
@@ -6593,6 +6664,92 @@ fn run_radiation_oer_sweep() {
     }
 }
 
+/// A separate sidecar keeps the historical production summary and its hash
+/// unchanged. Select from the production matrix rather than copying condition
+/// names: names seed the per-cell random streams and are part of the inputs.
+fn run_immune_measurements(output_dir: &Path) {
+    let immune = SpatialImmuneConfig::for_3d();
+    let params = Params::default();
+    let config = serde_json::json!({
+        "grid_dim": GRID_DIM,
+        "cell_size_um": CELL_SIZE_UM,
+        "tumor_radius_um": GRID_DIM as f64 * TUMOR_RADIUS_FRACTION * CELL_SIZE_UM,
+        "n_steps": N_STEPS,
+        "grid_seed": SEED,
+        "post_death_steps": params.post_death_steps,
+        "immune_start_step": IMMUNE_START_STEP,
+        "damp_kill_threshold": DAMP_KILL_THRESHOLD,
+        "biochem_seed_salt": BIOCHEM_SEED_SALT,
+        "immune_seed_salt": IMMUNE_SEED_SALT,
+        "params": params,
+        "spatial_params": SpatialParams {
+            cell_size_um: CELL_SIZE_UM,
+            neighbor_iron_fraction: IRON_DIFFUSE_FRACTION_3D,
+            ..Default::default()
+        },
+        "immune": {
+            "damp_per_lp": immune.damp_per_lp,
+            "damp_diffusion_fraction": immune.damp_diffusion_fraction,
+            "damp_clearance_rate": immune.damp_clearance_rate,
+            "dc_activation_kd": immune.dc_activation_kd,
+            "immune_kill_rate": immune.immune_kill_rate,
+            "pd1_brake": immune.pd1_brake,
+            "anti_pd1_efficacy": immune.anti_pd1_efficacy,
+            "exhaustion_rate": immune.exhaustion_rate,
+            "ferro_immunosuppression_strength": immune.ferro_immunosuppression_strength,
+        },
+    });
+    let conditions: Vec<_> = generate_conditions()
+        .into_iter()
+        .filter(|c| {
+            matches!(
+                c.name.as_str(),
+                "immune_Control" | "immune_RSL3" | "immune_SDT"
+            )
+        })
+        .map(|condition| {
+            let (result, measurements) =
+                run_measured_condition(&condition, RunConfig::production(), None);
+            serde_json::json!({
+                "condition_name": condition.name,
+                "condition_seed": SEED.wrapping_add(hash_condition_name(&condition.name)),
+                "configuration": {
+                    "treatment": condition.treatment_name,
+                    "o2_lambda_um": condition.o2_lambda,
+                    "immune_on": condition.immune_on,
+                    "stromal_on": condition.stromal_on,
+                    "ph_on": condition.ph_on,
+                    "dose_schedule": "Constant",
+                },
+                "result": result,
+                "measurements": measurements,
+            })
+        })
+        .collect();
+    assert_eq!(conditions.len(), 3);
+    let path = output_dir.join("immune_measurements.json");
+    let output =
+        serde_json::json!({"schema_version": 1, "config": config, "conditions": conditions});
+    // Compact JSON avoids spending most of the event archive on indentation.
+    fs::write(
+        &path,
+        serde_json::to_vec(&output).expect("serialize immune measurements"),
+    )
+    .expect("write immune measurements");
+    eprintln!("Wrote {}", path.display());
+}
+
+fn validate_immune_measurement_args(args: &[String], parameter_override_present: bool) {
+    assert!(
+        args.len() == 2 && args[1] == "--immune-measurements",
+        "--immune-measurements is a standalone canonical comparison; extra arguments are unsupported"
+    );
+    assert!(
+        !parameter_override_present,
+        "--immune-measurements requires FERRO_PARAM_OVERRIDES to be absent"
+    );
+}
+
 fn main() {
     // Guard against silent drift between this binary's metadata const and
     // the library's runtime value: if a future PR tunes
@@ -6637,6 +6794,20 @@ fn main() {
 
     let output_dir = Path::new("output/tme-3d");
     fs::create_dir_all(output_dir).expect("Failed to create output/tme-3d");
+
+    let measurement_args: Vec<String> = std::env::args().collect();
+    if measurement_args
+        .iter()
+        .skip(1)
+        .any(|a| a.starts_with("--immune-measurements"))
+    {
+        validate_immune_measurement_args(
+            &measurement_args,
+            std::env::var_os("FERRO_PARAM_OVERRIDES").is_some(),
+        );
+        run_immune_measurements(output_dir);
+        return;
+    }
 
     // `--snapshot[=NAME]` runs ONE visualization-focused condition with
     // per-step state capture for the Python animation. Default path (no
@@ -6762,6 +6933,96 @@ fn main() {
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn immune_measurements_preserve_results_snapshots_and_thread_determinism() {
+        let cfg = super::RunConfig {
+            grid_dim: 20,
+            n_steps: 90,
+        };
+        let one_thread = rayon::ThreadPoolBuilder::new()
+            .num_threads(1)
+            .build()
+            .unwrap();
+        let three_threads = rayon::ThreadPoolBuilder::new()
+            .num_threads(3)
+            .build()
+            .unwrap();
+        for condition in super::generate_conditions()
+            .into_iter()
+            .filter(|c| matches!(c.name.as_str(), "immune_RSL3" | "immune_SDT"))
+        {
+            let mut baseline =
+                super::snapshot::SnapshotBuffers::new(cfg.grid_dim, cfg.n_steps, false);
+            let original = one_thread.install(|| {
+                super::run_one_condition_with_config(&condition, cfg, Some(&mut baseline))
+            });
+            let mut observed =
+                super::snapshot::SnapshotBuffers::new(cfg.grid_dim, cfg.n_steps, false);
+            let (measured, ledger) = one_thread
+                .install(|| super::run_measured_condition(&condition, cfg, Some(&mut observed)));
+            assert_eq!(
+                serde_json::to_vec(&original).unwrap(),
+                serde_json::to_vec(&measured).unwrap()
+            );
+            assert_eq!(baseline.dead, observed.dead);
+            assert_eq!(baseline.lp, observed.lp);
+            assert_eq!(baseline.damp, observed.damp);
+            assert!(!ledger.ferroptotic_events.is_empty());
+            assert!(!ledger.eligible_cells.is_empty());
+            let (parallel, parallel_ledger) =
+                three_threads.install(|| super::run_measured_condition(&condition, cfg, None));
+            assert_eq!(
+                serde_json::to_vec(&measured).unwrap(),
+                serde_json::to_vec(&parallel).unwrap()
+            );
+            assert_eq!(
+                serde_json::to_vec(&ledger).unwrap(),
+                serde_json::to_vec(&parallel_ledger).unwrap()
+            );
+        }
+    }
+
+    #[test]
+    fn immune_measurements_reject_noncanonical_conditions_and_cli_overrides() {
+        let canonical = super::generate_conditions()
+            .into_iter()
+            .find(|c| c.name == "immune_RSL3")
+            .unwrap();
+        let mut wrong_seed = canonical.clone();
+        wrong_seed.name = "snapshot_immune_RSL3".to_string();
+        let mut wrong_geometry = canonical.clone();
+        wrong_geometry.o2_lambda = Some(80.0);
+        let mut wrong_layer = canonical.clone();
+        wrong_layer.stromal_on = true;
+        let mut wrong_schedule = canonical.clone();
+        wrong_schedule.dose_schedule = super::DoseSchedule::Bolus {
+            dose_step: 0,
+            peak: 1.0,
+            half_life_steps: 8.0,
+        };
+        for condition in [wrong_seed, wrong_geometry, wrong_layer, wrong_schedule] {
+            assert!(std::panic::catch_unwind(|| {
+                super::immune_measurements::validate_condition(&condition);
+            })
+            .is_err());
+        }
+        let args = vec![
+            "sim-tme-3d".to_string(),
+            "--immune-measurements".to_string(),
+        ];
+        super::validate_immune_measurement_args(&args, false);
+        assert!(
+            std::panic::catch_unwind(|| super::validate_immune_measurement_args(&args, true))
+                .is_err()
+        );
+        let mut extra = args.clone();
+        extra.push("--snapshot".to_string());
+        assert!(
+            std::panic::catch_unwind(|| super::validate_immune_measurement_args(&extra, false))
+                .is_err()
+        );
+    }
+
     /// Heat sinks are not exclusive, and the analytic model assumes they are.
     ///
     /// `perivascular_failure_radius_mm` answers a ONE-VESSEL question and P20
