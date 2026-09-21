@@ -4,6 +4,8 @@
 
 The split measures **PMC identifier presence**, a proxy for full-text availability. This scan does not verify current access, an open-access licence, or a local full-text copy. The historical JSON field names `with_fulltext` and `oa_rate` retain this proxy meaning.
 
+Mechanism names follow `mesh-mechanism-map.yaml` and inherit its descriptor scope. In particular, `sonodynamic` selects the broad `Ultrasonic Therapy` descriptor, including general ultrasound therapy. This group does not isolate sonodynamic therapy; its identifier rate and median year describe the broader descriptor group.
+
 The superseded version of this test compared 4,830 full-text records against 5,586 abstract-only ones, with the full-text side 98.7% open access. That is not a contrast. Here the split is 936,347 against 3,467,647.
 
 | mechanism | with PMC ID | without | PMC ID rate | rank, with ID | rank, without ID | shift | median year |

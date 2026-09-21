@@ -4,16 +4,15 @@ The analysis this replaced compared 4,830 full-text records against 5,586
 abstract-only ones with the full-text side 98.7% open access -- which is not a
 contrast at all, since both arms were drawn from a retrieval that had already
 selected for availability. The census version splits 936,347 against 3,467,647
-on identical expert descriptors, so only availability differs.
+by PMC identifier presence while using identical expert descriptors.
 
-THE CONFOUND IS THE POINT OF THE GUARDS, not the ranking. PMC deposition rose
-steeply over the same period the newer mechanisms grew, so a mechanism with a
-recent median year has a high OA rate for reasons that have nothing to do with
-its subject. If the median-year column is ever dropped, the OA column starts
-reading as a fact about access, and this page becomes an attribution it has no
-design to support.
+THE CONFOUND IS THE POINT OF THE GUARDS, not the ranking. Identifier coverage
+may reflect publication era as well as subject and access. Without the year
+column and qualification, the identifier column can read as a fact about
+access, an attribution this comparison has no design to support.
 """
 import copy
+import gzip
 import importlib.util
 import json
 from pathlib import Path
@@ -226,3 +225,22 @@ def test_recent_records_do_not_imply_high_identifier_coverage_or_a_causal_explan
     assert "only availability differs" not in report
     assert "high PMC identifier rate" not in report
     assert "does not separate these effects or quantify an era contribution" in report
+
+
+def test_broad_ultrasound_bucket_is_not_presented_as_sonodynamic_specific(
+        tmp_path, monkeypatch):
+    module = _module()
+    records = tmp_path / "records"
+    records.mkdir()
+    with gzip.open(records / "part.jsonl.gz", "wt", encoding="utf-8") as target:
+        target.write(json.dumps({"pmid": "1", "title": "General ultrasound therapy",
+                                 "mesh": ["Ultrasonic Therapy"], "year": 2020}) + "\n")
+    monkeypatch.setattr(module, "RECORDS", records)
+    data = module.scan()
+    bucket = next(row for row in data["mechanisms"] if row["mechanism"] == "sonodynamic")
+    assert bucket["total"] == 1
+    report = module.render(data)
+    manuscript = " ".join(MANUSCRIPT.read_text().split())
+    for text in (report, manuscript):
+        assert "`Ultrasonic Therapy` descriptor" in text
+        assert "does not isolate sonodynamic therapy" in text

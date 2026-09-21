@@ -145,6 +145,12 @@ def render(d: dict) -> str:
           "availability. This scan does not verify current access, an open-access "
           "licence, or a local full-text copy. The historical JSON field names "
           "`with_fulltext` and `oa_rate` retain this proxy meaning.", ""]
+    L += ["Mechanism names follow `mesh-mechanism-map.yaml` and inherit its "
+          "descriptor scope. In particular, `sonodynamic` selects the broad "
+          "`Ultrasonic Therapy` descriptor, including general ultrasound "
+          "therapy. This group does not isolate sonodynamic therapy; its "
+          "identifier rate and median year describe the broader descriptor "
+          "group.", ""]
     L += [f"The superseded version of this test compared 4,830 full-text "
           f"records against 5,586 abstract-only ones, with the full-text side "
           f"98.7% open access. That is not a contrast. Here the split is "
