@@ -6,7 +6,7 @@
 
 **1,958,401 of 4,403,994 (44.5%) carry nothing that discriminates study design** -- no trial or review publication type, no model or culture descriptor. A distribution computed over the remaining 2,445,593 and presented as a distribution over the literature would be a number quoted against a population it was not measured on, which is a mistake this project has made before. Both denominators are given in the table.
 
-1,755,619 (39.9%) carry only `Journal Article` or funding and language tags, which say nothing about design at all.
+1,755,619 (39.9%) carry no publication types or only these nonspecific types: `Journal Article`, `English Abstract`, `Multicenter Study`, `Comparative Study` and `Evaluation Study`. These do not distinguish the design classes used here.
 
 | class | what the label actually means | records | of census | of classifiable |
 |---|---|--:|--:|--:|
@@ -37,5 +37,5 @@ This is the one place the census is strictly better than the retrieval it replac
 * **`animal-model` and `cell-culture` are check-tag inferences.** MeSH check tags answer what organism or material appears in a study, not what kind of study it is. A clinical paper that mentions a cell line in passing can carry the descriptor. These two classes are the weakest rows here and are named for the descriptor rather than for a tier.
 * **Nothing distinguishes theoretical or computational work.** The superseded ladder had a tier for it; no publication type or descriptor identifies it reliably, so it is not approximated.
 * **Recent literature is undercounted in every class.** MeSH indexing lags publication, and `analysis/atlas-recent-window.md` measures how much.
-* **The 783,271 text-recovered census records are excluded** -- they carry no MeSH and no publication types, so no label of this kind exists for them. The denominator here is the 4,403,994 indexed stream, not the 5,187,265 full census.
+* **Text-recovered census records are excluded** -- they carry no MeSH and no publication types, so no label of this kind exists for them. The denominator here is the 4,403,994 indexed records read by this analysis. The text-recovered stream is not counted here.
 

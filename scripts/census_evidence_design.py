@@ -38,13 +38,16 @@ Usage:
 """
 
 import argparse
-import gzip
 import json
+import sys
 from collections import Counter
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from census_input import atlas_root, iter_census_records  # noqa: E402
+
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-RECORDS = PROJECT_ROOT / "corpus" / "atlas" / "records"
+RECORDS = atlas_root() / "records"
 OUT_MD = PROJECT_ROOT / "analysis" / "census-evidence-design.md"
 OUT_JSON = PROJECT_ROOT / "analysis" / "census-evidence-design.json"
 
@@ -69,7 +72,7 @@ NON_PRIMARY = {"Review", "Systematic Review", "Meta-Analysis", "Editorial",
                "Comment", "Letter", "News", "Historical Article",
                "Practice Guideline", "Guideline", "Consensus Development Conference",
                "Scoping Review", "Narrative"}
-# `Journal Article` and the funding tags carry no design information at all.
+# These types do not distinguish the design classes used here.
 UNINFORMATIVE = {"Journal Article", "English Abstract", "Multicenter Study",
                  "Comparative Study", "Evaluation Study"}
 
@@ -123,30 +126,27 @@ WHAT_IT_MEASURES = {
 }
 
 
-def scan() -> dict:
+def scan(stride: int = 1) -> dict:
     cls = Counter()
     phase = Counter()
     by_year_trial = Counter()
     by_year_total = Counter()
     bare = 0
     n = 0
-    for f in sorted(RECORDS.glob("*.jsonl.gz")):
-        with gzip.open(f, "rt", encoding="utf-8") as fh:
-            for line in fh:
-                r = json.loads(line)
-                n += 1
-                pt = r.get("pub_types") or []
-                c = classify(pt, r.get("mesh"))
-                cls[c] += 1
-                if set(pt) <= UNINFORMATIVE or not pt:
-                    bare += 1
-                for p in set(pt) & PHASED:
-                    phase[p] += 1
-                y = r.get("year")
-                if isinstance(y, int) and 1975 <= y <= 2026:
-                    by_year_total[y] += 1
-                    if c == "trial":
-                        by_year_trial[y] += 1
+    for r in iter_census_records(RECORDS, stride):
+        n += 1
+        pt = r.get("pub_types") or []
+        c = classify(pt, r.get("mesh"))
+        cls[c] += 1
+        if set(pt) <= UNINFORMATIVE or not pt:
+            bare += 1
+        for p in set(pt) & PHASED:
+            phase[p] += 1
+        y = r.get("year")
+        if isinstance(y, int) and 1975 <= y <= 2026:
+            by_year_total[y] += 1
+            if c == "trial":
+                by_year_trial[y] += 1
     classifiable = n - cls["undetermined"]
     return {
         "census": n,
@@ -180,15 +180,22 @@ def render(d: dict) -> str:
           f"project has made before. Both denominators are given in the table.",
           ""]
     L += [f"{d['bare_or_uninformative_pub_types']:,} "
-          f"({100*d['bare_or_uninformative_pub_types']/n:.1f}%) carry only "
-          f"`Journal Article` or funding and language tags, which say nothing "
-          f"about design at all.", ""]
+          f"({100*d['bare_or_uninformative_pub_types']/n:.1f}%) carry no "
+          "publication types or only these nonspecific types: `Journal Article`, "
+          "`English Abstract`, `Multicenter Study`, `Comparative Study` and "
+          "`Evaluation Study`. These do not distinguish the design classes "
+          "used here.", ""]
+
+    if not d["classifiable"]:
+        L += ["No records have a classifiable design; percentages of the "
+              "classifiable set are unavailable (N/A).", ""]
 
     L += ["| class | what the label actually means | records | of census | "
           "of classifiable |", "|---|---|--:|--:|--:|"]
     for k in ORDER:
         v = c[k]
-        cl = f"{100*v/d['classifiable']:.1f}%" if k != "undetermined" else "-"
+        cl = "-" if k == "undetermined" else (
+            f"{100*v/d['classifiable']:.1f}%" if d["classifiable"] else "N/A")
         L.append(f"| `{k}` | {WHAT_IT_MEASURES[k]} | {v:,} | "
                  f"{100*v/n:.1f}% | {cl} |")
     L += [""]
@@ -223,34 +230,33 @@ def render(d: dict) -> str:
           "* **Recent literature is undercounted in every class.** MeSH "
           "indexing lags publication, and `analysis/atlas-recent-window.md` "
           "measures how much.",
-          "* **The 783,271 text-recovered census records are excluded** -- "
+          "* **Text-recovered census records are excluded** -- "
           "they carry no MeSH and no publication types, so no label of this "
           "kind exists for them. The denominator here is the "
-          f"{n:,} indexed stream, not the {n + 783271:,} full census.",
+          f"{n:,} indexed records read by this analysis. The text-recovered "
+          "stream is not counted here.",
           ""]
     return "\n".join(L) + "\n"
 
 
-def main():
+def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
+    ap.add_argument("--stride", type=int, default=1,
+                    help="read every Nth sorted shard (default: all shards)")
     ap.add_argument("--render-only", action="store_true")
     args = ap.parse_args()
-    if args.render_only:
-        d = json.loads(OUT_JSON.read_text())
-    else:
-        d = scan()
-        if d["classes"]["trial"] == 0:
-            raise SystemExit(
-                "no trial publication types matched, which is not a finding -- "
-                "it is what a field-name or case mismatch looks like.")
-        OUT_JSON.write_text(json.dumps(d, indent=1, sort_keys=True) + "\n",
-                            encoding="utf-8")
-        d = json.loads(OUT_JSON.read_text())
-    OUT_MD.write_text(render(d), encoding="utf-8")
-    print(f"wrote {OUT_MD}\nwrote {OUT_JSON}")
+    d = json.loads(OUT_JSON.read_text()) if args.render_only else scan(args.stride)
+    json_text = json.dumps(d, indent=1, sort_keys=True) + "\n"
+    md_text = render(d)
+    if not args.render_only:
+        OUT_JSON.write_text(json_text, encoding="utf-8")
+        print(f"wrote {OUT_JSON}")
+    OUT_MD.write_text(md_text, encoding="utf-8")
+    print(f"wrote {OUT_MD}")
     for k in ORDER:
         print(f"  {k:16s} {d['classes'][k]:>9,}  {100*d['classes'][k]/d['census']:>5.1f}%")
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

@@ -464,7 +464,7 @@ Bulk data is gitignored. `FERRO_ATLAS_ROOT` and `FERRO_ATLAS_FULLTEXT` move it t
 external storage. Unit guards that need neither network nor data:
 `pytest tests/test_atlas.py`.
 
-Fourteen census reports use the shared
+Sixteen census reports use the shared
 [`census_input.py`](../scripts/census_input.py) reader. It honors
 `FERRO_ATLAS_ROOT` and reads the indexed `records/` stream. Missing shards,
 empty sampled inputs, and invalid sampling strides stop before either report
@@ -479,6 +479,7 @@ result. `--stride` samples sorted shard files, not individual records.
 | `external_check` | The complete selected census input is read before live PubMed requests begin. Use `--render-only` for offline reconstruction. |
 | `diagnostic_chains` | A scan also requires readable articles in the frozen `corpus/by-pmid/` comparison arm. An empty or unavailable corpus is not a zero-match comparison. |
 | `hypoxia_direction`, `thesis_direction` | Fresh scans report keyword candidates unless a completed CSV covers exactly the selected records and matches their fingerprints. Historical title-only labels are never applied to new scans. |
+| `evidence_design`, `oa_bias` | Default to all indexed shards. A zero-trial or zero-mechanism input remains valid; missing classifiable denominators or mechanism observations in either access arm make the corresponding comparison unavailable. Equal mechanism counts share a rank. The access split measures PMC identifier presence, not verified full-text access. |
 
 To rebuild report prose from committed counts without downloading the census:
 
@@ -487,9 +488,11 @@ python scripts/census_mechanism_growth.py --render-only
 python scripts/census_mechanism_sites.py --render-only
 python scripts/census_external_check.py --render-only
 python scripts/census_diagnostic_chains.py --render-only
+python scripts/census_evidence_design.py --render-only
+python scripts/census_oa_bias.py --render-only
 ```
 
-All fourteen reports support the same option. JSON serialization and Markdown
+All sixteen reports support the same option. JSON serialization and Markdown
 rendering finish before either output is written, so parser and rendering errors
 preserve the existing pair. This does not make two filesystem writes an atomic
 transaction against disk failures or process interruption.
@@ -499,8 +502,7 @@ reloading adjudication CSVs or rewriting the numerical artifact. New review
 worksheets and complete-label imports are documented in the
 [direction adjudication workflow](../docs/CENSUS_DIRECTION_ADJUDICATION.md).
 
-These protections cover the listed entry points, not every atlas script. The
-evidence-design and open-access-bias reports retain separate input handling.
+These protections cover the listed entry points, not every atlas script.
 See the [next steps](../docs/RESEARCH_NEXT_STEPS.md) before extending them.
 
 ## What the atlas is not
