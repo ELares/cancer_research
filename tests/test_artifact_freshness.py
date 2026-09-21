@@ -214,7 +214,7 @@ LIVE = [g[0] for g in GENERATORS
 # Pinned EXACTLY, not as a floor. A floor with slack lets a generator drop out
 # of the gate silently: at `>= 25` against 26, deleting the marker from one
 # script left the suite green with two parametrised cases quietly gone.
-EXPECTED_GENERATORS = 83
+EXPECTED_GENERATORS = 84
 
 
 def test_the_generator_list_is_discovered_not_listed():
@@ -459,10 +459,29 @@ def _dump_kwargs(name: str) -> dict:
                 if (isinstance(arg, ast.Call)
                         and getattr(arg.func, "attr", None) == "dumps"):
                     return {k.arg: ast.literal_eval(k.value) for k in arg.keywords}
+    # Staged writers prepare (destination, serialized payload) pairs before
+    # replacing files. Bind options to OUT_JSON's own payload, never an
+    # unrelated dumps used for hashing, logging or another destination.
+    for node in ast.walk(tree):
+        if not (isinstance(node, ast.Tuple) and len(node.elts) == 2
+                and isinstance(node.elts[0], ast.Name)
+                and node.elts[0].id == "OUT_JSON"):
+            continue
+        for expression in ast.walk(node.elts[1]):
+            if (isinstance(expression, ast.Call)
+                    and getattr(expression.func, "attr", None) == "dumps"):
+                return {k.arg: ast.literal_eval(k.value) for k in expression.keywords}
     return {}
 
 
 @pytest.mark.parametrize("source,expected", [
+    ("def writer():\n"
+     "    logging_text = json.dumps(d, indent=4)\n"
+     "    payloads = [(OUT_JSON, json.dumps(d, indent=2, sort_keys=True, allow_nan=False) + '\\n'), (OUT_MD, render(d))]\n",
+     {"indent": 2, "sort_keys": True, "allow_nan": False}),
+    ("def writer():\n"
+     "    payloads = [(OTHER_JSON, json.dumps(d, indent=4))]\n",
+     {}),
     ("def main():\n"
      "    OUT_JSON.write_text(data=json.dumps(d, indent=2, sort_keys=True) + '\\n')\n",
      {"indent": 2, "sort_keys": True}),

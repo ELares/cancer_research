@@ -37,8 +37,8 @@ fig9c   study-design composition from NLM publication types and check tags, with
 fig14c  mechanism class by anatomical site: each site's share of class site
         assignments divided by its share of all census site assignments,
         physical against pharmacological. Overlapping sites count separately.
-fig15c  the ten most frequent mechanism pairs. Counts, never a RATE -- Section
-        3.13 shows the rate is a property of the labelling instrument.
+fig15c  the ten most frequent mechanism pairs. Counts describe co-tagging;
+        Section 3.13 distinguishes it from tested combinations.
 fig16c  clinical-trial share against volume on a log axis, the replacement for a
         weighted composite whose ranking moved seven places under a defensible
         reweighting.
@@ -411,10 +411,9 @@ def fig15c_mechanism_pairs():
     ax.set_xlim(0, max(vals) * 1.14)
     ax.grid(axis="x", alpha=0.25, linewidth=0.6)
     fig.text(0.5, -0.04,
-             "Counts, not a rate. Co-tagging records that two vocabularies "
-             "appear on one article -- not that two mechanisms were tested in "
-             "combination -- and the co-occurrence RATE is a property of the "
-             "labelling instrument rather than of the field.",
+             "Counts record articles carrying both descriptor groups; they do not establish tested combinations.\n"
+             "Co-tagging fractions depend on label definitions, tagged-article denominators\n"
+             "and the selected population.",
              ha="center", fontsize=8.5, style="italic", color="#455A64")
     fig.savefig(FIG_DIR / "fig15c_mechanism_pairs.pdf")
     fig.savefig(FIG_DIR / "fig15c_mechanism_pairs.png")

@@ -6,8 +6,8 @@ means a defect here reaches six sections at once, so the columns the prose
 leans on are pinned to their derivations rather than to their stored values.
 
 The profile declines to rank mechanisms by volume (descriptor breadth varies
-enormously) or report a co-occurrence rate (which Section 3.13 shows is a
-property of the labelling instrument). Its report and generator state these
+enormously) or interpret a co-tagging fraction as a tested-combination rate
+(Section 3.13 distinguishes labels, denominators and population). Its report and generator state these
 limits. A synthetic expansion of only the target's descriptors also guards
 the caveat that trial share, site enrichment and partner ordering describe
 the selected articles and can change when descriptor coverage changes.

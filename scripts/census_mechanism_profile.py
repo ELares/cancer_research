@@ -203,7 +203,9 @@ def render(d: dict) -> str:
         "three summaries can change with descriptor coverage and indexing. "
         "Normalization does not establish comparability across mechanism "
         "definitions, and this profile does not test rank stability across "
-        "labeling methods.\n"
+        "labeling methods. A separate [paired frozen-corpus comparison]"
+        "(paired-partner-agreement.md) measures agreement on the same articles "
+        "and common groups; it does not establish census-wide ranking stability.\n"
     )
     L.append(f"| mechanism | census | trials | share | {d['start_year']} | "
              f"{d['end_year']} | growth |")
