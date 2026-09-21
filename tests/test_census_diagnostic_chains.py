@@ -1,13 +1,8 @@
 """Guards for the census diagnostic-therapy chain analysis.
 
-The whole value of this analysis is that it runs the SAME matcher on two
-populations. If the instrument differs between arms, the comparison measures
-the instrument and the section's conclusion -- that the manuscript's own
-disclaimer was right -- is unearned.
-
-So the load-bearing guard is not on any count. It is that the corpus arm
-reproduces the figure the manuscript published, which is the only evidence
-that the matcher being read on the census is the one that produced 240.
+Aggregate agreement is a reproducibility check, not proof that matchers or
+cohorts are identical. Annotation effects and rankings are measured separately
+on the selected records, including ties and overlapping chain memberships.
 """
 import json
 from pathlib import Path
@@ -30,8 +25,8 @@ def test_the_corpus_arm_reproduces_the_published_figure(d):
     """Without this the census column is being compared against nothing."""
     assert d["corpus_matched_production_text"] == PUBLISHED_CORPUS_MATCHES, (
         f"the corpus arm gives {d['corpus_matched_production_text']} where the "
-        f"manuscript published {PUBLISHED_CORPUS_MATCHES}; the matcher has "
-        "drifted and the census comparison is no longer like-for-like")
+        f"manuscript published {PUBLISHED_CORPUS_MATCHES}; the matcher "
+        "or comparator has changed and the reproduction must be checked")
 
 
 def test_the_annotation_channel_cost_is_measured_not_assumed(d):
@@ -44,10 +39,11 @@ def test_the_annotation_channel_cost_is_measured_not_assumed(d):
                     - d["corpus_matched_without_annotations"])
     md = MD.read_text()
     if cost == 0:
-        assert "costs nothing at all" in md
-        assert "reads low by about that much" not in md
+        assert "does not change the count of records matching at least one chain" in md
     else:
-        assert "reads low by about that much" in md
+        assert f"a difference of {cost:,}" in md
+    assert "do not estimate an annotation effect in the census" in md
+    assert "reads low by about that much" not in md
 
 
 def test_a_census_zero_and_a_corpus_zero_are_reported_apart(d):
@@ -68,18 +64,21 @@ def test_a_census_zero_and_a_corpus_zero_are_reported_apart(d):
 def test_the_ordering_disagreement_is_derived(d):
     """The section's actual finding is that the ordering moves, and an earlier
     draft would have left a reader to spot that from two columns."""
-    by_census = [r["chain"] for r in sorted(d["rows"], key=lambda r: -r["census"])]
-    by_corpus = [r["chain"] for r in sorted(d["rows"],
-                                            key=lambda r: -r["corpus_production_text"])]
-    moved = [c for c in by_census
-             if abs(by_census.index(c) - by_corpus.index(c)) >= 3]
+    # Average the occupied positions for each tied count.
+    def positions(key):
+        ordered = sorted(d["rows"], key=lambda r: -r[key])
+        return {r["chain"]: sum(i for i, peer in enumerate(ordered, 1)
+                                if peer[key] == r[key])
+                / sum(peer[key] == r[key] for peer in ordered)
+                for r in ordered}
+
+    census, corpus = positions("census"), positions("corpus_production_text")
+    moved = [c for c in census if abs(census[c] - corpus[c]) >= 3]
     md = MD.read_text()
-    if moved:
-        assert f"disagrees on {len(moved)} of {len(d['rows'])}" in md
-        for c in moved:
-            assert f"`{c}`" in md
-    else:
-        assert "rank the chains the same way" in md
+    assert f"disagrees on {len(moved)} of {len(d['rows'])}" in md
+    for c in moved:
+        assert (f"`{c}`: corpus rank {corpus[c]:g}, "
+                f"census rank {census[c]:g}") in md
 
 
 def test_the_manuscript_quotes_the_census_column_not_the_corpus_one():
@@ -199,6 +198,11 @@ def test_frozen_corpus_comparison_keeps_the_annotation_channel(scanner):
     assert result["records"] == 1
     assert result["matched_production_text"] == 1
     assert result["matched_without_annotations"] == 0
+    _write_input(scanner.RECORDS / "a.jsonl.gz", [{"title": "Unmatched article"}])
+    markdown = scanner.render(scanner.assemble(scanner.scan_census(1), result))
+    assert "from 1 to 0 (a difference of 1, 100.0%" in markdown
+    assert "do not estimate an annotation effect in the census" in markdown
+    assert "reads low by about that much" not in markdown
 
 
 def test_render_failure_preserves_both_diagnostic_reports(scanner, monkeypatch):
@@ -220,6 +224,53 @@ def test_render_failure_preserves_both_diagnostic_reports(scanner, monkeypatch):
 
 
 def test_aggregate_agreement_does_not_certify_matcher_or_cohort(d):
-    markdown = MD.read_text()
-    assert "does not establish an identical matcher or article cohort" in markdown
-    assert "so the matcher is the one the manuscript reported" not in markdown
+    for markdown in (MD.read_text(), MANUSCRIPT.read_text()):
+        assert "does not establish an identical matcher or article cohort" in markdown
+        assert "so the matcher is the one the manuscript reported" not in markdown
+
+
+def test_unchanged_any_chain_total_does_not_hide_per_chain_loss(scanner):
+    import tag_articles
+
+    corpus = Path(tag_articles.PMID_DIR)
+    corpus.mkdir()
+    (corpus / "article.md").write_text(
+        "---\ntitle: HER2 testing trastuzumab and EGFR mutation\n"
+        "drugs:\n- erlotinib\n---\n\n")
+    _write_input(scanner.RECORDS / "a.jsonl.gz", [{"title": "Unmatched article"}])
+    assert scanner.main() == 0
+    result = json.loads(scanner.OUT_JSON.read_text())
+    assert result["corpus_matched_production_text"] == 1
+    assert result["corpus_matched_without_annotations"] == 1
+    assert result["annotation_channel_cost_records"] == 0
+    markdown = scanner.OUT_MD.read_text()
+    assert "does not change the count of records matching at least one chain (1)" in markdown
+    assert "changes 1 per-chain count(s)" in markdown
+    assert "`egfr-mutation-to-egfr-inhibitor` 1 to 0" in markdown
+    assert "None of the per-chain counts changes" not in markdown
+
+
+@pytest.mark.parametrize("census,corpus,expected", [
+    ([10, 9, 8, 7, 6, 5, 4, 3, 2, 1], [9, 10, 8, 7, 6, 5, 4, 3, 2, 1],
+     "The rankings differ, but no chain differs by three or more places."),
+    ([1] * 10, [1] * 10, "The two columns rank the chains the same way."),
+    ([1] * 10, [2] + [1] * 9, "corpus rank 1, census rank 5.5"),
+    ([2] + [1] * 9, [1] * 10, "corpus rank 5.5, census rank 1"),
+])
+def test_rank_comparisons_handle_small_changes_and_ties(scanner, d, census, corpus, expected):
+    from copy import deepcopy
+
+    result = deepcopy(d)
+    for row, cen, cor in zip(result["rows"], census, corpus):
+        row.update(census=cen, corpus_production_text=cor, corpus_without_annotations=cor)
+    result.update(census_matched=sum(census), corpus_matched_production_text=sum(corpus),
+                  corpus_matched_without_annotations=sum(corpus), annotation_channel_cost_records=0,
+                  chains_zero_on_census=[], chains_zero_on_corpus=[])
+    for rows in (result["rows"], list(reversed(result["rows"]))):
+        result["rows"] = rows
+        markdown = scanner.render(result)
+        assert expected in markdown
+        assert "equal counts receive their average tied rank" in markdown
+        assert "do not by themselves identify their cause" in markdown
+        if census != corpus:
+            assert "rank the chains the same way" not in markdown

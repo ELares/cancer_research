@@ -8,9 +8,8 @@ weakened. They are guarded rather than commented.
    indistinguishable from "reached it slowly", and would quietly pull the
    median. The censored set must be derived, and censored rows must carry no
    lag.
-2. TWO ARMS, KEPT SEPARATE. The MeSH arm cannot see a concept before its
-   descriptor existed, so a lag measured on descriptors alone is partly a
-   measurement of when NLM minted a term. The text arm must therefore read
+2. TWO ARMS, KEPT SEPARATE. Descriptor and keyword coverage can differ, and
+   first-match ordering alone does not identify why. The text arm must read
    title and abstract ONLY -- folding MeSH into it would make the two arms
    partly one instrument and collapse the very gap being measured.
 3. THE START THRESHOLD IS A COUNT, so it is NOT sample-invariant. A strided
@@ -18,9 +17,9 @@ weakened. They are guarded rather than commented.
    means the committed artifact has to come from a full pass.
 4. WORD BOUNDARIES. Unbounded substrings dated `car-t` to 1947 by matching
    inside "s(car t)issue" and `electrolysis` to 1950 via "li(echt)enstein".
-   A first-appearance statistic is decided by its single worst false positive
-   across four million records, so it has none of the error averaging that
-   makes the same vocabulary adequate for a prevalence estimate.
+   A first-appearance statistic depends on its earliest match, so a false
+   positive can move it earlier and a missed match can move it later.
+   Aggregate prevalence accuracy also needs both precision and recall.
 
 OFFLINE: these read only the committed artifact.
 """
@@ -92,7 +91,8 @@ def test_the_robust_subset_is_derived_and_leads_the_report(d):
     import statistics
 
     robust = [r for r in d["rows"] if r["text_lag"] is not None
-              and (r["text_start_fragility"] or 0) <= 5]
+              and r["text_start_fragility"] is not None
+              and r["text_start_fragility"] <= 5]
     assert sorted(r["mechanism"] for r in robust) == sorted(d["robust"])
     assert not set(d["robust"]) & set(d["fragile"])
     if robust:
@@ -102,17 +102,27 @@ def test_the_robust_subset_is_derived_and_leads_the_report(d):
     assert f"Only {len(d['robust'])} of " in md
     assert "should not be quoted" in md, (
         "the all-mechanism median is presented without the warning that it "
-        "averages durations with numbers set by one false positive")
+        "includes durations sensitive to the article-count threshold")
 
 
 def test_threshold_sensitive_lags_are_not_claimed_to_bound_true_duration(d):
     """Neither first-match accuracy follows from an article-count threshold."""
-    md = MD.read_text()
     if not d["fragile"]:
         pytest.skip("no fragile rows")
-    assert "threshold-sensitive, not established bounds" in md
-    assert "without checking both the first literature and first trial matches" in md
-    assert "upper bound on the true duration" not in md
+    for md in (MD.read_text(), scanner.render(scanner.assemble(d))):
+        assert "threshold-sensitive, not established bounds" in md
+        assert "without checking both the first literature and first trial matches" in md
+        assert "82.5% precision alone does not establish the accuracy of prevalence estimates" in md
+        assert "sensitivity to the article-count threshold, not whether individual matches are correct" in md
+        assert "Both stable and threshold-sensitive lags need source-level verification" in md
+        for overclaim in (
+            "upper bound on the true duration",
+            "off by a predictable fraction",
+            "supports one statistic and not the other",
+            "wrong in a way the fragility column flags",
+            "which is what the fragility column measures",
+        ):
+            assert overclaim not in md
 
 
 def test_the_text_arm_is_word_bounded(d):
@@ -136,8 +146,7 @@ def test_the_remaining_polysemy_failure_is_named(d):
     assert "cuproptosis" in md and "copper ionophore" in md
     assert "electrolysis" in md
     assert "no error averaging" in md, (
-        "the transferable point -- a minimum has no error averaging while a "
-        "prevalence estimate does -- is missing")
+        "the transferable point -- a minimum has no error averaging -- is missing")
 
 
 def test_every_lag_recomputes_from_its_two_years(d):
@@ -167,17 +176,32 @@ def test_the_text_arm_reads_no_mesh(d):
         "not independent and the descriptor delay is not what it claims")
 
 
-def test_the_descriptor_delay_is_reported_per_mechanism_not_only_as_a_median(d):
-    """A median delay invites applying one correction to every row. The delay
-    is a property of each descriptor's own history and is not uniform."""
-    md = MD.read_text()
-    # Named `arm gap`, not `descriptor delay`. The first name asserted a CAUSE
-    # -- when NLM minted a term -- and the sign refuted it: a negative value
-    # means the descriptor is older or broader than the word, which is a
-    # different effect entirely.
-    assert "arm gap" in md
-    assert "NOT a measure of when a descriptor was minted" in md
-    assert "read the per-mechanism column, not the median" in md
+def test_the_arm_gap_reports_ordering_without_attributing_a_cause(d):
+    """Date differences must not diagnose descriptor history or breadth."""
+    reports = [MD.read_text(), scanner.render(scanner.assemble(d))]
+    for mesh_year, text_year in ((2000, 2020), (2020, 2000)):
+        sparse = scanner.assemble({
+            "census": 2, "first_min": 1, "stable_min": 5, "last_full_year": 2025,
+            "mesh_measurable": ["example"], "text_measurable": ["example"],
+            "arms": {"mesh": {"example": {str(mesh_year): 1}},
+                     "text": {"example": {str(text_year): 1}}},
+            "trials": {"mesh": {}, "text": {}},
+        })
+        assert sparse["rows"][0]["arm_start_gap"] == mesh_year - text_year
+        reports.append(scanner.render(sparse))
+    for md in reports:
+        assert "arm gap" in md
+        assert "NOT a measure of when a descriptor was minted" in md
+        assert "read the per-mechanism column, not the median" in md
+        assert "The sign alone does not identify the cause" in md
+        assert "source-level checks of the matches and descriptor history" in md
+        for overclaim in (
+            "measurement of MeSH's own history",
+            "which is the descriptor-introduction effect",
+            "NEGATIVE gap means the DESCRIPTOR is older or broader",
+            "For these the descriptor is the broader instrument",
+        ):
+            assert overclaim not in md
     have = [r for r in d["rows"] if r["arm_start_gap"] is not None]
     assert have, "no mechanism has both arms, so no delay is measurable"
     spread = {r["arm_start_gap"] for r in have}
@@ -207,8 +231,7 @@ def test_it_does_not_claim_a_lag_measures_success(d):
     assert "not evidence that a mechanism translated WELL" in md
     assert "82.5%" in md, (
         "the report does not carry the text arm's measured mechanism "
-        "precision, which is what bounds an early stray match starting the "
-        "clock early")
+        "precision and its limits for interpreting aggregate counts")
     for overclaim in ("translated fastest", "most successful mechanism",
                       "proves that"):
         assert overclaim not in md.lower()

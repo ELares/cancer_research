@@ -211,17 +211,16 @@ def render(d: dict) -> str:
         f"else. What IS comparable is the per-chain ordering and, in particular, "
         f"which chains return nothing.\n"
     )
-    verdict = (
-        f"costs nothing at all ({cost:,} records), so the two columns are built "
-        f"from the same channels for every chain here"
-        if cost == 0
-        else f"costs {cost:,} records of {d['corpus_matched_production_text']:,} "
-             f"({cost_pct:.1f}%), so the census column reads low by about that "
-             f"much against a corpus column built the same way ({narrow:,})"
-    )
-    if not d["corpus_matched_production_text"]:
-        verdict = ("has no matched records, so the annotation channel cost "
-                   "cannot be estimated as a proportion")
+    if cost == 0:
+        verdict = ("does not change the count of records matching at least one "
+                   f"chain ({narrow:,})")
+    else:
+        verdict = ("changes the count of records matching at least one chain "
+                   f"from {d['corpus_matched_production_text']:,} to {narrow:,} "
+                   f"(a difference of {cost:,}, {cost_pct:.1f}% of the "
+                   "production-text count)")
+    changed_chains = [r for r in d["rows"]
+                      if r["corpus_production_text"] != r["corpus_without_annotations"]]
     reproduction = (
         f"The corpus arm reproduces the published aggregate count of "
         f"{d['corpus_matched_production_text']:,}; agreement on that count alone "
@@ -238,6 +237,18 @@ def render(d: dict) -> str:
         f"arm {verdict}. {reproduction}{abs_pct:.1f}% of census records carry an "
         f"abstract at all.\n"
     )
+    if changed_chains:
+        L.append(
+            f"Annotation removal changes {len(changed_chains)} per-chain count(s): "
+            + "; ".join(f"`{r['chain']}` {r['corpus_production_text']} to "
+                        f"{r['corpus_without_annotations']}" for r in changed_chains)
+            + ". A record can lose a chain match while still matching another "
+              "chain, leaving the any-chain total unchanged.\n")
+    else:
+        L.append("None of the per-chain counts changes in this corpus. Equal "
+                 "counts do not make the input channels identical.\n")
+    L.append("These annotation comparisons describe the retrieved corpus; "
+             "they do not estimate an annotation effect in the census.\n")
     L.append("## Per chain\n")
     L.append("| chain | census | corpus (production text) | corpus (no annotations) |")
     L.append("|---|--:|--:|--:|")
@@ -249,32 +260,37 @@ def render(d: dict) -> str:
     L.append("")
     zc = d["chains_zero_on_corpus"]
     zn = d["chains_zero_on_census"]
-    by_corpus = sorted(d["rows"], key=lambda r: -r["corpus_production_text"])
-    moved = [
-        (r["chain"], by_corpus.index(r) + 1, i + 1)
-        for i, r in enumerate(d["rows"])
-        if abs(by_corpus.index(r) - i) >= 3
-    ]
+    def ranks(key):
+        counts = [r[key] for r in d["rows"]]
+        return {r["chain"]: 1 + sum(v > r[key] for v in counts)
+                + (sum(v == r[key] for v in counts) - 1) / 2
+                for r in d["rows"]}
+
+    corpus_ranks, census_ranks = ranks("corpus_production_text"), ranks("census")
+    moved = [(r["chain"], corpus_ranks[r["chain"]], census_ranks[r["chain"]])
+             for r in d["rows"]
+             if abs(corpus_ranks[r["chain"]] - census_ranks[r["chain"]]) >= 3]
     L.append("## The ordering, not the rate\n")
     if not d["census_matched"] or not d["corpus_matched_production_text"]:
         L.append("The ordering comparison is unavailable: at least one arm "
                  "has no matched chains.\n")
-    elif moved:
-        L.append(
-            "Ranking the same ten chains by each column disagrees on "
-            f"{len(moved)} of {len(d['rows'])} by three places or more:\n"
-        )
-        for chain, cor_rank, cen_rank in sorted(moved, key=lambda m: m[2]):
-            L.append(f"- `{chain}`: corpus rank {cor_rank}, census rank {cen_rank}")
-        L.append("")
-        L.append(
-            "The manuscript read its own ordering as a map of where the corpus had "
-            "translational depth, and said so. The census says which of those "
-            "readings were about the field: the chains that rise are the ones whose "
-            "literature the mechanism queries never went looking for.\n"
-        )
     else:
-        L.append("The two columns rank the chains the same way.\n")
+        L.append("Ranks are descriptive of the selected records; equal counts "
+                 "receive their average tied rank.\n")
+        if moved:
+            L.append(
+                f"Ranking the same {len(d['rows'])} chains by each column disagrees on "
+                f"{len(moved)} of {len(d['rows'])} by three places or more:\n")
+            for chain, cor_rank, cen_rank in sorted(moved, key=lambda m: m[2]):
+                L.append(f"- `{chain}`: corpus rank {cor_rank:g}, census rank {cen_rank:g}")
+            L.append("")
+        elif corpus_ranks == census_ranks:
+            L.append("The two columns rank the chains the same way.\n")
+        else:
+            L.append("The rankings differ, but no chain differs by three or "
+                     "more places.\n")
+        L.append("These differences do not by themselves identify their cause "
+                 "or establish an ordering beyond the selected populations.\n")
     L.append("## The zeros\n")
     if zc and not zn:
         L.append(

@@ -7,21 +7,18 @@ and a CLINICAL TRIAL being indexed for it. Both ends come from NLM -- the
 articles from MeSH descriptors or from the mechanism's own vocabulary, the
 trials from publication types -- so neither end is a judgement made here.
 
-THE CONFOUND IS LARGER THAN THE EFFECT AND IS THE REASON THIS RUNS TWO ARMS.
-A MeSH descriptor has an introduction date. `Ferroptosis` became a descriptor in
-2020, so no article carries it before then however long the science existed, and
-a lag measured from a descriptor's first appearance is partly a measurement of
-when NLM minted the term. So every mechanism is measured twice:
+DESCRIPTOR AND KEYWORD COVERAGE CAN DIFFER, SO THIS RUNS TWO ARMS.
+Descriptor history, descriptor breadth, vocabulary coverage and match errors
+can all affect the first observed year. Mechanisms are assessed on both arms
+where the relevant vocabulary is available:
 
-  MeSH arm  -- descriptors, expert-assigned, precise, and blind to anything
-               before the descriptor existed.
+  MeSH arm  -- expert-assigned descriptors in the selected records.
   TEXT arm  -- this project's own keyword vocabulary over title and abstract
-               only, which can see a concept from the moment authors named it.
+               only.
 
-The GAP BETWEEN THE TWO FIRST-YEARS is the confound, measured per mechanism
-rather than assumed uniform. Where the arms agree, a lag means what it appears
-to mean; where the text arm starts much earlier, the MeSH lag is compressed by
-the descriptor's own history.
+The GAP BETWEEN THE TWO FIRST-YEARS measures the observed ordering, per
+mechanism. Its sign alone does not establish the cause of a difference, and
+agreement between arms does not verify either arm's first match.
 
 The text arm also reaches three mechanisms MeSH cannot express at all --
 TTFields, bioelectric modulation, cold atmospheric plasma -- which are reported
@@ -197,15 +194,12 @@ def assemble(d: dict) -> dict:
                 row[f"{arm}_lag"] = trial - start
             else:
                 row[f"{arm}_lag"] = None
-            # How much a single stray match moves the clock, per mechanism.
+            # Start-year sensitivity to the article-count threshold.
             row[f"{arm}_start_fragility"] = (
                 row[f"{arm}_stable_start"] - start
                 if (start and row[f"{arm}_stable_start"]) else None)
-        # NOT a measure of when a descriptor was minted, which is what a first
-        # version called it. A negative value means the DESCRIPTOR is older or
-        # broader than the term -- `Ultrasonic Therapy` runs from 1955 while
-        # the word "sonodynamic" is recent -- so this mixes introduction date
-        # with descriptor breadth and is named for what it measures.
+        # Observed first-match ordering, not a causal attribution to descriptor
+        # introduction, breadth, vocabulary coverage or match errors.
         row["arm_start_gap"] = (
             row["mesh_start"] - row["text_start"]
             if (row["mesh_start"] and row["text_start"]) else None)
@@ -271,11 +265,12 @@ def render(d: dict) -> str:
         f"incomplete.\n"
     )
     L.append(
-        "Every mechanism is measured twice. The MeSH arm uses expert-assigned "
-        "descriptors and is blind to anything before the descriptor existed; "
+        "Mechanisms are assessed on two arms where the relevant vocabulary is "
+        "available. The MeSH arm uses expert-assigned descriptors; "
         "the text arm uses this project's keyword vocabulary over title and "
-        "abstract only. **The gap between the two start years is a measurement "
-        "of MeSH's own history, not of the field**, and it is reported per "
+        "abstract only. **The gap between the two start years measures their "
+        "observed first-match ordering.** It does not isolate descriptor "
+        "history, vocabulary coverage or match errors, and it is reported per "
         "mechanism rather than assumed uniform.\n"
     )
     L.append("| mechanism | text start | text 1st trial | lag | fragility | "
@@ -311,15 +306,12 @@ def render(d: dict) -> str:
     L.append("## What the two arms disagree about\n")
     L.append(
         f"The **arm gap** is the MeSH start minus the text start, and it is NOT "
-        f"a measure of when a descriptor was minted -- an earlier draft called "
-        f"it that and the sign refuted it. A POSITIVE gap means the text sees "
-        f"the concept first, which is the descriptor-introduction effect. A "
-        f"NEGATIVE gap means the DESCRIPTOR is older or broader than the term: "
-        f"`Ultrasonic Therapy` runs from the 1950s while the word "
-        f"\"sonodynamic\" is recent, so the descriptor arm starts decades "
-        f"earlier and is counting something wider. The column mixes both "
-        f"effects, which is why it is named for what it measures rather than "
-        f"for what it was meant to measure. "
+        f"a measure of when a descriptor was minted. A POSITIVE gap means the "
+        f"earliest text match precedes the earliest descriptor match; a "
+        f"NEGATIVE gap means the reverse. Descriptor introduction or breadth "
+        f"could contribute, as could vocabulary coverage and match errors. "
+        f"The sign alone does not identify the cause; attributing it requires "
+        f"source-level checks of the matches and descriptor history. "
         + (f"Median {d['median_arm_start_gap']} years; "
            if d['median_arm_start_gap'] is not None else
            "No mechanism has both start years, so the median is unavailable; ")
@@ -330,8 +322,9 @@ def render(d: dict) -> str:
             f"{len(d['mesh_older_than_text'])} mechanism(s) start EARLIER on "
             f"the descriptor arm: "
             + ", ".join(f"`{m}`" for m in d["mesh_older_than_text"])
-            + ". For these the descriptor is the broader instrument and its lag "
-              "is measured over a wider literature than the term names.\n"
+            + ". This records the observed ordering; it does not establish "
+              "that these descriptors cover broader literature than the "
+              "text vocabulary.\n"
         )
     L.append(
         "**Fragility** is how many years later the start moves if a mechanism "
@@ -394,16 +387,18 @@ def render(d: dict) -> str:
         "census analysis, `electrolysis` started in 1952 on a paper about cosmetic hair removal and iris "
         "cysts -- a real use of the word, a different subject. `cuproptosis` "
         "started in 1982 on `copper ionophore`, a genuine term applied to "
-        "disulfiram four decades before cuproptosis was named. Those rows are "
-        "wrong in a way the fragility column flags but does not repair.\n"
+        "disulfiram four decades before cuproptosis was named. These historical "
+        "examples required source-level checks; threshold sensitivity alone "
+        "does not establish that a match is wrong.\n"
     )
     L.append(
         "The general point is worth more than the table. **A first-appearance "
-        "statistic has no error averaging.** A prevalence estimate from an "
-        "82.5%-precise vocabulary is off by a predictable fraction; a MINIMUM "
-        "computed from the same vocabulary is decided entirely by its single "
-        "worst false positive across four million records. The same instrument "
-        "supports one statistic and not the other.\n"
+        "statistic has no error averaging.** Aggregate label counts depend on "
+        "both precision and recall; the vocabulary's measured 82.5% precision "
+        "alone does not establish the accuracy of prevalence estimates. A false "
+        "positive can move a first-appearance year earlier, while missed matches "
+        "can move it later. Threshold stability does not establish the accuracy "
+        "of either date.\n"
     )
     if d["censored_text"]:
         L.append(
@@ -419,11 +414,10 @@ def render(d: dict) -> str:
         "It is not time to approval, and it is not evidence that a mechanism "
         "translated WELL -- an indexed trial says a trial happened, not that it "
         "worked, and a fast lag can mean a low barrier to a first-in-human "
-        "study rather than a strong result. The text arm also carries this "
-        "project's keyword vocabulary, whose mechanism precision is 82.5%, so "
-        "an early stray match can start the clock early -- which is what the "
-        "fragility column measures per mechanism rather than assuming a single "
-        "threshold fixes it.\n"
+        "study rather than a strong result. The fragility column measures "
+        "sensitivity to the article-count threshold, not whether individual "
+        "matches are correct. Both stable and threshold-sensitive lags need "
+        "source-level verification of the first literature and trial matches.\n"
     )
     return "\n".join(L)
 
