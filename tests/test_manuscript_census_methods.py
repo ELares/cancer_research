@@ -1,6 +1,7 @@
 """Keep the active census methods tied to their committed inputs.
 
-Scope is Sections 3.4 and 3.5 plus the adjacent matrix comparison in 3.6:
+Scope is Sections 3.4 and 3.5, the adjacent matrix comparison in 3.6,
+and the interpretation of mechanism-pair ordering in 3.13:
 the historical keyword instrument is still described elsewhere, and a correct
 number elsewhere cannot rescue a stale methods claim. These checks bind named
 quantities and consequential method distinctions, without snapshotting the
@@ -142,9 +143,28 @@ def test_cotags_count_articles_without_claiming_tested_combinations():
     text = _paragraph("3.5", "Mechanism co-tagging")
     _claim(r"unordered pair once per article", text)
     _claim(r"deduplicates.*per-mechanism lists", text)
+    _claim(r"partner ordering ranks raw co-occurrence counts", text)
+    _claim(r"without adjustment for partner prevalence or descriptor breadth", text)
     _claim(r"include reviews and incidental coverage", text)
     _claim(r"do not establish that a combination was tested", text)
     _claim(r"not a field-wide rate", text)
+
+
+def test_profile_summaries_remain_conditional_on_descriptor_selection():
+    text = _paragraph("3.5", "Profile interpretation")
+    _claim(r"trial share, site enrichment and partner ordering.*articles selected", text)
+    _claim(r"all three can change with descriptor coverage or indexing", text)
+    _claim(r"normalization does not establish invariance or comparability", text)
+
+
+def test_pair_ordering_requires_a_paired_comparison_not_an_aggregate_rate():
+    text = " ".join(_section("3.13").split())
+    _claim(r"pair counts and ordering.*describe co-tagging under the current MeSH descriptor map", text)
+    _claim(r"aggregate co-occurrence-rate comparison does not establish ranking stability", text)
+    _claim(r"paired comparison of partner rankings on the same articles using both labelling methods", text)
+    _claim(r"no such comparison is reported", text)
+    _claim(r"historical retrieved corpus", text)
+    assert "stable in ordering under both instruments" not in text
 
 
 def test_profile_site_enrichment_keeps_its_assignment_denominator_and_observed_floor():
