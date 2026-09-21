@@ -162,7 +162,7 @@
    "rust_tests": 10,
    "calibration": "INADMISSIBLE",
    "spatial": "as modifier",
-   "book_words": 4406,
+   "book_words": 4634,
    "book_sections": [
     "6.8 Checkpoint Blockade, and What a Ratio Can Constrain",
     "6.19 Checkpoint Blockade, and a Number With No Denominator",
@@ -182,7 +182,7 @@
    "parity_lines": 0.032,
    "parity_fns": 0.038,
    "parity_tests": 0.037,
-   "parity_words": 0.82,
+   "parity_words": 0.863,
    "lines_short_of_parity": 3695
   },
   {
@@ -362,8 +362,8 @@
  "shared_modules": 5,
  "shared_code_lines": 818,
  "shared_pub_fns": 58,
- "manuscript_words_in_sections": 73914,
- "manuscript_words_attributed": 24677,
+ "manuscript_words_in_sections": 74256,
+ "manuscript_words_attributed": 24905,
  "sections_naming_more_than_one_arm": {
   "6.13 Photodynamic and Sonodynamic Therapy, the Two the Project Started With": 2
  },

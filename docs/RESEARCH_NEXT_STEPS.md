@@ -71,7 +71,7 @@ not require another simulation mechanism or a larger unmeasured corpus.
    **Complete when:** each migrated entry point distinguishes unavailable input
    from an observed zero and its offline rendering remains reproducible.
 
-3. **Passive 3D immune measurement completed; the 2D headline remains unmeasured.**
+3. **Passive 2D and 3D immune measurements completed; the saturation explanation is corrected.**
    The [protocol committed before capture](IMMUNE_MEASUREMENT_PROTOCOL.md)
    observes canonical Control/RSL3/SDT scenarios with their existing geometry,
    oxygen configuration and treatment-specific seeds. The
@@ -86,13 +86,21 @@ not require another simulation mechanism or a larger unmeasured corpus.
    causal estimates of per-cell potency. Older sensitivity reports now correctly
    describe their final-count normalization without claiming it isolates earlier
    immune eligibility. Their numerical results are unchanged.
-   **Next deliverable:** apply the same passive event accounting to the canonical
-   2D headline, preserving its seeds and production results, or separately freeze
-   a replicate study with a defined independent unit. This single 3D realization
-   does not retrospectively explain the historical 2D 104:1 total-kill ratio or
-   supply a replacement experimental threshold. Independent assay calibration
-   remains required. **Complete when:** the new event populations reconcile,
-   passivity is demonstrated, and all declared outcomes and limitations are published.
+   The [separately frozen 2D protocol](IMMUNE_2D_MEASUREMENT_PROTOCOL.md) now
+   reconstructs the historical 521/5 kills while preserving the full 33-condition
+   summary. Its [report](../analysis/immune-2d-measurement-report.md) measures
+   2,314,460/770,701 eligible SDT/RSL3 cell-step opportunities, mean activation
+   0.038506/0.001309, and zero opportunities at or above half-maximal activation.
+   The former deep-saturation explanation is unsupported in this realization.
+   Mean completed-release LP is 19.123/18.266; three RSL3 releases are censored
+   and recorded separately. See the [interpretation](IMMUNE_2D_MEASUREMENT_RESULTS.md).
+   These observations do not isolate a causal geometry effect between 2D and 3D.
+   **Next deliverable:** separately freeze a replicate study with a defined
+   independent unit and observable, while resolving the assay mapping below.
+   Neither single realization supplies experimental validation or a replacement
+   P5 threshold. **Complete when:** the independent unit, inputs and criteria
+   are fixed before evaluation, every declared outcome is published, and both
+   existing archives remain reproducible and unchanged.
 
 4. **Validate one observable against independent raw assay replicates.** Deliver
    a validation report with a named source/accession, raw replicate measurements,

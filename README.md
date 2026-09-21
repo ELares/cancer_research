@@ -43,6 +43,12 @@ death/release events and actual living-cell eligibility without changing the
 simulation outcomes. SDT/RSL3 produce 111/28 immune kills, while their mean LP
 at completed release is 19.69/17.98; the eligible populations differ substantially.
 These are model observations, not experimental validation or a per-cell potency claim.
+The [corresponding 2D report](analysis/immune-2d-measurement-report.md) preserves
+the historical 521/5 immune kills and adds actual exposure measurements.
+No eligible opportunity reaches half-maximal activation: the former deep
+saturation explanation is unsupported in this realization. See the
+[findings and limits](docs/IMMUNE_2D_MEASUREMENT_RESULTS.md); independent assay
+validation remains pending.
 
 This project reads the cancer literature at census scale. It holds **5,187,265
 cancer articles** — 4,403,994 MeSH-indexed records selected through the neoplasms tree and adjacent descriptors,
@@ -102,7 +108,7 @@ literature and describing a search.
   [`simulations/ferroptosis-core/README.md`](simulations/ferroptosis-core/README.md)
 - **Calibration infrastructure** linking simulation parameters to published experimental data
 - **[Model card](MODEL_CARD.md)** with the simulation suite's intended use, out-of-scope cases, assumptions/scope checklist, and per-layer calibration/validation status (the honest "broad but mostly uncalibrated" accounting, consolidated from [`CALIBRATION_STATUS.md`](simulations/calibration/CALIBRATION_STATUS.md))
-- **Book-format manuscript (~270 pp at 6x9 trim)** with 12 chapters, 3 appendices, and 47 figures (~81,300 words), cross-referenced against all analysis outputs and indexed in [`FIGURES.yaml`](FIGURES.yaml)
+- **Book-format manuscript (~270 pp at 6x9 trim)** with 12 chapters, 3 appendices, and 47 figures (~81,600 words), cross-referenced against all analysis outputs and indexed in [`FIGURES.yaml`](FIGURES.yaml)
 
 ## What the work is actually about
 
@@ -111,7 +117,7 @@ than leaving you to count files.**
 
 | | ferroptosis / physical-ROS | other therapy | method & tooling |
 |---|--:|--:|--:|
-| committed analyses | 22 | **1** | 125 |
+| committed analyses | 23 | **1** | 125 |
 | preregistered predictions | **10 of 29** | 0 | — |
 | engine modules mentioning it anywhere | **36 of 40** | — | — |
 | engine modules mentioning it in code | **21 of 40** | — | — |
@@ -131,7 +137,7 @@ therapy vocabulary admits 50 -- but 10 of those sit in this table's own
 ferroptosis column, so 50 is not a bound either. Neither rule measures subject. See
 [`analysis/scope-audit.md`](analysis/scope-audit.md).
 
-8 of 20 preregistered predictions, and 33 of 38 modules of the simulation engine, concern ferroptosis or the physical-ROS modalities (PDT and
+10 of 29 preregistered predictions, and 36 of 40 modules of the simulation engine, concern ferroptosis or the physical-ROS modalities (PDT and
 SDT). That first count read "every falsifiable commitment this project makes" until P9 to P13 registered predictions for the modality arms, and it sat sixteen lines below a table this same change had already updated to 8 of 13 -- the file contradicted itself. One committed analysis is FILED as taking another therapy as its subject, and that filing is a filename match rather than a measurement -- see the scope audit for what the rules do and do not establish.
 
 A narrow thesis on a broad corpus is how most good science works, and the census
@@ -208,7 +214,7 @@ On top of that landscape, the simulations act as a **claim-testing engine**: we 
 
 1. **Combination synergy (ferroptosis case study).** Dual inhibition of GPX4 and FSP1 produces an observed-to-Bliss ratio of ~1.99 at the modeled potencies. The [300-draw prior-predictive analysis](analysis/headline-uncertainty-report.md) reports a 95% interval of [1.000, 5.242], median 1.348, and full sampled range of [0.953, 7.800]. The interval reaches the additive null and some draws are sub-additive, so synergy is not guaranteed. Improving on either single agent is a separate claim from exceeding Bliss independence; these are model predictions to test in a specified cell state and dose range.
 
-2. **Microenvironment barriers affect drug-based and physical approaches differently.** Under simulated hypoxia, stromal shielding, and acidic pH, pharmacologic ferroptosis (RSL3) kill collapses (hypoxia 3.7% to 0.1%; stromal 3.0% to 1.5%; pH 163 to 77) while light- and ultrasound-delivered ROS (PDT/SDT) are less affected. This is one worked comparison of how mechanistically distinct modalities meet different barrier landscapes; it is directional, not a verdict. The hypoxia leg is the least certain: the SDT hypoxic-zone advantage brackets 0% to 86.6%, collapsing to roughly 0% if SDT's ROS is fully O2-dependent — the regime the lead clinical agent SONALA-001 occupies. The immune-coupling amplification (a model-predicted 104× more immune kills, medium confidence) shrinks to roughly 4:1 in 3D.
+2. **Microenvironment barriers affect drug-based and physical approaches differently.** Under simulated hypoxia, stromal shielding, and acidic pH, pharmacologic ferroptosis (RSL3) kill collapses (hypoxia 3.7% to 0.1%; stromal 3.0% to 1.5%; pH 163 to 77) while light- and ultrasound-delivered ROS (PDT/SDT) are less affected. This is one worked comparison of how mechanistically distinct modalities meet different barrier landscapes; it is directional, not a verdict. The hypoxia leg is the least certain: the SDT hypoxic-zone advantage brackets 0% to 86.6%, collapsing to roughly 0% if SDT's ROS is fully O2-dependent — the regime the lead clinical agent SONALA-001 occupies. The illustrative immune-kill ratio is about 104:1 in the canonical 2D run and 4:1 in the separate 3D run. [Measured 2D exposure](docs/IMMUNE_2D_MEASUREMENT_RESULTS.md) does not support the former deep-saturation explanation; these differing configurations do not isolate a geometry effect.
 
 3. **In-vitro-to-in-vivo penetration gap (applies to any systemic drug).** Tissue-specific delivery drops a RSL3-like drug from 40% (2D culture) to 12.1% (well-vascularized) to 2.6% (poorly-vascularized) to 1.8% (CNS/BBB), even at the blood vessel wall. The **ordering** is what is parameter-robust — it held in 300 of 300 draws — not these magnitudes, whose intervals span nearly the whole range at every tissue (well-vascularized median 23%, ~[0%, 93%]; CNS/BBB median 4%, ~[0%, 77%]).
 
@@ -231,7 +237,7 @@ These are computational predictions with documented assumptions and caveats, not
 | `corpus/` | Frozen full text by PubMed ID + INDEX.jsonl; `corpus/atlas/` holds the census (bulk gitignored, committed artifacts in `analysis/`); `corpus/living/` documents the frozen-versus-living split (the monthly deltas themselves are uploaded as workflow artifacts, never committed) |
 | `tags/` | Precomputed tag indexes (mechanism, cancer type, tissue, evidence level, diagnostic-therapy) |
 | `news/` | News source scaffolding: fetched articles, extracted claims, verification results, credibility scores |
-| `tests/` | 3357 Python tests (pipeline smoke + figure traceability + calibration-status ref guard + manuscript-inventory drift guard + depth-kill physics-constant guard + flagship-figure data guard + quantitative-figure drift guards (Figs 21/22/23) + invariant/integration + calibrate-extractor + MeSH evidence-fallback + gold-set precision-floor regression (#346) + Bliss/sim-tme/penetration prior-predictive intervals + ABC posterior (#332) + non-circular mechanism-recall (#412) + CTRPv2 calibration target + in-vitro kill-switch fit (#330) + System Xc-/erastin fit (#502) + joint multi-inducer posterior (#500) + spheroid structure validation (#333) + embedding evidence leg (#411) + RD-vs-BioFVM cross-check (#408) + dashboard data layer (#354) + tumor-PK measured-data anchor (#334) + Krogh penetration validation (#335) + spheroid size-aware zone thresholds (#333) + spheroid kill-vs-size direction (#333) + gene-symbol ambiguity/FSP1 sense disambiguation (#ATLAS-AMBIG) + rare-event Poisson intervals + tail-resolution classification + corpus identity/dedup index + expansion-crawl licence gating + duplicate-audit non-circularity + ferroptosis-python bindings) |
+| `tests/` | 3411 Python tests (pipeline smoke + figure traceability + calibration-status ref guard + manuscript-inventory drift guard + depth-kill physics-constant guard + flagship-figure data guard + quantitative-figure drift guards (Figs 21/22/23) + invariant/integration + calibrate-extractor + MeSH evidence-fallback + gold-set precision-floor regression (#346) + Bliss/sim-tme/penetration prior-predictive intervals + ABC posterior (#332) + non-circular mechanism-recall (#412) + CTRPv2 calibration target + in-vitro kill-switch fit (#330) + System Xc-/erastin fit (#502) + joint multi-inducer posterior (#500) + spheroid structure validation (#333) + embedding evidence leg (#411) + RD-vs-BioFVM cross-check (#408) + dashboard data layer (#354) + tumor-PK measured-data anchor (#334) + Krogh penetration validation (#335) + spheroid size-aware zone thresholds (#333) + spheroid kill-vs-size direction (#333) + gene-symbol ambiguity/FSP1 sense disambiguation (#ATLAS-AMBIG) + rare-event Poisson intervals + tail-resolution classification + corpus identity/dedup index + expansion-crawl licence gating + duplicate-audit non-circularity + ferroptosis-python bindings) |
 
 Start with the files in `analysis/` if you want to see what we've concluded so far—and where we're still uncertain.
 

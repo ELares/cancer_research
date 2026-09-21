@@ -11,24 +11,26 @@
 //! - DAMP release from ferroptotic cells triggers innate immunity
 //!   (Biology2e Ch.42-43, Microbiology Ch.15-17, Krysko Nat Rev Cancer 2012)
 //! - DC activation follows Michaelis-Menten kinetics (Chemistry2e Ch.12-14)
-//! - Spatial immune model valid for resident T cell phase (0-48h);
-//!   systemic lymph node priming (1-7 days) is NOT modeled
+//! - Local immune killing after an activation delay; systemic lymph-node
+//!   priming is not modeled. The historical 0–48 h description is a scope
+//!   label, not a calibrated conversion from simulation steps to hours.
 //!
-//! Key finding: LP at death is ~10.0 for ALL treatments (threshold-locked),
-//! so DAMP per dead cell is approximately equal. The immune differential
-//! comes from kill DENSITY (SDT kills 88% = dense DAMP field) not DAMP
-//! quality (which is similar across treatments). This is an honest finding
-//! that corrects the initial hypothesis about ICD quality differences.
+//! DAMP release uses evolved LP at the end of the post-death grace period.
+//! Death LP, completed-release LP, and terminally censored LP are distinct
+//! populations. `--immune-measurements` records them and the actual immune
+//! draw opportunities without changing the simulation.
 //!
 //! Caveats:
 //! - O2 modulates basal_ros only (conservative)
-//! - SDT/PDT modeled as O2-independent (Type I mechanism, conservative)
-//! - LP at death ~10.0 underestimates true DAMP quality differential by
-//!   ~30-50% (biologically, SDT should drive LP to 15-20 post-threshold)
+//! - SDT/PDT modeled as O2-independent by default
 //! - DAMP clearance modeled as exponential decay (simplified)
 //! - Immune kill is local/resident phase only (no systemic priming)
 //!
 //! Usage: `cargo run --release --bin sim-tme`
+
+mod immune_measurements;
+#[path = "../../observers/immune_measurements.rs"]
+mod passive_immune_measurements;
 
 use std::fs;
 use std::path::Path;
@@ -53,6 +55,7 @@ use ferroptosis_core::stromal::{stromal_adjacency_mask_2d, stromal_adjacent_kill
 const GRID_SIZE: usize = 500;
 const CELL_SIZE_UM: f64 = 20.0;
 const N_STEPS: u32 = 180;
+const IMMUNE_START_STEP: u32 = 60;
 
 /// Master RNG seed. Historically a hard-coded `42` with no replicate loop
 /// anywhere, so every reported number in this engine is a SINGLE draw and the
@@ -525,6 +528,48 @@ fn run_spatial_with_immune(
     o2_supply: Option<&[f64]>,
     sdt_o2_dependence: f64,
 ) -> (usize, usize, Vec<f64>) {
+    run_spatial_with_immune_impl(
+        grid,
+        tx,
+        params,
+        spatial_params,
+        immune,
+        stromal,
+        ph,
+        seed,
+        o2_supply,
+        sdt_o2_dependence,
+        ImmuneDiagnostics::default(),
+    )
+}
+
+/// Passive observers receive only immutable state at existing phase barriers.
+/// Snapshot buffers exist solely in tests and capture exact f64 bit patterns.
+#[derive(Default)]
+struct ImmuneDiagnostics<'a> {
+    measurements: Option<&'a mut passive_immune_measurements::Measurements>,
+    #[cfg(test)]
+    snapshots: Option<&'a mut Vec<Vec<u8>>>,
+}
+
+// Preserve the existing kernel arguments; diagnostics adds no simulation knob.
+#[allow(clippy::too_many_arguments, clippy::type_complexity)]
+fn run_spatial_with_immune_impl(
+    grid: &mut TumorGrid,
+    tx: Treatment,
+    params: &Params,
+    spatial_params: &SpatialParams,
+    immune: &SpatialImmuneConfig,
+    stromal: Option<(&[bool], &StromalConfig)>,
+    ph: Option<(&[(usize, usize, f64)], &PhConfig)>,
+    seed: u64,
+    // #358: same O2-dependent SDT/PDT exo-ROS knob as `run_spatial`, so the
+    // immune-on gradient rows stay consistent with the immune-off ones under
+    // `--sdt-o2-dependence`. `None` / `0.0` ⇒ factor 1.0 ⇒ byte-identical.
+    o2_supply: Option<&[f64]>,
+    sdt_o2_dependence: f64,
+    mut diagnostics: ImmuneDiagnostics<'_>,
+) -> (usize, usize, Vec<f64>) {
     let base_ros = match tx {
         Treatment::SDT => params.sdt_ros,
         Treatment::PDT => params.pdt_ros,
@@ -627,7 +672,7 @@ fn run_spatial_with_immune(
     let mut damp_delta = vec![0.0_f64; n_cells]; // reused each step to avoid allocation churn
     let mut ferroptosis_kills = 0usize;
     let mut immune_kills = 0usize;
-    let immune_start_step = 60_u32; // immune activation delay
+    let immune_start_step = IMMUNE_START_STEP; // immune activation delay
 
     for step in 0..N_STEPS {
         // --- Ferroptosis biochemistry ---
@@ -697,6 +742,10 @@ fn run_spatial_with_immune(
             }
         }
 
+        if let Some(observer) = diagnostics.measurements.as_mut() {
+            observer.after_biochemistry(&grid.cells, step);
+        }
+
         // --- Iron diffusion ---
         grid.diffuse_iron(
             spatial_params.iron_release_per_death,
@@ -724,6 +773,10 @@ fn run_spatial_with_immune(
             damp_field[i] = (damp_field[i] + damp_delta[i]).max(0.0);
             // Clearance decay
             damp_field[i] *= 1.0 - immune.damp_clearance_rate;
+        }
+
+        if let Some(observer) = diagnostics.measurements.as_mut() {
+            observer.before_immune(&grid.cells, &damp_field, step);
         }
 
         // --- Immune kill (after delay) ---
@@ -764,10 +817,34 @@ fn run_spatial_with_immune(
                 }
             }
         }
+        if let Some(observer) = diagnostics.measurements.as_mut() {
+            observer.after_immune(&grid.cells, &damp_field, step);
+        }
+        #[cfg(test)]
+        if let Some(snapshots) = diagnostics.snapshots.as_mut() {
+            // JSON includes all GridCell state; raw bits retain NaNs and exact
+            // LP / DAMP values that a lossy visualization would hide.
+            let raw: Vec<_> = grid
+                .cells
+                .iter()
+                .zip(&damp_field)
+                .map(|(cell, damp)| {
+                    (
+                        cell.state.lp.to_bits(),
+                        cell.lp_at_grace_end.to_bits(),
+                        damp.to_bits(),
+                    )
+                })
+                .collect();
+            snapshots.push(serde_json::to_vec(&(&grid.cells, raw)).unwrap());
+        }
     }
 
+    if let Some(observer) = diagnostics.measurements.as_mut() {
+        observer.before_terminal(&grid.cells, &damp_field, N_STEPS);
+    }
     // Release DAMP for cells whose grace period extends past the simulation
-    // (e.g., cells dying at step 176+ with 5 post-death steps).
+    // (e.g., cells dying at step 175+ with 5 post-death steps).
     for idx in 0..n_cells {
         if grid.cells[idx].is_tumor && grid.cells[idx].state.dead {
             if let Some(ds) = grid.cells[idx].state.death_step {
@@ -781,6 +858,9 @@ fn run_spatial_with_immune(
         }
     }
 
+    if let Some(observer) = diagnostics.measurements.as_mut() {
+        observer.after_terminal(&damp_field);
+    }
     (ferroptosis_kills, immune_kills, damp_field)
 }
 
@@ -910,6 +990,20 @@ fn zone_kill_rates(grid: &TumorGrid, shell_depth_um: f64) -> (f64, f64, f64) {
 // ============================================================
 
 fn main() {
+    let args: Vec<String> = std::env::args().collect();
+    if args
+        .iter()
+        .any(|arg| arg == "--immune-measurements" || arg.starts_with("--immune-measurements="))
+    {
+        let ferro_env: Vec<_> = std::env::vars_os()
+            .map(|(name, _)| name)
+            .filter(|name| name.to_string_lossy().starts_with("FERRO_"))
+            .collect();
+        immune_measurements::validate_args(&args, &ferro_env);
+        immune_measurements::run(Path::new("output/tme"));
+        return;
+    }
+
     eprintln!("=== Tumor Microenvironment: Oxygen Gradients ===");
     eprintln!(
         "Grid: {}×{} ({:.1}mm × {:.1}mm)",
@@ -1254,9 +1348,9 @@ fn main() {
     ];
 
     eprintln!("\n=== Spatial Immune Coupling (O2 gradient λ=120μm) ===");
-    eprintln!("NOTE: LP overshoot multiplier applied (SDT/PDT: 2.0×, RSL3/Control: 1.05×).");
-    eprintln!("DAMP differential comes from both kill DENSITY and per-cell DAMP quality.");
-    eprintln!("Immune model: resident T cell phase only (0-48h), not systemic.\n");
+    eprintln!("DAMP release samples evolved LP at the end of the post-death grace period.");
+    eprintln!("Use --immune-measurements for death, release, and immune-opportunity accounting.");
+    eprintln!("Immune updates begin at model step 60; this model has no calibrated physical-time mapping.\n");
 
     for (immune_label, immune_cfg) in &immune_modes {
         eprintln!(

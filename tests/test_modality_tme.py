@@ -313,26 +313,20 @@ def test_the_effects_are_signed_so_a_gain_is_not_called_a_loss(d, md):
         "than it had, so this is a sign or pairing error.")
 
 
-def test_the_amplification_is_measured_after_the_grace_period(d, md):
-    """The measurement that was wrong in an instructive way.
-
-    Reading lipid peroxidation AT death returns approximately the death
-    threshold for every arm by construction -- death IS the crossing -- so the
-    quality difference vanished. It had not vanished; it was being measured
-    before it happens.
-    """
+def test_panel_surrogate_retains_later_lp_without_a_causal_count_claim(d, md):
+    """Preserve the panel's later-LP surrogate without a causal count claim."""
     qr = d.get("quality_ratio")
     if qr is None:
         return
     # Death threshold is 10.0; a per-death figure at ~10 for every arm is the
     # symptom of measuring at the crossing rather than after the grace period.
     assert qr["sdt"] > 12.0 and qr["rsl3"] > 12.0, (
-        f"per-death DAMP release is {qr['sdt']:.1f}/{qr['rsl3']:.1f}, close to "
+        f"per-death LP surrogate is {qr['sdt']:.1f}/{qr['rsl3']:.1f}, close to "
         "the death threshold -- the measurement is being taken at the "
         "crossing rather than after `post_death_steps`")
-    assert qr["ratio"] > 1.0, "the ROS arm should die louder, not quieter"
+    assert qr["ratio"] > 1.0, "the recorded panel's SDT surrogate exceeds RSL3's"
     assert qr["ratio"] < 5.0, (
-        f"the per-death ratio is {qr['ratio']:.1f}; the page says the "
-        "amplification advantage is a COUNT effect and that sentence needs "
-        "re-deriving if the quality gap is now large")
-    assert "COUNT effect, not a quality effect" in md
+        f"the per-death surrogate ratio is {qr['ratio']:.1f}; check the "
+        "recorded panel scenario and population before changing this guard")
+    assert "does not identify the cause of immune amplification" in md
+    assert "separate modality-panel scenario" in md

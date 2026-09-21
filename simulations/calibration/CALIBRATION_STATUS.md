@@ -133,7 +133,7 @@ attention and the available data do not currently overlap.
 | Tissue drug penetration | `drug_transport` | **Form + reference-drug length validated vs measured (#335); ferroptosis-inducer length + binding-site barrier unvalidated** | Exponential Krogh-cylinder approximation across 3 tissue types. #335 validates it against published MEASURED penetration data: the exponential FORM is confirmed (Primeau 2005 PMID 16361566 and Tannock 2002 PMID 11895922 both report exponential decline of drug vs distance-from-vessel in vivo), and the doxorubicin transport reference (model λ=50 µm, half-distance 34.7 µm) sits WITHIN Tannock 2002's measured 25 to 75 µm and ~13% below Primeau 2005 / Minchinton 2006 (40 to 80 µm), i.e. right form and order of magnitude, conservative (shorter) end. A drift-guard ties the validated λ to the Rust presets. NOT validated: (1) the RSL3-like λ=100 µm (no ferroptosis inducer has published spatial penetration data, so it is an extrapolation), and (2) the binding-site barrier in #335's title, because the model has NO such mechanism (uptake is linear and lumped into λ, so penetration depth is dose-INDEPENDENT; a true binding-site barrier is saturable/dose-dependent, but a data-availability review (#335) concluded the mechanism is NOT warranted for the small molecules this model targets and is deliberately NOT added: the strong dose-dependent barrier is an ANTIBODY phenomenon (Fujimori 1990 PMID 2362198, Saga 1995 PMID 7568060, Thurber/Wittrup 2008 PMID 18541331 penetration ~ sqrt(dose)), it is physically WEAK for small molecules (a deep binding sink barely saturates at achievable doses, El-Kareh/Secomb), and no extractable small-molecule dose-resolved penetration-depth data exists to validate it; so #335's binding-site clause is resolved by evidence, not by building unvalidatable complexity). So the cross-tissue comparison (manuscript §6.1) stays directional, not quantitative. #315 adds an off-by-default ECM-tortuosity factor (`λ_eff = λ/√τ`; denser ECM shortens penetration, Netti 2000 PMID 10811131 / Provenzano 2012 PMID 22439937), `τ=1` for all shipped tissues (identity/byte-identical), uncalibrated. `scripts/validate_penetration.py`; see `analysis/calibration/penetration-validation.md`. |
 | Ferroptotic trigger-wave front | #482 | `trigger_wave` | **Partially anchored to measured data (#482); iron-dose SHAPE predicted, absolute diffusion not separated** | The new `trigger_wave` module solves the 1-D bistable Nagumo reaction-diffusion front `dL/dt = D*Lxx + k*L*(L-a)*(1-L)` (closed-form speed `c = sqrt(D*k/2)*(1-2a)`), the SPATIAL complement of the single-cell switch (#344). Ferroptosis propagates as a constant-speed lipid-peroxide/ROS front, measured by Co/Wu/Lee/Chen Nature 2024 (PMID 38987590; open code github.com/imb-lcd/ftw2024 + figshare 25762806) at 5.52 um/min baseline, iron-tunable to 2.33 (DFO chelation) / 9.40 (iron loading) um/min. The autocatalytic rate `k` scales with labile iron (Fenton), so `c ~ sqrt(iron)`. ANCHORED: the baseline is a one-point calibration of the product `D*k` to 5.52 um/min, and the iron-dose RESPONSE SHAPE `c ~ sqrt(iron)` reproduces the measured 2.33/5.52/9.40 at iron fold-changes ~0.18/1.0/2.9 — BUT those folds are BACK-SOLVED from the measured speeds (iron = (speed/baseline)²), so `c ~ sqrt(iron)` reproduces them BY CONSTRUCTION: this is a back-solve consistency check, NOT an independent test of the iron-dose response shape (`iron_dose_shape_independently_validated = false`; #528). The only non-circular content is the baseline one-point `D*k` calibration plus the plausibility of those inferred folds. Checked by `scripts/validate_trigger_wave.py` (pure-stdlib, CI; drift-guarded against the Rust `baseline()`). The numeric PDE solve agrees with the closed form (cross-language self-consistency). STILL OPEN: `D` is absorbed into the one-point `D*k` fit (a first-principles calibration would fix `D` from a measured lipid-radical diffusion coefficient), and the GPX4-defense leg (front slows/halts as the ignition threshold rises toward 0.5) is direction-only with no matched dataset. Opt-in (nothing in the production matrix calls it) ⇒ byte-identical; not in the C ABI. Calibrate `D` vs a measured radical diffusivity + the NADPH-oxidase-inhibitor dose-response Co 2024 also reports. |
 | Photosensitizer PK | `photosensitizer_pk` | **Partially anchored** | Distribution-phase + inter-drug ROS-yield normalization closed via #203 with literature scaling; absolute cellular PK still estimated. |
-| Immune ICD/DAMP cascade (2D) | `immune` | **Uncalibrated (illustrative); direction literature-anchored (#288)** | DAMP diffusion, T-cell kill rates estimated. The 104:1 SDT:RSL3 ratio (manuscript §7.2) is "a theoretical ceiling … not a quantitative prediction." Per #288, the *direction* (SDT ≫ RSL3 immune priming) is supported by verified literature (Wiernicki 35760796; Wang 34669472; Luo 35568916; Foglietta 38232641); the 2D 104:1 over-extrapolates because the model's saturating Michaelis-Menten DAMP→activation (Kd=50) is driven deep into saturation by the dense 2D kill field, while 3D volumetric dilution keeps it sub-saturating (~4:1, more consistent with the literature). The exact ratio stays uncalibratable. |
+| Immune ICD/DAMP cascade (2D) | `immune_spatial` / `sim-tme` | **Uncalibrated (illustrative); passive model accounting available** | The [frozen 2D replay](../../analysis/immune-2d-measurement-report.md) reconstructs the historical 521 SDT versus 5 RSL3 total immune kills (104.2:1; manuscript §8.2), preserving the full 33-condition summary. Completed-release mean LP is 19.123 for SDT (139,640 releases) versus 18.2658 for RSL3 (160 releases; three additional deaths censored at the horizon). SDT has 2,314,460 eligible cell-step opportunities versus 770,701 for RSL3; mean activation is 0.0385056 versus 0.00130919. No eligible opportunity in any arm reaches Kd=50 (SDT maximum DAMP 10.5005), contradicting the former deep-saturation explanation. These are model quantities, not DAMP potency or independent biological validation. The separate approximately 4:1 3D result does not isolate volumetric dilution: geometry, tumor size, transport, and RNG streams differ. Diffusion, kill rates, and LP-to-DAMP scaling remain uncalibrated; matched biological release and immune-readout measurements are still needed. |
 
 ## 3D realism layers (`sim-tme-3d` track)
 
@@ -227,30 +227,31 @@ rows than the "more than a dozen" realism-layer count above.
 The three 3D targets (`3d_rsl3_o2_collapse_ratio`, `3d_immune_sdt_dominates`,
 `3d_stromal_boundary_shielding`) are **self-consistency** — they regression-guard
 the 3D model's own predictions, not measured values. `3d_validation_report.md`
-records that, like-for-like, the 2D engine produces a **larger** immune ratio
-than 3D (104:1 vs **4:1**) and a slightly more complete hypoxia collapse — i.e.
-the 3D numbers are not "stronger," and the immune ratio in particular is
-sensitive to grid size / volumetric DAMP dilution.
+records a **larger** total immune-kill ratio in the historical 2D comparison
+than in the separate 3D comparison (approximately 104:1 versus **4:1**), and a
+slightly more complete hypoxia collapse. These are outputs of different
+geometries, tumor sizes, transport settings, and RNG streams; their difference
+does not identify volumetric dilution or a dimension effect.
 
-**Immune target — direction now literature-anchored (#288).** A #288 literature
-review (every PMID verified against PubMed) established that the SDT:RSL3 immune
-ratio's *exact value* cannot be calibrated — no published study runs SDT and an
-RSL3-only arm against a shared immune readout, and the previously-named
-"Nguyen 2019" source was a **phantom citation** (no such applicable study exists;
-removed from `targets.yaml`). But the *direction* (ratio > 1) and *single-digit
-magnitude-class* ARE supported by verified primary literature: the
-RSL3/GPX4-inhibitor denominator is non- to weakly-immunogenic (Wiernicki 2022
-PMID 35760796, 0% vaccination protection; with the genuine caveat that early
-ferroptosis can be immunogenic — Efimova 2020 PMID 33188036), SDT drives
-DC maturation + CD8 infiltration over controls (Wang 2021 PMID 34669472;
-Luo 2022 PMID 35568916; pancreatic-spheroid SDT-ICD Foglietta 2024 PMID 38232641;
-the precise fold-changes are figure-level, not abstract-level). The 2D 104:1
-over-extrapolates for a model-internal reason: the immune layer's saturating
-Michaelis-Menten DAMP→activation (Kd=50) is driven deep into saturation by the
-dense 2D kill field, whereas 3D volumetric DAMP dilution keeps it sub-saturating
-(the more literature-consistent ~4:1). So `3d_immune_sdt_dominates`
-stays self-consistency for its *value* but is now literature-anchored for its
-*direction and magnitude bound*.
+**Immune target — literature motivates the hypothesis, not a ratio bound.**
+The #288 review removed the previously named "Nguyen 2019" source, a phantom
+citation, from `targets.yaml`. The cited literature includes both impaired
+DC-mediated immunity under pharmacologic ferroptosis (Wiernicki 2022,
+PMID 35760796) and immunogenic early ferroptosis (Efimova 2020,
+PMID 33188036), alongside SDT immune activation or DAMP induction in other
+experimental contexts (Wang 2021, PMID 34669472; Luo 2022, PMID 35568916;
+Foglietta 2024, PMID 38232641). It supplies no matched SDT-versus-RSL3 assay
+that would calibrate this total immune-kill ratio or establish a single-digit
+magnitude bound.
+
+The passive 2D replay now directly contradicts the earlier claim that the
+104:1 ratio arose from deep saturation: none of its eligible cell-step
+opportunities reaches even half-maximal activation (DAMP ≥ Kd=50), and none
+reaches 90% activation (DAMP ≥ 9Kd=450). The frozen [3D measurement
+record](../../analysis/immune-measurement-report.md) is a separate model
+comparison, not a controlled dilution experiment. Accordingly,
+`3d_immune_sdt_dominates` remains a self-consistency check; neither its value
+nor a biological magnitude bound is independently validated by these records.
 
 ## Calibration roadmap (priority order)
 
@@ -258,13 +259,16 @@ Calibration is **data-gated**: each item needs an independent measurement the
 repo does not currently hold. Listed by leverage (how much it would change a
 load-bearing claim) × tractability (how obtainable the data is):
 
-1. **Immune coupling (2D + 3D).** ~~Needs a published SDT-immune-priming dataset.~~
-   **DONE as far as the literature allows (#288):** the direction + magnitude-class
-   are now literature-anchored (see the immune-target note above). What remains
-   genuinely data-blocked is a *precise* calibrated value, which requires a study
-   running SDT and RSL3 against a **shared** immune readout — none exists. The
-   honest residual is that the exact ratio (3D ~4:1) is uncalibratable, not that
-   the claim is ungrounded; the keystone direction is supported.
+1. **Immune coupling (2D + 3D).** **Passive model accounting complete for the
+   canonical comparisons; independent calibration pending.** The #288 review
+   supplied biological motivation, but its earlier magnitude-class claim is
+   not supported by a shared SDT-versus-RSL3 readout. The frozen 2D and 3D
+   records now separate deaths, releases, horizon censoring, and eligible
+   opportunities; the 2D activation summaries reject the former saturation
+   explanation. The remaining calibration needs matched biological DAMP
+   release per dead cell, DC maturation, and immune killing, with death counts,
+   sampling times, and spatial distributions reported. Neither a precise ratio
+   nor a biological magnitude bound is established by the current records.
 2. **Persister kinetics.** Direction is well-supported; only the rates are
    guessed. A single Hangauer-style multi-cycle screen would fit
    acquisition/reversion/`max_fraction`. Tractable, well-scoped.

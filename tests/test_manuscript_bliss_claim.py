@@ -10,7 +10,9 @@ the tests. They guard the interpretation and decision-rule distinction in the
 reader-facing sections, without modifying the historical preregistration.
 """
 
+import gzip
 import json
+import math
 import re
 from pathlib import Path
 
@@ -132,8 +134,46 @@ def test_immune_claim_does_not_infer_a_per_dead_cell_ratio_from_population_means
     threshold = re.search(r"death_threshold: ([\d.]+)", default).group(1)
     body = _section(MANUSCRIPT.read_text(), "### 8.2 Immune Coupling: DAMP-Mediated T Cell Activation")
     assert f"default threshold of {threshold}" in body
-    assert "not LP conditional on death in this matched spatial run" in body
-    assert "No treatment-specific per-dead-cell LP or DAMP ratio is established" in body
+    # The matched spatial ledger now measures the cohort that was previously
+    # missing. Bind each stated mean to completed releases, so an all-cell
+    # population mean cannot be substituted and presented as LP per death.
+    archive = ROOT / "analysis/immune-2d-measurements/observations.json.gz"
+    observations = json.loads(gzip.decompress(archive.read_bytes()))
+    arms = {row["condition_name"]: row for row in observations["conditions"]}
+    for treatment in ("RSL3", "SDT"):
+        events = arms[f"immune_{treatment}"]["measurements"]["ferroptotic_events"]
+        completed = [event for event in events if event["release_step"] is not None]
+        mean_lp = math.fsum(event["release_lp"] for event in completed) / len(completed)
+        claim = re.search(
+            rf"{treatment} has ([\d,]+) completed releases with mean release LP ([\d.]+)",
+            body,
+        )
+        assert claim, f"{treatment}'s LP mean must name its completed-release cohort"
+        assert int(claim.group(1).replace(",", "")) == len(completed)
+        assert float(claim.group(2)) == pytest.approx(mean_lp, rel=5e-6)
+    assert "means over completed-release cohorts, not all dead cells" in body
+    assert "neither the LP values nor their ratio measures biological DAMP potency" in body
+    assert "a model quantity, not a biological per-dead-cell DAMP or DC-maturation effect" in body
+    assert "terminal DAMP only after the final immune update" in body
+    # A successful PDF build previously dropped this whole table: only the
+    # legacy hardcoded tables were converted, and cleanup erased other rows.
+    # Check every manuscript value pair in the generated table, not merely
+    # that the generator or TeX mentions the new measurements somewhere.
+    md_table = re.search(r"(?m)^\| Measurement \| RSL3 \| SDT \|\n(?:^\|.*\n)+", body)
+    assert md_table, "the eligible-exposure table is missing from the manuscript"
+    tex = (ROOT / "article/drafts/v1.tex").read_text()
+    tex_table = re.search(
+        r"\\label\{tab:immune-measurements\}(.*?)\\end\{table\}", tex, re.S)
+    assert tex_table, "the eligible-exposure table is missing from the generated PDF source"
+    rows = md_table.group().strip().splitlines()[2:]
+    for row in rows:
+        label, rsl3, sdt = [cell.strip() for cell in row.strip("|").split("|")]
+        label_prefix = label.split(" ≥ ", 1)[0]
+        assert re.search(
+            re.escape(label_prefix) + r"[^&\n]*&\s*" + re.escape(rsl3)
+            + r"\s*&\s*" + re.escape(sdt) + r"\s*\\\\", tex_table.group(1)), (
+            f"generated measurement table lost or reassigned row {label!r}")
+    assert "[measurement report](" not in tex and "[frozen protocol](" not in tex
     for unsupported in ("~7.8", "~2.6× more DAMPs", "LP reaches ~20"):
         assert unsupported not in body
     assert not re.search(r"release at least \d+(?:\.\d+)?-fold more[^\n]*per dead cell", body), (
@@ -150,4 +190,4 @@ def test_immune_claim_does_not_infer_a_per_dead_cell_ratio_from_population_means
     caption = next(line for line in caption_source.splitlines()
                    if "'16': ('fig19_immune_coupling_flow'" in line)
     assert "total immune-kill ratio" in caption
-    assert "not a per-dead-cell DAMP or immunogenicity ratio" in caption
+    assert "not a DAMP potency or per-dead-cell immunogenicity ratio" in caption

@@ -152,8 +152,8 @@ def assemble(raw: dict) -> dict:
                 "direction": "gain" if value > 0 else "loss",
                 "tied_with": sorted(t[0] for t in tied[1:])}
     dominant = {ph: _dominant(ph) for ph in phenos}
-    # The amplification axis, reported separately because it is not a
-    # resistance pressure -- it is what an arm's death mode EARNS.
+    # The panel's post-death LP surrogate is reported separately from the
+    # resistance axes; it does not identify the cause of immune amplification.
     amp = []
     for c in conds:
         q = c.get("damp_per_death") or {}
@@ -312,34 +312,32 @@ def render(d: dict) -> str:
 
     qr = d.get("quality_ratio")
     if qr:
-        L += ["## Immune amplification is a COUNT effect, not a quality effect", "",
-              "The manuscript reports that sonodynamic therapy generates far "
-              "more immune kills than the pharmacologic inducer, and it does. "
-              "This measures WHY, and the answer refines the claim rather "
-              "than confirming it.", "",
-              f"In the unstressed {qr['phenotype']} state, DAMP release PER "
-              f"DEATH is {qr['sdt']:.2f} for SDT against {qr['rsl3']:.2f} for "
-              f"RSL3 — a ratio of **{qr['ratio']:.2f}×**. The two death modes "
-              "are not very different in quality. What differs is how many "
-              "cells they kill"
-              + (f", and there the ratio is {qr['kill_ratio']:.2f}×"
+        L += ["## Post-death LP does not identify the cause of immune amplification", "",
+              "This is a separate modality-panel scenario from "
+              "`sim-modality-panel --tme-sweep`, not the canonical 2D spatial "
+              "immune comparison behind the historical 104:1 ratio.", "",
+              f"In the unstressed {qr['phenotype']} state, the panel's "
+              f"DAMP-per-death surrogate is {qr['sdt']:.2f} for SDT against "
+              f"{qr['rsl3']:.2f} for RSL3 — a ratio of **{qr['ratio']:.2f}×**. "
+              "It is LP multiplied by the model's DAMP-per-LP factor"
+              + (f". The corresponding kill-fraction ratio is {qr['kill_ratio']:.2f}×"
                  if qr.get("kill_ratio") else "")
-              + ". The amplification advantage is overwhelmingly a count "
-              "effect.", "",
-              "**And the first version of this measurement got it wrong in an "
-              "instructive way.** It read lipid peroxidation at the moment of "
-              "death, which returns approximately the death threshold FOR "
-              "EVERY ARM by construction — death IS the threshold crossing. "
-              "Measured that way both arms reported ~10.2 and the quality "
-              "difference vanished entirely. It had not vanished; it was "
-              "being measured before it happens. The spatial binaries read "
-              "`lp_at_grace_end` rather than `lp` for exactly this reason, "
-              "and the field name says so: an arm delivering exogenous ROS "
-              "keeps climbing through the post-death grace period while one "
-              "that merely disabled a repair enzyme does not.", "",
-              "A quantity that is equal for every arm by construction is not "
-              "a measurement of anything, and the tell was that it came out "
-              "suspiciously close to a threshold the model defines.", ""]
+              + ". These are model quantities, not biological DAMP potency. "
+              "The comparison does not isolate how death counts, release "
+              "kinetics, spatial exposure, or remaining target cells contribute "
+              "to immune kills.", "",
+              "The panel records LP after the configured post-death grace "
+              "period, or at the simulation horizon if that period is "
+              "incomplete. Its mean combines those outcomes. Death-time LP "
+              "instead records threshold crossing; it is a distinct readout, "
+              "not a substitute for later release LP. Both SDT and RSL3 can "
+              "accumulate LP after death in this model.", "",
+              "The [canonical 2D event report](immune-2d-measurement-report.md) "
+              "separately measures completed and censored release cohorts, "
+              "living-cell eligibility and exposure during immune updates. "
+              "Those observations belong to their own scenario and do not "
+              "turn this panel's surrogate ratio into a causal explanation "
+              "of the historical immune-kill ratio.", ""]
 
     L += ["## What this does not say", "",
           (f"**{len(inert)} of the {len(axes)} axes were not tested, they were "

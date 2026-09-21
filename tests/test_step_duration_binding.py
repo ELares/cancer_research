@@ -1,8 +1,8 @@
 """The step-to-wall-clock readings, pinned to the sources they are read from.
 
 Prediction P3 is stated in days and the model runs in steps, so scoring it
-needs a conversion. `parameter_provenance.md` records that the engine does not
-have one conversion but TWO, 16x apart, in different binaries.
+needs a conversion. `parameter_provenance.md` records two candidate source
+readings, 16x apart, without adopting a biochemical step duration.
 
 WHAT THE FIRST VERSION OF THIS FILE GOT WRONG, kept here because the shape
 recurs. It asserted there was exactly one binding and guarded that with a grep
@@ -55,6 +55,16 @@ def test_the_audit_scans_the_binaries_not_only_the_library():
         f"the audit does not scan {sorted(on_disk - scanned)}, so a binding "
         "living there is invisible to every claim it makes")
     assert "ferroptosis-core" in scanned
+    observers = set((SIMS / "observers").glob("*.rs"))
+    assert observers, "the shared simulator observer source is missing"
+    assert observers <= set(files), (
+        "the audit omits the observer helpers included by the spatial binaries")
+    for observer in observers:
+        assert m._key(observer) == f"observers/{observer.name}"
+        assert m._path_for(m._key(observer)) == observer
+        assert observer.parent != CORE, "passive helpers are not biochemical library modules"
+    keys = [m._key(path) for path in files]
+    assert len(keys) == len(set(keys)), "shared and binary helper filenames collide"
     # And the file list must be deterministic: the artifact is byte-compared
     # in CI on two filesystems.
     assert files == m._rust_sources()
@@ -76,15 +86,22 @@ def test_both_competing_readings_are_still_found():
     assert "16x apart" in doc
 
 
-def test_the_implied_window_is_still_what_sim_tme_says():
-    """A doc-comment scope claim plus a loop length. Checked at the source."""
+def test_the_historical_window_is_not_an_adopted_sim_tme_clock():
+    """Retain the README match without restoring the removed validity claim."""
     main = (SIMS / "sim-tme/src/main.rs").read_text()
     assert re.search(r"const N_STEPS:\s*\w+\s*=\s*180", main), (
         "sim-tme's loop length changed, so 16 min/step no longer follows")
-    assert "resident T cell phase (0-48h)" in main
-    w = _audit()["implied_windows"][0]
-    assert w["binary"] == "sim-tme" and w["n_steps"] == 180
+    assert "historical 0–48 h description is a scope" in main
+    assert "not a calibrated conversion from simulation steps to hours" in main
+    windows = [w for w in _audit()["implied_windows"] if w["binary"] == "sim-tme"]
+    assert len(windows) == 1
+    w = windows[0]
+    assert w["module"] == "README.md" and w["n_steps"] == 180
     assert w["minutes_per_step"] == round(w["window_hours"] * 60 / w["n_steps"], 4)
+    source = (SIMS / "sim-tme/README.md").read_text().splitlines()[w["line"] - 1]
+    assert "historical scope description" in source
+    assert "do not calibrate the biochemical step duration" in source
+    assert "not evidence that it has been measured or adopted" in _doc()
 
 
 def test_the_doc_does_not_adopt_either_reading_as_correct():
@@ -313,9 +330,10 @@ def test_every_row_of_the_reading_table_matches_the_measurement():
             # reading "... is NOT modeled" as evidence FOR the thing.
             #
             # "refuse a quote that omits a negation present in the line" is the
-            # obvious rule and it REJECTS CORRECT WORK. `sim-tme/README.md:138`
-            # reads "captures only the resident T cell phase (0-48h), not
-            # systemic lymph node priming (1-7 days)", and the row quotes the
+            # obvious rule and it REJECTS CORRECT WORK. The historical-scope
+            # line in `sim-tme/README.md` reads "captures only the resident T
+            # cell phase (0-48h), not systemic lymph node priming (1-7 days)",
+            # and the row quotes the
             # affirmative half truthfully; the negation scopes the OTHER
             # clause. Position does not separate the two cases either, because
             # in both the negation follows the quoted span.
@@ -333,7 +351,8 @@ def test_the_subsystem_rule_is_stated_and_not_a_per_binary_one():
     doc = _doc()
     assert "not cleanly separable by binary" in doc
     assert "1 min/step** applies to the PK trajectory" in doc
-    assert "16 min/step** applies to the immune cascade" in doc
+    assert "16 min/step** is the conditional reading" in doc
+    assert "not an assigned duration for the immune cascade or the biochemical loop" in doc
     # And the reason must be checkable: sim-tme-3d really does state both.
     d = _audit()
     bins = {w["binary"] for w in d["implied_windows"]}
@@ -363,9 +382,10 @@ def test_the_superseded_headline_is_gone_from_every_site():
         assert "EXACTLY ONE module prices a step" not in flat, (
             f"{f.name} still carries the retracted one-binding headline")
     md = " ".join((REPO / "analysis/engine-time-audit.md").read_text().split())
-    assert "A second reading is IMPLIED and never declared" in md, (
+    assert "A second candidate reading comes from scope-window text" in md, (
         "the artifact reports only the declared binding, so its headline "
         "contradicts the reconciliation it points at")
+    assert "not a calibrated binding" in md
 
 
 # ---------------------------------------------------------------------------
@@ -416,8 +436,10 @@ def test_the_immune_delay_figures_are_what_the_code_implies():
     """"reads as 16 hours under it and one hour under the other"."""
     doc = _doc()
     main = (SIMS / "sim-tme/src/main.rs").read_text()
-    m = re.search(r"let immune_start_step\s*=\s*(\d+)", main)
+    m = re.search(r"const IMMUNE_START_STEP:\s*u32\s*=\s*(\d+)", main)
     assert m, "sim-tme no longer declares an immune activation delay"
+    assert re.search(r"let immune_start_step\s*=\s*IMMUNE_START_STEP\s*;", main), (
+        "the declared delay is no longer used by sim-tme's immune loop")
     steps = int(m.group(1))
     d = _audit()
     implied = max(w["minutes_per_step"] for w in d["implied_windows"])
@@ -499,10 +521,15 @@ def test_the_manuscript_adjacency_claim_is_checked_against_the_manuscript():
     end = next((n for n in range(start + 1, len(md))
                 if md[n].startswith(("### ", "## "))), len(md))
     bullets = [n for n in range(start, end) if md[n].startswith("**")]
-    window = next((n for n in bullets if "0-48 hour" in md[n]), None)
+    window = next((n for n in bullets if md[n].startswith("**Simplified immune layer.**")), None)
     steps = next((n for n in bullets if "180 steps within a single" in md[n]), None)
     assert window is not None and steps is not None, (
         "Section 9.4 no longer carries both bullets the doc cites")
+    assert "historical 0-48h scope label" in md[window]
+    assert "does not calibrate" in md[window]
+    roadmap = next(line for line in md if "The current immune layer models" in line)
+    assert "physical duration uncalibrated" in roadmap
+    assert "historical 0-48h label is not a time mapping" in roadmap
     later = [n for n in bullets if n > window]
     assert later and later[0] == steps, (
         f"the 0-48h bullet (line {window + 1}) is not immediately above the "
@@ -606,22 +633,31 @@ def test_the_detectors_stated_reach_matches_what_it_does():
     An unbounded "will now find a third reading if one appears" was the same
     over-claim this section retracts: the detector takes ONE window per line,
     needs the scope verb and the window on one line, and walks `sim-*` only.
-    `sim-tme/README.md:138` already carries a second window it drops.
+    The historical-scope line in `sim-tme/README.md` carries a second window
+    it drops. Locate it by content so unrelated README edits cannot move it
+    out from under this check.
     """
     doc = _doc()
     assert "ONE window per line" in doc
     assert "if one appears" not in doc, (
         "the reach claim is unbounded again")
-    # The dropped second window really is on that line.
-    line = (SIMS / "sim-tme/README.md").read_text().splitlines()[137]
-    assert "0-48h" in line and "1-7 days" in line, (
-        "README:138 no longer carries two windows, so the example is stale")
+    # The dropped second window really is on the uniquely identified line.
+    candidates = [(n, line) for n, line in
+                  enumerate((SIMS / "sim-tme/README.md").read_text().splitlines(), 1)
+                  if "resident T cell phase (0-48h)" in line
+                  and "systemic lymph node priming (1-7 days)" in line]
+    assert len(candidates) == 1, (
+        "README no longer has one unique line carrying both historical scope windows")
+    lineno, _ = candidates[0]
+    assert f"sim-tme/README.md:{lineno}" in doc, (
+        "the provenance document's two-window example cites a stale README line")
     import sys
     sys.path.insert(0, str(REPO / "scripts"))
     import engine_time_audit as m
     hits = [w for w in m.find_implied_windows()
             if w["module"] == "README.md" and w["binary"] == "sim-tme"]
-    assert len(hits) == 1 and hits[0]["window_hours"] == 48.0, (
+    assert len(hits) == 1 and hits[0]["line"] == lineno \
+        and hits[0]["window_hours"] == 48.0, (
         "the detector now reports more than one window for that line, so the "
         "stated limitation is stale")
 
