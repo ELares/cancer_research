@@ -23,6 +23,12 @@ kill rate 0.02, PD-1 brake 0.7, and zero anti-PD-1 efficacy, exhaustion and
 ferroptotic immunosuppression. These are model assumptions, not independently
 calibrated experimental values.
 
+Offline validation pins the complete schema-1 configuration in
+[`immune_measurement_config_v1.json`](../scripts/immune_measurement_config_v1.json),
+including biochemical/spatial parameters and both RNG salts. This records the
+frozen model configuration; it does not supply experimental calibration. Keep
+this contract unchanged when future model defaults evolve.
+
 ## Observation points and denominators
 
 1. **Ferroptotic death:** after the biochemical update, record lattice identity,
@@ -61,9 +67,14 @@ results while correcting claims that it isolates per-cell amplification.
 - Every per-step event count and DAMP sum agrees with the event ledger.
 - Per-cell and per-step opportunity/DAMP totals agree; there are no eligible
   opportunities after a cell dies or before immune activation.
+- Every observed lattice identity belongs to the canonical tumor sphere.
+- Kill-event DAMP fits within the corresponding cell and step opportunity
+  sums; eligible-cell DAMP fits within the full field mass at that step.
+- Starting from zero, completed releases and per-step clearance reproduce the
+  pre-terminal field mass. Diffusion conserves total DAMP in this configuration.
 - Terminal DAMP addition equals the sum from censored deaths and the increase
   in final field mass. Cumulative injections need not equal field mass because
-  diffusion and clearance occur between observations.
+  clearance occurs between observations.
 - Observing a run consumes no RNG and receives no mutable simulation state.
   Rust tests compare serialized legacy results and per-step snapshot arrays
   with observation on/off and compare observation across Rayon thread counts.
@@ -86,7 +97,18 @@ The command builds with `--locked`, runs the unchanged default matrix and the
 three observed conditions in separate temporary directories, validates their
 results, and creates `analysis/immune-measurements/`. It refuses to replace an
 existing archive. For a new independent capture, supply a new `--archive`
-directory and `--report` path. `CARGO_TARGET_DIR` may select a build cache.
+directory and a sibling `--report` path, for example:
+
+```bash
+python3 scripts/immune_measurement_report.py --capture --threads 8 \
+  --archive analysis/immune-measurements-replicate \
+  --report analysis/immune-measurements-replicate.md
+```
+
+The report must be outside the archive directory and must not alias any of its
+files through symlinks or hard links. `CARGO_TARGET_DIR` may select a build cache;
+capture uses the executable path reported by Cargo, including configured build
+targets.
 
 The archive contains the production summary, compressed raw observations,
 a compressed source bundle and a manifest with source commit, individual
@@ -100,7 +122,8 @@ are needed to verify it.
 python3 scripts/immune_measurement_report.py
 
 # Focused validation, followed by the normal repository checks:
-python3 -m pytest tests/test_immune_measurement_report.py -q
+python3 -m pytest tests/test_immune_measurement_report.py \
+  tests/test_immune_measurement_paths.py tests/test_immune_measurement_build.py -q
 cd simulations
 cargo test -p sim-tme-3d immune_measurements
 ```

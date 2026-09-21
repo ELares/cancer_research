@@ -20,10 +20,12 @@ import math
 import os
 from pathlib import Path
 import platform
+import shlex
 import shutil
 import subprocess
 import tempfile
 import tarfile
+from urllib.parse import quote
 
 ROOT = Path(__file__).resolve().parents[1]
 ARCHIVE = ROOT / "analysis" / "immune-measurements"
@@ -31,6 +33,7 @@ REPORT = ROOT / "analysis" / "immune-measurement-report.md"
 NAMES = ("immune_Control", "immune_RSL3", "immune_SDT")
 ARTIFACTS = {"observations.json.gz", "baseline-summary.json", "sources.tar.gz"}
 TOOLCHAIN = "1.96.0"
+CONFIG_V1 = Path(__file__).with_name("immune_measurement_config_v1.json")
 
 
 def require(ok: bool, message: str) -> None:
@@ -59,6 +62,13 @@ def close(a: float, b: float, label: str) -> None:
     require(math.isclose(a, b, rel_tol=1e-10, abs_tol=1e-8), label)
 
 
+def at_most(part: float, whole: float, label: str) -> None:
+    """A nonnegative subset cannot exceed its containing population's sum."""
+    finite(part, label)
+    finite(whole, label)
+    require(part <= whole or math.isclose(part, whole, rel_tol=1e-10, abs_tol=1e-8), label)
+
+
 def mean(values: list[float]) -> float | None:
     return math.fsum(values) / len(values) if values else None
 
@@ -80,6 +90,8 @@ def reconcile_condition(row: dict, cfg: dict) -> dict:
     n_steps, delay = cfg["n_steps"], cfg["immune_start_step"]
     grace, threshold = cfg["post_death_steps"], cfg["damp_kill_threshold"]
     factor = cfg["immune"]["damp_per_lp"]
+    clearance = finite(cfg["immune"]["damp_clearance_rate"], "DAMP clearance")
+    require(clearance <= 1, "DAMP clearance outside [0, 1]")
     events, kills = obs["ferroptotic_events"], obs["immune_kill_events"]
     cells, steps, terminal = obs["eligible_cells"], obs["steps"], obs["terminal"]
     require([s["step"] for s in steps] == list(range(n_steps)), "complete ordered steps")
@@ -99,6 +111,7 @@ def reconcile_condition(row: dict, cfg: dict) -> dict:
     completed, censored = [], []
     death_steps, release_steps, kill_steps = Counter(), Counter(), Counter()
     released = [[] for _ in steps]
+    killed_damp = [[] for _ in steps]
     for e in events:
         ds = integer(e["death_step"], "death step")
         require(ds < n_steps, "death outside simulation")
@@ -150,9 +163,15 @@ def reconcile_condition(row: dict, cfg: dict) -> dict:
         require(k["cell_index"] in eligible_by_id, "kill without eligible cell")
         c = eligible_by_id[k["cell_index"]]
         require(c["last_step"] == step, "immune cell eligible after kill")
+        at_most(k["local_damp"] + threshold * (c["opportunities"] - 1),
+                c["local_damp_sum"], "kill DAMP exceeds cell opportunity sum")
+        if c["opportunities"] == 1:
+            close(k["local_damp"], c["local_damp_sum"], "single-opportunity kill DAMP")
         kill_steps[step] += 1
+        killed_damp[step].append(k["local_damp"])
 
     dead_before_immune = possible_eligible = 0
+    field_mass = 0.0
     for s in steps:
         step = s["step"]
         possible_eligible += eligible_interval_changes[step]
@@ -162,6 +181,10 @@ def reconcile_condition(row: dict, cfg: dict) -> dict:
         require(s["completed_releases"] == release_steps[step], "step release reconciliation")
         require(s["immune_kills"] == kill_steps[step], "step kill reconciliation")
         close(s["released_damp"], math.fsum(released[step]), "step release DAMP")
+        # The canonical field starts at zero. Diffusion conserves mass,
+        # including the source cutoff; every cell then receives the same
+        # clearance factor. These releases are its only within-run sources.
+        field_mass = (field_mass + s["released_damp"]) * (1 - clearance)
         dead_before_immune += s["ferroptotic_deaths"]
         require(s["immune_kills"] <= s["eligible_cells"] <= result["total_tumor"] - dead_before_immune,
                 "step eligibility count")
@@ -175,6 +198,13 @@ def reconcile_condition(row: dict, cfg: dict) -> dict:
                 "eligible DAMP without eligible cells")
         require(s["eligible_local_damp_sum"] >= threshold * s["eligible_cells"] - 1e-8,
                 "step DAMP below threshold")
+        at_most(s["eligible_local_damp_sum"], field_mass,
+                "eligible DAMP exceeds whole field mass")
+        kill_damp_sum = math.fsum(killed_damp[step])
+        at_most(kill_damp_sum + threshold * (s["eligible_cells"] - s["immune_kills"]),
+                s["eligible_local_damp_sum"], "kill DAMP exceeds step opportunity sum")
+        if s["immune_kills"] == s["eligible_cells"]:
+            close(kill_damp_sum, s["eligible_local_damp_sum"], "all-eligible killed step DAMP")
 
     opportunities = sum(c["opportunities"] for c in cells)
     require(opportunities == sum(s["eligible_cells"] for s in steps), "opportunity reconciliation")
@@ -188,6 +218,7 @@ def reconcile_condition(row: dict, cfg: dict) -> dict:
     require(len(censored) == terminal["censored_deaths"] == terminal["terminal_additions"],
             "terminal event reconciliation")
     terminal_damp = math.fsum(e["terminal_damp"] for e in censored)
+    close(field_mass, terminal["damp_before_terminal"], "release/clearance DAMP mass balance")
     close(terminal_damp, terminal["terminal_damp"], "terminal DAMP sum")
     close(terminal["damp_before_terminal"] + terminal_damp, terminal["damp_after_terminal"],
           "terminal DAMP balance")
@@ -216,9 +247,22 @@ def expected_sha() -> str:
     return next(line.split()[0] for line in text.splitlines() if line and not line.startswith("#"))
 
 
+def in_tumor_sphere(cell_index: int, cfg: dict) -> bool:
+    """The deterministic is_tumor mask of TumorGrid3D::generate."""
+    dim = cfg["grid_dim"]
+    r, remainder = divmod(cell_index, dim * dim)
+    c, layer = divmod(remainder, dim)
+    center = dim / 2
+    radius = cfg["tumor_radius_um"] / cfg["cell_size_um"]
+    return sum((position - center) ** 2 for position in (r, c, layer)) <= radius ** 2
+
+
 def validate_observations(data: dict, baseline: dict) -> list[dict]:
     require(data["schema_version"] == 1, "measurement schema")
     cfg = data["config"]
+    contract = json.loads(CONFIG_V1.read_text())
+    require(contract["schema_version"] == 1, "configuration contract schema")
+    require(cfg == contract["config"], "complete canonical configuration changed")
     for k, v in {"grid_dim": 60, "cell_size_um": 20.0, "tumor_radius_um": 540.0,
                  "n_steps": 180, "grid_seed": 42, "post_death_steps": 5,
                  "immune_start_step": 60, "damp_kill_threshold": 0.01}.items():
@@ -243,7 +287,15 @@ def validate_observations(data: dict, baseline: dict) -> list[dict]:
                       and "stromal_mode" not in r and "ph_mode" not in r]
         require(len(candidates) == 1 and candidates[0] == row["result"], "baseline row changed")
         require(row["condition_name"] == "immune_" + row["result"]["treatment"], "condition identity")
-        summaries.append(reconcile_condition(row, cfg))
+        summary = reconcile_condition(row, cfg)
+        # Cube bounds alone admit stromal cells. Reconstruct the deterministic
+        # sphere mask used by TumorGrid3D::generate; phenotype randomness does
+        # not alter is_tumor. Cells exactly on the radius are included.
+        for population in ("ferroptotic_events", "immune_kill_events", "eligible_cells"):
+            for cell in row["measurements"][population]:
+                require(in_tumor_sphere(cell["cell_index"], cfg),
+                        "observed cell outside canonical tumor sphere")
+        summaries.append(summary)
     return summaries
 
 
@@ -251,6 +303,7 @@ def source_paths() -> list[str]:
     tracked = subprocess.check_output(["git", "ls-files", "simulations"], cwd=ROOT, text=True).splitlines()
     return sorted([p for p in tracked if p.endswith((".rs", ".toml", ".lock"))] + [
         "scripts/immune_measurement_report.py", "docs/IMMUNE_MEASUREMENT_PROTOCOL.md",
+        "scripts/immune_measurement_config_v1.json",
         "simulations/sim-tme-3d/expected_summary.sha256",
     ])
 
@@ -282,7 +335,34 @@ def load_archive(path: Path) -> tuple[dict, list[dict]]:
     return manifest, summaries
 
 
-def render(manifest: dict, summaries: list[dict]) -> str:
+def validate_output_path(archive: Path, report: Path) -> None:
+    """Keep report writes outside immutable archives, including filesystem aliases."""
+    lexical_archive = Path(os.path.abspath(archive))
+    lexical_report = Path(os.path.abspath(report))
+    resolved_archive, resolved_report = archive.resolve(), report.resolve()
+    require(not lexical_report.is_relative_to(lexical_archive)
+            and not resolved_report.is_relative_to(resolved_archive),
+            "report must be outside the immutable archive directory")
+    if report.exists():
+        for name in ARTIFACTS | {"manifest.json"}:
+            artifact = archive / name
+            require(not artifact.exists() or not report.samefile(artifact),
+                    "report must not alias an immutable archive file")
+
+
+def report_link(target: Path, report: Path) -> str:
+    return quote(os.path.relpath(target.resolve(), report.resolve().parent), safe="/")
+
+
+def reproduction_command(archive: Path, report: Path) -> str:
+    if archive.resolve() == ARCHIVE.resolve() and report.resolve() == REPORT.resolve():
+        return "python3 scripts/immune_measurement_report.py"
+    return shlex.join(["python3", str(ROOT / "scripts/immune_measurement_report.py"),
+                       "--archive", str(archive.resolve()), "--report", str(report.resolve())])
+
+
+def render(manifest: dict, summaries: list[dict], archive: Path = ARCHIVE,
+           report: Path = REPORT) -> str:
     def f(value):
         if value is None:
             return "undefined (n=0)"
@@ -345,18 +425,38 @@ def render(manifest: dict, summaries: list[dict]) -> str:
               "Every measured legacy result equals its corresponding default-matrix row; the complete "
               f"24-condition summary retains SHA-256 `{manifest['artifacts']['baseline-summary.json']}`.", "",
               "## Reproduction", "",
-              "```bash", "python3 scripts/immune_measurement_report.py", "```", "",
+              "```bash", reproduction_command(archive, report), "```", "",
               "This validates compressed raw event records, per-cell eligibility counts, every step, "
               "artifact hashes and frozen source hashes, then regenerates this report without running a simulation. "
-              "See the [protocol](../docs/IMMUNE_MEASUREMENT_PROTOCOL.md) for capture and validation commands.", "",
+              f"See the [protocol]({report_link(ROOT / 'docs/IMMUNE_MEASUREMENT_PROTOCOL.md', report)}) "
+              "for capture and validation commands.", "",
               f"- Frozen source commit: `{manifest['source_commit']}`.",
               f"- Captured: `{manifest['captured_at_utc']}`.",
               f"- Platform: `{manifest['platform']}`; `{manifest['rustc']}`; Rayon threads: {manifest['rayon_threads']}.",
               f"- Built binary SHA-256: `{manifest['binary_sha256']}`.",
-              "- [Archive and provenance](immune-measurements/manifest.json).",
-              "- [Unchanged production summary](immune-measurements/baseline-summary.json).", ""]
+              f"- [Archive and provenance]({report_link(archive / 'manifest.json', report)}).",
+              f"- [Unchanged production summary]({report_link(archive / 'baseline-summary.json', report)}).", ""]
     lines += [f"- `{s['condition']}` runtime seed: `{s['condition_seed']}`." for s in summaries]
     return "\n".join(lines) + "\n"
+
+
+def build_binary(cargo: list[str], sim: Path) -> Path:
+    """Use Cargo's actual executable path, including configured build targets."""
+    build = subprocess.run([*cargo, "build", "--locked", "--release", "-p", "sim-tme-3d",
+                            "--message-format=json-render-diagnostics"],
+                           cwd=sim, check=True, stdout=subprocess.PIPE, text=True)
+    executables = set()
+    for line in build.stdout.splitlines():
+        message = json.loads(line)
+        if (message.get("reason") == "compiler-artifact"
+                and message["target"]["name"] == "sim-tme-3d"
+                and "bin" in message["target"]["kind"]
+                and message.get("executable")):
+            executables.add(Path(message["executable"]))
+    require(len(executables) == 1, "Cargo must identify one sim-tme-3d executable")
+    binary = executables.pop()
+    require(binary.is_file(), "Cargo executable does not exist")
+    return binary
 
 
 def capture(destination: Path, threads: int) -> None:
@@ -370,9 +470,7 @@ def capture(destination: Path, threads: int) -> None:
     sim = ROOT / "simulations"
     cargo = ["rustup", "run", TOOLCHAIN, "cargo"]
     rustc = subprocess.check_output(["rustup", "run", TOOLCHAIN, "rustc", "--version"], cwd=sim, text=True).strip()
-    subprocess.run([*cargo, "build", "--locked", "--release", "-p", "sim-tme-3d"], cwd=sim, check=True)
-    meta = json.loads(subprocess.check_output([*cargo, "metadata", "--format-version=1", "--no-deps"], cwd=sim))
-    binary = Path(meta["target_directory"]) / "release" / "sim-tme-3d"
+    binary = build_binary(cargo, sim)
     env = dict(os.environ, RAYON_NUM_THREADS=str(threads))
     with tempfile.TemporaryDirectory(prefix="immune-observations-") as tmp:
         work = Path(tmp)
@@ -424,10 +522,12 @@ def main() -> None:
     parser.add_argument("--capture", action="store_true")
     parser.add_argument("--threads", type=int, default=8)
     args = parser.parse_args()
+    validate_output_path(args.archive, args.report)
     if args.capture:
         capture(args.archive, args.threads)
     manifest, summaries = load_archive(args.archive)
-    text = render(manifest, summaries)
+    text = render(manifest, summaries, args.archive, args.report)
+    validate_output_path(args.archive, args.report)
     args.report.parent.mkdir(parents=True, exist_ok=True)
     args.report.write_text(text)
     print(args.report)
