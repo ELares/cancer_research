@@ -18,7 +18,7 @@ import tempfile
 
 ROOT = Path(__file__).resolve().parents[1]
 OUTPUT = Path("docs/assets/research-data.json")
-SNAPSHOT_DATE = "2026-09-20"
+SNAPSHOT_DATE = "2026-09-21"
 REPOSITORY = "https://github.com/ELares/cancer_research/blob/main/"
 SOURCE_PATHS = (
     "analysis/census-evidence-design.json",

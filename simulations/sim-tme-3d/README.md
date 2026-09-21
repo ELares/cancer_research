@@ -365,3 +365,25 @@ After running both `sim-tme` and `sim-tme-3d` and generating the comparison tabl
 - **3D volumetric visualization** — delivered in #193/#238 (axial-slice GIF/MP4 renderer + `.npy` volumetric trajectory arrays + 2D-vs-3D comparison table). #193 closed as substantially delivered; a ParaView-grade VTK/HDF5 export remains optional polish if a manuscript figure ever needs it.
 - ~~**Larger grids**~~ — **demonstrated feasible** in #192: up to 200³ at ~1.29 GB / ~43 s (see Performance & scalability above). A standalone `sim-spatial-3d` binary (#194) was closed as superseded: `--snapshot=bare` already provides the unprotected depth-physics baseline.
 - **Empirical pimonidazole validation** — see #196.
+
+## Passive immune measurements (`--immune-measurements`)
+
+```bash
+cd simulations
+cargo run --release -p sim-tme-3d -- --immune-measurements
+# → output/tme-3d/immune_measurements.json
+```
+
+This standalone mode observes the existing `immune_Control`, `immune_RSL3`
+and `immune_SDT` conditions with their original seeds and defaults. It writes
+a separate sidecar containing ferroptotic death/release events, horizon-censored
+deaths and terminal DAMP additions, per-step immune eligibility, unique eligible
+cells and actual immune kills. It rejects extra arguments and biochemical
+environment overrides. The default matrix and its summary hash are unchanged.
+
+The [measurement protocol](../../docs/IMMUNE_MEASUREMENT_PROTOCOL.md) explains
+the populations, timing, passivity checks and provenance-capture command.
+The [committed report](../../analysis/immune-measurement-report.md) is regenerated
+offline with `python3 scripts/immune_measurement_report.py` from the repository
+root. Measurements describe the model; they do not establish independent
+biological validation or a causal per-cell DAMP effect.

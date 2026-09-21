@@ -101,9 +101,11 @@ of 50.
 
 *Not a verdict on the headline.* Supra-additive in 1 of 3 sets (`ctrpv2_point` = 1, `posterior_median` = 1 at 1.0 exactly, which is what a Bliss ratio returns when both single arms already saturate) — but `ctrpv2_point`, `posterior_median` are inadmissible above, so this row reports arithmetic in a degenerate regime rather than a direction that held or failed.
 
-## Hypoxia kill-collapse gap, and immune amplification
+## Hypoxia kill-collapse gap, and immune kill fraction
 
-| set | SDT − RSL3 hypoxic gap | SDT de-confounded immune rate |
+The immune fraction is `immune_kills / max(total_tumor - ferroptosis_kills, 1)`, using final non-ferroptotic counts. This final-population normalization does not measure living cells eligible at earlier immune windows or isolate per-cell DAMP amplification.
+
+| set | SDT − RSL3 hypoxic gap | SDT final-count immune fraction |
 |---|--:|--:|
 | `default` | 0.8661 | 0.02687 |
 | `ctrpv2_point` | 0.6062 | 1 |

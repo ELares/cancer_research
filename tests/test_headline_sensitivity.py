@@ -109,3 +109,39 @@ def test_default_binary_lookup_is_none_when_absent(tmp_path, monkeypatch):
     monkeypatch.setattr(hs, "REPO", tmp_path)
     # The function reads REPO at call time via the module global.
     assert hs._default_binary() is None
+
+
+@pytest.mark.parametrize("include_immune", [False, True])
+def test_report_distinguishes_final_counts_from_earlier_immune_eligibility(
+    tmp_path, monkeypatch, include_immune
+):
+    """Neither the full report nor its partial-run note may promise risk adjustment."""
+    report = tmp_path / "report.md"
+    monkeypatch.setattr(hs, "REPORT", report)
+    sections = []
+    if include_immune:
+        section, _ = hs.immune_section(np.ones(11), np.zeros(11), 1, 12)
+        sections.append((section, "immune"))
+    hs.write_report(sections, levels=4, total_evals=12)
+    text = report.read_text()
+    assert "immune_kills / max(total_tumor - ferroptosis_kills, 1)" in text
+    assert "final-population normalization" in text
+    assert "earlier immune windows" in text
+    assert "de-confounded" not in text.lower()
+    assert "de-confounding" not in text.lower()
+
+
+@pytest.mark.parametrize("path", [
+    "analysis/headline-sensitivity-report.md",
+    "analysis/headline-uncertainty-tme-report.md",
+    "analysis/headline-at-fitted-cascade.md",
+    "analysis/identifiability-report.md",
+    "article/drafts/v1.md",
+    "article/drafts/v1.tex",
+])
+def test_published_immune_fraction_keeps_its_eligibility_limit(path):
+    """The interpretation travels with the report and both manuscript formats."""
+    text = (REPO / path).read_text().lower()
+    assert "earlier immune windows" in text
+    assert "de-confounded immune" not in text
+    assert "per-cell immune amplification is death-density-driven" not in text

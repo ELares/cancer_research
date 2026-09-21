@@ -22,12 +22,11 @@ of the cost. It is a screening, not a variance decomposition; we report it as su
 - **Bliss synergy** (RSL3 + FSP1i 1.99x from `sim-combo-mech`): a clean scalar,
   cheap to evaluate (~seconds/run).
 - **Hypoxia kill-collapse** (SDT-minus-RSL3 hypoxic-zone kill GAP from `sim-tme`).
-- **Immune amplification** (SDT's POOL-DE-CONFOUNDED immune kill rate
-  `immune_kills / (total_tumor - ferroptosis_kills)` from `sim-tme`). The raw
-  immune-kill ratio matches the headline (SDT >> RSL3, ~104:1) but is confounded
-  for a sensitivity screen by pool depletion (SDT ferroptotically clears most of
-  the tumor first); de-confounding by the non-ferroptotic pool isolates the
-  DAMP-driven amplification per available cell and is bounded in [0, 1].
+- **Immune kill fraction** (SDT's final-population normalization
+  `immune_kills / max(total_tumor - ferroptosis_kills, 1)` from `sim-tme`).
+  The denominator uses final counts. It does not measure living tumor cells
+  eligible at earlier immune windows or isolate per-cell DAMP amplification.
+  Both the numerator and denominator can change under parameter perturbation.
 
 The two `sim-tme` headlines (hypoxia + immune) are screened from ONE shared set of
 sim-tme runs (a single run yields both observables), so the immune headline adds
@@ -223,12 +222,11 @@ def run_sim_tme_observables(params_row, binary):
 
     - `hypoxia`: the SDT-minus-RSL3 hypoxic-zone kill GAP (immune off) — the
       kill-collapse asymmetry (SDT holds, RSL3 collapses).
-    - `immune`: SDT's POOL-DE-CONFOUNDED immune kill rate (immune on),
-      `immune_kills / (total_tumor - ferroptosis_kills)`. This controls for the
-      pool the immune layer can act on (SDT ferroptotically clears most cells
-      first), so it isolates the DAMP-driven amplification rather than the
-      pool size. It is naturally bounded in [0, 1] (immune kills are a subset of
-      the non-ferroptotic cells), so it does not blow up under perturbation."""
+    - `immune`: SDT's immune kill fraction using final counts (immune on),
+      `immune_kills / max(total_tumor - ferroptosis_kills, 1)`. It is bounded
+      in [0, 1] under the model's mutually exclusive cause-of-death accounting.
+      This final-population normalization does not measure eligibility at
+      earlier immune windows or isolate a per-cell amplification mechanism."""
     with tempfile.TemporaryDirectory(prefix="ferro_morris_tme_") as workdir:
         overrides = {n: float(v) for n, v in zip(PARAM_NAMES, params_row)}
         env = dict(os.environ, FERRO_PARAM_OVERRIDES=json.dumps(overrides))
@@ -246,8 +244,9 @@ def extract_tme_observables(conditions):
     """Compute the two sim-tme headline observables from a `tme_summary.json`
     `conditions` list. Shared by the override path (`run_sim_tme_observables`)
     and the no-override default path (`headline_uncertainty._default_tme`) so they
-    never drift. `immune` floors the de-confounding pool at 1 to avoid div-by-zero
-    (it is naturally bounded [0,1])."""
+    never drift. `immune` divides by the final non-ferroptotic count, floored
+    at 1 to avoid div-by-zero. This is a final-population fraction, not a
+    measurement of the living population eligible at each immune window."""
     hypoxia = (
         _tme_row(conditions, "SDT", "off")["hypoxic_kill_rate"]
         - _tme_row(conditions, "RSL3", "off")["hypoxic_kill_rate"]
@@ -418,33 +417,32 @@ def immune_section(mu_star, sigma, n_traj, n_evals):
     order, table = _index_table(mu_star, sigma)
     top = ", ".join(f"`{PARAM_NAMES[i]}`" for i in order[:3])
     return [
-        "## Headline: immune amplification (SDT vs RSL3) — `sim-tme`",
+        "## Headline: immune kill fraction (SDT) — `sim-tme`",
         "",
-        "Observable: SDT's POOL-DE-CONFOUNDED immune kill rate, "
-        "`immune_kills / (total_tumor - ferroptosis_kills)` at the reference gradient "
-        f"(`{HYPOXIA_GRADIENT}`, immune on) from `tme_summary.json`. The raw "
-        "immune-kill ratio matches the headline (SDT >> RSL3, ~104:1) but is confounded "
-        "for a sensitivity screen by pool depletion (SDT ferroptotically clears most "
-        "of the tumor first); dividing by the non-ferroptotic pool isolates the "
-        "DAMP-driven amplification PER available cell and is bounded in [0, 1] (immune "
-        "kills are a subset of that pool, so it cannot blow up). Computed from the SAME "
+        "Observable: SDT's immune kill fraction using final counts, "
+        "`immune_kills / max(total_tumor - ferroptosis_kills, 1)` at the reference "
+        f"gradient (`{HYPOXIA_GRADIENT}`, immune on) from `tme_summary.json`. This "
+        "final-population normalization is bounded in [0, 1] under the model's "
+        "mutually exclusive cause-of-death accounting. Its denominator includes "
+        "immune-killed cells and final survivors; it does not count living tumor "
+        "cells eligible at earlier immune windows. A cell eligible then can later "
+        "die by ferroptosis and therefore be absent from this denominator. The "
+        "fraction does not isolate a per-cell DAMP effect or adjust for the full "
+        "history of opportunities for immune killing. Computed from the SAME "
         f"sim-tme runs as the hypoxia headline (Morris r={n_traj}, {n_evals} runs).",
         "",
         *table,
         "",
         f"**Top drivers:** {top}. The LP-cascade constants (`lp_propagation`, `lp_rate`) "
-        "lead, with `sdt_ros` close behind. The de-confounded amplification rides on the "
-        "SAME ferroptosis death-switch the single-cell Sobol and the hypoxia screen rank, "
-        "because the DAMP that primes immune killing IS the ferroptotic-death density, and "
-        "that density is set by how readily cells tip into ferroptosis (the LP cascade) "
-        "more than by the SDT dose alone. So the immune amplification is NOT a structurally "
-        "independent axis: it is governed by the death-switch biochemistry (plus the SDT "
-        "dose), not by a separate immune mechanism. Note the CONTRAST with the hypoxia gap, "
-        "where `sdt_ros` led: SDT's hypoxic SURVIVAL is dose-driven, but its per-cell immune "
-        "AMPLIFICATION is death-density-driven. The immune-coupling parameters themselves "
-        "(DAMP diffusion, DC activation, immune kill rate) are NOT in this PRCC biochemical "
-        "set, so this screen says which BIOCHEMICAL constants move the amplification, not "
-        "how the immune coupling is tuned. `rsl3_gpx4_inhib` is a structural zero (the SDT "
+        "lead, with `sdt_ros` close behind. These rankings describe sensitivity of "
+        "the final-count fraction to the screened biochemical parameters. Both immune "
+        "kills and the final non-ferroptotic denominator can change, so the screen "
+        "does not separate their contributions or establish that per-cell immune "
+        "amplification is driven by death density. The immune-coupling parameters "
+        "themselves (DAMP diffusion, DC activation, immune kill rate) are NOT in this "
+        "PRCC biochemical set and remain fixed. The screen therefore does not compare "
+        "their importance with that of the biochemical parameters or establish an "
+        "independent immune mechanism. `rsl3_gpx4_inhib` is a structural zero (the SDT "
         "immune-on observable never invokes RSL3's GPX4 inhibition).",
         "",
     ], order
@@ -489,12 +487,11 @@ def write_report(sections, levels, total_evals):
             "the committed report includes its section. This note appears only when "
             "the immune headline was NOT requested (e.g. `--headline bliss`); re-run "
             "without `--headline bliss` to include it. The observable is SDT's "
-            "pool-de-confounded immune kill rate "
-            "`immune_kills / (total_tumor - ferroptosis_kills)`: the raw immune ratio "
-            "matches the headline (SDT >> RSL3, ~104:1) but is confounded for a "
-            "sensitivity screen by pool depletion (SDT ferroptotically clears most "
-            "cells first), and de-confounding isolates the amplification per available "
-            "cell (bounded in [0, 1]).",
+            "immune kill fraction using final counts, "
+            "`immune_kills / max(total_tumor - ferroptosis_kills, 1)`. This "
+            "final-population normalization does not measure the living cells "
+            "eligible at earlier immune windows or isolate per-cell DAMP amplification. "
+            "It is bounded in [0, 1] under the model's cause-of-death accounting.",
         ]
     REPORT.write_text("\n".join(lines) + "\n")
 
