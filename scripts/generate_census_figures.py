@@ -34,9 +34,9 @@ fig9c   study-design composition from NLM publication types and check tags, with
         the UNDETERMINED share drawn rather than dropped, since it is the
         largest class and omitting it would imply the census classifies
         everything.
-fig14c  mechanism class by anatomical site: enrichment against each site's own
-        share, physical against pharmacological, so a site's general prominence
-        cancels and only a disagreement between classes carries.
+fig14c  mechanism class by anatomical site: each site's share of class site
+        assignments divided by its share of all census site assignments,
+        physical against pharmacological. Overlapping sites count separately.
 fig15c  the ten most frequent mechanism pairs. Counts, never a RATE -- Section
         3.13 shows the rate is a property of the labelling instrument.
 fig16c  clinical-trial share against volume on a log axis, the replacement for a
@@ -357,7 +357,8 @@ def fig14c_class_by_site():
     ax.set_yticks(list(y))
     ax.set_yticklabels(sites)
     ax.invert_yaxis()
-    ax.set_xlabel("enrichment against the site's own share of site-assigned records")
+    ax.set_xlabel("enrichment: site's share of class site assignments /\n"
+                  "site's share of all census site assignments")
     ax.set_title("Where each class of modality sits, by anatomical site")
     ax.legend(frameon=False, fontsize=9, loc="lower right")
     ax.grid(axis="x", alpha=0.25, linewidth=0.6)
@@ -374,7 +375,8 @@ def fig14c_class_by_site():
              f"directions -- the reading that does not depend on how much a "
              f"site is written about.\nThe physical class holds "
              f"{len(d['physical_members'])} mechanisms and omits radiotherapy, "
-             f"its largest real member.",
+             f"its largest real member.\n"
+             f"Sites can overlap; assignment totals are not unique-article coverage.",
              ha="center", va="top", fontsize=8.5, style="italic",
              color="#455A64")
     fig.savefig(FIG_DIR / "fig14c_class_by_site.pdf")

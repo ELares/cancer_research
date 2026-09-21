@@ -48,10 +48,12 @@ OUT_JSON = REPO / "analysis/census-mechanism-sites.json"
 
 
 def load_sites() -> dict[str, set[str]]:
-    """Shallow-list sites only. The DEEP walk is deliberately not used: MeSH
-    `Head and Neck Neoplasms` subsumes oesophagus and thyroid, which this list
-    counts as separate rows, so the deep column double-counts across the page's
-    own sites (#729)."""
+    """Load the committed C04 descendant map; its site groups can overlap.
+
+    For example, head-and-neck descendants include descriptors also assigned
+    to oesophagus and thyroid. Counts are unique within each site, not across
+    sites (#729).
+    """
     out: dict[str, set[str]] = defaultdict(set)
     for ln in SITE_MAP.read_text(encoding="utf-8").splitlines():
         if ln.startswith("#") or not ln.strip():
@@ -133,6 +135,9 @@ def assemble(d: dict) -> dict:
     ]
     d = dict(d)
     d["rows"] = rows
+    # Preserve the existing JSON names for consumers. All three totals count
+    # site assignments, not unique articles; overlapping sites contribute
+    # separately. A row's site_records is unique within that one site only.
     d["physical_total"] = sum(d["class_by_site"]["physical"].values())
     d["pharmacological_total"] = sum(d["class_by_site"]["pharmacological"].values())
     d["site_assigned_records"] = base_tot
@@ -154,23 +159,31 @@ def render(d: dict) -> str:
         f"({', '.join(d['physical_members'])}) and the pharmacological class "
         f"{len(d['pharmacological_members'])}.\n"
     )
+    L.append(
+        "Each article contributes once to each matching site and once per "
+        "matching class within that site. Sites and classes can overlap, so "
+        "summed site assignments are not unique article counts. The legacy JSON "
+        "fields `site_assigned_records`, `physical_total` and "
+        "`pharmacological_total` store assignment totals.\n"
+    )
     if not rows or not d["physical_total"] or not d["pharmacological_total"]:
         L.append(
             f"The input contains {d['site_assigned_records']:,} site assignments, "
             f"with {d['physical_total']:,} physical and "
             f"{d['pharmacological_total']:,} pharmacological class assignments. "
-            "At least one class has no site-assigned records, so the comparison "
+            "At least one class has no site assignments, so the comparison "
             "of class enrichment is unavailable.\n"
         )
         return "\n".join(L)
     top = rows[0]
     bot = rows[-1]
     L.append(
-        f"Enrichment is a class's share of a site divided by that site's share of "
-        f"all site-assigned records ({d['site_assigned_records']:,}). 1.00x is the "
-        f"site's own weight in the literature.\n"
+        f"Enrichment divides a site's share of a class's site assignments by "
+        f"its share of all census site assignments ({d['site_assigned_records']:,}). "
+        "1.00x means equal assignment shares, not equal article prevalence.\n"
     )
-    L.append("| site | physical | enrichment | pharmacological | enrichment | site share |")
+    L.append("| site | physical articles | enrichment | pharmacological articles | "
+             "enrichment | share of census site assignments |")
     L.append("|---|--:|--:|--:|--:|--:|")
     for r in rows:
         L.append(
@@ -232,12 +245,13 @@ def render(d: dict) -> str:
         )
     L.append("## Limits\n")
     L.append(
-        f"The physical class carries {d['physical_total']:,} site-assigned records "
-        f"against the pharmacological class's {d['pharmacological_total']:,}, so its "
-        f"per-site counts are small and the ordering is better determined than any "
-        f"single row. Assignment is by MeSH descriptor, so a paper is placed where "
-        f"NLM indexed it; multi-site papers are counted in each site, which is why "
-        f"the site column sums past the census.\n"
+        f"The physical class contributes {d['physical_total']:,} site assignments "
+        f"against the pharmacological class's {d['pharmacological_total']:,}. These "
+        "totals do not measure unique article coverage or establish the precision "
+        "of the ordering. Assignment is by MeSH descriptor; an article is counted "
+        "once within each matching site, including overlapping sites. Summed "
+        "site assignments can exceed the number of unique articles, but need "
+        "not exceed the full census.\n"
     )
     return "\n".join(L)
 
