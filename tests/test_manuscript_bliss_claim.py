@@ -155,6 +155,25 @@ def test_immune_claim_does_not_infer_a_per_dead_cell_ratio_from_population_means
     assert "neither the LP values nor their ratio measures biological DAMP potency" in body
     assert "a model quantity, not a biological per-dead-cell DAMP or DC-maturation effect" in body
     assert "terminal DAMP only after the final immune update" in body
+    # A successful PDF build previously dropped this whole table: only the
+    # legacy hardcoded tables were converted, and cleanup erased other rows.
+    # Check every manuscript value pair in the generated table, not merely
+    # that the generator or TeX mentions the new measurements somewhere.
+    md_table = re.search(r"(?m)^\| Measurement \| RSL3 \| SDT \|\n(?:^\|.*\n)+", body)
+    assert md_table, "the eligible-exposure table is missing from the manuscript"
+    tex = (ROOT / "article/drafts/v1.tex").read_text()
+    tex_table = re.search(
+        r"\\label\{tab:immune-measurements\}(.*?)\\end\{table\}", tex, re.S)
+    assert tex_table, "the eligible-exposure table is missing from the generated PDF source"
+    rows = md_table.group().strip().splitlines()[2:]
+    for row in rows:
+        label, rsl3, sdt = [cell.strip() for cell in row.strip("|").split("|")]
+        label_prefix = label.split(" ≥ ", 1)[0]
+        assert re.search(
+            re.escape(label_prefix) + r"[^&\n]*&\s*" + re.escape(rsl3)
+            + r"\s*&\s*" + re.escape(sdt) + r"\s*\\\\", tex_table.group(1)), (
+            f"generated measurement table lost or reassigned row {label!r}")
+    assert "[measurement report](" not in tex and "[frozen protocol](" not in tex
     for unsupported in ("~7.8", "~2.6× more DAMPs", "LP reaches ~20"):
         assert unsupported not in body
     assert not re.search(r"release at least \d+(?:\.\d+)?-fold more[^\n]*per dead cell", body), (

@@ -1923,7 +1923,7 @@ Ferroptotic cancer cells can release damage-associated molecular patterns (DAMPs
 
 Ferroptotic cell death releases damage-associated molecular patterns (DAMPs) --- particularly HMGB1, calreticulin, and ATP --- that activate dendritic cells and prime local T cell responses (immunogenic cell death, ICD). To explore how the spatial density of death and the assumed LP-to-DAMP mapping affect immune activation under SDT and RSL3, we added a spatial immune coupling layer to the TME simulation. All immune parameters in this layer --- T cell kill rate, DAMP diffusion coefficient, DC activation threshold --- are estimated, not calibrated to experimental data, placing this section's predictions at medium confidence (Section 10.2). Dead cells release DAMPs into a diffusion field; local DAMP concentration activates resident T cells via a half-maximal response function (Kd = 50.0); activated T cells kill adjacent tumor cells at rate 0.02 per step, suppressed by a PD-1 brake (70\% inhibition baseline, reduced to 14\% with simulated anti-PD-1).
 
-In \bookcode{sim-tme}, a ferroptotic death first requires LP to exceed the default threshold of 10.0. The model then allows further LP accumulation without repair during a five-step grace period and releases \bookcode{lp\_at\_grace\_end $\times$ damp\_per\_lp} into the DAMP field (\bookcode{ferroptosis-core/src/biochem.rs}; \bookcode{sim-tme/src/main.rs}). A passive replay of the canonical 2D comparison now records death LP, completed releases, horizon censoring, and eligible immune exposures without changing the full 33-condition production summary. The [measurement report](../../analysis/immune-2d-measurement-report.md) and [frozen protocol](../../docs/IMMUNE\_2D\_MEASUREMENT\_PROTOCOL.md) disclose that the historical kill counts were already known before this measurement was specified. The replay adds model accounting, not independent biological validation.
+In \bookcode{sim-tme}, a ferroptotic death first requires LP to exceed the default threshold of 10.0. The model then allows further LP accumulation without repair during a five-step grace period and releases \bookcode{lp\_at\_grace\_end $\times$ damp\_per\_lp} into the DAMP field (\bookcode{ferroptosis-core/src/biochem.rs}; \bookcode{sim-tme/src/main.rs}). A passive replay of the canonical 2D comparison now records death LP, completed releases, horizon censoring, and eligible immune exposures without changing the full 33-condition production summary. The measurement report (\bookcode{analysis/immune-2d-measurement-report.md}) and frozen protocol (\bookcode{docs/IMMUNE\_2D\_MEASUREMENT\_PROTOCOL.md}) disclose that the historical kill counts were already known before this measurement was specified. The replay adds model accounting, not independent biological validation.
 
 SDT has 139,640 completed releases with mean release LP 19.123; RSL3 has 160 completed releases with mean release LP 18.2658, plus three deaths whose scheduled releases fall beyond the 180-step horizon. Those three contribute terminal DAMP only after the final immune update. These are means over completed-release cohorts, not all dead cells, and neither the LP values nor their ratio measures biological DAMP potency. The LP-to-DAMP coefficient remains an uncalibrated assumption. The counts establish a large difference in the amount of modeled death; they do not isolate its causal contribution to immune killing.
 
@@ -1938,16 +1938,23 @@ Results (O2 gradient $\lambda$=120$\mu$m, 500$\times$500 grid): SDT with immune 
 
 An eligible opportunity is a living tumor cell immediately before an immune update at model step 60 or later, with local DAMP at least 0.01. Cells killed in that update are included; repeated eligibility produces multiple cell-step opportunities. In the captured baseline:
 
-
----:|---:|
-
-
-
-
-
-
-
-
+\begin{table}[tbp]
+\caption{Eligible immune exposures in the canonical 2D baseline. LP and DAMP are uncalibrated model quantities; repeated cell-step opportunities are not independent replicates.}
+\label{tab:immune-measurements}
+\booktablesize\begin{tabular}{@{}p{0.56\linewidth}rr@{}}
+\toprule
+\textbf{Measurement} & \textbf{RSL3} & \textbf{SDT} \\
+\midrule
+Unique eligible cells & 14,521 & 23,510 \\
+Eligible cell-step opportunities & 770,701 & 2,314,460 \\
+Mean local DAMP per eligible opportunity & 0.0658400 & 2.06872 \\
+Maximum local DAMP among eligible opportunities & 2.58529 & 10.5005 \\
+Mean activation per eligible opportunity & 0.00130919 & 0.0385056 \\
+Eligible opportunities with DAMP $\geq$ Kd=50 & 0 & 0 \\
+Eligible opportunities with DAMP $\geq$ 9Kd=450 & 0 & 0 \\
+\bottomrule
+\end{tabular}
+\end{table}
 Activation is DAMP/(DAMP+50); its mean is computed across eligible opportunities, not by applying the formula to mean DAMP. LP and DAMP remain uncalibrated model quantities. No eligible opportunity in any of the three arms, including Control, reaches half-maximal activation, let alone 90\% activation. This rejects the earlier explanation that deep saturation of the 2D immune response caused the large ratio. The denominator counts and means describe exposure under each treatment, not independent replicates or causal treatment effects. They differ from the final non-ferroptotic-pool denominator used by the earlier sensitivity analysis.
 
 \textbf{Seed dispersion (issue \#SEED-REP).} The figures above come from a single simulation seed, because the engine ran with a hard-coded seed and no replicate loop. Re-running the same condition across 20 seeds shows what one draw hides. The RSL3 arm produces a median of 5 immune kills with a range of 0 to 11, and the SDT arm 539 (498 to 556), so the ratio computed per seed has a median of \textbf{107:1} against the 104:1 reported here --- the point estimate is representative, and seed 42 was not a lucky draw. But the per-seed ratio ranges from \textbf{49:1 to 260:1}, and in 1 of 20 seeds the RSL3 arm produces no immune kills at all, making the ratio undefined. The correction is therefore about precision rather than accuracy: quoting \bookcode{104:1} implies two significant figures this denominator cannot support. Read it as ``of order 100:1, spanning roughly 50:1 to 260:1 across seeds, and undefined when the RSL3 arm scores zero'' --- which reinforces, rather than weakens, the existing conclusion that the direction and not the magnitude is the result. Full per-condition dispersion is in \bookcode{analysis/seed-replication-report.md}.

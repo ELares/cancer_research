@@ -403,7 +403,7 @@ body_tex = add_drop_caps(body_tex)
 
 # Replace markdown tables with LaTeX tables
 # Find pipe-delimited tables and replace
-def replace_table(text, marker, caption, label, headers, rows):
+def replace_table(text, marker, caption, label, headers, rows, colspec=None):
     pattern = r'(?m)^' + re.escape(marker) + r'.*\n(?:^\|.*\n)+'
     match = re.search(pattern, text)
     if not match:
@@ -411,7 +411,7 @@ def replace_table(text, marker, caption, label, headers, rows):
 
     h = ' & '.join(f'\\textbf{{{h}}}' for h in headers)
     r = ' \\\\\n'.join(' & '.join(cells) for cells in rows)
-    cols = 'l' + 'c' * (len(headers)-1)
+    cols = colspec or 'l' + 'c' * (len(headers)-1)
 
     table = f"""\\begin{{table}}[tbp]
 \\caption{{{caption}}}
@@ -449,6 +449,29 @@ body_tex = replace_table(body_tex, '| Modality |',
      ['IRE', '15', 'emerging', 'Invasive'],
      ['HIFU', '3', 'minimal', 'Deep (cm)'],
      ['TTFields', '0', '0', 'Surface']])
+
+# Preserve the passive measurement table directly from the manuscript. The
+# legacy cleanup below drops other pipe tables; retyping these new observations
+# into a second hardcoded table would make the PDF another numerical authority.
+measurement_marker = '| Measurement | RSL3 | SDT |'
+measurement_tables = list(re.finditer(
+    r'(?m)^' + re.escape(measurement_marker) + r'\n(?:^\|.*\n)+', body_tex))
+if len(measurement_tables) != 1:
+    raise SystemExit('ERROR: expected one canonical 2D immune measurement table')
+measurement_lines = measurement_tables[0].group().strip().splitlines()
+measurement_cells = [[cell.strip() for cell in line.strip('|').split('|')]
+                     for line in measurement_lines]
+if (len(measurement_cells) < 3
+        or any(len(row) != 3 for row in measurement_cells)
+        or not all(re.fullmatch(r':?-+:?', cell) for cell in measurement_cells[1])):
+    raise SystemExit('ERROR: malformed canonical 2D immune measurement table')
+body_tex = replace_table(
+    body_tex, measurement_marker,
+    'Eligible immune exposures in the canonical 2D baseline. LP and DAMP '
+    'are uncalibrated model quantities; repeated cell-step opportunities '
+    'are not independent replicates.',
+    'tab:immune-measurements', measurement_cells[0], measurement_cells[2:],
+    colspec=r'@{}p{0.56\linewidth}rr@{}')
 
 # Clean leftover pipe tables
 body_tex = re.sub(r'\|[-|]+\|', '', body_tex)
