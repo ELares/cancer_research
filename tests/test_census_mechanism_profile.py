@@ -5,12 +5,12 @@ separate scans is how one quantity ends up quoted three ways -- but it also
 means a defect here reaches six sections at once, so the columns the prose
 leans on are pinned to their derivations rather than to their stored values.
 
-The two refusals matter as much as the numbers. This file must NOT rank
-mechanisms by volume (descriptor breadth varies enormously, so a volume
-ranking is substantially a ranking of how broad each descriptor is) and must
-NOT report a co-occurrence rate (which Section 3.13 shows is a property of the
-labelling instrument). Both refusals are guarded, because a refusal nothing
-checks is a comment.
+The profile declines to rank mechanisms by volume (descriptor breadth varies
+enormously) or report a co-occurrence rate (which Section 3.13 shows is a
+property of the labelling instrument). Its report and generator state these
+limits. A synthetic expansion of only the target's descriptors also guards
+the caveat that trial share, site enrichment and partner ordering describe
+the selected articles and can change when descriptor coverage changes.
 """
 import gzip
 import importlib.util
@@ -142,6 +142,79 @@ def test_site_assignment_units_from_scan_to_report(tmp_path, monkeypatch, has_si
     assert "site-assigned records" not in report
 
 
+def test_descriptor_expansion_changes_profile_with_fixed_census(tmp_path, monkeypatch):
+    """Broader target coverage changes all three summaries within a fixed census."""
+    profile = _load_profile()
+    records = tmp_path / "records"
+    records.mkdir()
+    monkeypatch.setattr(profile, "RECORDS", records)
+    monkeypatch.setattr(profile, "load_sites", lambda: {
+        "site-a": {"site a"}, "site-b": {"site b"},
+    })
+    mech_map = tmp_path / "mechanisms.json"
+    monkeypatch.setattr(profile, "MECH_MAP", mech_map)
+    mechanisms = {
+        "target": {"descriptors": ["Narrow"]},
+        "partner-x": {"descriptors": ["Partner X"]},
+        "partner-y": {"descriptors": ["Partner Y"]},
+    }
+    with gzip.open(records / "part.jsonl.gz", "wt", encoding="utf-8") as fh:
+        for i in range(60):
+            mesh = ["Narrow" if i < 20 else "Additional",
+                    "Site A" if i < 20 else "Site B"]
+            if i < 12:
+                mesh.append("Partner X")
+            if 12 <= i < 16 or 20 <= i < 56:
+                mesh.append("Partner Y")
+            fh.write(json.dumps({
+                "pmid": str(i), "mesh": mesh,
+                "pub_types": ["Clinical Trial"] if i < 10 else [],
+            }) + "\n")
+
+    results = []
+    for descriptors in (["Narrow"], ["Narrow", "Additional"]):
+        mechanisms["target"]["descriptors"] = descriptors
+        mech_map.write_text(json.dumps({"mechanisms": mechanisms}))
+        result = profile.assemble(profile.scan())
+        assert result["census"] == 60
+        assert result["site_totals"] == {"site-a": 20, "site-b": 40}
+        assert result["count"]["partner-x"] == 12
+        assert result["count"]["partner-y"] == 40
+        assert result["trials"] == {"target": 10, "partner-x": 10}
+        results.append(result)
+
+    narrow, broader = results
+    assert narrow["count"]["target"] == 20
+    assert broader["count"]["target"] == 60
+    assert narrow["by_site"]["target"] == {"site-a": 20}
+    assert broader["by_site"]["target"] == {"site-a": 20, "site-b": 40}
+    assert narrow["partners"]["target"] == {"partner-x": 12, "partner-y": 4}
+    assert broader["partners"]["target"] == {"partner-x": 12, "partner-y": 40}
+    narrow_row, broader_row = [
+        next(row for row in result["rows"] if row["mechanism"] == "target")
+        for result in results
+    ]
+    assert (narrow_row["census"], broader_row["census"]) == (20, 60)
+    assert (narrow_row["trials"], broader_row["trials"]) == (10, 10)
+    assert (narrow_row["trial_share"], broader_row["trial_share"]) == (50.0, 16.67)
+    assert (narrow_row["site_assigned"], broader_row["site_assigned"]) == (20, 60)
+    assert narrow_row["top_sites"] == [
+        {"site": "site-a", "n": 20, "enrichment": 3.0},
+    ]
+    assert broader_row["top_sites"] == [
+        {"site": "site-a", "n": 20, "enrichment": 1.0},
+        {"site": "site-b", "n": 40, "enrichment": 1.0},
+    ]
+    assert narrow_row["top_partners"] == [
+        {"mechanism": "partner-x", "n": 12},
+        {"mechanism": "partner-y", "n": 4},
+    ]
+    assert broader_row["top_partners"] == [
+        {"mechanism": "partner-y", "n": 40},
+        {"mechanism": "partner-x", "n": 12},
+    ]
+
+
 @pytest.fixture(scope="module")
 def d():
     return json.loads(JSON.read_text())
@@ -203,10 +276,15 @@ def test_partners_are_symmetric(d):
 
 
 def test_the_report_refuses_a_volume_ranking_and_a_cooccurrence_rate(d):
-    """Both refusals are load-bearing and both are stated in the report."""
+    """The report scopes its summaries; the generator also refuses a rate."""
     md = MD.read_text()
     assert "Volume is NOT comparable across mechanisms" in md
     assert "how broad each descriptor is" in md
+    assert "articles selected by each mechanism's descriptors" in md
+    assert "Partner ordering ranks raw co-occurrence counts" in md
+    assert "can change with descriptor coverage and indexing" in md
+    assert "Normalization does not establish comparability across mechanism definitions" in md
+    assert "survive that objection" not in md
     assert "does not report a co-occurrence RATE" in (
         REPO / "scripts/census_mechanism_profile.py").read_text()
 

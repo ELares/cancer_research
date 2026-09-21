@@ -17,10 +17,13 @@ TWO THINGS THIS DELIBERATELY DOES NOT DO. It does not rank mechanisms against
 each other on volume, because descriptor breadth varies enormously -- 75% of
 `epigenetic` comes from `DNA Methylation`, carried by any paper MEASURING
 methylation -- so a cross-mechanism volume ranking is substantially a ranking of
-how broad each descriptor is. And it does not report a co-occurrence RATE, for
-the reason Section 3.13 sets out: that rate is a property of the labelling
-instrument rather than of how often researchers combine mechanisms. Partner
-ORDERINGS are stable under both instruments and are what is reported.
+how broad each descriptor is. And it does not report a co-occurrence RATE as
+evidence of tested combinations: co-tagging depends on the labelling instrument
+and does not show that mechanisms were tested together. Partner orderings rank
+raw co-occurrence counts in the descriptor-selected articles. Trial share,
+site enrichment and partner orderings can all change with descriptor coverage;
+normalization alone does not establish comparability. This profile does not
+compare partner rankings from different labelling methods on the same articles.
 
 The raw census is not committed. Set FERRO_ATLAS_ROOT when it lives outside
 corpus/atlas/, or use --render-only to regenerate from the committed counts
@@ -135,9 +138,9 @@ def assemble(d: dict) -> dict:
     for k, n in sorted(d["count"].items(), key=lambda x: -x[1]):
         sites = d["by_site"].get(k, {})
         assigned = sum(sites.values())
-        # Enrichment, not raw rank: the raw ordering of sites within a mechanism
-        # mostly reproduces the ordering of the sites themselves, which says
-        # nothing about the mechanism.
+        # Enrichment compares the mechanism's site-assignment shares with the
+        # census baseline. This normalization does not remove selection effects
+        # from the mechanism's descriptor coverage.
         enr = sorted(
             (
                 {
@@ -194,9 +197,13 @@ def render(d: dict) -> str:
         "Volume is NOT comparable across mechanisms and no cross-mechanism "
         "ranking is drawn from it: descriptor breadth varies enormously, so a "
         "volume ordering is substantially an ordering of how broad each "
-        "descriptor is. Trial share, site enrichment and partner ordering are "
-        "the columns that survive that objection, because each is a ratio "
-        "within a mechanism or a comparison against the mechanism's own base.\n"
+        "descriptor is. Trial share and site enrichment describe articles "
+        "selected by each mechanism's descriptors. Partner ordering ranks raw "
+        "co-occurrence counts; it is not adjusted for partner prevalence. All "
+        "three summaries can change with descriptor coverage and indexing. "
+        "Normalization does not establish comparability across mechanism "
+        "definitions, and this profile does not test rank stability across "
+        "labeling methods.\n"
     )
     L.append(f"| mechanism | census | trials | share | {d['start_year']} | "
              f"{d['end_year']} | growth |")
