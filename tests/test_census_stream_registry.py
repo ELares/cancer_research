@@ -61,6 +61,12 @@ _PATTERN = re.compile(
 
 # module -> (streams it reads, why that set is the right one)
 REGISTRY = {
+    "census_adjudication.py": (
+        set(),
+        "The records literal is a cohort member count and hash input, not a "
+        "census stream path. This helper receives already-selected records "
+        "from its caller and reads only an explicitly supplied adjudication "
+        "CSV; it does not choose or open any census stream."),
     "abc_joint_resample.py": (
         set(),
         "The literal records contains simulated proposal attempts in a compressed "

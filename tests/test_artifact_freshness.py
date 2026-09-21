@@ -12,23 +12,29 @@ a DIFFERENT document from the documented command and nothing noticed.
 Two ad-hoc gates were written for the two scripts where it was caught. This is
 the general one.
 
-WHAT IT CHECKS, in process and without writing a single file. First, that the
+WHAT IT CHECKS, in process and without writing repository files. First, that the
 committed `.md` is byte-for-byte what the generator's own `--render-only`
 branch produces -- replicating that branch rather than assuming its shape,
-because two generators turn out not to re-assemble at all. Second, that the
+because not every generator re-assembles. Second, that the
 committed `.json` is what the generator would write, which is how a
 formatting drift was found. The three synthetic importance studies permit only
 bounded floating-point differences in recomputed assessment fields across
 platforms; their formatting, raw inputs, decisions and provenance remain exact.
+Two explicitly pinned historical direction snapshots have a different contract:
+their original adjudications lack the record identities needed to bind them to
+a new cohort. Their JSON must remain unchanged, and their Markdown must render
+the embedded historical evidence. Isolated CLI calls below check that contract
+without scanning or loading external labels; these generators remain gated.
 Third, and structurally rather than by calling
-anything: that a generator owning an `assemble()` actually USES it on the
-render-only path.
+anything: that every other generator owning an `assemble()` actually USES it
+on the render-only path.
 
 THE THIRD CHECK IS THE ONE WITH TEETH. This repo documents the contract as
 "`--render-only` must RE-ASSEMBLE from stored raw counts, not re-render stored
-derived fields (else guards are inert)", and two generators violate it: they
-load the already-assembled JSON and render it. Every guard reading a derived
-field of those two is comparing the artifact to itself.
+derived fields (else guards are inert)". The two historical snapshots are a
+narrow, checked exception, not a claim that their old adjudications can be
+recomputed or verified. Their fresh assemblers are still checked for idempotence
+without inheriting any historical labels.
 
 WHAT IT CANNOT CHECK, stated at full width because an adversarial review
 found the first version of this paragraph understated it.
@@ -66,6 +72,7 @@ the honest deliverable is the scoped claim above rather than a third guess at
 a metric.
 """
 import ast
+import hashlib
 import importlib
 import inspect
 import json
@@ -158,6 +165,19 @@ EXEMPT: dict = {
         "and the diff would fail on a correct artifact. It is listed here rather "
         "than left undiscovered so that the exemption is a reviewed decision."
     ),
+}
+
+# These exact historical snapshots cannot be reconstructed from raw counts:
+# the old title-only labels have no verified record/cohort identity. A fresh
+# assemble intentionally drops them. Preserve their bytes, render their embedded
+# evidence, and keep both generators in LIVE for Markdown and ordering checks.
+# This is not an exemption for other outputs of these generators or a license
+# to refresh the hashes when a fresh scan accidentally overwrites the snapshots.
+IMMUTABLE_DIRECTION_SNAPSHOTS = {
+    "census_hypoxia_direction":
+        "283d0d8a768f3f06a49793ce58356147f824b0a08d002be453e1f6a7fd90c422",
+    "census_thesis_direction":
+        "c30d8801c49335d107dfeded434a29aa29de22e55ed1ce5ac3314a8c903c0fd8",
 }
 
 
@@ -529,17 +549,61 @@ def _assert_reassembled_json(name, produced_text, committed_text):
 
 
 @pytest.mark.parametrize("name", LIVE)
-def test_the_committed_json_is_what_the_generator_writes(name):
+def test_the_committed_json_is_what_the_generator_writes(name, tmp_path, monkeypatch):
     """A committed artifact that differs from its own generator's output makes
     every regenerate-and-diff check permanently dirty, which trains people to
-    ignore a dirty tree -- the state this gate exists to make meaningful."""
+    ignore a dirty tree -- the state this gate exists to make meaningful.
+
+    For the two pinned historical snapshots, the CLI must preserve JSON bytes
+    and render embedded labels. Run that branch against isolated output paths
+    instead of pretending its contract is to serialize a fresh assembly.
+    """
     mod = importlib.import_module(name)
+    if name in IMMUTABLE_DIRECTION_SNAPSHOTS:
+        committed = mod.OUT_JSON.read_bytes()
+        assert hashlib.sha256(committed).hexdigest() == IMMUTABLE_DIRECTION_SNAPSHOTS[name], (
+            f"{name}: the immutable historical JSON snapshot was changed")
+        committed_md = mod.OUT_MD.read_text()
+        isolated_json = tmp_path / mod.OUT_JSON.name
+        isolated_md = tmp_path / mod.OUT_MD.name
+        isolated_json.write_bytes(committed)
+        monkeypatch.setattr(mod, "OUT_JSON", isolated_json)
+        monkeypatch.setattr(mod, "OUT_MD", isolated_md)
+        monkeypatch.setattr(mod, "RECORDS", tmp_path / "unavailable-records")
+
+        def forbidden(*_args, **_kwargs):
+            pytest.fail("Historical rendering must not scan, reassemble or reload labels")
+
+        for entry in ("scan", "assemble", "read_adjudication"):
+            monkeypatch.setattr(mod, entry, forbidden)
+        monkeypatch.setattr(sys, "argv", [
+            f"{name}.py", "--render-only", "--output-dir", str(tmp_path),
+        ])
+
+        assert mod.main() == 0
+        assert isolated_json.read_bytes() == committed
+        assert isolated_md.read_text() == committed_md
+        return
     committed = mod.OUT_JSON.read_text()
     produced = json.dumps(_reproduce(mod, name), **_dump_kwargs(name)) + "\n"
     _assert_reassembled_json(name, produced, committed)
 
 
 ASSEMBLERS = [n for n in LIVE if any(g[0] == n and g[2] for g in GENERATORS)]
+
+
+def test_immutable_direction_snapshots_are_narrow_and_still_gated():
+    assert set(IMMUTABLE_DIRECTION_SNAPSHOTS) == {
+        "census_hypoxia_direction", "census_thesis_direction",
+    }
+    assert set(IMMUTABLE_DIRECTION_SNAPSHOTS) <= set(ASSEMBLERS)
+    assert not (set(IMMUTABLE_DIRECTION_SNAPSHOTS) & (set(EXEMPT) | NO_RENDERER))
+    for name in IMMUTABLE_DIRECTION_SNAPSHOTS:
+        mod = importlib.import_module(name)
+        stored = json.loads(mod.OUT_JSON.read_text())
+        assert "cohort" not in stored, "This is no longer the unbound historical snapshot"
+        assert stored["adjudication"]
+        assert stored["adjudication"].get("mode") != "complete-current-cohort"
 
 
 @pytest.mark.parametrize("name", ASSEMBLERS)
@@ -552,11 +616,16 @@ def test_render_only_reassembles_from_the_stored_raw_counts(name):
     check both. What rules that out here is reading the generators, not this
     test.
 
-    A generator that owns an `assemble()` and then renders the stored,
+    Except for the explicitly pinned historical snapshots checked by the
+    actual CLI above, a generator that owns an `assemble()` and renders stored,
     already-assembled JSON is re-rendering its own derived fields. A guard
     checking one of those fields is then comparing the artifact to itself and
     cannot fail, whatever the generator does.
     """
+    if name in IMMUTABLE_DIRECTION_SNAPSHOTS:
+        assert not _render_only_reassembles(name), (
+            f"{name}: reassembly would replace the embedded historical labels")
+        return
     assert _render_only_reassembles(name), (
         f"{name} has an assemble() and its --render-only branch does not call "
         "it, so the documented command re-renders stored derived fields "
@@ -568,16 +637,22 @@ def test_assemble_is_idempotent_where_it_is_used():
     """Re-assembling an assembled dict must not move anything.
 
     If it does, the raw counts are not sufficient to rebuild the derived
-    fields, and the render-only contract cannot be satisfied.
+    fields, and the render-only contract cannot be satisfied. For the historical
+    direction generators, assembly is used only for fresh measurements. Exercise
+    their no-label context explicitly and require it to drop historical labels;
+    they still count toward the exact assembler coverage check.
     """
     checked = 0
     for n in ASSEMBLERS:
-        if not _render_only_reassembles(n):
+        if not _render_only_reassembles(n) and n not in IMMUTABLE_DIRECTION_SNAPSHOTS:
             continue
         mod = importlib.import_module(n)
         stored = json.loads(mod.OUT_JSON.read_text())
         once = _reassemble(mod, stored)
         twice = _reassemble(mod, json.loads(json.dumps(once)))
+        if n in IMMUTABLE_DIRECTION_SNAPSHOTS:
+            assert once["adjudication"] == {}, (
+                f"{n}: fresh assembly silently reused historical labels")
         assert once == twice, f"{n}.assemble() is not idempotent"
         checked += 1
     # EXACT, not a floor -- this file argues at the top that a floor with

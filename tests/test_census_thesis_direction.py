@@ -1,9 +1,4 @@
-"""Guards for the direction check on this project's strongest leg.
-
-The analysis asks whether the 479-article leg the manuscript leans on points
-the way the manuscript needs. It came back favourable, which is the situation
-in which a guard earns its place: a check on one's own thesis that returns good
-news needs to be one that could have returned bad news.
+"""Keep historical evidence and candidate-level interpretation distinct.
 
 THE SPECIFIC HAZARD IS FITTING. The exploit vocabulary IS the thesis
 vocabulary, so widening the pattern set after seeing the split would tune the
@@ -11,8 +6,10 @@ result toward the answer this project wants, and nothing in the output would
 show it. The patterns are pinned here, in a second file, so changing them takes
 a deliberate edit in two places.
 
-OFFLINE: reads only the committed artifact.
+Offline fixtures exercise the renderer and preserve the published calculation.
+CLI identity/coverage behavior is tested separately with isolated gzip inputs.
 """
+import importlib.util
 import json
 import re
 from pathlib import Path
@@ -33,6 +30,15 @@ OBSTACLE_TERMS = 7
 @pytest.fixture(scope="module")
 def d():
     return json.loads(JSON.read_text())
+
+
+@pytest.fixture
+def module(monkeypatch):
+    monkeypatch.syspath_prepend(str(REPO / "scripts"))
+    spec = importlib.util.spec_from_file_location("thesis_unit_test", SCRIPT)
+    result = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(result)
+    return result
 
 
 def test_the_pattern_sets_have_not_grown(d):
@@ -100,20 +106,17 @@ def test_the_ratio_is_computed_over_singly_classified_articles_only(d):
         "The ambiguous cases have most likely been folded into one side.")
 
 
-def test_the_verdict_is_derived_and_could_have_gone_the_other_way(d):
-    """A check on one's own thesis that cannot fail is not a check."""
-    assert d["points_the_projects_way"] == (
-        d["exploit_share_of_classified"] > 50)
+def test_historical_verdict_does_not_become_a_current_claim(d, module):
+    """Preserve the snapshot without presenting its boolean as new evidence."""
+    assert d["points_the_projects_way"] is True
     md = MD.read_text()
-    if d["points_the_projects_way"]:
-        assert "does point the way the manuscript needs" in md
-        assert "should stop" not in md
-    else:
-        assert "does NOT point the project's way" in md
-        assert "should stop" in md
-    # The generator must contain the branch that reports the bad news, or the
-    # favourable verdict is the only thing it can say.
-    assert "does NOT point the project's way" in SCRIPT.read_text()
+    assert md == module.render(d)
+    assert "historical snapshot" in md
+    assert "does point the way the manuscript needs" not in md
+    assert "should stop" not in md
+    fresh = module.assemble(d)
+    assert not fresh.get("adjudication")
+    assert "points_the_projects_way" not in fresh
 
 
 def test_the_recall_limit_is_shown_rather_than_asserted(d):
@@ -128,7 +131,10 @@ def test_the_recall_limit_is_shown_rather_than_asserted(d):
     assert f"{d['unclassified_share']}%" in md
     for s in d["unclassified_sample"]:
         assert s["title"][:40] in md, "an unclassified example is not shown"
-    assert "MAGNITUDE is not claimed" in md
+    assert "Recall remains unmeasured" in md
+    assert "Their biological direction" in md
+    assert "9-to-1" not in md
+    assert "The first of those is the thesis direction" not in md
 
 
 def test_it_does_not_read_attention_as_endorsement(d):
@@ -145,15 +151,8 @@ def test_it_does_not_read_attention_as_endorsement(d):
 
 # --- the classifier errs in both directions, and the raw split overstates ----
 
-def test_the_adjudication_corrects_the_raw_split(d):
-    """The raw 89% is not the measurement.
-
-    Adjudicating found the classifier wrong in BOTH directions: exploit papers
-    labelled obstacle because they contain the obstacle phrase ("counteracts
-    ferroptosis resistance"), and obstacle papers labelled exploit because they
-    contain the induction phrase ("suppress erastin-induced ferroptosis"). The
-    same substring failure the sibling hypoxia analysis names, twice over.
-    """
+def test_historical_adjudication_counts_are_preserved(d):
+    """The frozen correction stays auditable despite its linkage limitations."""
     a = d["adjudication"]
     assert a, "the adjudication is missing, so the raw split stands uncorrected"
     ex, ob = a["by_label"]["exploit"], a["by_label"]["obstacle"]
@@ -161,7 +160,8 @@ def test_the_adjudication_corrects_the_raw_split(d):
         "no obstacle-labelled article was found to be an exploit paper, which "
         "would mean the classifier no longer has the failure this correction "
         "exists for")
-    assert ob["sampled"] == 29 or ob["sampled"] >= ob["decided"], ob
+    assert ob["sampled"] == 29 and ex["sampled"] == 20
+    assert a["rows"] == 49
     assert 0 < ex["precision"] < 1 and 0 < ob["precision"] < 1
     # The correction must MOVE the answer, or it is decoration.
     assert abs(a["corrected_exploit_share"] - d["exploit_share_of_classified"]) > 5, (
@@ -169,9 +169,8 @@ def test_the_adjudication_corrects_the_raw_split(d):
         "improved or the correction is not being applied")
 
 
-def test_the_corrected_range_separates_direction_from_magnitude(d):
-    """Direction can survive a correction that destroys the magnitude, and
-    reporting only one of those is how a weakened claim keeps its old force."""
+def test_historical_range_is_explicitly_conditional(d):
+    """A sampled precision interval cannot cover identity and sampling bias."""
     a = d["adjudication"]
     lo, hi = a["corrected_range"]
     assert lo <= a["corrected_exploit_share"] <= hi
@@ -179,13 +178,15 @@ def test_the_corrected_range_separates_direction_from_magnitude(d):
     md = MD.read_text()
     assert f"{a['corrected_exploit_share']}%" in md
     assert f"{lo}-{hi}%" in md
-    if a["direction_survives"]:
-        assert "DIRECTION survives" in md and "MAGNITUDE does not" in md
-        assert "should not be quoted" in md
+    assert "Historical conditional correction" in md
+    assert "representativeness is unverified" in md
+    assert "verified article-identity link or complete coverage" in md
+    assert "every plausible correction" not in md
+    assert "roughly 3 to 1" not in md
 
 
-def test_the_manuscript_carries_the_corrected_figure_not_the_raw_one():
-    """The raw figure was in the manuscript before this correction existed."""
+def test_the_manuscript_keeps_the_historical_figure_with_its_limitations():
+    """A retained historical result must not regain an unconditional verdict."""
     txt = " ".join(MANUSCRIPT.read_text().split())
     a = json.loads(JSON.read_text())["adjudication"]
     assert f"{a['corrected_exploit_share']}%" in txt, (
@@ -193,4 +194,64 @@ def test_the_manuscript_carries_the_corrected_figure_not_the_raw_one():
     assert "a ratio of 8.2 to 1" not in txt, (
         "the manuscript still states the uncorrected ratio, which the "
         "adjudication showed overstates the lead by roughly threefold")
-    assert "errs in BOTH directions" in txt or "errs in both directions" in txt
+    paragraph = next(line for line in MANUSCRIPT.read_text().splitlines()
+                     if "analysis/census-thesis-direction.md" in line)
+    assert "historical" in paragraph.lower()
+    assert "representativeness" in paragraph.lower()
+    assert "direction survives every plausible correction" not in paragraph
+
+
+@pytest.mark.parametrize("counts", [
+    {"exploit": 0, "obstacle": 0, "both": 0, "neither": 0},
+    {"exploit": 0, "obstacle": 0, "both": 1, "neither": 2},
+    {"exploit": 1, "obstacle": 0, "both": 0, "neither": 0},
+    {"exploit": 0, "obstacle": 1, "both": 0, "neither": 0},
+    {"exploit": 1, "obstacle": 1, "both": 0, "neither": 0},
+])
+def test_unadjudicated_candidates_cannot_assert_direction(module, counts):
+    data = module.assemble({"total": sum(counts.values()), "counts": counts,
+                            "unclassified_sample": []})
+    text = module.render(data)
+    assert not data.get("adjudication")
+    assert "points_the_projects_way" not in data
+    assert "No validated adjudication" in text
+    assert "do not establish a biological direction" in text
+    assert "None" not in text and "9-to-1" not in text
+    assert "should stop" not in text
+
+
+@pytest.mark.parametrize("decisions,direction,share", [
+    (["exploit", "exploit", "exploit", "obstacle", "ambiguous"], "exploit", 75.0),
+    (["exploit", "obstacle", "obstacle", "obstacle", "ambiguous"], "obstacle", 25.0),
+    (["exploit", "obstacle", "ambiguous"], "tie", 50.0),
+    (["exploit"], "exploit", 100.0),
+    (["obstacle"], "obstacle", 0.0),
+    (["ambiguous"], None, None),
+    ([], None, None),
+])
+def test_complete_decisions_bound_direction_to_decided_candidates(
+        module, decisions, direction, share):
+    rows = [{"adjudicated": decision} for decision in decisions]
+    raw = {"total": len(rows) + 1,
+           "counts": {"exploit": len(rows), "obstacle": 0,
+                      "both": 0, "neither": 1},
+           "unclassified_sample": [], "cohort": {"cohort_sha256": "fixture"}}
+    data = module.assemble(raw, adjudication_rows=rows)
+    adjudication = data["adjudication"]
+    assert adjudication["direction"] == direction
+    assert adjudication["exploit_share_of_decided"] == share
+    assert adjudication["decisions"] == rows
+    assert adjudication["cohort_sha256"] == "fixture"
+    assert "corrected_range" not in adjudication
+    text = module.render(data)
+    assert "historical" not in text.lower()
+    assert "None" not in text
+    if direction is None:
+        assert "no direction comparison is available" in text
+    elif direction == "tie":
+        assert "counts are equal" in text
+    else:
+        assert f"adjudicated {direction} framing leads within this candidate set" in text
+    if share is not None:
+        assert f"{share}%" in text
+        assert "without extrapolation to unmatched articles" in text
