@@ -10,6 +10,7 @@ import csv
 import hashlib
 import io
 import json
+import os
 from pathlib import Path
 
 
@@ -75,7 +76,7 @@ class AdjudicationCohort:
 def candidate_csv(cohort: dict) -> str:
     """Create an explicit review worksheet; no decisions are preselected."""
     output = io.StringIO(newline="")
-    writer = csv.DictWriter(output, fieldnames=CSV_FIELDS, lineterminator="\n")
+    writer = csv.DictWriter(output, fieldnames=CSV_FIELDS, lineterminator="\r\n")
     writer.writeheader()
     for candidate in cohort["candidates"]:
         writer.writerow({**candidate, "cohort_sha256": cohort["cohort_sha256"],
@@ -101,14 +102,29 @@ def read_adjudication(path: Path, cohort: dict, allowed_decisions) -> list[dict]
         fail("the selected cohort has no singly classified candidates to adjudicate")
     try:
         with path.open(encoding="utf-8-sig", newline="") as source:
-            reader = csv.DictReader(source, strict=True)
-            if reader.fieldnames is None or (
-                len(reader.fieldnames) != len(CSV_FIELDS)
-                or set(reader.fieldnames) != set(CSV_FIELDS)
-            ):
-                fail("expected the complete candidate-export columns; "
-                     "historical title-only CSVs cannot be applied to a new cohort")
-            rows = list(reader)
+            # UTF-8 field character counts cannot exceed the opened file's
+            # byte size. Accommodate complete exported text without leaving
+            # this process-wide CSV setting changed after the read.
+            previous_limit = csv.field_size_limit()
+            field_limit = max(previous_limit, os.fstat(source.fileno()).st_size)
+            try:
+                while True:
+                    try:
+                        csv.field_size_limit(field_limit)
+                        break
+                    except OverflowError:
+                        # Older Python versions use a platform C long here.
+                        field_limit = max(previous_limit, field_limit // 10)
+                reader = csv.DictReader(source, strict=True)
+                if reader.fieldnames is None or (
+                    len(reader.fieldnames) != len(CSV_FIELDS)
+                    or set(reader.fieldnames) != set(CSV_FIELDS)
+                ):
+                    fail("expected the complete candidate-export columns; "
+                         "historical title-only CSVs cannot be applied to a new cohort")
+                rows = list(reader)
+            finally:
+                csv.field_size_limit(previous_limit)
     except (OSError, UnicodeError, csv.Error) as exc:
         fail(f"cannot read a valid CSV ({exc})")
 

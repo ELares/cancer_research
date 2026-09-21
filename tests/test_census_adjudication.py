@@ -131,3 +131,67 @@ def test_no_candidates_exports_a_header_but_cannot_produce_an_adjudicated_share(
     path = _save(tmp_path / "empty.csv", [])
     with pytest.raises(SystemExit, match="no singly classified candidates"):
         scanner.read_adjudication(path, empty, ("exploit", "obstacle"))
+
+
+@pytest.mark.parametrize("field", ["title", "abstract"])
+@pytest.mark.parametrize("newline", ["\r", "\n", "\r\n"])
+def test_exported_text_with_newlines_round_trips(tmp_path, field, newline):
+    record = {"pmid": "123", "title": "Title", "abstract": "Abstract"}
+    record[field] = f"First{newline}Second"
+    current = _cohort([(record, "exploit")])
+    rows = _completed(current)
+    assert len(rows) == 1
+    assert rows[0][field] == record[field]
+    path = _save(tmp_path / "newlines.csv", rows)
+    assert scanner.read_adjudication(path, current, ("exploit", "obstacle")) == rows
+
+
+@pytest.mark.parametrize("field", ["title", "abstract", "reason"])
+def test_large_text_import_restores_csv_field_limit(tmp_path, field):
+    text = "Evidence β " * 15000
+    record = {"pmid": "123", "title": "Title", "abstract": "Abstract"}
+    if field != "reason":
+        record[field] = text
+    current = _cohort([(record, "exploit")])
+    row = {**current["candidates"][0], "cohort_sha256": current["cohort_sha256"],
+           "adjudicated": "exploit", "reason": "Reviewed complete evidence."}
+    if field == "reason":
+        row[field] = text
+    else:
+        assert text in scanner.candidate_csv(current)
+    path = _save(tmp_path / "long.csv", [row])
+    previous_limit = csv.field_size_limit()
+    assert scanner.read_adjudication(path, current, ("exploit", "obstacle")) == [row]
+    assert csv.field_size_limit() == previous_limit
+
+
+@pytest.mark.parametrize("failure", ["header", "parsing", "validation"])
+def test_failed_import_restores_csv_field_limit(cohort, tmp_path, failure):
+    rows = _completed(cohort)
+    rows[0]["reason"] = "Long reviewed reason. " * 10000
+    path = _save(tmp_path / "invalid.csv", rows)
+    if failure == "header":
+        path.write_text(path.read_text().replace("cohort_sha256", "unknown_column", 1))
+    elif failure == "parsing":
+        with path.open("a") as target:
+            target.write('"unterminated')
+    else:
+        rows[0]["adjudicated"] = "invalid"
+        _save(path, rows)
+    previous_limit = csv.field_size_limit()
+    with pytest.raises(SystemExit, match="Adjudication"):
+        scanner.read_adjudication(path, cohort, ("exploit", "obstacle"))
+    assert csv.field_size_limit() == previous_limit
+
+
+def test_import_preserves_an_existing_higher_csv_field_limit(cohort, tmp_path):
+    rows = _completed(cohort)
+    path = _save(tmp_path / "complete.csv", rows)
+    previous_limit = csv.field_size_limit()
+    higher_limit = max(previous_limit, path.stat().st_size) + 1000
+    try:
+        csv.field_size_limit(higher_limit)
+        assert scanner.read_adjudication(path, cohort, ("exploit", "obstacle")) == rows
+        assert csv.field_size_limit() == higher_limit
+    finally:
+        csv.field_size_limit(previous_limit)
