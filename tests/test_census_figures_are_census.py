@@ -162,3 +162,34 @@ def test_the_tex_is_not_stale_against_the_figure_map():
     for old in SUPERSEDED:
         assert f"{old}.pdf" not in tex, (
             f"v1.tex still includes the superseded {old}.pdf")
+
+
+def test_pair_figure_and_caption_keep_the_rate_interpretation_scoped(entries, tmp_path, monkeypatch):
+    """Updating the chapter alone left the PDF's figure repeating its old claim."""
+    import ast
+    import importlib
+
+    pytest.importorskip("matplotlib")
+    monkeypatch.syspath_prepend(str(REPO / "scripts"))
+    figure = importlib.import_module("generate_census_figures")
+    monkeypatch.setattr(figure, "FIG_DIR", tmp_path)
+    annotations = []
+    close = figure.plt.close
+
+    def capture(fig):
+        annotations.extend(text.get_text() for text in fig.texts)
+        close(fig)
+
+    monkeypatch.setattr(figure.plt, "close", capture)
+    figure.fig15c_mechanism_pairs()
+    tree = ast.parse(LATEX.read_text())
+    mapping = next(node.value for node in tree.body if isinstance(node, ast.Assign)
+                   and any(isinstance(target, ast.Name) and target.id == "figs"
+                           for target in node.targets))
+    caption = ast.literal_eval(mapping)["12"][1]
+    for text in (" ".join(annotations), caption, entries[12]["note"]):
+        assert "label definitions" in text
+        assert "tagged-article denominators" in text
+        assert "selected population" in text
+        assert "tested combinations" in text
+        assert "rather than of the field" not in text

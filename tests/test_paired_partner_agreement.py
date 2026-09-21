@@ -263,6 +263,7 @@ def test_loader_joins_pmids_and_distinguishes_missing_mesh_from_observed_no_hits
     ("duplicate_frontmatter_pmid", "duplicate.*PMID"),
     ("wrong_frontmatter_labels", "mechanism mismatch"),
     ("bad_yaml", "invalid metadata"),
+    ("unhashable_yaml_key", "unhashable YAML key"),
     ("unclosed_frontmatter", "closing delimiter"),
 ])
 def test_invalid_inputs_fail_without_replacing_existing_reports(corpus_files, tmp_path, monkeypatch, fault, reason):
@@ -281,6 +282,8 @@ def test_invalid_inputs_fail_without_replacing_existing_reports(corpus_files, tm
         article.write_text(article.read_text().replace("- immunotherapy", "- sonodynamic"))
     elif fault == "bad_yaml":
         article.write_text("---\npmid: [\n---\n")
+    elif fault == "unhashable_yaml_key":
+        article.write_text("---\n? [invalid, key]\n: value\n---\n")
     else:
         article.write_text("---\npmid: '202'\n")
     with pytest.raises(ValueError, match=reason):
@@ -298,8 +301,31 @@ def test_invalid_inputs_fail_without_replacing_existing_reports(corpus_files, tm
     assert md_output.read_bytes() == b"existing Markdown\n"
 
 
-def test_render_only_recomputes_stale_derived_values_without_loading_corpus(tmp_path, monkeypatch):
-    expected = agreement.assemble(_selection_snapshot())
+@pytest.mark.parametrize("provenance", [None, [], "invalid", 17, True])
+def test_render_only_rejects_invalid_provenance_without_replacing_reports(
+        tmp_path, monkeypatch, capsys, provenance):
+    stored = agreement.assemble(_selection_snapshot())
+    stored["snapshot"]["provenance"] = provenance
+    json_output, md_output = tmp_path / "report.json", tmp_path / "report.md"
+    json_output.write_text(json.dumps(stored))
+    md_output.write_text("existing Markdown\n")
+    original_json = json_output.read_bytes()
+    monkeypatch.setattr(agreement, "OUT_JSON", json_output)
+    monkeypatch.setattr(agreement, "OUT_MD", md_output)
+
+    assert agreement.main(["--render-only"]) == 2
+    assert "snapshot provenance must be a mapping" in capsys.readouterr().err
+    assert json_output.read_bytes() == original_json
+    assert md_output.read_bytes() == b"existing Markdown\n"
+
+
+@pytest.mark.parametrize("include_provenance", [False, True])
+def test_render_only_recomputes_stale_derived_values_without_loading_corpus(
+        tmp_path, monkeypatch, include_provenance):
+    snapshot = _selection_snapshot()
+    if not include_provenance:
+        del snapshot["provenance"]
+    expected = agreement.assemble(snapshot)
     stale = copy.deepcopy(expected)
     stale["primary"]["n"] = -1
     _row(stale)["top_k_overlap"] = -1
@@ -317,7 +343,7 @@ def test_render_only_recomputes_stale_derived_values_without_loading_corpus(tmp_
         pytest.fail("--render-only must reconstruct from stored article labels")
 
     monkeypatch.setattr(agreement, "load_snapshot", no_corpus_access)
-    agreement.main(["--render-only"])
+    assert agreement.main(["--render-only"]) == 0
     assert json.loads(json_output.read_text()) == expected
     assert md_output.read_text() == agreement.render(expected)
 

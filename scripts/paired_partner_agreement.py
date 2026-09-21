@@ -47,6 +47,10 @@ def _unique_mapping(loader, node, deep=False):
     out = {}
     for key_node, value_node in node.value:
         key = loader.construct_object(key_node, deep=deep)
+        try:
+            hash(key)
+        except TypeError as exc:
+            raise InputError("unhashable YAML key") from exc
         if key in out:
             raise InputError(f"duplicate YAML key: {key}")
         out[key] = loader.construct_object(value_node, deep=deep)
@@ -338,6 +342,8 @@ def _validate_snapshot(snapshot: dict) -> tuple[list[str], list[dict]]:
     # Stored identity claims must remain attached to the operational labels
     # that actually regenerate the report. Never trust stale derived totals.
     provenance = snapshot.get("provenance", {})
+    if not isinstance(provenance, dict):
+        raise InputError("snapshot provenance must be a mapping")
     for key, pmids in (
             ("all_pmid_sha256", [r["pmid"] for r in records]),
             ("observed_mesh_pmid_sha256", [r["pmid"] for r in records if r["mesh"] is not None]),

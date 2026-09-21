@@ -177,7 +177,7 @@ figures:
     type: census-derived
     status: manuscript
     note: >-
-      Replaces fig15_designed_combinations. Pair COUNTS, never a rate: the designed-combination classifier needed full text and has no census analogue, and the co-occurrence rate is a property of the labelling instrument.
+      Replaces fig15_designed_combinations. Counts describe articles carrying both descriptor groups, not tested combinations. Co-tagging fractions depend on label definitions, tagged-article denominators and the selected population.
 
   - manuscript_figure: 13
     filename: fig16c_trial_share
