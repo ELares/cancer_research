@@ -41,7 +41,9 @@ use serde::Serialize;
 use ferroptosis_core::biochem::{sim_cell_step, CellState};
 use ferroptosis_core::cell::{norm, Treatment};
 use ferroptosis_core::grid::{death_heatmap, depth_kill_curve, TumorGrid};
-use ferroptosis_core::immune_spatial::{immune_kill_probability, DAMP_KILL_THRESHOLD};
+use ferroptosis_core::immune_spatial::{
+    diffuse_damp_2d_step, immune_kill_probability, DAMP_KILL_THRESHOLD,
+};
 use ferroptosis_core::io::{write_depth_curves_csv, write_heatmap_csv, write_json};
 use ferroptosis_core::oxygen::o2_dependent_exo_factor;
 use ferroptosis_core::params::{
@@ -753,27 +755,13 @@ fn run_spatial_with_immune_impl(
         );
 
         // --- DAMP diffusion (neighbor spread + clearance) ---
-        damp_delta.fill(0.0);
-        for r in 0..rows {
-            for c in 0..cols {
-                let idx = r * cols + c;
-                let local = damp_field[idx];
-                if local < 0.001 {
-                    continue;
-                }
-                let share = local * immune.damp_diffusion_fraction;
-                let (neighbors, count) = grid.neighbors(r, c);
-                for &(nr, nc) in &neighbors[..count] {
-                    damp_delta[nr * cols + nc] += share;
-                }
-                damp_delta[idx] -= share * count as f64;
-            }
-        }
-        for i in 0..n_cells {
-            damp_field[i] = (damp_field[i] + damp_delta[i]).max(0.0);
-            // Clearance decay
-            damp_field[i] *= 1.0 - immune.damp_clearance_rate;
-        }
+        diffuse_damp_2d_step(
+            &mut damp_field,
+            &mut damp_delta,
+            grid,
+            immune.damp_diffusion_fraction,
+            immune.damp_clearance_rate,
+        );
 
         if let Some(observer) = diagnostics.measurements.as_mut() {
             observer.before_immune(&grid.cells, &damp_field, step);
@@ -991,6 +979,15 @@ fn zone_kill_rates(grid: &TumorGrid, shell_depth_um: f64) -> (f64, f64, f64) {
 
 fn main() {
     let args: Vec<String> = std::env::args().collect();
+    if immune_measurements::immune_controlled::requested(&args) {
+        let ferro_env: Vec<_> = std::env::vars_os()
+            .map(|(name, _)| name)
+            .filter(|name| name.to_string_lossy().starts_with("FERRO_"))
+            .collect();
+        immune_measurements::immune_controlled::validate_args(&args, &ferro_env);
+        immune_measurements::immune_controlled::run(Path::new("output/tme"));
+        return;
+    }
     if args
         .iter()
         .any(|arg| arg == "--immune-measurements" || arg.starts_with("--immune-measurements="))

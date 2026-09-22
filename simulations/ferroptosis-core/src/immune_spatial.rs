@@ -26,13 +26,14 @@
 //! `immune` answers "what does one death contribute?" and `immune_spatial`
 //! answers "where does it spread and who does it affect?"
 //!
-//! **The 104:1 question (issue #188).** Sim-tme's 2D model finds SDT
-//! produces ~104× more immune kills than RSL3 because SDT's dense kill
-//! field creates a high local DAMP concentration. The issue asks
-//! whether this ratio holds in 3D. **Answering it requires a full
-//! multi-step simulation** (sim-tme-3d, #195) — not a library unit
-//! test. This module provides the diffusion primitive; the kill-ratio
-//! comparison lands with #196 (3D validation).
+//! **The historical count contrast (issue #188).** One canonical 2D run
+//! produced 521 SDT immune kills versus 5 RSL3 immune kills. That count
+//! contrast alone does not identify a causal DAMP or saturation mechanism.
+//! The 2D and 3D runs differ in several design choices, so comparing their
+//! ratios is neither an isolated dimensionality effect nor biological
+//! validation. Sim-tme's separate controlled source-recipient driver studies
+//! these transport and activation rules under fixed imposed masks and
+//! releases; it does not reproduce treatment-induced source populations.
 //!
 //! ## ⚠️ Stability requirement (critical for 3D)
 //!
@@ -92,7 +93,7 @@
 //! }
 //! ```
 
-use crate::grid::{TumorGrid3D, TUMOR_RADIUS_FRACTION};
+use crate::grid::{TumorGrid, TumorGrid3D, TUMOR_RADIUS_FRACTION};
 use rand::prelude::*;
 
 /// Minimum local-DAMP concentration above which a cell is eligible for
@@ -120,10 +121,201 @@ const MAX_3D_NEIGHBORS: usize = 26;
 /// Source cells below this DAMP value skip spread + self-decrement
 /// (matches sim-tme's `if local < 0.001 { continue; }` sub-threshold cutoff in
 /// its DAMP-diffusion step). The cutoff exists for performance: cells
-/// at this magnitude contribute negligibly to neighbors. Mass is exactly
-/// preserved for sub-threshold cells (they don't lose to anyone), so
-/// the field's long-run behavior is unchanged — just faster.
+/// at this magnitude contribute little to neighbors. Skipping preserves their
+/// mass exactly, but suppresses their local spreading and makes the transport
+/// operator piecewise nonlinear.
 const DIFFUSION_SOURCE_CUTOFF: f64 = 0.001;
+
+/// The established sim-tme 2D DAMP update, extracted without changing its
+/// accumulation order. Sources share with their actual Moore neighbors before
+/// the complete field is multiplied by `1 - clearance_rate`. The rectangular
+/// lattice has no wrapping; tumor and recipient masks do not affect transport.
+///
+/// Values below 0.001 skip both spread and self-decrement. This preserves mass
+/// but makes the operator piecewise nonlinear: unrestricted superposition is
+/// not an invariant. Finite nonnegative field values are a caller precondition,
+/// not checked by a separate field scan here. Buffer lengths and finite valid
+/// transport coefficients are checked on every call.
+pub fn diffuse_damp_2d_step(
+    damp_field: &mut [f64],
+    scratch: &mut [f64],
+    grid: &TumorGrid,
+    diffusion_fraction: f64,
+    clearance_rate: f64,
+) {
+    let n = grid.rows * grid.cols;
+    assert_eq!(grid.cells.len(), n, "2D grid dimensions");
+    assert_eq!(damp_field.len(), n, "2D DAMP field length");
+    assert_eq!(scratch.len(), n, "2D DAMP scratch length");
+    assert!(
+        diffusion_fraction.is_finite()
+            && diffusion_fraction >= 0.0
+            && diffusion_fraction * 8.0 < 1.0,
+        "2D diffusion fraction must be finite, nonnegative, and satisfy fraction * 8 < 1"
+    );
+    assert!(
+        clearance_rate.is_finite() && (0.0..=1.0).contains(&clearance_rate),
+        "2D clearance must be finite and in [0, 1]"
+    );
+    scratch.fill(0.0);
+    for r in 0..grid.rows {
+        for c in 0..grid.cols {
+            let idx = r * grid.cols + c;
+            let local = damp_field[idx];
+            if local < DIFFUSION_SOURCE_CUTOFF {
+                continue;
+            }
+            let share = local * diffusion_fraction;
+            let (neighbors, count) = grid.neighbors(r, c);
+            for &(nr, nc) in &neighbors[..count] {
+                scratch[nr * grid.cols + nc] += share;
+            }
+            scratch[idx] -= share * count as f64;
+        }
+    }
+    for i in 0..n {
+        damp_field[i] = (damp_field[i] + scratch[i]).max(0.0);
+        damp_field[i] *= 1.0 - clearance_rate;
+    }
+}
+
+#[cfg(test)]
+mod diffusion_2d_tests {
+    use super::*;
+
+    fn close(a: f64, b: f64) {
+        assert!((a - b).abs() <= 1e-12 * b.abs() + 1e-12, "{a} != {b}");
+    }
+
+    #[test]
+    fn interior_and_corner_impulses_use_actual_neighbor_count() {
+        let grid = TumorGrid::generate(5, 5, 20.0, 42);
+        for (index, degree) in [(12, 8), (0, 3)] {
+            let mut field = vec![0.0; 25];
+            let mut scratch = vec![0.0; 25];
+            field[index] = 10.0;
+            diffuse_damp_2d_step(&mut field, &mut scratch, &grid, 0.08, 0.03);
+            close(field[index], 10.0 * (1.0 - degree as f64 * 0.08) * 0.97);
+            let (neighbors, count) = grid.neighbors(index / 5, index % 5);
+            assert_eq!(count, degree);
+            for &(r, c) in &neighbors[..count] {
+                close(field[r * 5 + c], 10.0 * 0.08 * 0.97);
+            }
+            close(field.iter().sum(), 9.7);
+        }
+    }
+
+    #[test]
+    fn below_cutoff_keeps_mass_and_equality_spreads() {
+        let grid = TumorGrid::generate(3, 3, 20.0, 42);
+        let mut scratch = vec![0.0; 9];
+        let mut below = vec![0.0; 9];
+        below[4] = 0.0005;
+        diffuse_damp_2d_step(&mut below, &mut scratch, &grid, 0.08, 0.03);
+        assert_eq!(below[4], 0.0005 * 0.97);
+        assert_eq!(below[0], 0.0);
+        let mut exact = vec![0.0; 9];
+        exact[4] = 0.001;
+        diffuse_damp_2d_step(&mut exact, &mut scratch, &grid, 0.08, 0.03);
+        assert_eq!(exact[0], 0.001 * 0.08 * 0.97);
+        close(exact.iter().sum(), 0.001 * 0.97);
+    }
+
+    #[test]
+    fn mass_recurrence_uniform_field_and_clearance_only_oracles() {
+        let grid = TumorGrid::generate(5, 6, 20.0, 42);
+        let mut scratch = vec![0.0; 30];
+        let mut field: Vec<_> = (0..30)
+            .map(|i| if i % 3 == 0 { 0.0005 } else { i as f64 })
+            .collect();
+        let mut expected = field.iter().sum::<f64>();
+        for _ in 0..20 {
+            field[0] += 2.0;
+            expected = (expected + 2.0) * 0.97;
+            diffuse_damp_2d_step(&mut field, &mut scratch, &grid, 0.08, 0.03);
+            close(field.iter().sum(), expected);
+            assert!(field.iter().all(|v| v.is_finite() && *v >= 0.0));
+        }
+        let mut uniform = vec![4.0; 30];
+        diffuse_damp_2d_step(&mut uniform, &mut scratch, &grid, 0.08, 0.03);
+        for value in uniform {
+            close(value, 4.0 * 0.97);
+        }
+        let before = field.clone();
+        diffuse_damp_2d_step(&mut field, &mut scratch, &grid, 0.0, 0.03);
+        for (old, new) in before.iter().zip(field) {
+            assert_eq!(new, old * 0.97);
+        }
+    }
+
+    // Independent retained reference to the pre-extraction inline production
+    // loop. This is compatibility evidence, not an experimental observation.
+    fn legacy_inline(field: &mut [f64], grid: &TumorGrid, fraction: f64, clearance: f64) {
+        let mut delta = vec![0.0; field.len()];
+        for r in 0..grid.rows {
+            for c in 0..grid.cols {
+                let idx = r * grid.cols + c;
+                let local = field[idx];
+                if local < 0.001 {
+                    continue;
+                }
+                let share = local * fraction;
+                let (neighbors, count) = grid.neighbors(r, c);
+                for &(nr, nc) in &neighbors[..count] {
+                    delta[nr * grid.cols + nc] += share;
+                }
+                delta[idx] -= share * count as f64;
+            }
+        }
+        for i in 0..field.len() {
+            field[i] = (field[i] + delta[i]).max(0.0);
+            field[i] *= 1.0 - clearance;
+        }
+    }
+
+    #[test]
+    fn extracted_2d_operator_matches_old_inline_bits_at_every_step() {
+        let grid = TumorGrid::generate(7, 6, 20.0, 42);
+        let mut old: Vec<_> = (0..42)
+            .map(|i| match i % 5 {
+                0 => 0.0,
+                1 => 0.0005,
+                2 => 0.001,
+                _ => (i as f64) / 7.0,
+            })
+            .collect();
+        let mut extracted = old.clone();
+        let mut scratch = vec![123.0; 42];
+        for step in 0..40 {
+            let idx = (step * 13) % 42;
+            old[idx] += step as f64 * 0.002;
+            extracted[idx] += step as f64 * 0.002;
+            legacy_inline(&mut old, &grid, 0.08, 0.03);
+            diffuse_damp_2d_step(&mut extracted, &mut scratch, &grid, 0.08, 0.03);
+            assert_eq!(
+                old.iter().map(|v| v.to_bits()).collect::<Vec<_>>(),
+                extracted.iter().map(|v| v.to_bits()).collect::<Vec<_>>()
+            );
+        }
+    }
+
+    #[test]
+    fn two_dimensional_transport_rejects_unstable_or_invalid_coefficients() {
+        let grid = TumorGrid::generate(3, 3, 20.0, 42);
+        for (fraction, clearance) in [
+            (0.125, 0.03),
+            (-0.1, 0.03),
+            (f64::NAN, 0.03),
+            (0.08, 1.1),
+            (0.08, f64::NAN),
+        ] {
+            assert!(std::panic::catch_unwind(|| {
+                diffuse_damp_2d_step(&mut [0.0; 9], &mut [0.0; 9], &grid, fraction, clearance);
+            })
+            .is_err());
+        }
+    }
+}
 
 /// One step of DAMP diffusion + exponential clearance on a 3D spheroid
 /// grid. Mutates `damp_field` in place using `scratch` to avoid

@@ -1,0 +1,419 @@
+{
+  "schema_version": 1,
+  "study": "immune-2d-controlled-source-recipient",
+  "simulator": "sim-tme",
+  "dimension": 2,
+  "config": {
+    "grid_rows": 500,
+    "grid_cols": 500,
+    "cell_size_um": 20.0,
+    "n_steps": 180,
+    "immune_start_step": 60,
+    "damp_diffusion_fraction": 0.08,
+    "damp_clearance_rate": 0.03,
+    "diffusion_source_cutoff": 0.001,
+    "damp_kill_threshold": 0.01,
+    "dc_activation_kd": 50.0
+  },
+  "masks": {
+    "region_start": 218,
+    "region_stop": 282,
+    "tile_size": 8,
+    "source_offsets": [
+      2,
+      5
+    ],
+    "reference_recipient_count": 3840,
+    "reduced_recipient_modulus": 2,
+    "reduced_recipient_remainder": 0
+  },
+  "factors": {
+    "source_counts": [
+      64,
+      256
+    ],
+    "total_damp_budgets": [
+      1280.0,
+      5120.0
+    ],
+    "release_steps": [
+      30,
+      60
+    ],
+    "recipient_counts": [
+      3840,
+      960
+    ]
+  },
+  "primary_endpoint": "activation_sum_per_reference_recipient",
+  "reference_recipient_count": 3840,
+  "tolerances": {
+    "relative": 1e-10,
+    "absolute": 1e-08
+  },
+  "contrast_operation": "left_minus_right",
+  "conditions": [
+    {
+      "condition_id": "n64_m1280_t30_r3840",
+      "source_count": 64,
+      "total_damp": 1280.0,
+      "per_source_damp": 20.0,
+      "release_step": 30,
+      "recipient_count": 3840
+    },
+    {
+      "condition_id": "n64_m1280_t30_r960",
+      "source_count": 64,
+      "total_damp": 1280.0,
+      "per_source_damp": 20.0,
+      "release_step": 30,
+      "recipient_count": 960
+    },
+    {
+      "condition_id": "n64_m1280_t60_r3840",
+      "source_count": 64,
+      "total_damp": 1280.0,
+      "per_source_damp": 20.0,
+      "release_step": 60,
+      "recipient_count": 3840
+    },
+    {
+      "condition_id": "n64_m1280_t60_r960",
+      "source_count": 64,
+      "total_damp": 1280.0,
+      "per_source_damp": 20.0,
+      "release_step": 60,
+      "recipient_count": 960
+    },
+    {
+      "condition_id": "n64_m5120_t30_r3840",
+      "source_count": 64,
+      "total_damp": 5120.0,
+      "per_source_damp": 80.0,
+      "release_step": 30,
+      "recipient_count": 3840
+    },
+    {
+      "condition_id": "n64_m5120_t30_r960",
+      "source_count": 64,
+      "total_damp": 5120.0,
+      "per_source_damp": 80.0,
+      "release_step": 30,
+      "recipient_count": 960
+    },
+    {
+      "condition_id": "n64_m5120_t60_r3840",
+      "source_count": 64,
+      "total_damp": 5120.0,
+      "per_source_damp": 80.0,
+      "release_step": 60,
+      "recipient_count": 3840
+    },
+    {
+      "condition_id": "n64_m5120_t60_r960",
+      "source_count": 64,
+      "total_damp": 5120.0,
+      "per_source_damp": 80.0,
+      "release_step": 60,
+      "recipient_count": 960
+    },
+    {
+      "condition_id": "n256_m1280_t30_r3840",
+      "source_count": 256,
+      "total_damp": 1280.0,
+      "per_source_damp": 5.0,
+      "release_step": 30,
+      "recipient_count": 3840
+    },
+    {
+      "condition_id": "n256_m1280_t30_r960",
+      "source_count": 256,
+      "total_damp": 1280.0,
+      "per_source_damp": 5.0,
+      "release_step": 30,
+      "recipient_count": 960
+    },
+    {
+      "condition_id": "n256_m1280_t60_r3840",
+      "source_count": 256,
+      "total_damp": 1280.0,
+      "per_source_damp": 5.0,
+      "release_step": 60,
+      "recipient_count": 3840
+    },
+    {
+      "condition_id": "n256_m1280_t60_r960",
+      "source_count": 256,
+      "total_damp": 1280.0,
+      "per_source_damp": 5.0,
+      "release_step": 60,
+      "recipient_count": 960
+    },
+    {
+      "condition_id": "n256_m5120_t30_r3840",
+      "source_count": 256,
+      "total_damp": 5120.0,
+      "per_source_damp": 20.0,
+      "release_step": 30,
+      "recipient_count": 3840
+    },
+    {
+      "condition_id": "n256_m5120_t30_r960",
+      "source_count": 256,
+      "total_damp": 5120.0,
+      "per_source_damp": 20.0,
+      "release_step": 30,
+      "recipient_count": 960
+    },
+    {
+      "condition_id": "n256_m5120_t60_r3840",
+      "source_count": 256,
+      "total_damp": 5120.0,
+      "per_source_damp": 20.0,
+      "release_step": 60,
+      "recipient_count": 3840
+    },
+    {
+      "condition_id": "n256_m5120_t60_r960",
+      "source_count": 256,
+      "total_damp": 5120.0,
+      "per_source_damp": 20.0,
+      "release_step": 60,
+      "recipient_count": 960
+    },
+    {
+      "condition_id": "zero_r3840",
+      "source_count": 64,
+      "total_damp": 0.0,
+      "per_source_damp": 0.0,
+      "release_step": 60,
+      "recipient_count": 3840
+    },
+    {
+      "condition_id": "zero_r960",
+      "source_count": 64,
+      "total_damp": 0.0,
+      "per_source_damp": 0.0,
+      "release_step": 60,
+      "recipient_count": 960
+    }
+  ],
+  "contrasts": [
+    {
+      "contrast_id": "equal_total_mass__n256_m1280_t30_r3840__minus__n64_m1280_t30_r3840",
+      "kind": "equal_total_mass",
+      "left": "n256_m1280_t30_r3840",
+      "right": "n64_m1280_t30_r3840"
+    },
+    {
+      "contrast_id": "equal_total_mass__n256_m1280_t30_r960__minus__n64_m1280_t30_r960",
+      "kind": "equal_total_mass",
+      "left": "n256_m1280_t30_r960",
+      "right": "n64_m1280_t30_r960"
+    },
+    {
+      "contrast_id": "equal_total_mass__n256_m1280_t60_r3840__minus__n64_m1280_t60_r3840",
+      "kind": "equal_total_mass",
+      "left": "n256_m1280_t60_r3840",
+      "right": "n64_m1280_t60_r3840"
+    },
+    {
+      "contrast_id": "equal_total_mass__n256_m1280_t60_r960__minus__n64_m1280_t60_r960",
+      "kind": "equal_total_mass",
+      "left": "n256_m1280_t60_r960",
+      "right": "n64_m1280_t60_r960"
+    },
+    {
+      "contrast_id": "equal_total_mass__n256_m5120_t30_r3840__minus__n64_m5120_t30_r3840",
+      "kind": "equal_total_mass",
+      "left": "n256_m5120_t30_r3840",
+      "right": "n64_m5120_t30_r3840"
+    },
+    {
+      "contrast_id": "equal_total_mass__n256_m5120_t30_r960__minus__n64_m5120_t30_r960",
+      "kind": "equal_total_mass",
+      "left": "n256_m5120_t30_r960",
+      "right": "n64_m5120_t30_r960"
+    },
+    {
+      "contrast_id": "equal_total_mass__n256_m5120_t60_r3840__minus__n64_m5120_t60_r3840",
+      "kind": "equal_total_mass",
+      "left": "n256_m5120_t60_r3840",
+      "right": "n64_m5120_t60_r3840"
+    },
+    {
+      "contrast_id": "equal_total_mass__n256_m5120_t60_r960__minus__n64_m5120_t60_r960",
+      "kind": "equal_total_mass",
+      "left": "n256_m5120_t60_r960",
+      "right": "n64_m5120_t60_r960"
+    },
+    {
+      "contrast_id": "release_amount__n64_m5120_t30_r3840__minus__n64_m1280_t30_r3840",
+      "kind": "release_amount",
+      "left": "n64_m5120_t30_r3840",
+      "right": "n64_m1280_t30_r3840"
+    },
+    {
+      "contrast_id": "release_amount__n64_m5120_t30_r960__minus__n64_m1280_t30_r960",
+      "kind": "release_amount",
+      "left": "n64_m5120_t30_r960",
+      "right": "n64_m1280_t30_r960"
+    },
+    {
+      "contrast_id": "release_amount__n64_m5120_t60_r3840__minus__n64_m1280_t60_r3840",
+      "kind": "release_amount",
+      "left": "n64_m5120_t60_r3840",
+      "right": "n64_m1280_t60_r3840"
+    },
+    {
+      "contrast_id": "release_amount__n64_m5120_t60_r960__minus__n64_m1280_t60_r960",
+      "kind": "release_amount",
+      "left": "n64_m5120_t60_r960",
+      "right": "n64_m1280_t60_r960"
+    },
+    {
+      "contrast_id": "release_amount__n256_m5120_t30_r3840__minus__n256_m1280_t30_r3840",
+      "kind": "release_amount",
+      "left": "n256_m5120_t30_r3840",
+      "right": "n256_m1280_t30_r3840"
+    },
+    {
+      "contrast_id": "release_amount__n256_m5120_t30_r960__minus__n256_m1280_t30_r960",
+      "kind": "release_amount",
+      "left": "n256_m5120_t30_r960",
+      "right": "n256_m1280_t30_r960"
+    },
+    {
+      "contrast_id": "release_amount__n256_m5120_t60_r3840__minus__n256_m1280_t60_r3840",
+      "kind": "release_amount",
+      "left": "n256_m5120_t60_r3840",
+      "right": "n256_m1280_t60_r3840"
+    },
+    {
+      "contrast_id": "release_amount__n256_m5120_t60_r960__minus__n256_m1280_t60_r960",
+      "kind": "release_amount",
+      "left": "n256_m5120_t60_r960",
+      "right": "n256_m1280_t60_r960"
+    },
+    {
+      "contrast_id": "release_timing__n64_m1280_t60_r3840__minus__n64_m1280_t30_r3840",
+      "kind": "release_timing",
+      "left": "n64_m1280_t60_r3840",
+      "right": "n64_m1280_t30_r3840"
+    },
+    {
+      "contrast_id": "release_timing__n64_m1280_t60_r960__minus__n64_m1280_t30_r960",
+      "kind": "release_timing",
+      "left": "n64_m1280_t60_r960",
+      "right": "n64_m1280_t30_r960"
+    },
+    {
+      "contrast_id": "release_timing__n64_m5120_t60_r3840__minus__n64_m5120_t30_r3840",
+      "kind": "release_timing",
+      "left": "n64_m5120_t60_r3840",
+      "right": "n64_m5120_t30_r3840"
+    },
+    {
+      "contrast_id": "release_timing__n64_m5120_t60_r960__minus__n64_m5120_t30_r960",
+      "kind": "release_timing",
+      "left": "n64_m5120_t60_r960",
+      "right": "n64_m5120_t30_r960"
+    },
+    {
+      "contrast_id": "release_timing__n256_m1280_t60_r3840__minus__n256_m1280_t30_r3840",
+      "kind": "release_timing",
+      "left": "n256_m1280_t60_r3840",
+      "right": "n256_m1280_t30_r3840"
+    },
+    {
+      "contrast_id": "release_timing__n256_m1280_t60_r960__minus__n256_m1280_t30_r960",
+      "kind": "release_timing",
+      "left": "n256_m1280_t60_r960",
+      "right": "n256_m1280_t30_r960"
+    },
+    {
+      "contrast_id": "release_timing__n256_m5120_t60_r3840__minus__n256_m5120_t30_r3840",
+      "kind": "release_timing",
+      "left": "n256_m5120_t60_r3840",
+      "right": "n256_m5120_t30_r3840"
+    },
+    {
+      "contrast_id": "release_timing__n256_m5120_t60_r960__minus__n256_m5120_t30_r960",
+      "kind": "release_timing",
+      "left": "n256_m5120_t60_r960",
+      "right": "n256_m5120_t30_r960"
+    },
+    {
+      "contrast_id": "recipient_availability__n64_m1280_t30_r960__minus__n64_m1280_t30_r3840",
+      "kind": "recipient_availability",
+      "left": "n64_m1280_t30_r960",
+      "right": "n64_m1280_t30_r3840"
+    },
+    {
+      "contrast_id": "recipient_availability__n64_m1280_t60_r960__minus__n64_m1280_t60_r3840",
+      "kind": "recipient_availability",
+      "left": "n64_m1280_t60_r960",
+      "right": "n64_m1280_t60_r3840"
+    },
+    {
+      "contrast_id": "recipient_availability__n64_m5120_t30_r960__minus__n64_m5120_t30_r3840",
+      "kind": "recipient_availability",
+      "left": "n64_m5120_t30_r960",
+      "right": "n64_m5120_t30_r3840"
+    },
+    {
+      "contrast_id": "recipient_availability__n64_m5120_t60_r960__minus__n64_m5120_t60_r3840",
+      "kind": "recipient_availability",
+      "left": "n64_m5120_t60_r960",
+      "right": "n64_m5120_t60_r3840"
+    },
+    {
+      "contrast_id": "recipient_availability__n256_m1280_t30_r960__minus__n256_m1280_t30_r3840",
+      "kind": "recipient_availability",
+      "left": "n256_m1280_t30_r960",
+      "right": "n256_m1280_t30_r3840"
+    },
+    {
+      "contrast_id": "recipient_availability__n256_m1280_t60_r960__minus__n256_m1280_t60_r3840",
+      "kind": "recipient_availability",
+      "left": "n256_m1280_t60_r960",
+      "right": "n256_m1280_t60_r3840"
+    },
+    {
+      "contrast_id": "recipient_availability__n256_m5120_t30_r960__minus__n256_m5120_t30_r3840",
+      "kind": "recipient_availability",
+      "left": "n256_m5120_t30_r960",
+      "right": "n256_m5120_t30_r3840"
+    },
+    {
+      "contrast_id": "recipient_availability__n256_m5120_t60_r960__minus__n256_m5120_t60_r3840",
+      "kind": "recipient_availability",
+      "left": "n256_m5120_t60_r960",
+      "right": "n256_m5120_t60_r3840"
+    },
+    {
+      "contrast_id": "equal_per_source_amount__n256_m5120_t30_r3840__minus__n64_m1280_t30_r3840",
+      "kind": "equal_per_source_amount",
+      "left": "n256_m5120_t30_r3840",
+      "right": "n64_m1280_t30_r3840"
+    },
+    {
+      "contrast_id": "equal_per_source_amount__n256_m5120_t30_r960__minus__n64_m1280_t30_r960",
+      "kind": "equal_per_source_amount",
+      "left": "n256_m5120_t30_r960",
+      "right": "n64_m1280_t30_r960"
+    },
+    {
+      "contrast_id": "equal_per_source_amount__n256_m5120_t60_r3840__minus__n64_m1280_t60_r3840",
+      "kind": "equal_per_source_amount",
+      "left": "n256_m5120_t60_r3840",
+      "right": "n64_m1280_t60_r3840"
+    },
+    {
+      "contrast_id": "equal_per_source_amount__n256_m5120_t60_r960__minus__n64_m1280_t60_r960",
+      "kind": "equal_per_source_amount",
+      "left": "n256_m5120_t60_r960",
+      "right": "n64_m1280_t60_r960"
+    }
+  ]
+}
