@@ -40,11 +40,14 @@ Usage:
 """
 
 import argparse
-import gzip
 import json
 import re
+import sys
 from collections import Counter
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from census_input import atlas_root, iter_census_records
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 ATLAS = PROJECT_ROOT / "corpus" / "atlas"
@@ -198,8 +201,8 @@ def deep_map() -> dict:
     return out
 
 
-def write_map(dm: dict) -> None:
-    """Commit the resolved map, so a placement is disputable."""
+def render_map(dm: dict) -> str:
+    """Prepare the resolved map without changing any report on disk."""
     L = ["# site\ttree root\tMeSH descriptor",
          "# DERIVED: every C04 descriptor at or beneath the tree nodes the",
          "# shallow SITES list already occupies. No rule beyond that list --",
@@ -214,7 +217,7 @@ def write_map(dm: dict) -> None:
             root = next((r for r in dm[site]["roots"]
                          for t in ts if t == r or t.startswith(r + ".")), "?")
             L.append(f"{site}\t{root}\t{x}")
-    OUT_MAP.write_text("\n".join(L) + "\n", encoding="utf-8")
+    return "\n".join(L) + "\n"
 
 
 def _pairs(v):
@@ -224,9 +227,21 @@ def _pairs(v):
     comes back alphabetical and `--render-only` renders a DIFFERENT report --
     the defect #730 already fixed in this repo and this file did not inherit.
     """
-    if isinstance(v, dict):
-        return sorted(v.items(), key=lambda kv: -kv[1])
-    return [tuple(x) for x in v]
+    pairs = v.items() if isinstance(v, dict) else v
+    return sorted((tuple(x) for x in pairs), key=lambda kv: (-kv[1], kv[0]))
+
+
+def _ranks(pairs):
+    """Positive counts only; tied counts share the same competition rank."""
+    out, previous, rank = {}, None, 0
+    for i, (site, count) in enumerate(_pairs(pairs), 1):
+        if count <= 0:
+            continue
+        if count != previous:
+            rank = i
+        out[site] = rank
+        previous = count
+    return out
 
 
 def _lut(mapping: dict) -> dict:
@@ -240,14 +255,15 @@ def _lut(mapping: dict) -> dict:
 GENERIC = "neoplasms"
 
 
-def scan() -> dict:
-    dm = deep_map()
-    write_map(dm)
+def scan(dm: dict | None = None) -> dict:
+    dm = deep_map() if dm is None else dm
+    root = atlas_root()
+    c04 = set(c04_labels().values())
     luts = {
         "shallow": _lut(SITES),
         "deep": _lut({s: v["deep"] for s, v in dm.items()}),
     }
-    per_site = {k: Counter() for k in luts}
+    per_site = {k: Counter({s: 0 for s in SITES}) for k in luts}
     assigned = {k: 0 for k in luts}
     multi = {k: 0 for k in luts}
     total = 0
@@ -258,53 +274,60 @@ def scan() -> dict:
     un_adjacent = 0
     un_desc = Counter()
     res_desc = Counter()   # the RESIDUE alone -- see the note in _remainder_section
-    for f in sorted((ATLAS / "records").glob("*.jsonl.gz")):
-        with gzip.open(f, "rt", encoding="utf-8") as fh:
-            for line in fh:
-                r = json.loads(line)
-                total += 1
-                adj = r.get("cancer_basis") != "C04"
-                adjacent += adj
-                mesh = {m.lower() for m in (r.get("mesh") or [])}
-                hits = {}
-                for k, lut in luts.items():
-                    h = set()
-                    for m in mesh & lut.keys():
-                        h |= lut[m]
-                    hits[k] = h
-                    if h:
-                        assigned[k] += 1
-                        multi[k] += len(h) > 1
-                        for s in h:
-                            per_site[k][s] += 1
-                if not hits["shallow"]:
-                    if hits["deep"]:
-                        un_deeper += 1
-                    else:
-                        if GENERIC in mesh:
-                            un_generic += 1
-                        if adj:
-                            un_adjacent += 1
-                        for m in mesh:
-                            un_desc[m] += 1
-                        # THE PROSE'S "the descriptors above" pointed at
-                        # `un_desc`, which accumulates over every unassigned
-                        # record -- including the generic-`Neoplasms` and
-                        # no-C04 ones the same sentence has just excluded. The
-                        # residue gets its own counter.
-                        if GENERIC not in mesh and not adj:
-                            for m in mesh:
-                                res_desc[m] += 1
+    for r in iter_census_records(root / "records"):
+        if not isinstance(r, dict):
+            raise ValueError("Invalid census record: expected a JSON object")
+        terms = r.get("mesh")
+        if terms is not None and (not isinstance(terms, list)
+                                  or any(not isinstance(m, str) for m in terms)):
+            raise ValueError("Invalid census record: mesh must be a list of strings or null")
+        basis = r.get("cancer_basis")
+        if basis is not None and not isinstance(basis, str):
+            raise ValueError("Invalid census record: cancer_basis must be a string or null")
+        total += 1
+        mesh = {m.lower() for m in (terms or [])}
+        # The descriptors determine membership; an absent provenance field
+        # must not turn a C04 record into an adjacent-only one.
+        adj = not bool(mesh & c04)
+        adjacent += adj
+        hits = {}
+        for k, lut in luts.items():
+            h = set()
+            for m in mesh & lut.keys():
+                h |= lut[m]
+            hits[k] = h
+            if h:
+                assigned[k] += 1
+                multi[k] += len(h) > 1
+                for s in h:
+                    per_site[k][s] += 1
+        if not hits["shallow"]:
+            if hits["deep"]:
+                un_deeper += 1
+            else:
+                if GENERIC in mesh:
+                    un_generic += 1
+                if adj:
+                    un_adjacent += 1
+                for m in mesh:
+                    un_desc[m] += 1
+                # The residue excludes the generic-Neoplasms and no-C04
+                # buckets, so it needs its own descriptor profile.
+                if GENERIC not in mesh and not adj:
+                    for m in mesh:
+                        res_desc[m] += 1
+    excluded = excluded_streams(root)
+    _validate_excluded(excluded, total - adjacent)
     return {
         "census": total,
         "adjacent_basis": adjacent,
         "assigned": assigned["shallow"],
         "multi_site": multi["shallow"],
-        "sites": [[k, v] for k, v in per_site["shallow"].most_common()],
+        "sites": [[k, v] for k, v in _pairs(per_site["shallow"])],
         "n_sites": len(SITES),
         "variants": {
             k: {"assigned": assigned[k], "multi_site": multi[k],
-                "sites": [[x, y] for x, y in per_site[k].most_common()],
+                "sites": [[x, y] for x, y in _pairs(per_site[k])],
                 "n_descriptors": sum(
                     len(SITES[s] if k == "shallow" else dm[s]["deep"])
                     for s in SITES)}
@@ -336,34 +359,52 @@ def scan() -> dict:
             "same_sites_deeper": un_deeper,
             "generic_neoplasms": un_generic,
             "no_c04_descriptor": un_adjacent,
-            "top_descriptors": [[k, v] for k, v in un_desc.most_common(20)],
+            "top_descriptors": [[k, v] for k, v in _pairs(un_desc)[:20]],
             "residue_top_descriptors": [[k, v]
-                                        for k, v in res_desc.most_common(24)],
+                                        for k, v in _pairs(res_desc)[:24]],
         },
-        "excluded_streams": excluded_streams(),
+        "excluded_streams": excluded,
     }
 
 
-def excluded_streams() -> dict:
-    """What this denominator leaves out, which the page never said.
+def _manifest_total(path: Path, field: str) -> int:
+    data = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(data, dict) or not isinstance(data.get("files"), dict):
+        raise ValueError(f"Invalid manifest {path}: files must be an object")
+    total = 0
+    for name, entry in data["files"].items():
+        value = entry.get(field) if isinstance(entry, dict) else None
+        if type(value) is not int or value < 0:
+            raise ValueError(
+                f"Invalid manifest {path}: {name} must have a nonnegative integer {field}")
+        total += value
+    return total
 
-    The `carry no MeSH at all` row it used to print could only ever be zero:
-    `atlas_baseline.py` admits a record only when a DescriptorName matches, so
-    no record in this stream can lack MeSH. The row measured the admission
-    rule. What IS excluded is a second census stream and a sub-population of
-    this one, and both change the denominator.
-    """
+
+def _validate_excluded(excluded: dict, observed_core: int) -> None:
+    """Reject impossible totals; count agreement does not establish provenance."""
+    if not isinstance(excluded, dict):
+        raise ValueError("Excluded-stream totals must be an object")
+    for field in ("text_matched_no_mesh", "c04_core"):
+        if field not in excluded:
+            continue
+        value = excluded[field]
+        if type(value) is not int or value < 0:
+            raise ValueError(f"Invalid excluded-stream total: {field}")
+    if "c04_core" in excluded and excluded["c04_core"] != observed_core:
+        raise ValueError("C04 manifest total does not match the scanned C04 population")
+
+
+def excluded_streams(root: Path | None = None) -> dict:
+    """Read optional population manifests from the selected acquisition root."""
+    root = atlas_root() if root is None else root
     out = {}
-    p = ATLAS / "unindexed-manifest.json"
+    p = root / "unindexed-manifest.json"
     if p.exists():
-        d = json.loads(p.read_text())
-        out["text_matched_no_mesh"] = sum(
-            v.get("cancer_text", 0) for v in dict(d.get("files") or {}).values())
-    p = ATLAS / "manifest-c04only.json"
+        out["text_matched_no_mesh"] = _manifest_total(p, "cancer_text")
+    p = root / "manifest-c04only.json"
     if p.exists():
-        d = json.loads(p.read_text())
-        out["c04_core"] = sum(
-            v.get("cancer", 0) for v in dict(d.get("files") or {}).values())
+        out["c04_core"] = _manifest_total(p, "cancer")
     return out
 
 
@@ -386,9 +427,12 @@ def _roundtrip(d: dict) -> dict:
 
 def render(d: dict) -> str:
     n, a = d["census"], d["assigned"]
+    if n <= 0:
+        raise ValueError("Cannot render site coverage without census records")
     sites = _pairs(d["sites"])
     var = d.get("variants") or {}
-    ex = d.get("excluded_streams") or {}
+    ex = d.get("excluded_streams", {})
+    _validate_excluded(ex, n - d.get("adjacent_basis", 0))
     L = ["# Can the census assign articles to cancer sites?", ""]
     L += ["*Generated by `scripts/atlas_site_coverage.py`. This measures the "
           "denominator a burden-weighted analysis would need. It does NOT "
@@ -398,7 +442,8 @@ def render(d: dict) -> str:
     L += [f"| census articles | {n:,} | |",
           f"| **assignable to a site** | **{a:,}** | **{100*a/n:.1f}%** |",
           f"| assigned to more than one | {d['multi_site']:,} | "
-          f"{100*d['multi_site']/max(a,1):.1f}% of assigned |", ""]
+          + (f"{100*d['multi_site']/a:.1f}% of assigned |" if a else
+             "n/a (no assigned articles) |"), ""]
     L += _denominator_section(d, n, a, ex)
     L += _depth_section(d, n, var)
 
@@ -414,16 +459,26 @@ def render(d: dict) -> str:
     L += [f"**{100*a/n:.1f}% of the census is assignable to one of these "
           f"sites** on the shallow list.", ""]
     L += _remainder_section(d, n, a)
-    L += [f"The spread across sites is {lo:,} to {hi:,} articles, a factor of "
-          f"{hi/max(lo,1):.0f}. That spread is the thing a burden ratio would "
+    spread = (f"a factor of {hi/lo:.0f}" if lo else
+              "with no finite largest/smallest ratio because at least one site has zero articles")
+    L += [f"The spread across sites is {lo:,} to {hi:,} articles, {spread}. "
+          f"That spread is the thing a burden ratio would "
           f"divide into mortality, so it carries directly into every "
           f"literature-per-death figure -- and the depth note above says how "
           f"much of it is the list rather than the literature.", ""]
-    L += [f"Multi-site assignment is {100*d['multi_site']/max(a,1):.1f}% of "
-          f"assigned articles. Those are counted once per site here, so the "
-          f"per-site column sums to more than the assigned total -- correct for "
-          f"'how much literature touches this site', wrong for a partition. A "
-          f"burden ratio has to state which it wants.", ""]
+    if a and d["multi_site"]:
+        L += [f"Multi-site assignment is {100*d['multi_site']/a:.1f}% of "
+              f"assigned articles. Those are counted once per site here, so the "
+              f"per-site column sums to more than the assigned total -- correct for "
+              f"'how much literature touches this site', wrong for a partition. A "
+              f"burden ratio has to state which it wants.", ""]
+    elif a:
+        L += ["No assigned article touches more than one site, so the per-site "
+              "column equals the assigned total in this input.", ""]
+    else:
+        L += ["No article in this input matches the shallow site list. "
+              "The share of assigned articles that touch multiple sites is "
+              "undefined because there are no assigned articles.", ""]
 
     L += ["## What is still missing before a ratio is defensible", ""]
     L += ["* GLOBOCAN site definitions do not map one-to-one onto MeSH "
@@ -454,30 +509,32 @@ def render(d: dict) -> str:
 def _denominator_section(d, n, a, ex) -> list:
     """What the denominator leaves out. The row this replaces could only be 0."""
     L = ["## What is not in this denominator", ""]
-    L += ["An earlier version of this table carried a row reading `carry no "
-          "MeSH at all | 0 | 0.0%`. THAT ROW COULD NOT HAVE BEEN ANYTHING ELSE: "
-          "`atlas_baseline.py` admits a record to this stream only when a MeSH "
-          "DescriptorName matches, so no record here can lack MeSH. It measured "
-          "the admission rule and read as a property of the literature. What is "
-          "actually excluded is this:", ""]
+    L += ["The standard `atlas_baseline.py` acquisition admits indexed records "
+          "through matching MeSH descriptors. A zero count of records without "
+          "MeSH in that acquisition reflects its admission rule, not a property "
+          "of all cancer literature. Custom inputs may contain records without "
+          "MeSH; this report retains them in the no-C04 group. Available "
+          "population information follows:", ""]
     tm = ex.get("text_matched_no_mesh")
     core = ex.get("c04_core")
     adj = d.get("adjacent_basis") or 0
-    if tm:
+    if tm is not None:
         both = n + tm
         L += [f"* **{tm:,} MeSH-less cancer articles** sit in a second census "
               f"stream, `corpus/atlas/records_unindexed/`, recovered by text "
               f"match and carrying no descriptors at all. They are excluded by "
               f"choice and cannot be assigned by any descriptor list. Over "
               f"both streams assignability is {a:,} / {both:,} = "
-              f"**{100*a/both:.1f}%**, not {100*a/n:.1f}%."]
+              f"**{100*a/both:.1f}%**"
+              + (f", not {100*a/n:.1f}%." if tm else ".")]
     if adj:
-        L += [f"* **{adj:,} articles ({100*adj/n:.1f}% of this stream)** are "
-              f"admitted only by the nine adjacent experimental-context "
-              f"descriptors and carry NO C04 descriptor. Every site string is "
+        L += [f"* **{adj:,} articles ({100*adj/n:.1f}% of this stream)** "
+              f"carry NO C04 descriptor. Every site string is "
               f"a C04 descriptor, so these are unassignable by construction."
               + (f" Over the C04 core alone ({core:,} articles) assignability "
-                 f"is **{100*a/core:.1f}%**." if core else "")]
+                 f"is **{100*a/core:.1f}%**." if core else
+                 " The C04 core is empty, so its assignability is unavailable."
+                 if core == 0 else "")]
     L += [""]
     return L
 
@@ -487,16 +544,21 @@ def _depth_section(d, n, var) -> list:
     sh, dp = var.get("shallow"), var.get("deep")
     if not (sh and dp):
         return []
+    dp_counts = dict(_pairs(dp["sites"]))
+    depth_ratios = {dp_counts.get(s, 0) / c
+                    for s, c in _pairs(sh["sites"]) if c > 0}
     L = ["## The list is shallow, but not uniformly shallow", ""]
-    L += [f"The 18 sites are matched by {sh['n_descriptors']} descriptors "
+    L += [f"The {d['n_sites']} sites are matched by {sh['n_descriptors']} descriptors "
           f"between them -- but not evenly. `stomach`, `ovary`, `bladder` and "
           f"`thyroid` get one each while `brain/CNS` and `head and neck` get "
           f"four, and the tree holds far more under some of those nodes than "
           f"others. "
-          f"So the per-site column is understated by a different factor for "
-          f"every site, and it is the column a burden ratio divides into "
-          f"mortality.", ""]
-    L += [f"Measured against the SAME 18 sites walked down NLM's own tree -- "
+          + ("The per-site counts change by different factors under the two "
+             "lists, and it is this column a burden ratio divides into "
+             "mortality." if len(depth_ratios) > 1 else
+             "The table below measures whether that difference changes the "
+             "per-site counts in this input."), ""]
+    L += [f"Measured against the SAME {d['n_sites']} sites walked down NLM's own tree -- "
           f"every C04 descriptor at or beneath the nodes the shallow list "
           f"already occupies, {dp['n_descriptors']} placements over "
           f"{d.get('n_distinct_descriptors', dp['n_descriptors'])} distinct "
@@ -511,8 +573,8 @@ def _depth_section(d, n, var) -> list:
     L += ["| site | shallow | deep | deep/shallow | rank shallow -> deep |",
           "|---|--:|--:|--:|--:|"]
     sh_pairs, dp_pairs = _pairs(sh["sites"]), _pairs(dp["sites"])
-    dp_by = dict(dp_pairs)
-    rows = sh_pairs
+    sh_by = dict(sh_pairs)
+    rows = sh_pairs + [(s, 0) for s, _c in dp_pairs if s not in sh_by]
     # A DEEP RANK IS MEANINGLESS FOR A SITE WHOSE SUBTREE CONTAINS ANOTHER OF
     # THESE SITES. `head and neck` reaches rank 1 only because MeSH puts
     # oesophagus and thyroid under it -- 53% of its deep gain is descriptors
@@ -526,27 +588,39 @@ def _depth_section(d, n, var) -> list:
     dp_pairs = [(x, c) for x, c in dp_pairs if x not in merged]
     sh_rank_pairs = [(x, c) for x, c in sh_pairs if x not in merged]
     dp_by_all = dict(_pairs(dp["sites"]))
-    r_sh = {x: i + 1 for i, (x, _c) in enumerate(sh_rank_pairs)}
-    r_dp = {x: i + 1 for i, (x, _c) in enumerate(dp_pairs)}
+    r_sh = _ranks(sh_rank_pairs)
+    r_dp = _ranks(dp_pairs)
     for s, c in rows:
         cd = dp_by_all.get(s, 0)
         if s in merged:
             cell = "n/a (subsumes " + ", ".join(
                 f"`{x}`" for x in d["deep_site_overlaps"][s]) + ")"
         else:
-            mv = f"{r_sh[s]} -> {r_dp.get(s, 0)}"
-            cell = f"**{mv}**" if r_sh[s] != r_dp.get(s) else mv
-        L.append(f"| {s} | {c:,} | {cd:,} | {cd/max(c,1):.2f}x | {cell} |")
+            mv = f"{r_sh.get(s, 'n/a')} -> {r_dp.get(s, 'n/a')}"
+            cell = f"**{mv}**" if s in r_sh and s in r_dp and r_sh[s] != r_dp[s] else mv
+        ratio = f"{cd/c:.2f}x" if c else "n/a (zero shallow)"
+        L.append(f"| {s} | {c:,} | {cd:,} | {ratio} | {cell} |")
     L += [""]
-    ratios = {s: dp_by_all.get(s, 0) / max(c, 1) for s, c in sh_pairs}
+    if any(c == 0 for _s, c in rows):
+        L += ["Deep/shallow ratios are undefined for sites with zero shallow "
+              "articles; zero-count sites receive no rank.", ""]
+    if any(len({c for _s, c in pairs if c > 0}) < sum(c > 0 for _s, c in pairs)
+           for pairs in (sh_rank_pairs, dp_pairs)):
+        L += ["Tied positive counts share a rank; alphabetical display order "
+              "does not break ties.", ""]
+    ratios = {s: dp_by_all.get(s, 0) / c for s, c in sh_pairs if c > 0}
     worst = sorted(ratios.items(), key=lambda kv: -kv[1])[:4]
     flat = sorted(ratios.items(), key=lambda kv: kv[1])[:4]
     moved = [(s, r_sh[s], r_dp.get(s)) for s in r_sh
              if s not in merged and r_dp.get(s) and r_sh[s] != r_dp[s]]
+    rank_change = (f"{len(moved)} of {len(r_sh)} rankable sites change rank, "
+                   + ", ".join(f"`{s}` {i} -> {j}" for s, i, j in
+                               sorted(moved, key=lambda x: -abs(x[1] - x[2]))[:3])
+                   + ". " if moved else "")
     ov = d.get("deep_site_overlaps") or {}
     if ov:
         L += ["**Read the deep column with its overlaps.** NLM's tree does not "
-              "draw this page's 18 boundaries: "
+              f"draw this page's {d['n_sites']} boundaries: "
               + "; ".join(f"`{a}` subsumes " + ", ".join(f"`{x}`" for x in b)
                           for a, b in sorted(ov.items()))
               + ". Those sites are listed separately here, so the deep column "
@@ -557,24 +631,32 @@ def _depth_section(d, n, var) -> list:
                 "pick its boundaries before it picks its depth.", ""]
     def _lab(x):
         return f"`{x}`" + ("*" if x in merged else "")
-    L += ["The gap between the two lists is not uniform and it is not small "
-          "(a `*` marks a site whose subtree contains another of these sites, "
+    if len(set(ratios.values())) > 1:
+        L += ["The gap between the two lists varies by site "
+          + "(a `*` marks a site whose subtree contains another of these sites, "
           "so its figure counts descriptors this table lists separately): "
           + ", ".join(f"{_lab(s)} {v:.2f}x" for s, v in worst)
           + " against " + ", ".join(f"{_lab(s)} {v:.2f}x" for s, v in flat)
-          + ". " + (f"{len(moved)} of {len(r_sh)} rankable sites change rank, "
-                    + ", ".join(f"`{s}` {i} -> {j}" for s, i, j in
-                                sorted(moved, key=lambda x: -abs(x[1] - x[2]))[:3])
-                    + ". " if moved else "")
+          + ". " + rank_change
           + "So the per-site column is comparable within a list and not "
             "across sites, and any burden ratio built on it inherits that.", ""]
+    elif ratios:
+        L += [f"Across sites with positive shallow counts, the deep/shallow "
+              f"ratio is uniformly {next(iter(ratios.values())):.2f}x."
+              + (" " + rank_change.rstrip() if moved else ""), ""]
+    else:
+        L += ["No site has a positive shallow count, so no deep/shallow "
+              "ratio or shallow-to-deep rank change can be measured.", ""]
     L += [f"Assignability itself goes **{100*sh['assigned']/n:.1f}%** shallow "
           f"-> **{100*dp['assigned']/n:.1f}%** on the subtree walk "
           f"(+{dp['assigned']-sh['assigned']:,} articles). The shallow figure "
           f"is the one this page leads with, because it is the shorter and "
           f"more conservative list -- NOT because it is more auditable, which "
-          f"the bullet below retracts. It is a floor, not the census's limit, "
-          f"and a deeper list can also over-reach: membership here is NLM's "
+          f"the bullet below retracts. "
+          + ("It is a floor, not the census's limit, "
+             if dp['assigned'] > sh['assigned'] else
+             "The subtree walk adds no assigned articles in this input, ")
+          + f"and a deeper list can also over-reach: membership here is NLM's "
           f"tree, so an accident of naming cannot cause that, but a site's "
           f"subtree still carries entities its shallow row does not.", ""]
     nh = d.get("non_human_disease_placements") or {}
@@ -586,7 +668,7 @@ def _depth_section(d, n, var) -> list:
               + "; ".join(
                   f"`{k}` gets " + ", ".join(f"`{x}`" for x in v[:4])
                   + (f" and {len(v)-4} more" if len(v) > 4 else "")
-                  for k, v in sorted(nh.items(), key=lambda kv: -len(kv[1]))[:3])
+                  for k, v in sorted(nh.items(), key=lambda kv: (-len(kv[1]), kv[0]))[:3])
               + ". They sit legitimately under those nodes in MeSH and are not "
                 "human disease at that site, so a burden analysis wanting the "
                 "deeper list has to strip them.", ""]
@@ -602,14 +684,14 @@ def _remainder_section(d, n, a) -> list:
     L = [f"An earlier version of this page said the remainder \"is not a "
          f"failure of the census: much cancer literature is about biology, "
          f"methods or cancer in general rather than a site\". That was "
-         f"narrated rather than measured, and it is wrong for a large share of "
-         f"it. Of the {t:,} unassigned:", ""]
+         f"narrated rather than measured. Of the {t:,} unassigned:", ""]
     L += [f"* **{u['same_sites_deeper']:,} ({100*u['same_sites_deeper']/t:.1f}%)** "
-          f"are the SAME 18 sites, named by a descriptor beneath the shallow "
-          f"list's own tree nodes. The great majority of them name a site.",
+          f"are the SAME {d['n_sites']} sites, named by a descriptor beneath the shallow "
+          f"list's own tree nodes.",
           f"* {u['generic_neoplasms']:,} ({100*u['generic_neoplasms']/t:.1f}%) "
-          f"carry the generic `Neoplasms` descriptor, which is the reading the "
-          f"sentence describes.",
+          f"carry the generic `Neoplasms` descriptor. They may also name "
+          f"sites outside this list; this label does not establish that an "
+          f"article concerns cancer in general rather than a site.",
           f"* {u['no_c04_descriptor']:,} "
           f"({100*u['no_c04_descriptor']/t:.1f}%) carry no C04 descriptor at "
           f"all and could not be assigned by any list of C04 strings."]
@@ -622,23 +704,28 @@ def _remainder_section(d, n, a) -> list:
     top = [x for x in (u.get("residue_top_descriptors") or [])
            if x[0] not in CHECKTAG][:8]
     if top:
-        L += [f"* the rest is not featureless, and it is largely CANCER AT A "
-              f"SITE THIS LIST DOES NOT COVER -- the same correction bullet "
-              f"one makes, one level out. Its commonest descriptors, "
+        L += [f"* the residue's commonest descriptors, "
               f"excluding check-tags and study-design terms: "
               + ", ".join(f"`{k}` {v:,}" for k, v in top) + ". An earlier "
               f"version pointed at a descriptor list accumulated over ALL "
               f"unassigned records, which included the generic-`Neoplasms` "
-              f"and no-C04 buckets the same sentence had just excluded."]
+              f"and no-C04 buckets the same sentence had just excluded. "
+              f"These descriptor counts alone do not establish how much of "
+              f"the residue is cancer at a site this list does not cover."]
     rest = t - u["same_sites_deeper"] - u["generic_neoplasms"] - u["no_c04_descriptor"]
     L += [f"* the remaining {rest:,} ({100*rest/t:.1f}%) is none of those "
-          f"three, and is the largest single bucket."]
+          f"three"
+          + (", and is the largest single bucket." if rest > max(
+              u['same_sites_deeper'], u['generic_neoplasms'], u['no_c04_descriptor'])
+             else ".")]
     L += ["", f"So the honest version of the original sentence is much "
           f"narrower: {100*u['same_sites_deeper']/t:.1f}% of the remainder is "
-          f"a limit of THIS 18-site list rather than of the census, a further "
-          f"{100*u['generic_neoplasms']/t:.1f}% is the reading the original "
-          f"sentence described, and {100*rest/t:.1f}% is neither and is not "
-          f"characterised here beyond the descriptors above.", ""]
+          f"a limit of THIS {d['n_sites']}-site list rather than of the census, a further "
+          f"{100*u['generic_neoplasms']/t:.1f}% carries the generic descriptor "
+          f"without establishing article scope, and {100*rest/t:.1f}% is "
+          f"neither and is not "
+          + ("characterised here beyond the descriptors above." if top else
+             "characterised by a non-check-tag descriptor profile in this input."), ""]
     return L
 
 
@@ -649,16 +736,21 @@ def main():
     if args.render_only:
         d = json.loads(OUT_JSON.read_text())
     else:
-        d = scan()
-        if d["assigned"] == 0:
-            raise SystemExit(
-                "no article was assigned to a site, which is not a finding -- "
-                "it is what a descriptor-case mismatch looks like.")
-        OUT_JSON.write_text(json.dumps(d, indent=1, sort_keys=True) + "\n",
-                            encoding="utf-8")
-    OUT_MD.write_text(render(_roundtrip(d)), encoding="utf-8")
+        dm = deep_map()
+        d = scan(dm)
+        map_text = render_map(dm)
+    json_text = json.dumps(d, indent=1, sort_keys=True, allow_nan=False) + "\n"
+    markdown = render(_roundtrip(d))
+    # Exhaust input and prepare every payload before writing any output.
+    # This protects against input/render failures, not filesystem write errors.
+    if not args.render_only:
+        OUT_MAP.write_text(map_text, encoding="utf-8")
+        OUT_JSON.write_text(json_text, encoding="utf-8")
+    OUT_MD.write_text(markdown, encoding="utf-8")
     print(f"wrote {OUT_MD}")
-    print(f"wrote {OUT_JSON}")
+    if not args.render_only:
+        print(f"wrote {OUT_JSON}")
+        print(f"wrote {OUT_MAP}")
     print(f"  assignable: {d['assigned']:,} of {d['census']:,} "
           f"({100*d['assigned']/d['census']:.1f}%)")
     for s, c in _pairs(d["sites"])[:6]:

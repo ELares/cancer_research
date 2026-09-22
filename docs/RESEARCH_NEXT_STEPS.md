@@ -75,7 +75,7 @@ not require another simulation mechanism or a larger unmeasured corpus.
    checks cannot establish complete within-region distributions or precise tails;
    agreeing biological runs cannot rule out a shared unseen region.
 
-2. **Census input protection is implemented in seventeen analysis entry points.**
+2. **Census input protection covers seventeen census and two atlas analysis entry points.**
    The shared [streaming helper](../scripts/census_input.py) honors
    `FERRO_ATLAS_ROOT`, validates shard stride, and rejects missing or empty
    inputs before replacing reports. Valid records with zero scientific matches
@@ -117,6 +117,22 @@ not require another simulation mechanism or a larger unmeasured corpus.
    across the map. The profile distinguishes NLM article indexing from
    the project's curated mechanism and site groupings. Historical profile
    counts and derived JSON remain byte-identical; only report prose is updated.
+   Site coverage and descriptor recall now use the same indexed-record reader
+   and external-root setting. A readable census with no assigned sites, no
+   subject records or no matches on one descriptor/text axis is a valid result;
+   undefined percentages and ratios are marked unavailable. Site coverage
+   prepares its descriptor map as well as JSON and Markdown before writing.
+   Descriptor recall derives comparisons from stored counts, and its prose
+   distinguishes equal, reversed and unavailable results. Its interval model
+   includes within-arm descriptor/text overlap but lacks cross-arm covariance;
+   text agreement is not an independently adjudicated accuracy estimate.
+   Offline rendering preserves both historical numerical snapshots and the
+   committed site map. These changes protect reporting; they add no new census
+   observations or biological adjudications.
+   Population manifests require valid counts and a consistent C04 total. The
+   manuscript comparison rejects recall evidence whose subject population or
+   descriptor counts differ from its own. Aggregate agreement remains a
+   necessary check, not a fingerprint of the underlying article identities.
    **Baseline verification and review preparation completed:** the
    [readiness report](../analysis/census-direction-review.md) reconciles all
    4,403,994 indexed records across 1,334 shards against the local acquisition

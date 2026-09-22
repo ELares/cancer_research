@@ -499,6 +499,22 @@ result. `--stride` samples sorted shard files, not individual records.
 | `hypoxia_direction`, `thesis_direction` | Fresh scans report keyword candidates unless a completed CSV covers exactly the selected records and matches their fingerprints. Historical title-only labels are never applied to new scans. |
 | `evidence_design`, `oa_bias` | Default to all indexed shards. A zero-trial or zero-mechanism input remains valid; missing classifiable denominators or mechanism observations in either access arm make the corresponding comparison unavailable. Equal mechanism counts share a rank. The access split measures PMC identifier presence, not verified full-text access. |
 
+The atlas reports `atlas_site_coverage.py` and `atlas_descriptor_recall.py`
+also use this reader and `FERRO_ATLAS_ROOT`, retaining their full indexed scans.
+The site taxonomy comes from the committed MeSH files. Zero assigned sites or
+zero descriptor/text matches remain valid observations; ratios without a
+usable denominator are unavailable. Site coverage prepares all three outputs
+(JSON, Markdown and the resolved descriptor map) before writing any of them.
+Descriptor recall prepares both reports and derives its conclusions from the
+counts, including equality and reversals. Its approximate intervals account
+for within-arm descriptor/text overlap, but not cross-arm covariance; the text
+rules measure agreement, not independently adjudicated accuracy.
+Optional population manifests must provide nonnegative integer counts, and a
+C04 total must match the scanned C04 population. The manuscript comparison also
+checks the subject total and descriptor counts before using recall evidence.
+These count checks detect inconsistent populations; matching aggregates alone
+cannot establish that the underlying article sets are identical.
+
 To rebuild report prose from committed counts without downloading the census:
 
 ```bash
@@ -509,12 +525,15 @@ python scripts/census_external_check.py --render-only
 python scripts/census_diagnostic_chains.py --render-only
 python scripts/census_evidence_design.py --render-only
 python scripts/census_oa_bias.py --render-only
+python scripts/atlas_site_coverage.py --render-only
+python scripts/atlas_descriptor_recall.py --render-only
 ```
 
-All seventeen reports support the same option. JSON serialization and Markdown
-rendering finish before either output is written, so parser and rendering errors
-preserve the existing pair. This does not make two filesystem writes an atomic
-transaction against disk failures or process interruption.
+All nineteen reports support the same option. Output preparation finishes
+before writing, so parser and rendering errors preserve the existing artifacts.
+The atlas pair rebuilds Markdown without rewriting historical JSON or the site
+map. Sequential filesystem writes are not an atomic transaction against disk
+failures or process interruption.
 
 For the two direction reports, `--render-only` renders the stored JSON without
 reloading adjudication CSVs or rewriting the numerical artifact. New review

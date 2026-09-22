@@ -788,7 +788,6 @@ def _shuffled(obj, rng):
 ORDER_DEPENDENT = {
     "atlas_ingest_sensitivity",
     "atlas_recent_window",
-    "atlas_site_coverage",
     "census_mechanism_growth",
 }
 

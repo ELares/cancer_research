@@ -270,7 +270,8 @@ def test_the_dead_no_mesh_row_is_gone_and_the_real_exclusions_are_stated():
     assert "no_mesh" not in d, (
         "the artifact still carries a count that the admission rule fixes at "
         "zero, which reads as a property of the literature")
-    assert "carry no MeSH at all" in md and "COULD NOT HAVE BEEN ANYTHING ELSE" in md
+    assert "reflects its admission rule" in md
+    assert "Custom inputs may contain records without MeSH" in md
     ex = d.get("excluded_streams") or {}
     assert ex.get("text_matched_no_mesh"), (
         "the MeSH-less census stream this denominator excludes is not counted")
@@ -306,7 +307,7 @@ def test_the_ranking_survives_a_json_round_trip():
 
 
 def test_the_map_root_column_actually_places_its_descriptor():
-    """`write_map`'s middle column is the whole auditability claim, and no
+    """The map's middle column is the whole auditability claim, and no
     guard read it: falsifying 95 of 233 roots left every test green.
     """
     m = _mod()
@@ -437,12 +438,6 @@ def test_the_geography_caveat_survives():
         "the report no longer states that mortality and publication counts "
         "have different geography, which is the caveat that stops the eventual "
         "ratio being read as a neglect verdict")
-
-
-def test_an_empty_assignment_refuses_to_render():
-    src = SCRIPT.read_text()
-    assert 'if d["assigned"] == 0:' in src
-    assert "is not a finding" in src and "raise SystemExit" in src
 
 
 def test_no_shallow_descriptor_is_called_non_human():

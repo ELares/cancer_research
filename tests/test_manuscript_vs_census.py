@@ -4,7 +4,7 @@ WHAT IT DOES
 ------------
 Two published claims the frozen 4,830-article corpus could not test are now
 testable against the whole indexed cancer literature with expert MeSH labels.
-Both survive, and one is understated by the manuscript.
+The descriptor comparison requires an independent text-agreement qualification.
 
 WHY A CONFIRMATION NEEDS GUARDING AS MUCH AS A REFUTATION
 ----------------------------------------------------------
@@ -331,15 +331,13 @@ def test_the_headline_agrees_with_the_verdicts_it_summarises():
     # PER CLAIM. Equating "the word survive appears" with "both held" raised a
     # false alarm on a state the generator handles correctly (8.2 failed, 3.7
     # held), and the likely repair under CI pressure is to loosen the guard.
-    for name, ok in (("section 8.2", mt["census_exceeds_manuscript"]
-                      or mt["direction_holds"]),
-                     ("section 3.7", g["corpus_exceeds_field"])):
+    for name, ok in (("section 3.7", g["corpus_exceeds_field"]),):
         says_failed = f"{name} does not survive" in headline.lower()
         assert says_failed == (not ok), (
             f"the headline {'says' if says_failed else 'does not say'} "
             f"{name} failed while its verdict is {ok}: {headline!r}")
-    assert ("understated by the manuscript" in headline.lower()) == bool(
-        mt["census_exceeds_manuscript"]), (
+    assert ("supports understatement under the count model" in headline.lower()) == bool(
+        mt["ratio_is_measurable"] and m._recall_check()["symmetric_agrees"]), (
         "the headline's understatement clause does not track the verdict")
 
     # EVERY state, and through render() so the headline is checked against the
@@ -372,12 +370,11 @@ def test_the_headline_agrees_with_the_verdicts_it_summarises():
                             f"[{label}] undecidable is reported as refuted, "
                             "which the document says three times it does not do")
                     else:
-                        assert (("section 8.2 does not survive" in head)
-                                == (not direction)), (
-                            f"[{label}] the headline's 8.2 clause disagrees "
-                            f"with its verdict: {head.strip()[:160]!r}")
-                        assert (("understated by the manuscript" in head)
-                                == bool(exceeds)), (
+                        assert "section 8.2 does not survive" not in head, (
+                            "a descriptor-only direction must not override the "
+                            "symmetric text comparison")
+                        assert (("supports understatement under the count model" in head)
+                                == m._recall_check()["symmetric_agrees"]), (
                             f"[{label}] the understatement clause does not "
                             "track the verdict")
                     # RETIRED IS NOT REFUTED, the same distinction this file
@@ -442,8 +439,9 @@ def test_the_named_invalidator_is_measured_not_just_named():
     for k in ("pdt_pct", "sdt_pct", "gap_points", "filtered_ratio"):
         assert om.get(k) is not None, f"{k} is not measured"
     txt_ = flat()
-    sym = "the over-estimation is symmetric" in txt_
-    asym = "one descriptor is materially broader" in txt_
+    threshold = mod().TEXT_AGREEMENT_GAP_POINTS
+    sym = f"text agreement is within the {threshold:g}-point descriptive threshold" in txt_
+    asym = f"text agreement differs by more than the {threshold:g}-point descriptive threshold" in txt_
     assert sym != asym, "the document states both or neither symmetry branch"
     assert sym == om["symmetric_within_5_points"], (
         f"the document says the over-estimation is "
@@ -452,8 +450,8 @@ def test_the_named_invalidator_is_measured_not_just_named():
         f"{om['gap_points']}-point gap) says "
         f"{om['symmetric_within_5_points']}")
     assert 0 < om["pdt_pct"] <= 100 and 0 < om["sdt_pct"] <= 100
-    assert "symmetric" in flat(), (
-        "the symmetry result is measured but not reported")
+    assert "does not establish descriptor breadth" in flat(), (
+        "text agreement must not be presented as adjudicated descriptor error")
 
 
 def test_the_recall_qualification_is_present_and_follows_the_measurement():
@@ -468,8 +466,7 @@ def test_the_recall_qualification_is_present_and_follows_the_measurement():
     import json as _json
     md = DOC.read_text()
     rec_path = REPO_ROOT / "analysis" / "atlas-descriptor-recall.json"
-    if not rec_path.exists():
-        return                      # fail-open, like the generator
+    assert rec_path.exists(), "the recall qualification is required"
     rec = _json.loads(rec_path.read_text())
     tr, mr = rec["ratio_by_text"], rec["manuscript_ratio"]
 
@@ -483,14 +480,17 @@ def test_the_recall_qualification_is_present_and_follows_the_measurement():
         "the report does not state both measured recalls")
 
     # and the verdict must follow the SYMMETRIC comparison, re-derived
-    if tr <= mr:
+    interval = rec["ratio_by_text_ci"]
+    if interval is not None and interval[0] <= mr:
         assert "verdict is withdrawn" in md, (
             f"the symmetric ratio {tr:.2f} does not exceed the manuscript's "
             f"{mr:.2f}, so the 'understated' verdict must be withdrawn and "
             "the report still asserts it")
         assert "understated by the manuscript.**" not in md, (
             "the withdrawn verdict is back in the headline")
-    else:
+    elif interval is not None:
         assert "verdict is withdrawn" not in md, (
-            "the symmetric ratio exceeds the manuscript's, so the "
+            "the symmetric interval lies above the manuscript's, so the "
             "understatement verdict should stand rather than be withdrawn")
+    else:
+        assert "symmetric interval is unavailable" in md
