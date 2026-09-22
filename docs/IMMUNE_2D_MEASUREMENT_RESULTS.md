@@ -78,10 +78,12 @@ comparison. LP and DAMP are uncalibrated model units; no physical clock or
 experimental assay mapping is established here. The registered P5 within-1.5×
 criterion remains unchanged and experimentally untested.
 
-Next, separately freeze a replicate study with a defined independent unit
-and observable, while resolving the [independent assay mapping and metadata
-gap](INDEPENDENT_ASSAY_CANDIDATE.md). Preserve both measurement archives and
-publish all declared outcomes, including null results.
+A [separately frozen 20-block follow-up](IMMUNE_2D_REPLICATION_RESULTS.md) now
+extends the activation measurements across widely spaced seed roots. It retains
+all declared outcomes and both original archives. The earlier consecutive-seed
+count-only report is preserved numerically, with its seed-address reuse and
+unvalidated independent-run uncertainty made explicit. The [independent assay
+mapping and metadata gap](INDEPENDENT_ASSAY_CANDIDATE.md) remains unresolved.
 
 ## Reconstruct the evidence
 

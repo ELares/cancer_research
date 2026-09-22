@@ -163,12 +163,24 @@ not require another simulation mechanism or a larger unmeasured corpus.
    Mean completed-release LP is 19.123/18.266; three RSL3 releases are censored
    and recorded separately. See the [interpretation](IMMUNE_2D_MEASUREMENT_RESULTS.md).
    These observations do not isolate a causal geometry effect between 2D and 3D.
-   **Next deliverable:** separately freeze a replicate study with a defined
-   independent unit and observable, while resolving the assay mapping below.
-   Neither single realization supplies experimental validation or a replacement
-   P5 threshold. **Complete when:** the independent unit, inputs and criteria
-   are fixed before evaluation, every declared outcome is published, and both
-   existing archives remain reproducible and unchanged.
+   **Prospective replication completed:** all 20 separately frozen, widely
+   spaced seed blocks completed and reconciled. The mean paired SDT − RSL3
+   contrast is 0.555834 accumulated activation steps per initial tumor cell,
+   with a 95% whole-block bootstrap interval [0.554223, 0.557439]. No eligible
+   opportunity reaches half-maximal activation in any arm or block. All 60
+   arm summaries and null outcomes are retained in the
+   [replayable study](../analysis/immune-2d-replication.md); the
+   [interpretation](IMMUNE_2D_REPLICATION_RESULTS.md) explains the primary
+   exposure denominator, historical seed reuse and uncertainty limits.
+   Both old archives and their golden outputs are unchanged.
+   **Next deliverable:** define a controlled comparison that separates death
+   density, release amount, timing and survival, while resolving assay mapping
+   below. Fix interventions, matched quantities, independent units and error
+   criteria before evaluation. Neither seed replication nor passive observation
+   supplies experimental validation or a replacement P5 threshold.
+   **Complete when:** the declared controlled outcomes are published, including
+   failures and null results, with a clear distinction between model mechanism
+   tests and independent biological validation.
 
 4. **Validate one observable against independent raw assay replicates.** Deliver
    a validation report with a named source/accession, raw replicate measurements,
