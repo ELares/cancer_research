@@ -43,20 +43,28 @@ N_SAMPLE = 6
 DECISIONS = {"protects", "sensitises", "off-topic", "ambiguous"}
 
 
-def scan(stride: int = 1) -> dict:
+def in_scope(record: dict) -> bool:
+    ms = {m.lower() for m in (record.get("mesh") or [])}
+    return FERRO in ms and bool(ms & HYPOXIA)
+
+
+def candidate_label(record: dict) -> str:
+    blob = f"{record.get('title') or ''} {record.get('abstract') or ''}".lower()
+    p, s = bool(PROTECTS.search(blob)), bool(SENSITISES.search(blob))
+    return ("both" if p and s else "protects" if p
+            else "sensitises" if s else "neither")
+
+
+def scan_records(records) -> dict:
     counts = {"protects": 0, "sensitises": 0, "both": 0, "neither": 0}
     sample = []
     total = 0
     cohort = AdjudicationCohort("hypoxia-direction", ("protects", "sensitises"))
-    for record in iter_census_records(RECORDS, stride):
-        ms = {m.lower() for m in (record.get("mesh") or [])}
-        if FERRO not in ms or not (ms & HYPOXIA):
+    for record in records:
+        if not in_scope(record):
             continue
         total += 1
-        blob = f"{record.get('title') or ''} {record.get('abstract') or ''}".lower()
-        p, s = bool(PROTECTS.search(blob)), bool(SENSITISES.search(blob))
-        key = ("both" if p and s else "protects" if p
-               else "sensitises" if s else "neither")
+        key = candidate_label(record)
         counts[key] += 1
         cohort.add(record, key)
         if key in ("protects", "sensitises") and len(sample) < N_SAMPLE:
@@ -64,6 +72,10 @@ def scan(stride: int = 1) -> dict:
                            "title": (record.get("title") or "")[:105]})
     return {"total": total, "counts": counts, "sample": sample,
             "hypoxia_descriptors": sorted(HYPOXIA), "cohort": cohort.as_dict()}
+
+
+def scan(stride: int = 1) -> dict:
+    return scan_records(iter_census_records(RECORDS, stride))
 
 
 def _summarize_adjudication(rows: list[dict], cohort: dict) -> dict:

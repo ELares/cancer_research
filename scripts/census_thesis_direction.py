@@ -46,20 +46,28 @@ OBSTACLE = re.compile(
 N_SAMPLE = 6
 
 
-def scan(stride: int = 1) -> dict:
+def in_scope(record: dict) -> bool:
+    ms = {m.lower() for m in (record.get("mesh") or [])}
+    return FERRO in ms and RESIST in ms
+
+
+def candidate_label(record: dict) -> str:
+    blob = f"{record.get('title') or ''} {record.get('abstract') or ''}".lower()
+    e, o = bool(EXPLOIT.search(blob)), bool(OBSTACLE.search(blob))
+    return ("both" if e and o else "exploit" if e
+            else "obstacle" if o else "neither")
+
+
+def scan_records(records) -> dict:
     counts = {"exploit": 0, "obstacle": 0, "both": 0, "neither": 0}
     cohort = AdjudicationCohort("thesis-direction", ("exploit", "obstacle"))
     unclassified = []
     total = 0
-    for r in iter_census_records(RECORDS, stride):
-        ms = {m.lower() for m in (r.get("mesh") or [])}
-        if FERRO not in ms or RESIST not in ms:
+    for r in records:
+        if not in_scope(r):
             continue
         total += 1
-        blob = f"{r.get('title') or ''} {r.get('abstract') or ''}".lower()
-        e, o = bool(EXPLOIT.search(blob)), bool(OBSTACLE.search(blob))
-        key = ("both" if e and o else "exploit" if e
-               else "obstacle" if o else "neither")
+        key = candidate_label(r)
         counts[key] += 1
         cohort.add(r, key)
         if key == "neither" and len(unclassified) < N_SAMPLE:
@@ -67,6 +75,10 @@ def scan(stride: int = 1) -> dict:
                 {"year": r.get("year"), "title": (r.get("title") or "")[:110]})
     return {"total": total, "counts": counts,
             "unclassified_sample": unclassified, "cohort": cohort.as_dict()}
+
+
+def scan(stride: int = 1) -> dict:
+    return scan_records(iter_census_records(RECORDS, stride))
 
 
 def assemble(d: dict, *, adjudication_rows=None) -> dict:
