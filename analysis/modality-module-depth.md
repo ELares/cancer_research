@@ -26,13 +26,13 @@ The last column is why it is there. **`sonodynamic` has no production caller at 
 
 | module | serves | pub fns | lines | files that call it |
 |---|---|--:|--:|--:|
-| `cell` | CRISPR knockouts | 5 | 165 | 23 |
+| `cell` | CRISPR knockouts | 5 | 165 | 24 |
 | `drug_transport` | nanocarrier + ADC delivery profiles | 11 | 110 | 4 |
 | `immune` | checkpoint blockade, CAR-T, bispecifics, oncolytic ICD, microbiome, mRNA vaccine | 8 | 139 | 3 |
-| `immune_spatial` | the spatial immune model | 28 | 346 | 2 |
+| `immune_spatial` | the spatial immune model | 29 | 388 | 3 |
 | `nutrient` | metabolic targeting | 6 | 58 | 1 |
 
-Credited to no single arm, deliberately. `cell.rs` is the deepest of them and **23 other files in the workspace call it**, so assigning its weight to any one arm would overstate that arm and assigning it to none would understate the engine. Neither number alone is the answer, so both are reported. (That reach is counted from the code. An earlier version of this page said "four arms" beside a table row naming six, and neither figure came from anything.)
+Credited to no single arm, deliberately. `cell.rs` is the deepest of them and **24 other files in the workspace call it**, so assigning its weight to any one arm would overstate that arm and assigning it to none would understate the engine. Neither number alone is the answer, so both are reported. (That reach is counted from the code. An earlier version of this page said "four arms" beside a table row naming six, and neither figure came from anything.)
 
 ## Against the ferroptosis engine
 
@@ -41,9 +41,9 @@ Credited to no single arm, deliberately. `cell.rs` is the deepest of them and **
 | shared machinery counted as | engine modules | pub fns | lines | lines per line of modality code |
 |---|--:|--:|--:|--:|
 | neither side | 26 | 182 | 3,817 | 2.4x |
-| the engine | 31 | 240 | 4,635 | 3.0x |
+| the engine | 31 | 241 | 4,677 | 3.0x |
 
-So the modality arms are somewhere between **1/2.4 and 1/3.0 of the engine by line count**, and 1/1.6 to 1/2.1 by public function. On either reading the ferroptosis engine is still the larger body of work, and it carries something none of the new modules do: legs fitted against independent published data, and numbers the manuscript actually reports. (That clause read "years of calibration" until a reviewer checked the first commit date against it. The repository is months old, so the claim was false — and it was the one clause in a paragraph built around a measured interval that had been exempted from measurement.)
+So the modality arms are somewhere between **1/2.4 and 1/3.0 of the engine by line count**, and 1/1.6 to 1/2.2 by public function. On either reading the ferroptosis engine is still the larger body of work, and it carries something none of the new modules do: legs fitted against independent published data, and numbers the manuscript actually reports. (That clause read "years of calibration" until a reviewer checked the first commit date against it. The repository is months old, so the claim was false — and it was the one clause in a paragraph built around a measured interval that had been exempted from measurement.)
 
 ## What this does NOT measure
 

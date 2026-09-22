@@ -837,6 +837,49 @@ def test_the_test_block_stripper_handles_the_forms_it_used_to_miss():
     assert MC.strip_test_blocks(src).count("\n") == src.count("\n")
 
 
+@pytest.mark.parametrize("field_type", [
+    "Option<&'a mut Vec<Vec<u8>>>",
+    "Result<Vec<u8>, (u8, u8)>",
+    "[fn(u8, u8) -> u8; 2]",
+    "Array<{ choose::<u8, u16>() }, 2>",
+    "for<'b> fn(&'b str, u8) -> Option<(u8, u8)>",
+])
+def test_test_only_fields_preserve_other_fields_and_following_production(field_type):
+    source = ("struct Diagnostics<'a> {\n    production_before: usize,\n"
+              f"    #[cfg(test)]\n    snapshots: {field_type},\n"
+              "    production_after: usize,\n}\n"
+              "fn production_kernel() { immune_kill_probability(1.0, 0.02, 0.7); }\n")
+    stripped = MC.strip_test_blocks(source)
+    assert "snapshots" not in stripped
+    assert "production_before: usize" in stripped
+    assert "production_after: usize" in stripped
+    assert "fn production_kernel() { immune_kill_probability" in stripped
+    assert stripped.count("\n") == source.count("\n")
+
+
+def test_last_test_only_field_preserves_enclosing_brace_and_other_attributes():
+    source = ("struct Diagnostics {\n    #[cfg(not(test))]\n    production: usize,\n"
+              "    #[cfg(test)]\n    #[allow(dead_code)]\n"
+              "    pub(crate) snapshots: Option<(u8, u8)>\n}\n"
+              "fn production_kernel() { immune_kill_probability(1.0, 0.02, 0.7); }\n")
+    stripped = MC.strip_test_blocks(source)
+    assert "snapshots" not in stripped and "allow(dead_code)" not in stripped
+    assert "#[cfg(not(test))]\n    production: usize," in stripped
+    assert stripped.count("}") == source.count("}")
+    assert "fn production_kernel() { immune_kill_probability" in stripped
+    assert stripped.count("\n") == source.count("\n")
+
+
+def test_test_only_local_statement_ends_at_semicolon_not_its_tuple_comma():
+    source = ("fn production_kernel() {\n    #[cfg(test)]\n"
+              "    let snapshots: (u8, u8) = (1, 2);\n"
+              "    immune_kill_probability(1.0, 0.02, 0.7);\n}\n")
+    stripped = MC.strip_test_blocks(source)
+    assert "snapshots" not in stripped
+    assert "immune_kill_probability(1.0, 0.02, 0.7);" in stripped
+    assert stripped.count("}") == source.count("}")
+
+
 def test_the_gating_sentence_is_derived_from_the_crate(d, md):
     """The paragraph used to say both immune models are "gated on ferroptotic
     death by construction". The immunotherapy arm (#728) made that false the

@@ -1,7 +1,8 @@
 """Rebuild committed importance-sampling reports and verify their provenance.
 
 No simulator or local extension binary is required. Archived binary hashes are
-checked for consistency, while checked-in source and CSV hashes are recomputed.
+checked for consistency, while original source and CSV hashes are recomputed.
+Historical source identities resolve to exact registered snapshots after edits.
 These checks verify reproducibility and integrity, not that adequacy screens pass
 or that the simulation describes experimental outcomes.
 """
@@ -21,6 +22,7 @@ ROOT = Path(__file__).resolve().parents[1]
 CAL = ROOT / "analysis" / "calibration"
 sys.path.insert(0, str(ROOT / "scripts"))
 import abc_joint_importance as driver  # noqa: E402
+import archived_numerical_sources as provenance  # noqa: E402
 
 
 @pytest.fixture(autouse=True)
@@ -75,7 +77,7 @@ def test_committed_json_and_markdown_rebuild_from_all_raw_archives():
 
 
 @pytest.mark.parametrize("seed", driver.SEEDS)
-def test_archived_numerical_source_hashes_match_checked_in_files(archive_by_seed, seed):
+def test_archived_numerical_source_hashes_match_available_original_bytes(archive_by_seed, seed):
     archive = archive_by_seed(seed)
     required = {
         "scripts/abc_joint_importance.py", "scripts/importance_sampling.py",
@@ -88,9 +90,8 @@ def test_archived_numerical_source_hashes_match_checked_in_files(archive_by_seed
                     (ROOT / "simulations" / "ferroptosis-core" / "src").rglob("*.rs"))
     assert set(archive["source_hashes"]) == required
     for relative, digest in archive["source_hashes"].items():
-        path = ROOT / relative
-        assert path.is_file(), relative
-        assert hashlib.sha256(path.read_bytes()).hexdigest() == digest, relative
+        original = provenance.resolve_source_bytes(relative, digest, root=ROOT)
+        assert hashlib.sha256(original).hexdigest() == digest, relative
 
 
 @pytest.mark.parametrize("seed", driver.SEEDS)

@@ -356,8 +356,7 @@ def strip_test_blocks(src: str) -> str:
     """Remove every `test`-gated item, preserving line numbers.
 
     Run AFTER comment stripping so a brace in a comment cannot unbalance the
-    match. Four things the first version got wrong, none of them live in this
-    crate today and all of them legal Rust -- the same class its sibling
+    match. Earlier failures in legal Rust -- the same class its sibling
     `strip_rust_comments` was hardened against and this one was not:
 
     * `#[cfg(all(test, feature = "x"))]` and `#[cfg( test )]` did not match at
@@ -372,6 +371,9 @@ def strip_test_blocks(src: str) -> str:
       inside test blocks in this crate. They are harmless today only because
       those blocks run to EOF, where an overshoot and a correct match are
       indistinguishable.
+    * Named fields end at an unnested comma or their enclosing delimiter,
+      not a semicolon. Treating the test-only snapshot field as an item
+      removed the following production immune kernel from the caller scan.
 
     Every one of those is planted in a test rather than waited for.
     """
@@ -384,21 +386,67 @@ def strip_test_blocks(src: str) -> str:
             out.append(src[i:])
             break
         out.append(src[i:m.start()])
-        j, end = m.end(), None
+        j = m.end()
+        end = _test_field_end(src, j)
         # A brace-bodied item (`mod`, `fn`, `impl`, `struct`) ends at its
         # matching `}`; a statement item (`use`, `const`, `type`) ends at the
         # first `;`. Whichever terminator comes first decides which it is.
-        brace = _scan_for(src, j, "{")
-        semi = _scan_for(src, j, ";")
-        if brace is not None and (semi is None or brace < semi):
-            end = _matching_brace(src, brace)
-        elif semi is not None:
-            end = semi + 1
+        if end is None:
+            brace = _scan_for(src, j, "{")
+            semi = _scan_for(src, j, ";")
+            if brace is not None and (semi is None or brace < semi):
+                end = _matching_brace(src, brace)
+            elif semi is not None:
+                end = semi + 1
         if end is None:
             end = n
         out.append("\n" * src.count("\n", m.start(), end))
         i = end
     return "".join(out)
+
+
+def _test_field_end(src: str, start: int) -> int | None:
+    """End of a named field/parameter after cfg(test), if this is one.
+
+    Commas in generic arguments, tuple/function types, arrays and const
+    expressions belong to the type. Leave the enclosing brace/parenthesis
+    intact when the last field has no trailing comma. A type-colon prefix
+    distinguishes fields from gated items and statements inside functions.
+    """
+    i, n = start, len(src)
+    while attr := re.match(r"\s*#\s*\[", src[i:]):
+        i += attr.end()
+        depth = 1
+        while i < n and depth:
+            i = _skip_literal(src, i)
+            if i >= n:
+                return None
+            depth += (src[i] == "[") - (src[i] == "]")
+            i += 1
+    field = re.match(r"\s*(?:pub(?:\s*\([^)]*\))?\s+)?"
+                     r"(?:r#)?[A-Za-z_]\w*\s*:(?!:)", src[i:])
+    if not field:
+        return None
+    i += field.end()
+    closing = []
+    pairs = {"(": ")", "[": "]", "{": "}"}
+    while i < n:
+        i = _skip_literal(src, i)
+        if i >= n:
+            return None
+        ch = src[i]
+        if ch == "," and not closing:
+            return i + 1
+        if ch in ")]}" and not closing:
+            return i
+        if ch in pairs:
+            closing.append(pairs[ch])
+        elif ch == "<" and "}" not in closing:
+            closing.append(">")
+        elif closing and ch == closing[-1] and not (ch == ">" and src[i - 1] == "-"):
+            closing.pop()
+        i += 1
+    return None
 
 
 def _scan_for(src: str, i: int, ch: str):
