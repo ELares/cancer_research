@@ -227,6 +227,22 @@ not require another simulation mechanism or a larger unmeasured corpus.
    [degree-bias](../analysis/atlas-discovery-degree-bias.md) and
    [headroom](../analysis/atlas-discovery-headroom.md) reports.
 
+   **Structural diagnostic corrected:** the
+   [contradiction-quality report](../analysis/atlas-contradiction-quality.md)
+   now separates pair-PMID-direction incidences, pair-PMID incidences and
+   unique papers. Its historical aggregates cannot supply a unique-paper
+   denominator or establish extraction accuracy. The ambiguity association
+   does not establish causation or eliminate confounding; this raw-identifier
+   diagnostic also differs from the corrected contradiction queue's cohort.
+   Offline rendering recomputes point summaries while preserving the historical
+   JSON and explicitly retaining its non-replayable bootstrap interval.
+   Fresh runs sort pairs before resampling, report undefined estimates as null,
+   and validate inputs and prepare both reports before replacing either one.
+   The two writes remain sequential, not a transaction against disk failure.
+   Sentence-level independent adjudication and dependence-aware uncertainty
+   remain the next evidence-quality deliverable; these software and accounting
+   corrections do not supply new biological labels.
+
 The open [trial-publication-gap PR #866](https://github.com/ELares/cancer_research/pull/866)
 and [long-`Retry-After` PR #867](https://github.com/ELares/cancer_research/pull/867)
 are separate work already in progress. Review and integrate those changes on

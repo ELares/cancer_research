@@ -319,28 +319,45 @@ wrong — it says the docs should state which side they took.
 
 ### How much of that is real? — `atlas_contradiction_quality.py`
 
-The contradictions layer named extraction error as a caveat and never measured
-it. Two failure modes are now bounded, with opposite answers.
+Two diagnostics examine the raw directional relation dump. Eligibility uses
+directional support, while the contradiction queue above uses support across all
+predicates; the cohorts therefore differ.
 
-**A single paper asserting both directions** would be extraction inconsistency
-rather than disagreement between studies. It happens to **1 paper in 115,024**.
-That mode is effectively absent, and the conflicts really are between papers.
+**Within-paper directional overlap:** among **6,373 conflicting pairs**, one
+pair-PMID observation carries both directions, out of **196,363 distinct
+pair-PMID observations** (**196,364 direction incidences**). These are not counts
+of unique papers, whose denominator cannot be recovered from the archive.
+An overlap can reflect extraction error or different contexts in one paper.
+Its rarity does not establish that the remaining conflicts are accurate.
 
-**Entity ambiguity manufacturing disagreement** is the one that bites. Merging
-two entities under one identifier merges two literatures, and two literatures
-about different biology will disagree. Pairs involving a measured sense collision
-are **1.45×** more likely to be flagged contradictory (95% CI 1.37–1.53).
+**Measured entity ambiguity:** pairs involving a measured sense collision have
+a pooled Mantel-Haenszel association of **1.45×** with a contradiction flag after
+stratification by directional support, against a crude **1.46×** association.
+The **95% pair-resampling interval is 1.39–1.50**. Pairs share papers and entities,
+and this interval does not account for that dependence.
 
-> That is not a popularity artifact, which it easily could have been: colliding
-> identifiers are contested *because* they are heavily mentioned, and more
-> assertions means more chance of showing both directions. Stratifying by
-> assertion count and pooling (Mantel-Haenszel) leaves it at 1.45× against a
-> crude 1.47×, it holds inside every stratum, and it *rises* with assertion count
-> — the direction conflation predicts.
->
-> It is an association, not an attribution: it does not license subtracting 45%
-> of the ambiguous conflicts. Check any conflict involving a blocklisted symbol
-> for conflation before reading it as a scientific dispute.
+> Stratification does not establish that confounding is removed. The stratum
+> ratios do not rise monotonically, and the association does not establish how
+> many flags were caused by conflation or license subtracting 45% of them.
+> Check measured collisions when reviewing conflicts. The comparison group can
+> contain unmeasured collisions; their effect on the ratio is not guaranteed to
+> be downward. Neither group establishes extraction accuracy.
+
+Rebuild the report without external data:
+
+```bash
+python scripts/atlas_contradiction_quality.py --render-only
+```
+
+This preserves the historical JSON. Point estimates are derived from its counts;
+the historical bootstrap interval is retained because the original pair order
+was not saved. Fresh runs use `FERRO_ATLAS_ROOT` to locate
+`relations/relations.tsv.gz`, validate that input and the ambiguity scan, and
+sort pairs before resampling. Missing or malformed input fails before either
+report is replaced. A readable dataset without eligible pairs is an observed
+zero, with non-estimable comparisons recorded as JSON `null`. Preparing both
+outputs protects against analysis and rendering failures; the two file writes
+are sequential and are not an atomic transaction.
 
 ### Emergence — `atlas_emergence.py` → `atlas-emergence.md`
 

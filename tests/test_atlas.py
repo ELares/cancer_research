@@ -877,55 +877,43 @@ def test_shape_alone_cannot_separate_names_from_english():
 
 # --- how much of the contradiction signal is real? (#ATLAS-CONTRA-Q) -------
 
-def test_contradiction_quality_separates_the_two_failure_modes():
-    """Two failure modes, measured, with opposite answers.
-
-    Within-paper self-contradiction is extraction inconsistency; ambiguity-driven
-    conflation is two literatures merged. Reporting only the reassuring one would
-    be as misleading as reporting only the alarming one.
-    """
+def test_contradiction_quality_uses_consistent_pair_denominators():
+    """Structural overlaps and flags are counts, not adjudicated error rates."""
     import json
     import re
     raw = json.loads(
         (REPO_ROOT / "analysis" / "atlas-contradiction-quality.json").read_text())
-    # mode 1: essentially absent
-    assert raw["self_contradicting_assertions"] / raw["total_assertions_in_conflicts"] < 0.001
-    # mode 2: real, and above 1 with the interval excluding it
-    assert raw["mantel_haenszel"] > 1.0
-    assert raw["mh_ci95"][0] > 1.0, "if the CI ever spans 1, the caveat must be softened"
+    assert raw["ambiguous"]["n"] + raw["clean"]["n"] == raw["eligible_pairs"]
+    assert raw["ambiguous"]["conflicted"] + raw["clean"]["conflicted"] == raw["conflicting_pairs"]
+    overlaps = raw["self_contradicting_assertions"]
+    assert raw["pairs_with_self_contradiction"] <= overlaps
+    assert 2 * overlaps <= raw["total_assertions_in_conflicts"]
 
 
-def test_ambiguity_enrichment_is_not_a_popularity_artifact():
-    """The confound that would have made this finding worthless.
-
-    Colliding identifiers are contested BECAUSE they are heavily mentioned, and
-    a pair with more assertions has more chance of showing both directions. If
-    stratifying by assertion count collapsed the ratio toward 1, the crude number
-    would have been measuring popularity.
-    """
+def test_ambiguity_ratio_matches_the_stored_stratum_counts():
+    """Reconcile the association without treating adjustment as causal proof."""
     import json
     import re
     raw = json.loads(
         (REPO_ROOT / "analysis" / "atlas-contradiction-quality.json").read_text())
-    crude, adjusted = raw["crude_risk_ratio"], raw["mantel_haenszel"]
-    # the adjustment must barely move it -- that is what rules the confound out
-    assert abs(crude - adjusted) < 0.15, \
-        f"crude {crude:.2f} vs adjusted {adjusted:.2f}: the confound is no longer ruled out"
-    # and the enrichment must hold inside the strata, not only in the pooled number
-    held = 0
+    numerator = denominator = 0.0
     for s in raw["strata"].values():
         an, ac = s["amb"]
         cn, cc = s["clean"]
-        if an >= 20 and cn >= 20 and (ac / an) > (cc / cn):
-            held += 1
-    assert held >= 3, "the enrichment must survive within strata, not just pooled"
+        if an and cn:
+            numerator += ac * cn / (an + cn)
+            denominator += cc * an / (an + cn)
+    assert raw["mantel_haenszel"] == pytest.approx(numerator / denominator)
+    a, c = raw["ambiguous"], raw["clean"]
+    assert raw["crude_risk_ratio"] == pytest.approx((a["conflicted"] / a["n"]) /
+                                                        (c["conflicted"] / c["n"]))
 
 
 def test_contradictions_module_carries_the_measured_caveat():
     """A caveat measured elsewhere has to reach the module that needs it."""
     src = (REPO_ROOT / "scripts" / "atlas_contradictions.py").read_text()
-    assert "1.45x" in src and "115,024" in src, \
-        "the contradiction module must state both measured failure modes"
+    assert "1.45x" in src and "196,363" in src and "pair-PMID" in src
+    assert "115,024" not in src and "conflicts really are" not in src
 
 
 # --- how wrong is the sampled emergence estimate? (#ATLAS-EMERG-ERR) -------
@@ -1136,27 +1124,18 @@ def test_temporal_check_validates_the_undeclaring_corrections():
         "the contrast sense must span decades, or the check proves nothing"
 
 
-def test_module_support_rules_out_conflation_for_contested_claims():
-    """A contested verdict has to survive the conflation explanation.
-
-    Across the graph, pairs built on a measured sense collision are 1.45x more
-    likely to be flagged contradictory. A reader seeing 'contested: yes' on a
-    module claim needs to know whether that could be two literatures merged
-    rather than a field divided, so the report states which it is.
-    """
-    text = (REPO_ROOT / "analysis" / "atlas-module-support.md").read_text()
-    assert "1.45x" in text, "the report must quote the measured enrichment"
-    assert ("Conflation does not explain these" in text
-            or "may be conflation, not disagreement" in text), \
-        "the report must resolve the conflation question either way"
+def test_module_support_keeps_unmeasured_conflation_possible():
+    """An incomplete collision set cannot establish that identifiers are sound."""
+    for name in ("analysis/atlas-module-support.md", "scripts/atlas_module_support.py"):
+        text = (REPO_ROOT / name).read_text()
+        assert "1.45x" in text
+        assert "does not exclude unmeasured" in text
+        assert "Conflation does not explain these" not in text
+        assert "field is genuinely split" not in text
 
 
 def test_no_module_claim_rests_on_a_colliding_entity():
-    """If a claim ever lands on one, its contested verdict needs re-reading.
-
-    This is the check that lets the report say conflation is excluded. It is a
-    property of the claim list, so it must be asserted rather than assumed.
-    """
+    """A measured collision warrants review; absence does not rule one out."""
     import json
     import re
     scan = json.loads((REPO_ROOT / "analysis" / "atlas-ambiguity.json").read_text())

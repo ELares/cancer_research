@@ -627,26 +627,29 @@ def main() -> None:
             L.append(f"| `{r['module']}` | {r['a']} - {r['b']} | {r['pos']} | {r['neg']} | "
                      f"{r['balance']:.2f} | {r['pmid']} |")
         L += ["",
-              "A high balance means the field is genuinely split; a low one means the module",
-              "is on the majority side of a mostly-settled question. Neither says the module",
-              "is wrong -- it says the module docs should state which side they took.", ""]
-        # A contradiction can be manufactured by conflating two entities under one
-        # identifier, and that inflates the flag rate by 1.45x across the graph
-        # (analysis/atlas-contradiction-quality.md). So say whether it could be
-        # the explanation HERE, rather than leaving a reader to wonder.
+              "A high balance means similar extracted support for both directions; a low",
+              "one means one direction dominates. These counts do not establish whether",
+              "the field is divided or which direction the module implements. The module",
+              "docs should explain their evidence and how they handle the opposing claims.", ""]
+        # The raw directional diagnostic associates measured sense collisions
+        # with a higher flag rate; it does not attribute the excess to conflation
+        # or establish that an unflagged identifier is unambiguous.
         if colliding:
-            L += ["> **Some of these may be conflation, not disagreement.** These claims rest",
-                  "> on entities measured as sense collisions, and merging two entities merges",
-                  "> two literatures, which will disagree "
+            L += ["> **These claims need a conflation check.** They involve identifiers",
+                  "> measured as sense collisions. An apparent conflict can arise when",
+                  "> claims about different entities are merged "
                   "(`analysis/atlas-contradiction-quality.md`):", ""]
             L += [f">   * `{m}`: {', '.join(h)}" for m, h in colliding] + [""]
         else:
-            L += ["> **Conflation does not explain these.** Across the graph, pairs built on a",
-                  "> measured sense collision are 1.45x more likely to be flagged contradictory",
-                  "> (`analysis/atlas-contradiction-quality.md`), so that had to be excluded.",
-                  f"> All {len(rows)} claims here rest on entities with no measured collision,",
-                  "> so these conflicts are disagreements between studies rather than two",
-                  "> literatures merged under one identifier.", ""]
+            L += ["> **This check identified no measured collision in these claims.**",
+                  f"> None of the {len(rows)} claims matched the collision set used here.",
+                  "> The set has limited coverage, so this does not exclude unmeasured",
+                  "> conflation, extraction errors or differences in biological context.", ""]
+        L += ["> The separate raw directional diagnostic reports a 1.45x association",
+              "> between measured collisions and contradiction flags after stratification",
+              "> by directional support (`analysis/atlas-contradiction-quality.md`).",
+              "> Its eligibility rule differs from this module-claim check and the",
+              "> contradiction queue. It does not establish a cause of any conflict here.", ""]
 
     L += ["", "## Reading", "",
           f"* **{len(found)} of {len(rows)}** module claims are corroborated by at least one",

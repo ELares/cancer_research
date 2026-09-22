@@ -1,49 +1,24 @@
 #!/usr/bin/env python3
-"""Atlas: how much of the contradiction signal is real? (#ATLAS-CONTRA-Q)
+"""Audit extracted direction overlap and ambiguity-associated flag rates.
 
-WHY
----
-`atlas_contradictions.py` reports 4,667 entity pairs the literature asserts in
-both directions and calls itself "a reading queue, not a verdict". It names
-extraction error as a caveat but never measures it, so a reader has no way to
-discount the number. This gives it two bounds, one reassuring and one not.
+The diagnostic cohort uses raw entity identifiers and distinct
+(pair, PMID, direction) incidences. It differs from atlas_contradictions.py,
+which uses corrected identifiers and all-predicate relation totals. These
+structural diagnostics do not measure extraction accuracy or biological
+agreement. Same-paper overlap can reflect different contexts within a paper.
 
-TEST 1 -- DOES A SINGLE PAPER CONTRADICT ITSELF?
-------------------------------------------------
-If the same paper is extracted as asserting both `positive_correlate` and
-`negative_correlate` for one pair, that is extraction inconsistency rather than
-disagreement between studies. Measured: **1 paper out of 115,024**. This failure
-mode is essentially absent, and the conflicts really are between papers.
-
-TEST 2 -- DOES ENTITY AMBIGUITY MANUFACTURE CONTRADICTIONS?
-------------------------------------------------------------
-This one bites. Merging two different entities under one identifier merges two
-literatures, and two literatures about different biology will disagree. `ER`
-resolves to EREG for some papers and would carry ESR1's claims for others, so an
-apparent contradiction can be two genes being conflated rather than a field
-divided.
-
-Pairs involving an identifier that `scripts/atlas_ambiguity.py` measured as a
-sense collision are **1.45x** more likely to be flagged contradictory.
-
-THE CONFOUND, AND WHY THE ANSWER SURVIVES IT
----------------------------------------------
-Colliding identifiers are contested precisely BECAUSE they are heavily
-mentioned, and a pair with more assertions has more chance of showing both
-directions. So the crude ratio could be a popularity artifact.
-
-It is not. Stratifying by the number of directional assertions and pooling with
-a Mantel-Haenszel estimator leaves the ratio at 1.45x against a crude 1.47x, and
-the enrichment holds inside every stratum -- rising from 1.36x to 1.88x as
-assertions accumulate, which is the direction merging two literatures predicts.
-
-Reads only the gitignored relation dump and the committed ambiguity scan. No
-network.
+The committed aggregate JSON is a historical snapshot. --render-only derives
+counts and point estimates from it without a relation dump or ambiguity scan,
+leaves that JSON untouched, and identifies its unreproducible historical
+bootstrap interval. A fresh analysis preserves the original cohort definition
+and orders pairs before seeded resampling.
 
 Usage:
+    python scripts/atlas_contradiction_quality.py --render-only
     python scripts/atlas_contradiction_quality.py
 """
 
+import argparse
 import collections
 import gzip
 import json
@@ -59,196 +34,423 @@ from atlas_contradictions import MIN_TOTAL, MIN_WEAK  # noqa: E402
 from config import PROJECT_ROOT  # noqa: E402
 
 SCAN = PROJECT_ROOT / "analysis" / "atlas-ambiguity.json"
-OUT = PROJECT_ROOT / "analysis" / "atlas-contradiction-quality.md"
-RAW = PROJECT_ROOT / "analysis" / "atlas-contradiction-quality.json"
-
+OUT_MD = PROJECT_ROOT / "analysis" / "atlas-contradiction-quality.md"
+OUT_JSON = PROJECT_ROOT / "analysis" / "atlas-contradiction-quality.json"
 BOOTSTRAP = 2000
 BOOT_SEED = 20260803
-MIN_STRATUM = 20   # a stratum thinner than this is not reported separately
+MAX_BUCKET = 10
+DIRECTIONS = {"positive_correlate", "negative_correlate"}
+RELATIONS = DIRECTIONS | {
+    "associate", "treat", "cause", "inhibit", "stimulate", "cotreat",
+    "interact", "compare", "prevent", "drug_interact",
+}
 
 
 def load_directional(root: Path):
-    """pair -> PMIDs asserting each direction."""
-    pos = collections.defaultdict(set)
-    neg = collections.defaultdict(set)
-    with gzip.open(root / "relations" / "relations.tsv.gz", "rt",
-                   encoding="utf-8", errors="ignore") as fh:
-        for line in fh:
-            p = line.rstrip("\n").split("\t")
-            if len(p) < 4 or p[1] not in ("positive_correlate", "negative_correlate"):
-                continue
-            a = p[2].split("|", 1)[-1]
-            b = p[3].split("|", 1)[-1]
-            key = (a, b) if a <= b else (b, a)
-            (pos if p[1] == "positive_correlate" else neg)[key].add(p[0])
+    """Load raw-ID pairs -> distinct PMIDs per direction; reject invalid input.
+
+    A nonempty, valid file with only nondirectional relations is a valid zero
+    result. Missing, empty, malformed and undecodable input is not a zero result.
+    """
+    path = root / "relations" / "relations.tsv.gz"
+    pos, neg = collections.defaultdict(set), collections.defaultdict(set)
+    count = 0
+    with gzip.open(path, "rt", encoding="utf-8") as fh:
+        for count, line in enumerate(fh, 1):
+            p = line.rstrip("\r\n").split("\t")
+            if (len(p) < 4 or not p[0].isascii() or not p[0].isdigit()
+                    or int(p[0]) <= 0 or p[1] not in RELATIONS):
+                raise ValueError(f"{path}:{count}: malformed relation row")
+            ids = []
+            for entity in p[2:4]:
+                parts = entity.split("|")
+                if (len(parts) != 2 or any(not part or any(c.isspace() for c in part)
+                                           for part in parts)):
+                    raise ValueError(f"{path}:{count}: expected Type|ID entity")
+                ids.append(parts[1])
+            if p[1] in DIRECTIONS:
+                key = tuple(sorted(ids))
+                (pos if p[1] == "positive_correlate" else neg)[key].add(p[0])
+    if not count:
+        raise ValueError(f"{path}: empty relation input")
     return pos, neg
 
 
-def main() -> int:
-    try:
-        scan = json.loads(SCAN.read_text())
-    except (OSError, ValueError):
-        print(f"missing {SCAN}; run scripts/atlas_ambiguity.py first", file=sys.stderr)
-        return 1
+def load_contested(scan: dict) -> set:
+    """Validate every required ambiguity group before selecting its IDs."""
+    if not isinstance(scan, dict) or not isinstance(scan.get("by_type"), dict):
+        raise ValueError("ambiguity scan requires a by_type object")
     contested = set()
-    for t in ("gene", "chemical", "disease"):
-        for r in scan["by_type"][t]["sense_rows"]:
-            contested |= {r["top"]["id"], r["runner_up"]["id"]}
+    for kind in ("gene", "chemical", "disease"):
+        group = scan["by_type"].get(kind)
+        if not isinstance(group, dict) or not isinstance(group.get("sense_rows"), list):
+            raise ValueError(f"ambiguity scan requires {kind}.sense_rows list")
+        for row in group["sense_rows"]:
+            for side in ("top", "runner_up"):
+                entry = row.get(side) if isinstance(row, dict) else None
+                ident = entry.get("id") if isinstance(entry, dict) else None
+                if not isinstance(ident, str) or not ident or ident != ident.strip():
+                    raise ValueError(f"ambiguity scan requires a nonempty {kind}.{side}.id")
+                contested.add(ident)
+    return contested
 
-    print("reading directional relations ...", flush=True)
-    pos, neg = load_directional(atlas_root())
 
-    # --- test 1: within-paper self-contradiction ---------------------------
-    conflicts = []
-    for key in set(pos) & set(neg):
-        P, N = pos[key], neg[key]
-        if min(len(P), len(N)) >= MIN_WEAK and len(P) + len(N) >= MIN_TOTAL:
-            conflicts.append((key, P, N))
-    self_pairs = [k for k, P, N in conflicts if P & N]
-    total_assertions = sum(len(P) + len(N) for _k, P, N in conflicts)
-    both_assertions = sum(len(P & N) for _k, P, N in conflicts)
-
-    # --- test 2: does ambiguity manufacture conflicts? ---------------------
-    rows = []
-    for k in set(pos) | set(neg):
-        P, N = pos.get(k, set()), neg.get(k, set())
-        n = len(P) + len(N)
-        if n < MIN_TOTAL:          # not eligible for a conflict verdict either way
-            continue
-        rows.append((n,
-                     k[0] in contested or k[1] in contested,
-                     min(len(P), len(N)) >= MIN_WEAK))
-
-    amb_n = sum(1 for _n, a, _c in rows if a)
-    amb_c = sum(1 for _n, a, c in rows if a and c)
-    cln_n = sum(1 for _n, a, _c in rows if not a)
-    cln_c = sum(1 for _n, a, c in rows if not a and c)
-    crude = (amb_c / amb_n) / (cln_c / cln_n) if amb_n and cln_n and cln_c else float("nan")
-
+def _strata(rows):
     strata = collections.defaultdict(lambda: {"amb": [0, 0], "clean": [0, 0]})
-    for n, is_amb, conf in rows:
-        s = strata[min(int(math.log2(n)), 10)]["amb" if is_amb else "clean"]
-        s[0] += 1
-        s[1] += conf
+    for n, is_ambiguous, flagged in rows:
+        bucket = min(n.bit_length() - 1, MAX_BUCKET)
+        cell = strata[bucket]["amb" if is_ambiguous else "clean"]
+        cell[0] += 1
+        cell[1] += flagged
+    return strata
 
-    def mh(sample_rows):
-        st = collections.defaultdict(lambda: {"amb": [0, 0], "clean": [0, 0]})
-        for n, is_amb, conf in sample_rows:
-            s = st[min(int(math.log2(n)), 10)]["amb" if is_amb else "clean"]
-            s[0] += 1
-            s[1] += conf
-        num = den = 0.0
-        for s in st.values():
-            an, ac = s["amb"]
-            cn, cc = s["clean"]
-            if an and cn:
-                num += ac * cn / (an + cn)
-                den += cc * an / (an + cn)
-        return num / den if den else float("nan")
 
-    mh_point = mh(rows)
-    rng = random.Random(BOOT_SEED)
-    boots = []
-    for _ in range(BOOTSTRAP):
-        s = [rows[rng.randrange(len(rows))] for _ in range(len(rows))]
-        v = mh(s)
-        if v == v:
-            boots.append(v)
-    boots.sort()
-    ci = (boots[int(0.025 * len(boots))], boots[int(0.975 * len(boots))]) if boots else (0, 0)
+def _ratio(an, ac, cn, cc):
+    return (ac / an) / (cc / cn) if an and cn and cc else None
 
-    L = [
-        "# How much of the contradiction signal is real? (#ATLAS-CONTRA-Q)", "",
-        "Generated by `scripts/atlas_contradiction_quality.py`.",
-        "`atlas_contradictions.py` names extraction error as a caveat and never",
-        "measures it. This gives that caveat two bounds -- one reassuring, one not.", "",
-        "## Test 1: does a single paper contradict itself?", "",
-        "If one paper is extracted as asserting a pair both ways, that is extraction",
-        "inconsistency rather than disagreement between studies.", "",
-        f"| | count | share |", "|---|---|---|",
-        f"| conflicting pairs examined | {len(conflicts):,} | |",
-        f"| ... with any paper asserting BOTH directions | {len(self_pairs):,} | "
-        f"{100*len(self_pairs)/max(1,len(conflicts)):.2f}% |",
-        f"| asserting papers that contradict themselves | {both_assertions:,} of "
-        f"{total_assertions:,} | {100*both_assertions/max(1,total_assertions):.2f}% |",
-        "",
-        "**This failure mode is essentially absent.** The conflicts really are",
-        "between papers, which is the reading the report already gives them.", "",
-        "## Test 2: does entity ambiguity manufacture contradictions?", "",
-        "Merging two entities under one identifier merges two literatures, and two",
-        "literatures about different biology will disagree. An apparent contradiction",
-        "can therefore be two genes being conflated rather than a field divided.", "",
-        f"Among the {len(rows):,} pairs carrying enough directional assertions to be",
-        "eligible for a conflict verdict at all:", "",
-        "| pairs | n | flagged contradictory | rate |", "|---|---|---|---|",
-        f"| involving a measured sense collision | {amb_n:,} | {amb_c:,} | "
-        f"**{100*amb_c/max(1,amb_n):.1f}%** |",
-        f"| involving none | {cln_n:,} | {cln_c:,} | {100*cln_c/max(1,cln_n):.1f}% |",
-        "", f"Crude risk ratio: **{crude:.2f}x**.", "",
-        "### The confound, and why the answer survives it", "",
-        "Colliding identifiers are contested precisely BECAUSE they are heavily",
-        "mentioned, and a pair with more assertions has more chance of showing both",
-        "directions. So the crude ratio could be nothing but popularity.", "",
-        "Stratifying by the number of directional assertions:", "",
-        "| assertions | ambiguous | clean | ratio |", "|---|---|---|---|",
-    ]
-    for b in sorted(strata):
-        s = strata[b]
+
+def _mh(strata):
+    numerator = denominator = 0.0
+    for bucket in sorted(strata, key=int):
+        s = strata[bucket]
         an, ac = s["amb"]
         cn, cc = s["clean"]
-        if an < MIN_STRATUM or cn < MIN_STRATUM:
-            continue
-        ar, cr = ac / an, cc / cn
-        L.append(f"| {2**b}-{2**(b+1)-1} | {ac}/{an} ({100*ar:.1f}%) | "
-                 f"{cc}/{cn} ({100*cr:.1f}%) | {ar/max(cr,1e-9):.2f}x |")
-    L += [
-        "",
-        f"Pooled with a Mantel-Haenszel estimator: **{mh_point:.2f}x** "
-        f"(95% CI {ci[0]:.2f}-{ci[1]:.2f}, {BOOTSTRAP:,} bootstrap resamples over pairs),",
-        f"against a crude {crude:.2f}x. The adjustment barely moves it, the enrichment",
-        "holds inside every stratum, and it RISES with assertion count -- which is the",
-        "direction merging two literatures predicts, since more papers means more",
-        "chance both merged senses are represented.", "",
-        "## What a reader should do with this", "",
-        "* A contradiction between two unambiguous entities is worth reading. The",
-        "  within-paper failure mode is measured at effectively zero.",
-        "* A contradiction involving an entity on the ambiguity blocklist should be",
-        "  checked for conflation FIRST. Roughly a third more of these are flagged",
-        "  than the base rate, and the excess has to come from somewhere.",
-        "* The blocklist is in `analysis/atlas-ambiguity.json`; `atlas_graph.resolve`",
-        "  already refuses to resolve those symbols.", "",
-        "## Limits", "",
-        "* This bounds two specific failure modes. It says nothing about the",
-        "  extractor mislabelling direction consistently across papers, which would",
-        "  produce a conflict no structural test can see.",
-        "* 1.45x is an association, not an attribution. It does not license",
-        "  subtracting 45% of the ambiguous conflicts; some are genuine disagreements",
-        "  that happen to involve a colliding symbol.",
-        "* Ambiguity is measured only for the top forms per entity type that resolved",
-        "  against NCBI and NLM, so pairs contaminated by an unmeasured collision are",
-        "  counted here as clean, which biases the ratio DOWN.",
-        "* Only `positive_correlate` / `negative_correlate` are examined. The valence",
-        "  conflicts (`treat` vs `cause`) are not tested here.",
-    ]
+        if an and cn:
+            numerator += ac * cn / (an + cn)
+            denominator += cc * an / (an + cn)
+    return numerator / denominator if denominator else None
 
-    OUT.write_text("\n".join(L) + "\n")
-    RAW.write_text(json.dumps({
-        "conflicting_pairs": len(conflicts),
-        "pairs_with_self_contradiction": len(self_pairs),
-        "self_contradicting_assertions": both_assertions,
-        "total_assertions_in_conflicts": total_assertions,
+
+def analyze(pos, neg, contested, *, bootstrap=BOOTSTRAP, seed=BOOT_SEED) -> dict:
+    """Compute this diagnostic only; no file access or biological adjudication.
+
+    PMID sets deduplicate repeated rows. A PMID may contribute to many pairs,
+    and to both directions of the same pair. Bootstrap sampling units are pairs.
+    """
+    if isinstance(bootstrap, bool) or not isinstance(bootstrap, int) or bootstrap < 0:
+        raise ValueError("bootstrap must be a nonnegative integer")
+    _count(seed, "bootstrap seed")
+    rows = []
+    conflicting_pairs = overlap_pairs = overlap = total = 0
+    papers, overlap_papers = set(), set()
+    for key in sorted(set(pos) | set(neg)):
+        positive, negative = pos.get(key, set()), neg.get(key, set())
+        n = len(positive) + len(negative)
+        if n < MIN_TOTAL:
+            continue
+        flagged = min(len(positive), len(negative)) >= MIN_WEAK
+        rows.append((n, any(ident in contested for ident in key), flagged))
+        if flagged:
+            both = positive & negative
+            conflicting_pairs += 1
+            overlap_pairs += bool(both)
+            overlap += len(both)
+            total += n
+            papers.update(positive | negative)
+            overlap_papers.update(both)
+    strata = _strata(rows)
+    an = sum(s["amb"][0] for s in strata.values())
+    ac = sum(s["amb"][1] for s in strata.values())
+    cn = sum(s["clean"][0] for s in strata.values())
+    cc = sum(s["clean"][1] for s in strata.values())
+    rng = random.Random(seed)
+    boots = []
+    for _ in range(bootstrap):
+        sampled = [rows[rng.randrange(len(rows))] for _ in range(len(rows))]
+        value = _mh(_strata(sampled))
+        if value is not None and math.isfinite(value):
+            boots.append(value)
+    boots.sort()
+    ci = ([boots[int(0.025 * len(boots))], boots[int(0.975 * len(boots))]]
+          if boots else None)
+    return {
+        "conflicting_pairs": conflicting_pairs,
+        "pairs_with_self_contradiction": overlap_pairs,
+        "self_contradicting_assertions": overlap,
+        "total_assertions_in_conflicts": total,
+        "unique_papers_in_conflicts": len(papers),
+        "unique_papers_with_overlap": len(overlap_papers),
         "eligible_pairs": len(rows),
-        "ambiguous": {"n": amb_n, "conflicted": amb_c},
-        "clean": {"n": cln_n, "conflicted": cln_c},
-        "crude_risk_ratio": crude,
-        "mantel_haenszel": mh_point,
-        "mh_ci95": list(ci),
+        "ambiguous": {"n": an, "conflicted": ac},
+        "clean": {"n": cn, "conflicted": cc},
+        "crude_risk_ratio": _ratio(an, ac, cn, cc),
+        "mantel_haenszel": _mh(strata),
+        "mh_ci95": ci,
+        "bootstrap": {
+            "resamples": bootstrap,
+            "seed": seed,
+            "finite_resamples": len(boots),
+            "undefined_resamples": bootstrap - len(boots),
+            "sampling_unit": "entity pair",
+            "row_order": "sorted raw identifier pairs",
+        },
         "strata": {str(b): dict(v) for b, v in sorted(strata.items())},
-    }, indent=2) + "\n")
-    print(f"\nself-contradiction {both_assertions}/{total_assertions:,}   "
-          f"ambiguity enrichment crude {crude:.2f}x -> MH {mh_point:.2f}x "
-          f"[{ci[0]:.2f}, {ci[1]:.2f}]")
-    print(f"wrote {OUT}\nwrote {RAW}")
+    }
+
+
+def _count(value, name):
+    if isinstance(value, bool) or not isinstance(value, int) or value < 0:
+        raise ValueError(f"{name} must be a nonnegative integer")
+    return value
+
+
+def _validate(raw):
+    """Check the retained counts before computing any report or writing output."""
+    if not isinstance(raw, dict):
+        raise ValueError("analysis must be a JSON object")
+    for key in ("conflicting_pairs", "pairs_with_self_contradiction",
+                "self_contradicting_assertions", "total_assertions_in_conflicts",
+                "eligible_pairs"):
+        _count(raw.get(key), key)
+    if not isinstance(raw.get("strata"), dict):
+        raise ValueError("strata must be an object")
+    totals = {"amb": [0, 0], "clean": [0, 0]}
+    for bucket, stratum in raw["strata"].items():
+        if (not isinstance(bucket, str) or not bucket.isdigit()
+                or str(int(bucket)) != bucket
+                or not MIN_TOTAL.bit_length() - 1 <= int(bucket) <= MAX_BUCKET
+                or not isinstance(stratum, dict)):
+            raise ValueError(f"invalid assertion-count stratum: {bucket}")
+        for group in totals:
+            cell = stratum.get(group)
+            if not isinstance(cell, list) or len(cell) != 2:
+                raise ValueError(f"stratum {bucket}.{group} must be [pairs, flagged]")
+            n, flagged = (_count(v, f"stratum {bucket}.{group}") for v in cell)
+            if flagged > n:
+                raise ValueError(f"stratum {bucket}.{group}: flagged exceeds pairs")
+            totals[group][0] += n
+            totals[group][1] += flagged
+    for stored, group in (("ambiguous", "amb"), ("clean", "clean")):
+        counts = raw.get(stored)
+        if not isinstance(counts, dict):
+            raise ValueError(f"missing {stored} counts")
+        cell = [_count(counts.get(k), f"{stored}.{k}") for k in ("n", "conflicted")]
+        if cell != totals[group]:
+            raise ValueError(f"{stored} counts disagree with strata")
+    if sum(t[0] for t in totals.values()) != raw["eligible_pairs"]:
+        raise ValueError("eligible pair count disagrees with strata")
+    if sum(t[1] for t in totals.values()) != raw["conflicting_pairs"]:
+        raise ValueError("conflicting pair count disagrees with strata")
+    overlap_pairs = raw["pairs_with_self_contradiction"]
+    overlap = raw["self_contradicting_assertions"]
+    total = raw["total_assertions_in_conflicts"]
+    minimum_support = maximum_support = 0
+    unbounded_support = False
+    for bucket, stratum in raw["strata"].items():
+        flagged = stratum["amb"][1] + stratum["clean"][1]
+        lower = 2 ** int(bucket)
+        minimum_support += flagged * lower
+        maximum_support += flagged * (2 * lower - 1)
+        unbounded_support |= int(bucket) == MAX_BUCKET and flagged > 0
+    if total < minimum_support or (not unbounded_support and total > maximum_support):
+        raise ValueError("directional incidence total is outside the retained stratum bounds")
+    if (not overlap_pairs <= raw["conflicting_pairs"] or overlap < overlap_pairs
+            or bool(overlap) != bool(overlap_pairs) or total < 2 * overlap
+            or total < MIN_TOTAL * raw["conflicting_pairs"]
+            or (not raw["conflicting_pairs"] and total)):
+        raise ValueError("inconsistent within-pair overlap counts")
+    unique_keys = ("unique_papers_in_conflicts", "unique_papers_with_overlap")
+    if any(k in raw for k in unique_keys):
+        papers, both_papers = (_count(raw.get(k), k) for k in unique_keys)
+        if (papers > total - overlap or both_papers > min(papers, overlap)
+                or bool(papers) != bool(total) or bool(both_papers) != bool(overlap)):
+            raise ValueError("inconsistent unique-paper counts")
+    ci = raw.get("mh_ci95")
+    if ci is not None:
+        if (not isinstance(ci, list) or len(ci) != 2
+                or any(isinstance(v, bool) or not isinstance(v, (int, float))
+                       or not math.isfinite(v) or v < 0 for v in ci)
+                or ci[0] > ci[1]):
+            raise ValueError("mh_ci95 must be null or two ordered finite values")
+        if _mh(raw["strata"]) is None:
+            raise ValueError("bootstrap interval exists for an undefined pooled ratio")
+    meta = raw.get("bootstrap")
+    if meta is not None:
+        if not isinstance(meta, dict):
+            raise ValueError("bootstrap metadata must be an object")
+        for key in ("resamples", "seed", "finite_resamples", "undefined_resamples"):
+            _count(meta.get(key), f"bootstrap.{key}")
+        if meta["finite_resamples"] + meta["undefined_resamples"] != meta["resamples"]:
+            raise ValueError("bootstrap resample counts do not add up")
+        if bool(meta["finite_resamples"]) != (ci is not None):
+            raise ValueError("bootstrap interval disagrees with finite resample count")
+        if (meta.get("sampling_unit") != "entity pair"
+                or meta.get("row_order") != "sorted raw identifier pairs"):
+            raise ValueError("unsupported bootstrap sampling unit or row order")
+    return totals
+
+
+def _percent(numerator, denominator):
+    if not denominator:
+        return "not estimable (no observations)"
+    value = 100 * numerator / denominator
+    return f"{value:.6f}%" if 0 < value < 0.01 else f"{value:.2f}%"
+
+
+def _formatted_ratio(value):
+    return "not estimable" if value is None else f"{value:.2f}x"
+
+
+def render(raw: dict) -> str:
+    """Render a validated aggregate snapshot without reading or changing inputs."""
+    totals = _validate(raw)
+    an, ac = totals["amb"]
+    cn, cc = totals["clean"]
+    crude = _ratio(an, ac, cn, cc)
+    pooled = _mh(raw["strata"])
+    flagged = raw["conflicting_pairs"]
+    overlap_pairs = raw["pairs_with_self_contradiction"]
+    overlap = raw["self_contradicting_assertions"]
+    incidences = raw["total_assertions_in_conflicts"]
+    pair_papers = incidences - overlap
+    lines = [
+        "# Extracted direction overlap and ambiguity association (#ATLAS-CONTRA-Q)", "",
+        "Generated by `scripts/atlas_contradiction_quality.py`. Reproduce this report",
+        "with `python scripts/atlas_contradiction_quality.py --render-only`; that reads",
+        "the committed JSON and leaves it unchanged. These are structural diagnostics,",
+        "not measurements of extraction precision, recall, or biological disagreement.", "",
+        "## Population and counting units", "",
+        f"A pair is eligible with at least {MIN_TOTAL} distinct (pair, PMID, direction)",
+        f"incidences. It is flagged when each direction has at least {MIN_WEAK} distinct PMIDs.",
+        "Repeated rows for the same pair, PMID and direction count once. The same PMID",
+        "can contribute to many pairs and to both directions of one pair.", "",
+        "This diagnostic uses raw identifiers and only `positive_correlate` and",
+        "`negative_correlate`. The contradiction queue instead uses corrected identifiers",
+        "and totals over all relation predicates. Its counts and this diagnostic's counts",
+        "therefore describe different cohorts; this is not an accuracy audit of that queue.", "",
+        "## Same-paper overlap within flagged pairs", "",
+        "| quantity | count | share |", "|---|---|---|",
+        f"| flagged pairs | {flagged:,} | |",
+        f"| flagged pairs with at least one PMID in both directions | {overlap_pairs:,} | "
+        f"{_percent(overlap_pairs, flagged)} |",
+        f"| distinct (pair, PMID, direction) incidences in flagged pairs | {incidences:,} | |",
+        f"| distinct (pair, PMID) incidences in flagged pairs | {pair_papers:,} | |",
+        f"| (pair, PMID) incidences appearing in both directions | {overlap:,} | "
+        f"{_percent(overlap, pair_papers)} |", "",
+        "The pair-PMID denominator is the directional-incidence count minus the overlap:",
+        f"{incidences:,} - {overlap:,} = {pair_papers:,}. Each overlapping pair-PMID is counted",
+        "twice in the directional total and once in the pair-PMID total.", "",
+    ]
+    if "unique_papers_in_conflicts" in raw:
+        papers = raw["unique_papers_in_conflicts"]
+        both_papers = raw["unique_papers_with_overlap"]
+        lines += [
+            f"Across flagged pairs there are {papers:,} unique PMIDs; {both_papers:,} have",
+            "both directions for at least one flagged pair. These separate paper counts",
+            "deduplicate PMIDs across pairs; the table above counts pair-PMID incidences.", "",
+        ]
+    else:
+        lines += [
+            "Unique-paper counts were not retained in this historical aggregate. The",
+            "pair-PMID totals cannot supply a unique-paper denominator.", "",
+        ]
+    lines += [
+        "Overlap can reflect distinct tissues, conditions, or claims within one paper;",
+        "it is not itself proof of extraction error. Low overlap does not establish",
+        "extraction accuracy, and opposite outputs from different papers do not establish",
+        "scientific disagreement. Pairs below the flag thresholds were not tested here.", "",
+        "## Association with measured identifier ambiguity", "",
+        "A pair is marked as involving measured ambiguity when either raw identifier",
+        "appears as the top or runner-up identifier in the ambiguity scan's sense rows.",
+        "This does not show that the particular mentions forming that pair were conflated.", "",
+        "| eligible pairs | pairs | flagged | flag rate |", "|---|---|---|---|",
+        f"| involving a measured sense collision | {an:,} | {ac:,} | {_percent(ac, an)} |",
+        f"| no measured sense collision | {cn:,} | {cc:,} | {_percent(cc, cn)} |", "",
+        f"Crude risk ratio: **{_formatted_ratio(crude)}**.", "",
+        "All stored assertion-count strata are shown, including sparse groups:", "",
+        "| directional incidences | measured collision: flagged/pairs | "
+        "no measured collision: flagged/pairs | risk ratio |", "|---|---|---|---|",
+    ]
+    ratios = []
+    for bucket in sorted(raw["strata"], key=int):
+        b = int(bucket)
+        s = raw["strata"][bucket]
+        sn, sc = s["amb"]
+        tn, tc = s["clean"]
+        ratio = _ratio(sn, sc, tn, tc)
+        if ratio is not None:
+            ratios.append(ratio)
+        label = f"{2**b}+" if b == MAX_BUCKET else f"{2**b}-{2**(b+1)-1}"
+        lines.append(f"| {label} | {sc}/{sn} ({_percent(sc, sn)}) | "
+                     f"{tc}/{tn} ({_percent(tc, tn)}) | {_formatted_ratio(ratio)} |")
+    lines += ["", f"Mantel-Haenszel pooled risk ratio: **{_formatted_ratio(pooled)}**.", ""]
+    if any(a > b for a, b in zip(ratios, ratios[1:])):
+        lines += ["The estimable stratum ratios do not increase monotonically with assertion count.", ""]
+    lines += [
+        "A risk ratio requires both groups and a nonzero comparison-group flag rate.",
+        "Strata missing either group do not contribute to the pooled estimate; a zero",
+        "pooled denominator makes that estimate undefined. Undefined estimates are",
+        "reported as not estimable rather than as zero or an arbitrary large ratio.", "",
+    ]
+    ci = raw.get("mh_ci95")
+    meta = raw.get("bootstrap")
+    if meta is None:
+        if ci is not None:
+            lines += [f"Stored historical 95% pair-bootstrap interval: {ci[0]:.2f}-{ci[1]:.2f}."]
+        else:
+            lines += ["No historical bootstrap interval is available."]
+        lines += [
+            "The historical interval is retained, not recomputed: the original pair order",
+            "was not saved, and the legacy sampler used unordered set iteration. A fixed",
+            "random seed alone cannot reproduce its endpoints. Finite and undefined",
+            "resample counts were not retained.", "",
+        ]
+    else:
+        if ci is not None:
+            lines += [f"95% pair-bootstrap percentile interval: {ci[0]:.2f}-{ci[1]:.2f}."]
+        else:
+            lines += ["Bootstrap interval: not estimable (no finite bootstrap estimates)."]
+        lines += [
+            f"Bootstrap resamples: {meta['resamples']:,}; finite: {meta['finite_resamples']:,};",
+            f"undefined: {meta['undefined_resamples']:,}. Seed: {meta['seed']}. Fresh runs",
+            "order raw identifier pairs before sampling. Percentiles use only finite",
+            "resamples; discarding undefined estimates can affect their interpretation.", "",
+        ]
+    lines += [
+        "The bootstrap samples pairs as if independent. Pairs can share PMIDs and",
+        "entities, so the interval does not account for that dependence or for extraction",
+        "and ambiguity-label error. It is not a validated uncertainty interval for",
+        "biological disagreement or for a causal effect of ambiguity.", "",
+        "## Interpretation and remaining evidence work", "",
+        "The pooled ratio describes an association after grouping directional-incidence",
+        "counts into broad bins. It does not establish that ambiguity caused extra flags",
+        "or rule out popularity, context, or other confounding. The estimates cannot be",
+        "used to subtract an attributed fraction of conflicts.", "",
+        "No measured collision means only that this ambiguity scan did not flag the",
+        "identifier. The scan covers selected surface forms; unmeasured ambiguity may",
+        "remain, and the direction of resulting bias is not established here.", "",
+        "Sentence-level claims, source context, independent adjudication, and an explicit",
+        "sampling frame are still required to estimate extraction quality. Abstract versus",
+        "full-text coverage and census-stream coverage cannot be recovered from these",
+        "aggregate counts. The `treat` versus `cause` comparison is outside this analysis.",
+    ]
+    return "\n".join(lines) + "\n"
+
+
+def main(argv=None) -> int:
+    parser = argparse.ArgumentParser(description=__doc__.split("\n")[0])
+    parser.add_argument("--render-only", action="store_true",
+                        help="render committed aggregate JSON without external inputs or rewriting it")
+    args = parser.parse_args(argv)
+    try:
+        if args.render_only:
+            raw = json.loads(OUT_JSON.read_text(encoding="utf-8"))
+        else:
+            contested = load_contested(json.loads(SCAN.read_text(encoding="utf-8")))
+            print("reading directional relations ...", flush=True)
+            pos, neg = load_directional(atlas_root())
+            raw = analyze(pos, neg, contested)
+        # Prepare and validate both products before replacing either output.
+        outputs = [(OUT_MD, render(raw))]
+        if not args.render_only:
+            outputs.insert(0, (OUT_JSON, json.dumps(raw, indent=2, allow_nan=False) + "\n"))
+        for path, payload in outputs:
+            path.write_text(payload, encoding="utf-8")
+    except (OSError, EOFError, UnicodeError, ValueError) as exc:
+        print(f"atlas contradiction quality: {exc}", file=sys.stderr)
+        return 1
+    for path, _ in outputs:
+        print(f"wrote {path}")
     return 0
 
 
