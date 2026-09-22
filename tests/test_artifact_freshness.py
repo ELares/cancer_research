@@ -20,6 +20,10 @@ committed `.json` is what the generator would write, which is how a
 formatting drift was found. The synthetic importance studies permit only
 bounded floating-point differences in recomputed assessment fields across
 platforms; their formatting, raw inputs, decisions and provenance remain exact.
+The archive-only covariance diagnostic has a separate, explicitly named set of
+derived metric paths with the same tolerance. Its error-to-MCSE ratio also
+permits the propagation of accepted operand differences through division;
+its other fields remain exact.
 Two explicitly pinned historical direction snapshots have a different contract:
 their original adjudications lack the record identities needed to bind them to
 a new cohort. Their JSON must remain unchanged, and their Markdown must render
@@ -214,7 +218,7 @@ LIVE = [g[0] for g in GENERATORS
 # Pinned EXACTLY, not as a floor. A floor with slack lets a generator drop out
 # of the gate silently: at `>= 25` against 26, deleting the marker from one
 # script left the suite green with two parametrised cases quietly gone.
-EXPECTED_GENERATORS = 85
+EXPECTED_GENERATORS = 86
 
 
 def test_the_generator_list_is_discovered_not_listed():
@@ -523,8 +527,75 @@ NUMERICAL_REASSEMBLY = frozenset({
 })
 
 
+DIAGNOSTIC_GENERATOR = "proposal_correlated_diagnostics"
+
+
+def _diagnostic_float_path(path):
+    """Only named derived metrics receive the diagnostic's replay tolerance.
+
+    In particular, being under ``diagnostics`` does not relax a raw input,
+    analytic truth, count, decision, or selected attempt index. This separate
+    schema does not change the four frozen studies' existing comparison rule.
+    """
+    if (len(path) < 5 or path[0] not in {"runs", "pilots"} or
+            type(path[1]) is not int or path[2] != "diagnostics"):
+        return False
+    if path[0] == "runs":
+        if len(path) == 5 and path[3] == "weights":
+            return path[4] in {
+                "ess", "max_normalized_weight", "top_1_weight", "top_5_weight",
+                "top_20_weight",
+            }
+        if path[3] == "features" and isinstance(path[4], str):
+            if len(path) == 6:
+                return path[5] in {
+                    "estimate", "signed_error", "conditional_mcse", "error_over_mcse",
+                }
+            return (len(path) == 7 and path[5] == "single_deletion" and
+                    path[6] in {"signed_change", "absolute_change"})
+        if path[3] == "decomposition":
+            if len(path) == 5:
+                return path[4] in {"total_signed_error", "between_regions", "within_regions"}
+            return (len(path) == 7 and path[4] == "regions" and
+                    isinstance(path[5], str) and path[6] in {
+                        "estimated_mass", "conditional_estimate",
+                        "between_contribution", "within_contribution",
+                    })
+        return False
+    if len(path) == 6 and path[3] == "pooled":
+        return path[4] in {"feature_means", "region_fractions"} and isinstance(path[5], str)
+    return (len(path) == 8 and path[3] == "islands" and type(path[4]) is int and
+            path[5] == "summary" and path[6] in {"feature_means", "region_fractions"} and
+            isinstance(path[7], str))
+
+
+def _diagnostic_ratio_close(actual, expected, actual_feature, expected_feature):
+    """Bound ratio replay drift using only the observed operand differences.
+
+    For q=e/s, the exact identity q_a-q_b = (e_a-e_b-q_b*(s_a-s_b))/s_a
+    bounds the difference by (|delta e| + max(|q_a|, |q_b|)*|delta s|)/min(s).
+    The existing ratio tolerance covers final floating-point division. Each
+    operand pair and each ratio's own quotient must still pass the original
+    tolerance, so this cannot excuse a stale ratio or a changed input metric.
+    """
+    ea, eb = actual_feature.get("signed_error"), expected_feature.get("signed_error")
+    sa, sb = actual_feature.get("conditional_mcse"), expected_feature.get("conditional_mcse")
+    if (any(type(value) is not float or not math.isfinite(value)
+            for value in (actual, expected, ea, eb, sa, sb)) or sa <= 0 or sb <= 0):
+        return False
+    qa, qb = ea / sa, eb / sb
+    if (not math.isfinite(qa) or not math.isfinite(qb) or
+            any(not math.isclose(left, right, rel_tol=1e-12, abs_tol=1e-14)
+                for left, right in ((ea, eb), (sa, sb), (actual, qa), (expected, qb)))):
+        return False
+    propagated = (abs(ea - eb) + max(abs(qa), abs(qb)) * abs(sa - sb)) / min(sa, sb)
+    ratio_tolerance = max(1e-14, 1e-12 * max(abs(actual), abs(expected)))
+    bound = propagated + ratio_tolerance
+    return math.isfinite(bound) and abs(actual - expected) <= bound
+
+
 def _assert_reassembled_json(name, produced_text, committed_text):
-    if name not in NUMERICAL_REASSEMBLY:
+    if name not in NUMERICAL_REASSEMBLY and name != DIAGNOSTIC_GENERATOR:
         if produced_text != committed_text:
             raise AssertionError(f"{name}: generated JSON bytes differ from the committed artifact")
         return
@@ -555,11 +626,22 @@ def _assert_reassembled_json(name, produced_text, committed_text):
                 raise AssertionError(f"{label}: JSON list lengths differ")
             for index, (left, right) in enumerate(zip(actual, expected)):
                 check(left, right, (*path, index))
-        elif (isinstance(expected, float) and len(path) >= 4 and
-              path[0] in assessment_branches and
-              isinstance(path[1], int) and path[2] == "assessment"):
+        elif (isinstance(expected, float) and (
+                (name in NUMERICAL_REASSEMBLY and len(path) >= 4 and
+                 path[0] in assessment_branches and
+                 isinstance(path[1], int) and path[2] == "assessment") or
+                (name == DIAGNOSTIC_GENERATOR and _diagnostic_float_path(path)))):
             if (not math.isfinite(actual) or not math.isfinite(expected) or
                     not math.isclose(actual, expected, rel_tol=1e-12, abs_tol=1e-14)):
+                if (name == DIAGNOSTIC_GENERATOR and len(path) == 6 and
+                        path[0] == "runs" and type(path[1]) is int and
+                        path[2:4] == ("diagnostics", "features") and
+                        isinstance(path[4], str) and path[5] == "error_over_mcse" and
+                        _diagnostic_ratio_close(
+                            actual, expected,
+                            produced["runs"][path[1]]["diagnostics"]["features"][path[4]],
+                            committed["runs"][path[1]]["diagnostics"]["features"][path[4]])):
+                    return
                 raise AssertionError(f"{label}: derived float differs ({actual!r} versus {expected!r})")
         elif json.dumps(actual) != json.dumps(expected):
             raise AssertionError(f"{label}: exact JSON value differs")
