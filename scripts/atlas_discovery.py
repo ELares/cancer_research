@@ -75,24 +75,17 @@ TP53 is famous". `scripts/atlas_discovery_eval.py` tested that claim with a time
 split -- build the graph as it stood before year Y, rank, and check which pairs
 the literature went on to assert -- and it does not hold.
 
-Over 200 seeds at precision@20, ranking these same candidates by raw popularity
-scores 17.2% against this module's 12.3%. The gap is paired-bootstrap decided
-(-0.99 hits of 20, 95% CI [-1.27, -0.71]) and reproduces at split years 2015,
-2018 and 2021. So the bridge counting, hub filter and hypergeometric tail order
-candidates measurably WORSE than asking which of them is already well studied.
+The committed evaluation reports lower ABC precision than popularity at each
+published split; its seed-bootstrap intervals for the difference exclude zero.
+See analysis/atlas-discovery-eval.md for the counts, intervals and limitations.
+Adamic-Adar and raw bridge count also have negative intervals in that snapshot.
+These observations describe the evaluated rankings, not every possible revision.
 
-What survives is the candidate SET: every ranking beats random by several times,
-so restricting attention to 2-hop bridged entities is genuinely informative. This
-is a good candidate generator and a bad ranker.
-
-Nor can it be repaired by swapping in a better link predictor. The standard ones
-were tried on the same candidate set and NONE beats popularity. They order
-themselves by how hard each corrects for degree, and the harder the correction
-the worse it does -- raw bridge count and Adamic-Adar tie with the baseline,
-resource allocation loses, this module's hypergeometric loses more, and Jaccard
-(normalising by both degrees) falls to near chance. New edges here genuinely do
-attach preferentially to well-connected entities, so removing degree removes most
-of what predicts the next edge.
+Every method, INCLUDING random, ranks the same candidate pool. Their differences
+measure ordering within that pool. They cannot establish the value of two-hop
+candidate generation without an unrestricted or alternative candidate control.
+Degree selectivity is associated with future-assertion precision in the measured
+methods, but this comparison cannot identify its cause or biological usefulness.
 
 One caveat runs the other way, and it is in the evaluation's own report: that
 measurement scores a ranking by whether it anticipates the literature, while

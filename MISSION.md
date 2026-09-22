@@ -133,27 +133,20 @@ been marketing.
 4. **Mine.** Contradiction detection, replication tracking, temporal emergence,
    and literature-based discovery across disconnected fields.
 
-   > **The discovery pillar does not work as built, and this is the honest
-   > record of it.** Given a time split — rank candidate pairs on the graph as it
-   > stood before year Y, then check what the literature went on to assert — the
-   > shipped ABC ranking scores 10.1% precision@20 against 15.5% for simply
-   > ranking the same candidates by how well studied they already are. No
-   > standard link predictor beats that baseline either, and the methods line up
-   > by how hard each corrects for degree: the harder the correction, the worse
-   > it does. That last sentence was an observation from what each formula does;
-   > it has since been measured. Ranking the methods by how hub-selecting they
-   > actually are — the mean degree of a method's top 20 over the mean degree of
-   > the pool it drew them from — reproduces the precision leaderboard exactly
-   > (rank correlation 1.00 over the seven
-   > measured methods), and blending any of the seed-specific signals into a
-   > degree-only prior adds nothing measurable at any weight tested.
+   > **Measure ranking performance and keep its scope explicit.** In the retained
+   > temporal evaluation, the shipped ABC ranking scores 13.1% precision@20
+   > against 20.5% for popularity on the same candidate pool. Its seed-bootstrap
+   > interval lies below popularity, as do Adamic-Adar and raw bridge count in
+   > this snapshot. Degree selectivity and precision are associated across the
+   > seven measured methods (rank correlation 0.96); the tested blends provide
+   > no measurable improvement over the degree-only prior.
    >
-   > What survives is the candidate *set*, which beats random several times
-   > over. The other half of the old summary — a bad ranker — does not follow:
-   > on this metric a degree-correcting ranker and a bad one cannot be told
-   > apart, because the metric rewards not correcting. That is a limit of the
-   > evaluation, not a verdict on the ranking, and whether hub-selection is
-   > *wrong* is not identifiable from this corpus at all
+   > Every method, including random, ranks that same pool. A benefit from the
+   > candidate generator does not follow from within-pool ranking differences;
+   > an unrestricted or alternative candidate-selection control is needed.
+   > Whether hub selection reflects biological utility or literature exposure
+   > is not identifiable from this comparison. These studies predict later
+   > dated, observed assertions rather than independently verified discoveries
    > (`analysis/atlas-discovery-eval.md`,
    > `analysis/atlas-discovery-degree-bias.md`,
    > `analysis/atlas-discovery-headroom.md`).

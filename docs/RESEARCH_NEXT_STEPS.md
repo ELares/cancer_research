@@ -264,6 +264,17 @@ not require another simulation mechanism or a larger unmeasured corpus.
    Fresh runs sort pairs before resampling, report undefined estimates as null,
    and validate inputs and prepare both reports before replacing either one.
    The two writes remain sequential, not a transaction against disk failure.
+   **Discovery reporting corrected:** the [temporal evaluation](../analysis/atlas-discovery-eval.md)
+   now reconstructs summaries and paired intervals from retained per-seed counts.
+   All seven rankings use the same pool, so comparisons establish within-pool
+   ordering, not the benefit of candidate generation. Method and split conclusions
+   follow the counts; the former Adamic-Adar/bridge-count tie claim is removed.
+   Offline rendering preserves the historical JSON, and failed validation or
+   rendering preserves both existing outputs. The paired seed bootstrap retains
+   its original definition but does not account for overlapping entities or
+   papers. Dating, ranking and candidate-selection policies are unchanged.
+   A future generator claim needs an unrestricted or alternative candidate-pool
+   control, with fixed temporal windows and independent evidence adjudication.
    Sentence-level independent adjudication and dependence-aware uncertainty
    remain the next evidence-quality deliverable; these software and accounting
    corrections do not supply new biological labels.

@@ -153,11 +153,23 @@ Reported here because a findings page that only lists wins is marketing.
 So the standing finding is not that the layer is broken. It is that this project shipped a filter justified by an error distribution the filter itself changed, did not notice for two issues, and needed a fresh sample drawn after the rebuild to see it. The cost of the real fix is 28% of true matches, paid entirely on MeSH terms (35%) and not at all on genes (0%).
 *Source:* `comention-regression.md`, `comention-authority-result.md`
 
-**Literature-based discovery does not work as built.** The shipped ABC
+**Discovery ranking is evaluated within a fixed candidate pool.** The shipped ABC
 ranking scores 13.1% precision@20 against
-20.5% for ranking the same candidates by
-popularity, and no standard link predictor beats that baseline either.
-The candidate SET is genuinely informative, so that half stands. The obvious second half -- a bad RANKER -- does not follow, and two later measurements say why. Ordering the seven measured methods by how hub-selecting each one is reproduces the precision leaderboard exactly (rank correlation 0.96 over those seven points), so the metric rewards NOT correcting for candidate degree; and blending each of the five seed-aware signals into a degree-only prior adds nothing measurable, at any weight tested and under three combination schemes outside the blend family. Among every ranker measured, a degree-correcting one and a bad one cannot be told apart on this metric.
+20.5% for ranking the same candidates by popularity.
+Its mean paired hit difference is -1.50 per seed, with
+a seed-bootstrap 95% interval [-1.85, -1.16]; ABC is lower
+under that statistic. These comparisons concern later dated, observed
+literature assertions, not independently validated biological relations.
+
+All methods, including random, rank the same candidate pool. Better
+performance than that random baseline does not establish that the candidate
+generator improves on an unrestricted or alternative pool. Candidate-generator
+value remains unmeasured by this comparison. Nor does biological usefulness
+or lack of it follow from this endpoint alone.
+
+The separate degree-selectivity and blending studies describe the particular
+methods and combination families evaluated. A general verdict about the
+quality of a discovery method does not follow from those finite comparisons.
 *Source:* `atlas-discovery-eval.md`, `atlas-discovery-degree-bias.md`, `atlas-discovery-headroom.md`
 
 **Replication looked like it was collapsing, and was not.** Scoring cohorts on whether they were EVER replicated gives 60.3% for 1950 to 14.5% for 2022; that is the observation window shrinking, not science changing, since the older cohort has had decades to acquire a second paper and the newer one had 5 years. On an equal 5-year window from each pair's own first assertion the decline is modest, and the recent end is an upper bound because of MeSH indexing lag.
