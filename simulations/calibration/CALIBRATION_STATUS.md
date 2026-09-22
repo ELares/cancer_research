@@ -341,6 +341,13 @@ controls exposed how high ESS can coexist with missing support. The
 [interpretation](../../docs/COVERAGE_CHALLENGE_RESULTS.md) retains all outcomes
 and the limits of finite moment checks. The historical biological scores and
 calibration tier remain unchanged.
+The separately frozen [final-covariance comparison](../../docs/CORRELATED_PROPOSAL_RESULTS.md)
+then passed 10/12 correlated runs, versus 7/12 for each of two diagonal arms on
+shared unchanged pilots. Correlation improved the original rotated-box results,
+but one annular and one new shifted-box run failed a moment/CDF check. All
+regions were observed and all analytic controls behaved as declared. The
+revision remains experimental; the biological sampler and calibration tier
+are unchanged. All 36 learned arms and 24 controls are retained.
 Independent raw-replicate validation also remains pending; the
 [external assay acquisition review](../../docs/INDEPENDENT_ASSAY_CANDIDATE.md)
 documents candidate observations and the missing metadata and endpoint mapping.

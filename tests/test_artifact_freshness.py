@@ -17,7 +17,7 @@ committed `.md` is byte-for-byte what the generator's own `--render-only`
 branch produces -- replicating that branch rather than assuming its shape,
 because not every generator re-assembles. Second, that the
 committed `.json` is what the generator would write, which is how a
-formatting drift was found. The three synthetic importance studies permit only
+formatting drift was found. The synthetic importance studies permit only
 bounded floating-point differences in recomputed assessment fields across
 platforms; their formatting, raw inputs, decisions and provenance remain exact.
 Two explicitly pinned historical direction snapshots have a different contract:
@@ -214,7 +214,7 @@ LIVE = [g[0] for g in GENERATORS
 # Pinned EXACTLY, not as a floor. A floor with slack lets a generator drop out
 # of the gate silently: at `>= 25` against 26, deleting the marker from one
 # script left the suite green with two parametrised cases quietly gone.
-EXPECTED_GENERATORS = 84
+EXPECTED_GENERATORS = 85
 
 
 def test_the_generator_list_is_discovered_not_listed():
@@ -519,7 +519,7 @@ def test_dump_options_follow_the_expression_written(source, expected, tmp_path, 
 # source hashes, analytic truth, or any other generator's byte comparison.
 NUMERICAL_REASSEMBLY = frozenset({
     "proposal_synthetic_validation", "proposal_synthetic_validation_v2",
-    "proposal_coverage_challenges",
+    "proposal_coverage_challenges", "proposal_correlated_study",
 })
 
 
@@ -530,7 +530,7 @@ def _assert_reassembled_json(name, produced_text, committed_text):
         return
     produced, committed = json.loads(produced_text), json.loads(committed_text)
     assessment_branches = {"positive_runs", "negative_controls"}
-    if name == "proposal_coverage_challenges":
+    if name in {"proposal_coverage_challenges", "proposal_correlated_study"}:
         assessment_branches.add("oracle_controls")
     for label, value, text in (("produced", produced, produced_text),
                                ("committed", committed, committed_text)):

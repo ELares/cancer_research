@@ -12,7 +12,8 @@ import test_artifact_freshness as freshness
 
 HISTORICAL_NAMES = ("proposal_synthetic_validation", "proposal_synthetic_validation_v2")
 COVERAGE_NAME = "proposal_coverage_challenges"
-NAMES = (*HISTORICAL_NAMES, COVERAGE_NAME)
+ORACLE_NAMES = (COVERAGE_NAME, "proposal_correlated_study")
+NAMES = (*HISTORICAL_NAMES, *ORACLE_NAMES)
 
 
 def _artifact():
@@ -55,7 +56,7 @@ def _artifact():
 
 
 def _dump(value):
-    # Independent spelling of the three writers' public JSON format.
+    # Independent spelling of the declared writers' public JSON format.
     return json.dumps(value, indent=2, sort_keys=True, allow_nan=False) + "\n"
 
 
@@ -65,7 +66,7 @@ def _replace(value, path, replacement):
     value[path[-1]] = replacement
 
 
-def test_only_the_three_declared_synthetic_reports_receive_numeric_tolerance():
+def test_only_the_four_declared_synthetic_reports_receive_numeric_tolerance():
     assert freshness.NUMERICAL_REASSEMBLY == frozenset(NAMES)
 
 
@@ -170,17 +171,18 @@ def test_material_results_types_decisions_provenance_and_raw_values_are_strict(p
     (1000.0, 1000.0 + 5e-10),
     (-1000.0, -1000.0 - 5e-10),
 ])
-def test_only_the_new_study_allows_small_oracle_assessment_float_changes(old, new):
+@pytest.mark.parametrize("name", ORACLE_NAMES)
+def test_only_declared_oracle_reports_allow_small_assessment_float_changes(name, old, new):
     original = _coverage_artifact()
     path = ("oracle_controls", 0, "assessment", "importance", "ess")
     _replace(original, path, old)
     changed = deepcopy(original)
     _replace(changed, path, new)
-    freshness._assert_reassembled_json(COVERAGE_NAME, _dump(changed), _dump(original))
-    freshness._assert_reassembled_json(COVERAGE_NAME, _dump(original), _dump(changed))
-    for name in HISTORICAL_NAMES:
+    freshness._assert_reassembled_json(name, _dump(changed), _dump(original))
+    freshness._assert_reassembled_json(name, _dump(original), _dump(changed))
+    for historical_name in HISTORICAL_NAMES:
         with pytest.raises(AssertionError, match="exact JSON value differs"):
-            freshness._assert_reassembled_json(name, _dump(changed), _dump(original))
+            freshness._assert_reassembled_json(historical_name, _dump(changed), _dump(original))
 
 
 @pytest.mark.parametrize("path,replacement", [
@@ -206,22 +208,24 @@ def test_only_the_new_study_allows_small_oracle_assessment_float_changes(old, ne
     (("checks", "all_nine_full_target_oracles_pass"), False),
     (("metadata", "oracle_controls", 0, "assessment", "moment"), math.nextafter(0.25, math.inf)),
 ])
-def test_new_oracle_scope_keeps_counts_flags_raw_values_and_provenance_strict(path, replacement):
+@pytest.mark.parametrize("name", ORACLE_NAMES)
+def test_new_oracle_scope_keeps_counts_flags_raw_values_and_provenance_strict(name, path, replacement):
     original = _coverage_artifact()
     changed = deepcopy(original)
     _replace(changed, path, replacement)
     with pytest.raises(AssertionError):
-        freshness._assert_reassembled_json(COVERAGE_NAME, _dump(changed), _dump(original))
+        freshness._assert_reassembled_json(name, _dump(changed), _dump(original))
 
 
-def test_large_oracle_count_cannot_receive_relative_float_tolerance():
+@pytest.mark.parametrize("name", ORACLE_NAMES)
+def test_large_oracle_count_cannot_receive_relative_float_tolerance(name):
     original = _coverage_artifact()
     path = ("oracle_controls", 0, "assessment", "region_counts", "quadrant_0")
     _replace(original, path, 10**15)
     changed = deepcopy(original)
     _replace(changed, path, 10**15 + 1)
     with pytest.raises(AssertionError, match="exact JSON value differs"):
-        freshness._assert_reassembled_json(COVERAGE_NAME, _dump(changed), _dump(original))
+        freshness._assert_reassembled_json(name, _dump(changed), _dump(original))
 
 
 def test_large_integer_counts_cannot_slip_through_relative_float_tolerance():
@@ -314,17 +318,18 @@ def test_the_freshness_gate_uses_the_scoped_comparator(name, delta, tmp_path, mo
 
 
 @pytest.mark.parametrize("delta", [5e-10, 0.1])
-def test_new_oracle_assessments_use_the_scoped_comparator_through_the_freshness_gate(delta, tmp_path, monkeypatch):
+@pytest.mark.parametrize("name", ORACLE_NAMES)
+def test_new_oracle_assessments_use_the_scoped_comparator_through_the_freshness_gate(name, delta, tmp_path, monkeypatch):
     original = _coverage_artifact()
     changed = deepcopy(original)
     changed["oracle_controls"][0]["assessment"]["importance"]["ess"] += delta
     committed_path = tmp_path / "coverage.json"
     committed_path.write_text(_dump(original))
-    monkeypatch.setitem(sys.modules, COVERAGE_NAME, SimpleNamespace(OUT_JSON=committed_path))
+    monkeypatch.setitem(sys.modules, name, SimpleNamespace(OUT_JSON=committed_path))
     monkeypatch.setattr(freshness, "_reproduce", lambda mod, script: deepcopy(changed))
     if delta < 1e-9:
-        freshness.test_the_committed_json_is_what_the_generator_writes(COVERAGE_NAME, tmp_path, monkeypatch)
+        freshness.test_the_committed_json_is_what_the_generator_writes(name, tmp_path, monkeypatch)
     else:
         with pytest.raises(AssertionError, match="derived float differs"):
-            freshness.test_the_committed_json_is_what_the_generator_writes(COVERAGE_NAME, tmp_path, monkeypatch)
+            freshness.test_the_committed_json_is_what_the_generator_writes(name, tmp_path, monkeypatch)
     assert committed_path.read_text() == _dump(original)

@@ -49,10 +49,19 @@ not require another simulation mechanism or a larger unmeasured corpus.
    deliberately restricted controls passed usual screens but failed truth checks.
    The [interpretation](COVERAGE_CHALLENGE_RESULTS.md) separates these finite-budget
    failures from evidence of omitted support or a biological model defect.
-   **Next deliverable:** develop and separately freeze a proposal revision
-   addressing correlated targets, with a normalized, evaluable full density
-   and a prospective evaluation that discloses these now-seen fixtures.
-   Keep this completed failure study unchanged. In parallel, establish the
+   **Final-covariance comparison completed:** a
+   [separately frozen protocol](CORRELATED_PROPOSAL_PLAN.md) compared three final
+   proposals on unchanged shared pilots. The correlated revision passed 10/12
+   runs: all three original rotated-box runs passed, but one annular and one
+   new shifted-box run failed moment/CDF accuracy. Both diagonal arms passed
+   7/12. All regions were observed; all analytic controls behaved as declared.
+   The [results](CORRELATED_PROPOSAL_RESULTS.md) retain all 36 arms and explain
+   why higher ESS does not establish complete distributional accuracy.
+   The revision remains experimental; no biological sampler was replaced.
+   **Next deliverable:** diagnose the archived weighted feature errors and
+   separately freeze any regularization or mixture revision. All four fixtures
+   are now seen cases, so a further prospective claim needs new declared
+   challenges. Preserve every completed study. In parallel, establish the
    model-to-assay mapping and missing independent replicate metadata below.
    **Complete when:** the revision and independent observable have fixed inputs,
    error criteria and published outcomes, including failures. Finite moment
