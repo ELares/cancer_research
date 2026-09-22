@@ -492,13 +492,18 @@ def _render_sparse(d):
               "|---|--:|--:|--:|"]
     for year in sorted(comp["by_comparator"], key=int):
         row = comp["by_comparator"][year]
-        share = "undefined" if row["flat_share"] is None else f"{row['flat_share']}%"
+        # Older failed runs wrote zero shares for an empty selected pool before
+        # the renderer rejected them. Replay must use the actual denominator.
+        share = ("undefined" if not comp["pool_size"] or row["flat_share"] is None
+                 else f"{row['flat_share']}%")
         lines.append(f"| {year} | {row['comparator_n']:,} | {row['flat_or_down']:,} | {share} |")
+    resolved_share = (f"{idx['resolved_share_pct']}%" if idx["pool_total"]
+                      else "share undefined: no baseline unindexed articles")
     lines += ["", "No longer rising uses a point rate ratio at or below 1.0; "
               "admission uses a 99% lower confidence bound. These are different rules.", "",
               "## Indexing during the update window", "",
               f"Of {idx['pool_total']:,} baseline unindexed articles, "
-              f"**{idx['resolved_total']:,} ({idx['resolved_share_pct']}%)** appear in "
+              f"**{idx['resolved_total']:,} ({resolved_share})** appear in "
               "the indexed update stream. Totals include articles with an unknown "
               "publication year; dated cohort rates exclude them.", ""]
     if idx["rows"]:

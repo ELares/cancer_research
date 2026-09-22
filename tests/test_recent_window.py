@@ -660,3 +660,31 @@ def test_sparse_replay_does_not_turn_unretained_undated_counts_into_zeros(
     assert "new in this window: **not retained**" in rendered
     assert "baseline: **0**" not in rendered
     assert "new in this window: **0**" not in rendered
+
+
+@pytest.mark.parametrize("empty_unindexed", [False, True])
+def test_legacy_empty_result_replay_does_not_publish_zero_denominator_shares(
+        isolated_recent, monkeypatch, empty_unindexed):
+    _, md, stored = isolated_recent
+    recent.main([])
+    legacy = strict_json(stored)
+    assert legacy["composition"]["pool_size"] == 0
+    for row in legacy["composition"]["by_comparator"].values():
+        # The old generator wrote this before its renderer rejected empty pools.
+        row["flat_share"] = 0.0
+    if empty_unindexed:
+        legacy["indexing"].update(pool_total=0, resolved_total=0, resolved_share_pct=0.0)
+    stored.write_text(json.dumps(legacy, indent=4) + "\n")
+    before = stored.read_bytes()
+    monkeypatch.setattr(recent, "collect", lambda: pytest.fail("offline replay read raw records"))
+    recent.main(["--render-only"])
+    assert stored.read_bytes() == before
+    rendered = md.read_text()
+    assert "| 2024 | 1 | 0 | undefined |" in rendered
+    assert "| 2024 | 1 | 0 | 0.0% |" not in rendered
+    if empty_unindexed:
+        assert "share undefined: no baseline unindexed articles" in rendered
+        assert "**0 (0.0%)**" not in rendered
+    else:
+        # Zero resolutions of a nonempty baseline is an observed zero share.
+        assert "**0 (0.0%)**" in rendered

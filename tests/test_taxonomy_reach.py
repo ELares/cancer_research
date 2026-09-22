@@ -837,3 +837,71 @@ def test_historical_counts_are_preserved_by_pure_rendering():
     original = copy.deepcopy(d)
     m.render(d)
     assert d == original
+
+
+@pytest.mark.parametrize("corruption", ["overfull-publication-types", "overfull-legacy-publication-types",
+                                        "incomplete-publication-types",
+                                        "uncovered-keyword-hits", "too-many-mechanisms"])
+def test_incompatible_complete_ledgers_preserve_reports_on_offline_replay(reach, corruption):
+    m, _ = reach
+    d = _doc()
+    untagged = d["sampled"] - d["keyword_hits"]
+    if corruption.startswith("overfull"):
+        d["untagged_pubtypes"] = [["review/opinion", untagged],
+                                 ["primary research (no special type)", untagged]]
+        if corruption == "overfull-legacy-publication-types":
+            del d["untagged_no_pubtype"]
+        else:
+            d["untagged_no_pubtype"] = 0
+    elif corruption == "incomplete-publication-types":
+        d["untagged_pubtypes"] = []
+        d["untagged_no_pubtype"] = 0
+    elif corruption == "uncovered-keyword-hits":
+        d["per_mechanism"] = []
+    else:
+        d["n_mechanisms"] = 1
+    m.OUT_JSON.write_text(json.dumps(d))
+    before = (m.OUT_JSON.read_bytes(), m.OUT_MD.read_bytes())
+    with pytest.raises(ValueError, match="publication-type partition|per-mechanism profile"):
+        m.main(["--render-only"])
+    assert (m.OUT_JSON.read_bytes(), m.OUT_MD.read_bytes()) == before
+
+
+def test_mechanism_counts_can_overlap_on_the_same_keyword_matched_article(reach):
+    m, records = reach
+    _write_shard(records / "part.jsonl.gz", [{
+        "pmid": "overlap", "title": "Sonodynamic therapy and electrolysis in cancer",
+        "abstract": "", "mesh": ["Electrolysis", "Ultrasonic Therapy"], "pub_types": [],
+    }])
+    d = m.scan(sample_every=1)
+    assert d["keyword_hits"] == 1
+    assert dict(d["per_mechanism"])["sonodynamic"] == 1
+    assert dict(d["per_mechanism"])["electrolysis"] == 1
+    assert sum(hits for _, hits in d["per_mechanism"]) > d["keyword_hits"]
+    d["n_mechanisms"] = len(d["per_mechanism"])
+    m.render(d)
+
+
+@pytest.mark.parametrize("pub_types", [[], ["Journal Article"]], ids=["no-type", "all-typed"])
+def test_publication_partition_boundaries_and_missing_legacy_no_type_count(reach, pub_types):
+    m, records = reach
+    _write_shard(records / "part.jsonl.gz", [{**UNMATCHED, "pub_types": pub_types}])
+    d = m.scan(sample_every=1)
+    assert d["keyword_hits"] == 0
+    assert sum(hits for _, hits in d["untagged_pubtypes"]) + d["untagged_no_pubtype"] == 1
+    m.render(d)
+    # An older profile may not retain the missing-type count; its listed
+    # categories must still fit the remainder, but cannot reconcile its total.
+    del d["untagged_no_pubtype"]
+    m.render(d)
+
+
+def test_explicit_zero_mechanism_rows_are_not_counted_as_positive_hits(reach):
+    m, records = reach
+    _write_shard(records / "part.jsonl.gz", [UNMATCHED])
+    d = m.scan(sample_every=1)
+    d["per_mechanism"] = [["sonodynamic", 0]]
+    md = m.render(d)
+    assert "The 0 largest of 0 mechanisms with any hit" in md
+    assert "| sonodynamic |" not in md
+    assert d["per_mechanism"] == [["sonodynamic", 0]]

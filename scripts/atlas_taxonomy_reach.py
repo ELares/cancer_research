@@ -400,6 +400,7 @@ def _validate_counts(d):
             raise ValueError(f"invalid taxonomy profile: {key}")
         rows = value.items() if isinstance(value, dict) else value
         seen = set()
+        total = 0
         for row in rows:
             if not isinstance(row, (list, tuple)) or len(row) != 2:
                 raise ValueError(f"invalid taxonomy profile row: {key}")
@@ -410,6 +411,18 @@ def _validate_counts(d):
                     or not 0 <= hits <= ceiling):
                 raise ValueError(f"invalid taxonomy profile count: {key}")
             seen.add(name)
+            total += hits
+        if key == "untagged_pubtypes":
+            if total > untagged:
+                raise ValueError("publication-type partition exceeds the unmatched remainder")
+            no_type = d.get("untagged_no_pubtype")
+            if no_type is not None and total + no_type != untagged:
+                raise ValueError("publication-type partition does not cover the unmatched remainder")
+        elif key == "per_mechanism":
+            # Each keyword-matched article has at least one mechanism, while
+            # several mechanisms may overlap on the same article.
+            if total < kw or len(seen) > d["n_mechanisms"]:
+                raise ValueError("per-mechanism profile is incompatible with keyword hits or vocabulary")
 
 
 def _percent(numerator, denominator, places=2):
@@ -579,16 +592,16 @@ def render(d: dict) -> str:
               "The aggregate profile does not identify which of them the production",
               "matcher also missed, or independently adjudicate their subject.", ""]
 
+    _pm = [(mechanism, hits) for mechanism, hits in _pairs(d["per_mechanism"]) if hits > 0]
     L += ["## Per mechanism, within the sample", ""]
-    L += [f"The {min(15, len(_pairs(d['per_mechanism'])))} largest of "
-          f"{len(_pairs(d['per_mechanism']))} mechanisms with any hit, "
+    L += [f"The {min(15, len(_pm))} largest of "
+          f"{len(_pm)} mechanisms with any hit, "
           f"BY COUNT. An earlier version sliced an alphabetically "
           f"reordered dict and omitted `nanoparticle`, the "
           f"second-largest.", ""]
     L += ["| mechanism | sampled hits | share of sampled articles |", "|---|--:|--:|"]
     # top 15 BY COUNT, and the truncation is stated: an alphabetical
     # slice omitted `nanoparticle`, the second-largest mechanism.
-    _pm = _pairs(d["per_mechanism"])
     for m, v in _pm[:15]:
         L.append(f"| {m} | {v:,} | {_percent(v, s)} |")
     L += [""]
