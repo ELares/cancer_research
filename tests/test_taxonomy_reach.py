@@ -32,11 +32,14 @@ THE WAYS THIS GOES WRONG
    makes a claim about it.
 """
 
+import copy
+import gzip
+import hashlib
 import json
 import re
-import subprocess
-import sys
 from pathlib import Path
+
+import pytest
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 SCRIPT = REPO_ROOT / "scripts" / "atlas_taxonomy_reach.py"
@@ -157,16 +160,19 @@ def test_the_map_is_parsed_with_a_real_yaml_loader():
         f"{sorted(d ^ expected)[:5]}")
 
 
-def test_an_empty_result_refuses_to_render():
-    """Zero matches is what a broken import looks like, not a finding."""
-    src = SCRIPT.read_text()
-    # The CONDITION, not the message beside it. Asserting only the prose let a
-    # mutation replacing the test with `if False:` pass untouched.
-    assert 'if d["keyword_hits"] == 0:' in src, (
-        "the zero-result check no longer tests the keyword hit count, so a "
-        "scan that matched nothing would write 0% reach as a measurement")
-    assert "is not a finding" in src and "raise SystemExit" in src, (
-        "the refusal message or the raise is gone")
+def test_readable_zero_keyword_population_is_a_valid_measurement(reach):
+    m, records = reach
+    _write_shard(records / "part.jsonl.gz", [UNMATCHED])
+    assert m.main(["--sample-every", "1"]) == 0
+    got = json.loads(m.OUT_JSON.read_text())
+    assert got["census_total"] == got["sampled"] == 1
+    assert got["keyword_hits"] == got["production_hits"] == got["mesh_leaf_hits"] == 0
+    md = m.OUT_MD.read_text()
+    assert "**0.00%** (95% CI" in md
+    assert "Measured production-matcher reach is **0.0%**" in md
+    assert "No articles in this raw-keyword-unmatched sample carry either" in md
+    assert "partly true and not sufficient" not in md
+    assert "Humans` alone sits on most" not in md
 
 
 def test_the_verdict_is_derived_not_asserted():
@@ -189,22 +195,21 @@ def test_the_verdict_is_derived_not_asserted():
         "insufficient, which is the finding")
 
 
-def test_render_only_works_without_the_census():
-    """The prose must be rebuildable from the artifact alone."""
-    # Run against a COPY of the tree's artifacts. Invoking the generator here
-    # rewrites the committed report, which makes the suite non-idempotent and --
-    # measured the hard way -- lets a mutation sweep corrupt a committed file:
-    # a mutated renderer ran through this test and its text landed on disk.
-    import shutil, tempfile
-    with tempfile.TemporaryDirectory() as td:
-        shutil.copy2(MD, Path(td) / MD.name)
-        try:
-            res = subprocess.run([sys.executable, str(SCRIPT), "--render-only"],
-                                 cwd=REPO_ROOT, capture_output=True, text=True)
-        finally:
-            shutil.copy2(Path(td) / MD.name, MD)
-    assert res.returncode == 0, (
-        f"--render-only failed:\n{res.stdout}\n{res.stderr}")
+def test_render_only_works_without_the_census(reach, monkeypatch):
+    """Replay needs only stored counts, and never rewrites their bytes."""
+    m, records = reach
+    original = JSON_OUT.read_bytes()
+    m.OUT_JSON.write_bytes(original)
+    assert not records.exists()
+
+    def forbidden(*args, **kwargs):
+        pytest.fail("offline rendering read scientific inputs")
+
+    for name in ("scan", "iter_census_records", "mesh_leaf_descriptors", "_keywords"):
+        monkeypatch.setattr(m, name, forbidden)
+    assert m.main(["--render-only"]) == 0
+    assert m.OUT_JSON.read_bytes() == original
+    assert m.OUT_MD.read_text() == m.render(json.loads(original))
 
 
 def test_render_is_invariant_to_json_key_ordering():
@@ -348,43 +353,25 @@ def test_the_excluded_tags_are_split_and_disclosed():
         "the section still silently drops what answers its own question")
 
 
-def test_the_scan_honours_every_contract_the_page_depends_on():
+def test_the_scan_honours_every_contract_the_page_depends_on(reach):
     """Checks the SCAN's output shape, not the committed artifact.
 
     Reverting the storage to dicts is a scan-level change, so it is invisible
     to any guard that reads the committed JSON or runs `--render-only` -- and
     the storage shape is the whole reason the ordering is safe. Run over a
-    handful of shards so this costs seconds rather than the full scan.
+    synthetic shard so the check does not depend on the external census.
     """
-    m = _mod()
-    # THE OFFLINE CONTRACT. corpus/atlas/records/ is gitignored bulk data, so
-    # CI has no shards: this guard recounts against the census and can only
-    # run where the census exists. Skipping keeps the contract while the
-    # check still fires for anyone holding the data -- which is where the
-    # scan-level mutations it exists to catch would be introduced.
-    import pytest
-    if not any((m.ATLAS / "records").glob("*.jsonl.gz")):
-        pytest.skip("census shards not present in this checkout")
-
-    shards = sorted((m.ATLAS / "records").glob("*.jsonl.gz"))
-    assert shards, "no census shards available"
-
-    real_glob = type(m.ATLAS).glob
-    subset = shards[::400][:4] or shards[:2]
-
-    class _Stub:
-        def __truediv__(self, other):
-            return self
-
-        def glob(self, _pat):
-            return iter(subset)
-
-    saved = m.ATLAS
-    try:
-        m.ATLAS = _Stub()
-        out = m.scan(sample_every=1)
-    finally:
-        m.ATLAS = saved
+    m, records = reach
+    rows = [{"pmid": "match", "title": "Sonodynamic therapy in cancer", "abstract": "", "mesh": ["Ultrasonic Therapy"], "pub_types": []}]
+    for index, pubtype in enumerate(("Meta-Analysis", "Guideline", "Clinical Trial",
+                                     "Case Reports", "Review", "Journal Article")):
+        rows.append({"pmid": str(index), "title": "Cancer epidemiology", "abstract": "",
+                     "mesh": ["Humans", "Retrospective Studies", "Neoplasms",
+                              "Antineoplastic Agents", "Antineoplastic Combined Chemotherapy Protocols"],
+                     "pub_types": [pubtype]})
+    subset = [records / "synthetic.jsonl.gz"]
+    _write_shard(subset[0], rows)
+    out = m.scan(sample_every=1)
 
     for key in ("per_mechanism", "untagged_top_mesh", "untagged_pubtypes"):
         assert isinstance(out[key], list), (
@@ -589,11 +576,264 @@ def test_the_humans_share_is_measured_not_written():
 
 def test_the_headline_reach_is_the_production_figure():
     """Reverting it to the raw loop changed the page's central number silently."""
-    d, md = _doc(), MD.read_text()
+    d, md = _doc(), _mod().render(_doc())
     prod, kw, s = d.get("production_hits"), d["keyword_hits"], d["sampled"]
     if not prod:
         return
-    assert f"share of **{100*prod/s:.1f}%** of the cancer literature" in md, (
+    assert f"production-matcher reach is **{100*prod/s:.1f}%** of sampled census articles" in md, (
         f"the headline does not quote the production reach "
         f"({100*prod/s:.1f}%); reverting it to the raw loop "
         f"({100*kw/s:.1f}%) would change the page's central number in silence")
+
+
+UNMATCHED = {"pmid": "1", "title": "Regional patterns", "abstract": "Population survey",
+             "mesh": ["Neoplasms"], "pub_types": ["Journal Article"]}
+PUBLISHED_JSON = b'{"previous": "published counts"}\n'
+PUBLISHED_MD = b"Previously published interpretation.\n"
+HISTORICAL_SHA = "b48aa96d4ddbc49a86a90f1dc2a604592df53e8e63ba47bb3920c6430d1d08f7"
+
+
+@pytest.fixture
+def reach(tmp_path, monkeypatch):
+    root = tmp_path / "external atlas"
+    monkeypatch.setenv("FERRO_ATLAS_ROOT", str(root))
+    m = _mod()
+    assert m.ATLAS == root
+    monkeypatch.setattr(m, "OUT_JSON", tmp_path / "report.json")
+    monkeypatch.setattr(m, "OUT_MD", tmp_path / "report.md")
+    m.OUT_JSON.write_bytes(PUBLISHED_JSON)
+    m.OUT_MD.write_bytes(PUBLISHED_MD)
+    return m, root / "records"
+
+
+def _write_shard(path, rows):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with gzip.open(path, "wt", encoding="utf-8") as fh:
+        for row in rows:
+            fh.write(json.dumps(row) + "\n")
+
+
+def _preserved(m):
+    assert m.OUT_JSON.read_bytes() == PUBLISHED_JSON
+    assert m.OUT_MD.read_bytes() == PUBLISHED_MD
+
+
+@pytest.mark.parametrize("state", ["missing", "empty-directory", "empty-shard", "auxiliary-only"])
+def test_unavailable_indexed_stream_preserves_both_reports(reach, state):
+    m, records = reach
+    if state == "empty-directory":
+        records.mkdir(parents=True)
+    elif state == "empty-shard":
+        _write_shard(records / "part.jsonl.gz", [])
+    elif state == "auxiliary-only":
+        for stream in ("records_unindexed", "records_updates"):
+            _write_shard(m.ATLAS / stream / "part.jsonl.gz", [UNMATCHED])
+    with pytest.raises(SystemExit, match="No census records"):
+        m.main(["--sample-every", "1"])
+    _preserved(m)
+
+
+def test_empty_shards_do_not_hide_a_readable_record(reach):
+    m, records = reach
+    _write_shard(records / "000.jsonl.gz", [])
+    _write_shard(records / "001.jsonl.gz", [UNMATCHED])
+    assert m.main(["--sample-every", "1"]) == 0
+    assert json.loads(m.OUT_JSON.read_text())["census_total"] == 1
+
+
+@pytest.mark.parametrize("bad", [None, [], 1, {"title": "missing indexed schema"},
+                                 {"mesh": "Neoplasms"}, {"mesh": [7]},
+                                 {"mesh": [], "abstract": []},
+                                 {"mesh": [], "pub_types": "Review"}])
+def test_a_malformed_later_record_preserves_reports_even_when_not_sampled(reach, bad):
+    m, records = reach
+    if isinstance(bad, dict) and "mesh" in bad:
+        bad = {**UNMATCHED, **bad}
+    _write_shard(records / "part.jsonl.gz", [UNMATCHED, UNMATCHED, bad])
+    with pytest.raises(ValueError):
+        m.main(["--sample-every", "2"])
+    _preserved(m)
+
+
+@pytest.mark.parametrize("field", ["title", "abstract", "pub_types", "mesh"])
+def test_missing_consumed_fields_are_not_measured_as_empty(reach, field):
+    m, records = reach
+    bad = {key: value for key, value in UNMATCHED.items() if key != field}
+    _write_shard(records / "part.jsonl.gz", [UNMATCHED, UNMATCHED, bad])
+    with pytest.raises(ValueError, match=field):
+        m.main(["--sample-every", "2"])
+    _preserved(m)
+
+
+@pytest.mark.parametrize("text,pub_types", [(None, None), ("", [])])
+def test_present_empty_or_nullable_fields_remain_valid_zero_measurements(reach, text, pub_types):
+    m, records = reach
+    row = {"pmid": "1", "title": text, "abstract": text,
+           "mesh": [], "pub_types": pub_types}
+    _write_shard(records / "part.jsonl.gz", [row])
+    assert m.main(["--sample-every", "1"]) == 0
+    d = json.loads(m.OUT_JSON.read_text())
+    assert d["census_total"] == d["sampled"] == d["sampled_without_abstract"] == 1
+    assert d["untagged_no_pubtype"] == 1
+    assert d["keyword_hits"] == d["production_hits"] == 0
+
+
+@pytest.mark.parametrize("corruption", ["gzip", "json", "utf8"])
+def test_unreadable_later_shard_preserves_reports(reach, corruption):
+    m, records = reach
+    _write_shard(records / "000.jsonl.gz", [UNMATCHED])
+    path = records / "001.jsonl.gz"
+    path.write_bytes(b"not gzip" if corruption == "gzip" else
+                     gzip.compress(b"{broken\n" if corruption == "json" else b"\xff\n"))
+    with pytest.raises((ValueError, OSError)):
+        m.main(["--sample-every", "1"])
+    _preserved(m)
+
+
+@pytest.mark.parametrize("step", [0, -1])
+def test_invalid_record_sampling_is_rejected_before_input_reads(reach, monkeypatch, step):
+    m, _ = reach
+    monkeypatch.setattr(m, "scan", lambda *_: pytest.fail("invalid sample read the census"))
+    with pytest.raises(SystemExit) as error:
+        m.main(["--sample-every", str(step)])
+    assert error.value.code == 2
+    _preserved(m)
+
+
+def test_sampling_remains_every_nth_record_across_shard_boundaries(reach):
+    m, records = reach
+    matching = {"pmid": "match", "title": "Sonodynamic therapy in cancer", "abstract": "", "mesh": ["Ultrasonic Therapy"], "pub_types": []}
+    # Selected records 3 and 6 live in different shards; per-shard resetting or
+    # selecting every third shard gives a different sample and MeSH census.
+    _write_shard(records / "000.jsonl.gz", [UNMATCHED, UNMATCHED])
+    _write_shard(records / "001.jsonl.gz", [matching])
+    _write_shard(records / "002.jsonl.gz", [UNMATCHED, UNMATCHED, UNMATCHED])
+    # These streams must neither enlarge the census nor break its record offset.
+    for stream in ("records_unindexed", "records_updates"):
+        _write_shard(m.ATLAS / stream / "part.jsonl.gz", [matching] * 3)
+    d = m.scan(sample_every=3)
+    assert d["census_total"] == 6
+    assert d["sampled"] == 2
+    assert d["mesh_leaf_hits"] == d["keyword_hits"] == d["production_hits"] == 1
+    assert dict(d["per_mechanism"])["sonodynamic"] == 1
+
+
+def test_readable_census_with_no_sample_preserves_full_population_measurement(reach):
+    m, records = reach
+    _write_shard(records / "part.jsonl.gz", [{**UNMATCHED, "mesh": ["Ultrasonic Therapy"]}])
+    assert m.main([]) == 0
+    d = json.loads(m.OUT_JSON.read_text())
+    assert d["census_total"] == d["mesh_leaf_hits"] == 1
+    assert d["sampled"] == d["keyword_hits"] == d["production_hits"] == 0
+    md = m.OUT_MD.read_text()
+    assert "unavailable (no sampled records)" in md
+    assert "(**100.00%**)" in md  # Full-census descriptor reach still exists.
+    assert "95% CI" not in md
+    assert "No gap verdict can be drawn" in md
+    assert "**0.00%**" not in md
+
+
+def test_zero_production_match_is_not_replaced_by_positive_raw_keyword_reach(reach):
+    m, records = reach
+    _write_shard(records / "part.jsonl.gz", [
+        {"pmid": "1", "title": "Sonodynamic therapy in yeast", "abstract": "", "mesh": ["Cell Death"], "pub_types": []}])
+    assert m.main(["--sample-every", "1"]) == 0
+    d = json.loads(m.OUT_JSON.read_text())
+    assert d["keyword_hits"] == 1
+    assert d["production_hits"] == d["production_title_abstract_hits"] == 0
+    md = m.OUT_MD.read_text()
+    assert "Production is the 0.00% row" in md
+    assert "Measured production-matcher reach is **0.0%**" in md
+    assert "No gap verdict can be drawn from an empty unmatched group" in md
+    assert "raw keyword loop" in md
+
+
+def test_missing_production_measurement_stays_unavailable():
+    m, d = _mod(), _doc()
+    del d["production_hits"]
+    md = m.render(d)
+    assert d["keyword_hits"] > 0
+    assert "Production-matcher reach is unavailable in this snapshot" in md
+    assert "Measured production-matcher reach" not in md
+    assert "| the production matcher |" not in md
+
+
+def test_missing_union_is_not_reconstructed_from_overlapping_truncated_rows():
+    m, d = _mod(), _doc()
+    del d["untagged_therapy_union"]
+    md = m.render(d)
+    assert "therapy-descriptor union was not retained" in md
+    assert "overlapping or truncated descriptor" in md
+    assert "partly true and not sufficient" not in md
+
+
+@pytest.mark.parametrize("vocabulary", [{}, {"ferroptosis": []},
+                                        {"ferroptosis": "ferroptosis"},
+                                        {"ferroptosis": [""]}])
+def test_invalid_vocabulary_is_distinct_from_zero_matches(reach, monkeypatch, vocabulary):
+    m, records = reach
+    _write_shard(records / "part.jsonl.gz", [UNMATCHED])
+    monkeypatch.setattr(m.config, "MECHANISM_KEYWORDS", vocabulary)
+    with pytest.raises(ValueError, match="vocabulary"):
+        m.main(["--sample-every", "1"])
+    _preserved(m)
+
+
+@pytest.mark.parametrize("contents", [None, "", "mechanisms: []", "mechanisms: {}",
+                                      "mechanisms: {a: {descriptors: 'scalar'}}",
+                                      "mechanisms: {a: {descriptors: ['']}}"])
+def test_unavailable_or_malformed_reference_map_preserves_reports(reach, monkeypatch, tmp_path, contents):
+    m, records = reach
+    _write_shard(records / "part.jsonl.gz", [UNMATCHED])
+    path = tmp_path / "reference.yaml"
+    if contents is not None:
+        path.write_text(contents)
+    monkeypatch.setattr(m, "MESH_MAP", path)
+    with pytest.raises((ValueError, OSError, SystemExit)):
+        m.main(["--sample-every", "1"])
+    _preserved(m)
+
+
+@pytest.mark.parametrize("offline", [False, True])
+@pytest.mark.parametrize("stage", ["render", "serialize"])
+def test_preparation_errors_preserve_both_outputs(reach, monkeypatch, offline, stage):
+    m, records = reach
+    _write_shard(records / "part.jsonl.gz", [UNMATCHED])
+    if offline:
+        m.OUT_JSON.write_bytes(JSON_OUT.read_bytes())
+    before = (m.OUT_JSON.read_bytes(), m.OUT_MD.read_bytes())
+
+    def broken(*args, **kwargs):
+        raise TypeError("synthetic preparation error")
+
+    if stage == "render":
+        monkeypatch.setattr(m, "render", broken)
+    else:
+        monkeypatch.setattr(m.json, "dumps", broken)
+    with pytest.raises(TypeError, match="synthetic preparation error"):
+        m.main(["--render-only"] if offline else ["--sample-every", "1"])
+    assert (m.OUT_JSON.read_bytes(), m.OUT_MD.read_bytes()) == before
+
+
+@pytest.mark.parametrize("field,value", [("sampled", -1), ("sampled", True),
+                                        ("keyword_hits", 9999999),
+                                        ("production_hits", float("inf")),
+                                        ("mesh_leaf_hits", -1)])
+def test_invalid_offline_counts_preserve_reports(reach, field, value):
+    m, _ = reach
+    d = _doc()
+    d[field] = value
+    m.OUT_JSON.write_text(json.dumps(d))
+    before = m.OUT_JSON.read_bytes()
+    with pytest.raises(ValueError):
+        m.main(["--render-only"])
+    assert m.OUT_JSON.read_bytes() == before
+    assert m.OUT_MD.read_bytes() == PUBLISHED_MD
+
+
+def test_historical_counts_are_preserved_by_pure_rendering():
+    assert hashlib.sha256(JSON_OUT.read_bytes()).hexdigest() == HISTORICAL_SHA
+    m, d = _mod(), _doc()
+    original = copy.deepcopy(d)
+    m.render(d)
+    assert d == original

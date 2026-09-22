@@ -4,7 +4,10 @@
 
 ## The field of view
 
-The keyword tagger carries **25 mechanisms** over **186 terms**. Applied to a uniform 1-in-20 sample of the 4,403,994-article census (220,199 articles):
+The keyword tagger carries **25 mechanisms** over **186 terms**. Applied to a sample selecting every Nth record (N = 20) of the 4,403,994-article census (220,199 articles):
+
+Sampling counts records continuously across sorted indexed shards and selects
+each Nth record. Unindexed and update streams are outside this report.
 
 | | count | share |
 |---|--:|--:|
@@ -17,11 +20,14 @@ The keyword tagger carries **25 mechanisms** over **186 terms**. Applied to a un
 | **matched at least one mechanism** | **14,979** | **6.80%** (95% CI 6.70-6.91%) |
 | matched none | 205,220 | 93.20% |
 
-The `matched at least one mechanism` row is a raw loop over `text_matches_keyword` on title and abstract. **Production is the 6.80% row**: `match_mechanisms` opens with a cancer-context gate and reads the MeSH descriptors as well as the title and abstract. On the same articles production's extra logic is worth -0.25 points on title+abstract -- a NET of the cancer-context gate and two composite matchers pulling opposite ways, not the gate alone, which an earlier version of this sentence attributed it to -- and the MeSH channel adds +1.08. An earlier version published the raw figure as the production field of view.
+The `matched at least one mechanism` row is a raw loop over `text_matches_keyword` on title and abstract. **Production is the 6.80% row**: `match_mechanisms` opens with a cancer-context gate and reads the MeSH descriptors as well as the title and abstract.
 
-Scope: **24.9%** of the sampled records carry no abstract at all, so for that quarter the production channel is title and MeSH only.
+On the same articles production's extra logic is worth -0.25 points on title+abstract -- a NET of the cancer-context gate and two composite matchers pulling opposite ways, not the gate alone, which an earlier version of this sentence attributed it to -- and the MeSH channel adds +1.08. An earlier version published the raw figure as the production field of view.
 
-So every mechanism share this project reports is a share of **6.8%** of the cancer literature.
+Scope: **24.9%** of the sampled records carry no abstract at all, so for those records the production channel is title and MeSH only.
+
+Measured production-matcher reach is **6.8%** of sampled census articles. This describes the keyword instrument;
+the MeSH map below measures a separate instrument.
 
 The documented 0.20%-41.86% per-mechanism capture spread is NOT variation inside this fraction: it is computed by the MeSH leaf map on both sides, a different instrument whose reach is reported below. An earlier version of this sentence attached the spread to the keyword reach, which is the conflation this script's own docstring forbids.
 
@@ -32,6 +38,9 @@ The documented 0.20%-41.86% per-mechanism capture spread is NOT variation inside
 That number is **not** a coverage failure. The map deliberately drops umbrella descriptors -- bare `Immunotherapy` is excluded as non-discriminative -- because its job is to measure the tagger's recall without the tagger's own vocabulary leaking into the reference. It is a precision instrument and should be read as one.
 
 ## What the unlabelled remainder actually is
+
+This profile concerns articles unmatched by the raw keyword loop.
+It is not the production matcher's unmatched cohort.
 
 The percentage is less interesting than its complement. If the remainder is literature no mechanism taxonomy should claim, the field of view is appropriate and only the wording of the capture caveat needs fixing.
 
@@ -78,15 +87,17 @@ The study-design descriptors removed from that table, which are what the remaind
 
 The comfortable reading is that the unlabelled remainder is literature no mechanism taxonomy should claim. That is **partly true and not sufficient**: review, opinion and case reports account for 31.6% of it, but 63.4% is primary research with no special publication type.
 
-And the remainder carries explicit therapy descriptors: `antineoplastic agents` and `antineoplastic combined chemotherapy protocols` sit on **11.1%** of unlabelled articles. Those are therapy papers the taxonomy has no name for -- chemotherapy has no mechanism tag -- rather than literature outside its remit. That is the UNION of the therapy descriptors, not the sum of two overlapping rows, which an earlier version published.
+The remainder carries explicit therapy descriptors: `antineoplastic agents` and `antineoplastic combined chemotherapy protocols` sit on **11.1%** of raw-keyword-unmatched articles. That is the UNION of the therapy descriptors, not the sum of two overlapping rows, which an earlier version published.
 
-So the field of view is a real limit and not merely a wording problem. The capture caveat should carry this number, and the backbone modalities with no tag are the first place to widen.
+These articles mark a measured limit of the raw keyword instrument.
+The aggregate profile does not identify which of them the production
+matcher also missed, or independently adjudicate their subject.
 
 ## Per mechanism, within the sample
 
 The 15 largest of 25 mechanisms with any hit, BY COUNT. An earlier version sliced an alphabetically reordered dict and omitted `nanoparticle`, the second-largest.
 
-| mechanism | sampled hits | share of census |
+| mechanism | sampled hits | share of sampled articles |
 |---|--:|--:|
 | immunotherapy | 6,276 | 2.85% |
 | nanoparticle | 3,051 | 1.39% |

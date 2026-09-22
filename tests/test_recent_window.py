@@ -12,7 +12,7 @@ methodological:
    because the newest year is only partly indexed. The report must use the most
    recent COMPLETE year, the same exclusion the thesis-leg section applies.
 
-2. AN EMPTY RESULT MUST NOT RENDER. The first version of the generator read a
+2. MISSING INPUT MUST NOT RENDER AS AN EMPTY RESULT. The first version read a
    field named `mesh_terms`, which does not exist in these records -- the field
    is `mesh` -- and produced a report reading "Of **0 MeSH descriptors** ...
    **0 (0.0%)** are flat or lower". A missing field rendered as a measurement.
@@ -30,15 +30,20 @@ methodological:
 """
 
 import json
+import gzip
 import re
 import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
 REPO_ROOT = Path(__file__).resolve().parent.parent
 SCRIPT = REPO_ROOT / "scripts" / "atlas_recent_window.py"
 MD = REPO_ROOT / "analysis" / "atlas-recent-window.md"
 JSON_OUT = REPO_ROOT / "analysis" / "atlas-recent-window.json"
+sys.path.insert(0, str(REPO_ROOT / "scripts"))
+import atlas_recent_window as recent
 
 
 def _doc():
@@ -86,16 +91,14 @@ def test_the_comparator_is_a_complete_year_not_the_newest():
         f"complete year while the composition section uses {complete}")
 
 
-def test_an_empty_pool_refuses_to_render():
-    """The missing-field failure, pinned. A wrong field name must raise."""
+def test_descriptor_schema_is_checked_before_counting_matches():
+    """A missing field must not be confused with a valid empty selection."""
     src = SCRIPT.read_text()
-    assert 'r.get("mesh")' in src, (
+    assert 'record.get("mesh")' in src, (
         "the generator no longer reads the `mesh` field; `mesh_terms` does not "
         "exist in these records and silently yields an empty pool")
     assert 'r.get("mesh_terms")' not in src, "the nonexistent field is back"
-    assert "raise SystemExit" in src and "is not a finding" in src, (
-        "an empty descriptor pool no longer refuses to render, so a wrong "
-        "field name would print '0 descriptors (0.0%)' as a measurement")
+    assert "mesh must be a list of nonempty descriptor strings" in src
 
 
 def test_the_report_does_not_claim_decline():
@@ -379,3 +382,281 @@ def test_the_generator_can_rebuild_the_report_from_the_artifact():
     assert res.returncode == 0, (
         f"--render-only failed, so the report cannot be checked without the "
         f"bulk census:\n{res.stdout}\n{res.stderr}")
+
+
+STREAMS = ("records", "records_unindexed", "records_updates")
+
+
+def write_records(root, stream, records, name="part.jsonl.gz"):
+    directory = root / stream
+    directory.mkdir(parents=True, exist_ok=True)
+    path = directory / name
+    with gzip.open(path, "wt", encoding="utf-8") as handle:
+        for record in records:
+            handle.write(json.dumps(record) + "\n")
+    return path
+
+
+@pytest.fixture
+def isolated_recent(tmp_path, monkeypatch):
+    root = tmp_path / "atlas"
+    write_records(root, "records", [{"pmid": "baseline", "year": 2024, "mesh": ["Other"]}])
+    write_records(root, "records_unindexed", [{"pmid": "unindexed", "year": 2023}])
+    write_records(root, "records_updates", [{"pmid": "new", "year": 2025, "mesh": ["Other"]}])
+    monkeypatch.setattr(recent, "ATLAS", root)
+    md, stored = tmp_path / "report.md", tmp_path / "report.json"
+    md.write_bytes(b"Published Markdown.\n")
+    stored.write_bytes(b"Published JSON.\n")
+    monkeypatch.setattr(recent, "OUT_MD", md)
+    monkeypatch.setattr(recent, "OUT_JSON", stored)
+    return root, md, stored
+
+
+def published_bytes(isolated):
+    return tuple(path.read_bytes() for path in isolated[1:])
+
+
+def strict_json(path):
+    def reject(value):
+        pytest.fail(f"nonstandard JSON constant {value}")
+    return json.loads(path.read_text(), parse_constant=reject)
+
+
+@pytest.mark.parametrize("empty_mesh", [False, True])
+def test_valid_zero_selected_topics_and_ferroptosis_are_published(isolated_recent, empty_mesh):
+    root, md, stored = isolated_recent
+    if empty_mesh:
+        for stream, pid, year in (("records", "baseline", 2024), ("records_updates", "new", 2025)):
+            write_records(root, stream, [{"pmid": pid, "year": year, "mesh": []}])
+    recent.main([])
+    result = strict_json(stored)
+    assert result["census_total"] == result["new_total"] == 1
+    assert result["composition"]["pool_size"] == 0
+    assert result["composition"]["by_comparator"]["2024"]["flat_share"] is None
+    assert result["indexing"]["rows"] == []
+    assert result["indexing"]["reference_year"] is None
+    assert result["legs"]["gain_total"] == 0
+    assert result["legs"]["gain_trailing_share_pct"] is None
+    assert "**0 descriptors**" in md.read_text()
+    assert "shares are undefined" in md.read_text()
+    assert "baseline: **0**" in md.read_text()
+    assert "new in this window: **0**" in md.read_text()
+    assert "tens of papers" not in md.read_text()
+    assert md.read_text() == recent.render(recent._roundtrip(result))
+
+
+def test_revision_only_updates_are_a_valid_zero_new_article_window(isolated_recent):
+    root, md, stored = isolated_recent
+    write_records(root, "records_updates", [{"pmid": "baseline", "year": 2024, "mesh": ["Other"]}])
+    recent.main([])
+    result = strict_json(stored)
+    assert result["new_total"] == result["composition"]["pool_size"] == 0
+    assert "0 articles the census did not have" in md.read_text()
+
+
+def test_novel_descriptors_with_zero_baseline_frequency_still_serialize_strictly(isolated_recent):
+    root, _, stored = isolated_recent
+    write_records(root, "records", [
+        {"pmid": f"baseline-{i}", "year": 2024, "mesh": ["Other"]} for i in range(100)])
+    write_records(root, "records_updates", [
+        {"pmid": f"new-{i}", "year": 2025, "mesh": ["Novel"]} for i in range(100)])
+    recent.main([])
+    composition = strict_json(stored)["composition"]
+    assert composition["pool_size"] == 1
+    comparator = composition["by_comparator"]["2024"]
+    assert comparator["flat_or_down"] == 0
+    assert comparator["examples"] == []
+
+
+@pytest.mark.parametrize("stream", STREAMS)
+@pytest.mark.parametrize("absence", ["missing-directory", "no-shards", "empty-shard"])
+def test_each_required_stream_must_contain_records_before_reports_change(
+        isolated_recent, stream, absence):
+    root, _, _ = isolated_recent
+    before = published_bytes(isolated_recent)
+    shard = root / stream / "part.jsonl.gz"
+    if absence == "empty-shard":
+        write_records(root, stream, [])
+    else:
+        shard.unlink()
+        if absence == "missing-directory":
+            shard.parent.rmdir()
+    with pytest.raises(SystemExit, match="No census records"):
+        recent.main([])
+    assert published_bytes(isolated_recent) == before
+
+
+def test_empty_individual_shards_do_not_hide_populated_required_streams(isolated_recent):
+    root, _, stored = isolated_recent
+    for stream in STREAMS:
+        write_records(root, stream, [], name="00-empty.jsonl.gz")
+    recent.main([])
+    assert strict_json(stored)["new_total"] == 1
+
+
+@pytest.mark.parametrize("stream", STREAMS)
+@pytest.mark.parametrize("damage", ["broken-json", "broken-gzip"])
+def test_malformed_required_streams_preserve_both_outputs(isolated_recent, stream, damage):
+    root, _, _ = isolated_recent
+    before = published_bytes(isolated_recent)
+    path = root / stream / "99-broken.jsonl.gz"
+    if damage == "broken-json":
+        with gzip.open(path, "wt", encoding="utf-8") as handle:
+            handle.write("{broken\n")
+    else:
+        path.write_bytes(b"not a gzip stream")
+    with pytest.raises((ValueError, OSError)):
+        recent.main([])
+    assert published_bytes(isolated_recent) == before
+
+
+@pytest.mark.parametrize("stream", STREAMS)
+@pytest.mark.parametrize("damage", ["not-object", "missing-pmid", "missing-year", "invalid-year"])
+def test_invalid_record_identity_or_year_cannot_become_a_zero_result(
+        isolated_recent, stream, damage):
+    root, _, _ = isolated_recent
+    before = published_bytes(isolated_recent)
+    row = {"pmid": "extra", "year": 2024, "mesh": []}
+    if damage == "not-object":
+        row = []
+    elif damage == "missing-pmid":
+        del row["pmid"]
+    elif damage == "missing-year":
+        del row["year"]
+    else:
+        row["year"] = True
+    write_records(root, stream, [row], name="99-invalid.jsonl.gz")
+    with pytest.raises(ValueError):
+        recent.main([])
+    assert published_bytes(isolated_recent) == before
+
+
+@pytest.mark.parametrize("stream", ["records", "records_updates"])
+@pytest.mark.parametrize("mesh", [None, "Ferroptosis", [None]])
+def test_indexed_mesh_schema_is_required_even_for_filtered_revision_records(
+        isolated_recent, stream, mesh):
+    root, _, _ = isolated_recent
+    before = published_bytes(isolated_recent)
+    row = {"pmid": "baseline", "year": 2024}
+    if mesh is not None:
+        row["mesh"] = mesh
+    write_records(root, stream, [row], name="99-invalid.jsonl.gz")
+    with pytest.raises(ValueError, match="mesh must be a list"):
+        recent.main([])
+    assert published_bytes(isolated_recent) == before
+
+
+def test_no_dated_baseline_is_unavailable_not_a_fictitious_complete_year(isolated_recent):
+    root, _, _ = isolated_recent
+    before = published_bytes(isolated_recent)
+    write_records(root, "records", [{"pmid": "baseline", "year": None, "mesh": []}])
+    with pytest.raises(ValueError, match="no dated indexed census"):
+        recent.main([])
+    assert published_bytes(isolated_recent) == before
+
+
+def test_separate_streams_deduplicate_updates_and_count_undated_resolutions(isolated_recent):
+    root, _, _ = isolated_recent
+    write_records(root, "records_unindexed", [
+        {"pmid": "undated", "year": None}, {"pmid": "dated", "year": 2023}])
+    write_records(root, "records_updates", [
+        {"pmid": "baseline", "year": 2025, "mesh": [recent.FERRO]},
+        {"pmid": "undated", "year": 2025, "mesh": [recent.FERRO]},
+        {"pmid": "dated", "year": 2025, "mesh": [recent.FERRO]},
+        {"pmid": "new", "year": 2025, "mesh": ["Other"]},
+        {"pmid": "new", "year": 2025, "mesh": [recent.FERRO]},
+    ])
+    collected = recent.collect()
+    assert collected["census_total"] == collected["new_total"] == 1
+    assert collected["unindexed_total"] == 2
+    assert collected["new_desc"] == {"Other": 1}
+    assert collected["ferro_year_new"] == {}
+    assert collected["resolved_unindexed"] == {2023: 1}
+    assert collected["resolved_unindexed_total"] == 2
+    summary = recent.indexing(collected)
+    assert summary["resolved_total"] == 2
+    assert summary["resolved_share_pct"] == 100
+
+
+@pytest.mark.parametrize("stream,field,prose", [
+    ("records", "ferroptosis_undated_before", "baseline: **1**"),
+    ("records_updates", "ferroptosis_undated_new", "new in this window: **1**"),
+])
+def test_undated_ferroptosis_matches_are_reported_separately_from_dated_counts(
+        isolated_recent, stream, field, prose):
+    root, md, stored = isolated_recent
+    write_records(root, stream, [{
+        "pmid": "undated-ferroptosis", "year": None,
+        "mesh": [recent.FERRO, "Ultrasonic Therapy"],
+    }], name="99-undated.jsonl.gz")
+    recent.main([])
+    summary = strict_json(stored)["legs"]
+    assert summary[field] == 1
+    assert summary["gain_total"] == 0
+    assert summary["ferroptosis_all_years_before"] == 0
+    assert "unknown publication year" in md.read_text()
+    assert prose in md.read_text()
+    assert "all dated years" in md.read_text()
+    assert "**0 dated ferroptosis-indexed articles**" in md.read_text()
+
+
+@pytest.mark.parametrize("offline", [False, True])
+@pytest.mark.parametrize("stage", ["serialization", "render"])
+def test_preparation_failures_preserve_both_reports(isolated_recent, monkeypatch, offline, stage):
+    _, _, stored = isolated_recent
+    if offline:
+        stored.write_text(JSON_OUT.read_text())
+        monkeypatch.setattr(recent, "collect", lambda: pytest.fail("offline replay read raw records"))
+    before = published_bytes(isolated_recent)
+
+    def fail(*args, **kwargs):
+        raise ValueError("synthetic preparation failure")
+
+    monkeypatch.setattr(recent.json if stage == "serialization" else recent,
+                        "dumps" if stage == "serialization" else "render", fail)
+    with pytest.raises(ValueError, match="synthetic preparation failure"):
+        recent.main(["--render-only"] if offline else [])
+    assert published_bytes(isolated_recent) == before
+
+
+def test_offline_replay_preserves_historical_json_bytes_and_render(isolated_recent, monkeypatch, capsys):
+    _, md, stored = isolated_recent
+    expected = JSON_OUT.read_bytes()
+    stored.write_bytes(expected)
+    monkeypatch.setattr(recent, "collect", lambda: pytest.fail("offline replay read raw records"))
+    recent.main(["--render-only"])
+    assert stored.read_bytes() == expected
+    assert md.read_bytes() == MD.read_bytes()
+    output = capsys.readouterr().out
+    assert f"wrote {md}" in output
+    assert f"wrote {stored}" not in output
+
+
+def test_nonfinite_offline_summary_preserves_both_reports(isolated_recent):
+    _, _, stored = isolated_recent
+    data = _doc()
+    data["composition"]["lcb_floor"] = float("inf")
+    stored.write_text(json.dumps(data))
+    before = published_bytes(isolated_recent)
+    with pytest.raises(ValueError, match="JSON compliant"):
+        recent.main(["--render-only"])
+    assert published_bytes(isolated_recent) == before
+
+
+def test_sparse_replay_does_not_turn_unretained_undated_counts_into_zeros(
+        isolated_recent, monkeypatch):
+    _, md, stored = isolated_recent
+    recent.main([])
+    legacy = strict_json(stored)
+    del legacy["legs"]["ferroptosis_undated_before"]
+    del legacy["legs"]["ferroptosis_undated_new"]
+    stored.write_text(json.dumps(legacy, indent=4) + "\n")
+    before = stored.read_bytes()
+    monkeypatch.setattr(recent, "collect", lambda: pytest.fail("offline replay read raw records"))
+    recent.main(["--render-only"])
+    assert stored.read_bytes() == before
+    rendered = md.read_text()
+    assert "baseline: **not retained**" in rendered
+    assert "new in this window: **not retained**" in rendered
+    assert "baseline: **0**" not in rendered
+    assert "new in this window: **0**" not in rendered

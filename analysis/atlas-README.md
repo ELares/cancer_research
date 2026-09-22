@@ -503,6 +503,22 @@ checks the subject total and descriptor counts before using recall evidence.
 These count checks detect inconsistent populations; matching aggregates alone
 cannot establish that the underlying article sets are identical.
 
+Two further atlas reports use the same input checks with their own sampling
+and stream definitions:
+
+| Report | Input and zero-result behavior |
+|---|---|
+| `atlas_recent_window.py` | Requires readable indexed, unindexed and update streams under `FERRO_ATLAS_ROOT`, and keeps them separate. Updates already in either baseline are revisions, not new articles. A readable update stream with no new articles or no qualifying rising descriptors is valid; missing streams, malformed records or a baseline with no dated articles cannot support the analysis. Empty comparison sets do not establish a trend. |
+| `atlas_taxonomy_reach.py` | Reads only indexed `records/`. `--sample-every N` selects every Nth record across sorted shards, retaining the global record counter; it does not select every Nth shard. The full MeSH scan still runs when the population is shorter than the sampling interval. Zero measured hits remain zero, while an empty sample or absent production measurement is unavailable. The profiled remainder consists of articles unmatched by the raw keyword loop, which differs from the production matcher. |
+
+Both validate the inputs used by their calculations and prepare strict JSON
+and Markdown before replacing either report. Their `--render-only` paths use
+retained summaries without opening raw streams or rewriting historical JSON;
+they do not reconstruct a census from those summaries.
+Recent-window indexing totals include resolved articles whose original year
+is unknown. Dated cohort and ferroptosis comparisons keep their year-based
+populations; fresh scans report undated ferroptosis observations separately.
+
 To rebuild report prose from committed counts without downloading the census:
 
 ```bash
@@ -515,12 +531,14 @@ python scripts/census_evidence_design.py --render-only
 python scripts/census_oa_bias.py --render-only
 python scripts/atlas_site_coverage.py --render-only
 python scripts/atlas_descriptor_recall.py --render-only
+python scripts/atlas_recent_window.py --render-only
+python scripts/atlas_taxonomy_reach.py --render-only
 ```
 
-All nineteen reports support the same option. Output preparation finishes
+All twenty-one reports support the same option. Output preparation finishes
 before writing, so parser and rendering errors preserve the existing artifacts.
-The atlas pair rebuilds Markdown without rewriting historical JSON or the site
-map. Sequential filesystem writes are not an atomic transaction against disk
+The four atlas reports rebuild Markdown without rewriting historical JSON or
+the site map. Sequential filesystem writes are not an atomic transaction against disk
 failures or process interruption.
 
 For the two direction reports, `--render-only` renders the stored JSON without

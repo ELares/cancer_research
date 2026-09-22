@@ -75,7 +75,7 @@ not require another simulation mechanism or a larger unmeasured corpus.
    checks cannot establish complete within-region distributions or precise tails;
    agreeing biological runs cannot rule out a shared unseen region.
 
-2. **Census input protection covers seventeen census and two atlas analysis entry points.**
+2. **Census input protection covers seventeen census and four atlas analysis entry points.**
    The shared [streaming helper](../scripts/census_input.py) honors
    `FERRO_ATLAS_ROOT`, validates shard stride, and rejects missing or empty
    inputs before replacing reports. Valid records with zero scientific matches
@@ -129,6 +129,18 @@ not require another simulation mechanism or a larger unmeasured corpus.
    Offline rendering preserves both historical numerical snapshots and the
    committed site map. These changes protect reporting; they add no new census
    observations or biological adjudications.
+   Recent-window and taxonomy-reach now protect both report files against
+   input and preparation failures. The recent-window report requires its three
+   separate streams and accepts readable updates with no new articles or
+   qualifying descriptor rises. Indexing-resolution totals include articles
+   with unknown publication years; undated ferroptosis observations are shown
+   separately from dated trend and leg counts. Taxonomy reach preserves every-Nth-record
+   sampling and its full indexed MeSH count; a zero production hit count is
+   reported as zero, while an empty sample is unavailable. Its remainder is
+   explicitly the raw-keyword-unmatched cohort, not the production complement.
+   Both honor the external census root and render retained summaries offline
+   without changing historical JSON. Neither silently merges new observations
+   into the published baseline.
    Population manifests require valid counts and a consistent C04 total. The
    manuscript comparison rejects recall evidence whose subject population or
    descriptor counts differ from its own. Aggregate agreement remains a
