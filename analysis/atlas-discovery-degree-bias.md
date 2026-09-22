@@ -32,9 +32,9 @@ construction, because popularity IS degree.
 
 ## What it says
 
-**The correction is real and it is large.** ABC sits at 2.5x against popularity's 7.4x, reproducing only 24% of the
-selectivity of ranking by degree itself. Jaccard normalises so hard it
-lands BELOW the pool average in this snapshot.
+**Measured degree selectivity.** ABC's median L is 2.51x, below popularity's 7.36x.
+ABC retains 24% of popularity's excess selectivity above the degree-neutral value of 1.
+Jaccard's median L is 0.09x, below the degree-neutral value of 1 in this snapshot.
 
 **Observed selectivity and precision.** The original evaluation already suspected this
 association from the formulas' intended corrections. This table measures selection
@@ -50,11 +50,12 @@ on the retained graph, alongside each method's future-assertion precision:
 | random | 0.9x | 3.0% |
 | jaccard | 0.1x | 3.8% |
 
-Rank correlation between L and precision is **0.96** over all
-7 methods and **1.00** over the 6 that carry any signal.
-The exception is `random`, which is degree-neutral by construction rather
-than by correction and has nothing to rank with; it is the one point where
-a low L does not mean the method corrected for degree.
+Rank correlation between L and precision is **0.96** over 7 methods with both measurements, and **1.00** over 6 methods excluding random.
+
+The observed median L for `random` is 0.91x. Uniform sampling
+within each candidate pool has expected mean L = 1; individual samples
+and their median across seeds need not equal 1. Its observed location
+does not imply a degree correction in the random ranking.
 
 **Scope of the ordering.** These methods cover different degrees of hub
 selection in this snapshot. Their observed association with precision
@@ -82,10 +83,11 @@ identifiable from this corpus at any sample size, because every available
 exposure measure is either the outcome measured through the same extractor
 or is the treatment itself.
 
-**And it is six points.** The rank correlation is over six methods, not six
-hundred. It is a near-perfect ordering rather than a well-powered estimate,
-and it would be worth little if the ordering were not this clean or if the
-methods were not spread across the whole range from 0.1x to 7.4x.
+**A small comparison of methods.** These correlations summarize only
+7 method-level measurements (6 excluding random).
+The methods share seeds, a graph and candidate pools. Their association
+is descriptive; it is not an independent-sample significance test or
+evidence of a causal effect of degree selectivity.
 
 Computed over 200 seeds at split 2018.
 

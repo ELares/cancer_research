@@ -297,7 +297,17 @@ def _assemble_split(raw):
             count = _integer(row.get(method), f"{method} hits for {sid!r}")
             if count > selected:
                 raise ValueError(f"{method} hits for {sid!r} exceed {selected} predictions")
+            if count > metadata["pairs_after"]:
+                raise ValueError(f"{method} hits for {sid!r} exceed the number "
+                                 "of observed post-split pairs")
             copied[method] = count
+        # Rankings select equally sized subsets of the same pool. Their hit
+        # counts can differ only through candidates omitted by another ranking;
+        # selecting the entire pool therefore requires identical hit counts.
+        counts = [copied[method] for method in METHODS]
+        if max(counts) - min(counts) > candidates - selected:
+            raise ValueError(f"ranking hit counts for {sid!r} are incompatible "
+                             "with the shared candidate pool")
         per_seed.append(copied)
 
     hits = {m: sum(r[m] for r in per_seed) for m in METHODS}

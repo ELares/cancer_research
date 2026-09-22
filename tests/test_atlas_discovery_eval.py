@@ -124,16 +124,44 @@ def test_stale_derived_fields_cannot_change_comparisons_and_raw_is_not_mutated()
 
 
 def test_short_candidate_pools_use_actual_predictions_in_precision():
-    source = raw([seed("short", 2, 1, candidates=2),
-                  seed("long", 3, 4, candidates=8)])
+    short = seed("short", 2, 2, candidates=2)
+    short.update(dict.fromkeys(METHODS, 2))
+    source = raw([short, seed("long", 3, 4, candidates=10)])
     result = evaluation.assemble(source)["headline"]
     assert result["seeds_evaluated"] == 2
     assert result["predictions"] == dict.fromkeys(METHODS, 7)
-    assert result["hits"]["abc"] == result["hits"]["popularity"] == 5
+    assert result["hits"]["abc"] == 5
+    assert result["hits"]["popularity"] == 6
     assert result["precision"]["abc"] == pytest.approx(5 / 7)
-    assert result["paired"]["mean_diff"] == 0
-    assert result["paired"]["ci95"] == [-1, 1]
-    assert result["paired"]["abc_ahead"] == result["paired"]["abc_behind"] == 1
+    assert result["paired"]["mean_diff"] == -0.5
+    assert result["paired"]["ci95"] == [-1, 0]
+    assert result["paired"]["abc_ahead"] == 0
+    assert result["paired"]["abc_behind"] == 1
+
+
+@pytest.mark.parametrize("candidates,abc,popularity", [
+    (2, 2, 1), (5, 3, 2), (6, 3, 1), (8, 5, 1),
+], ids=["short-pool", "exact-full-pool", "one-omitted", "three-omitted"])
+def test_shared_pool_rejects_impossible_differences_between_ranking_hits(
+        candidates, abc, popularity):
+    row = seed("a", abc, popularity, candidates=candidates)
+    row.update(dict.fromkeys(METHODS, popularity))
+    row["abc"] = abc
+    with pytest.raises(ValueError, match="shared candidate pool"):
+        evaluation.assemble(raw([row]))
+
+
+@pytest.mark.parametrize("candidates,abc,popularity", [
+    (2, 1, 1), (5, 3, 3), (6, 3, 2), (8, 4, 1),
+], ids=["short-pool", "exact-full-pool", "one-omitted", "three-omitted"])
+def test_shared_pool_accepts_realisable_ranking_hit_counts(
+        candidates, abc, popularity):
+    row = seed("a", abc, popularity, candidates=candidates)
+    row.update(dict.fromkeys(METHODS, popularity))
+    row["abc"] = abc
+    result = evaluation.assemble(raw([row]))["headline"]
+    assert result["hits"]["abc"] == abc
+    assert result["hits"]["popularity"] == popularity
 
 
 def test_evaluate_preserves_pre_split_ranking_sampling_and_paired_results():
@@ -291,6 +319,25 @@ def test_a_hit_count_cannot_exceed_a_short_candidate_pool():
         evaluation.assemble(source)
 
 
+@pytest.mark.parametrize("pairs_after,method,hits", [
+    (0, "abc", 1), (1, "random", 2),
+], ids=["no-observed-future-pairs", "more-hits-than-future-pairs"])
+def test_seed_hits_cannot_exceed_observed_post_split_pairs(pairs_after, method, hits):
+    source = raw([seed("a", 0, 0)])
+    source["headline"]["pairs_after"] = pairs_after
+    source["headline"]["per_seed"][0][method] = hits
+    with pytest.raises(ValueError, match="observed post-split pairs"):
+        evaluation.assemble(source)
+
+
+@pytest.mark.parametrize("pairs_after", [0, 2], ids=["no-future-pairs", "all-future-pairs-hit"])
+def test_seed_can_hit_every_observed_post_split_pair(pairs_after):
+    source = raw([seed("a", pairs_after, 0)])
+    source["headline"]["pairs_after"] = pairs_after
+    result = evaluation.assemble(source)["headline"]
+    assert result["hits"]["abc"] == pairs_after
+
+
 @pytest.mark.parametrize("missing", METHODS)
 def test_missing_ranking_counts_are_not_interpreted_as_zero(missing):
     source = raw()
@@ -326,7 +373,8 @@ def test_render_only_is_offline_and_preserves_historical_json_format(outputs, mo
     assert "8765" not in md.read_text()
 
 
-@pytest.mark.parametrize("problem", ["bad-json", "bad-count", "empty-seeds"])
+@pytest.mark.parametrize("problem", ["bad-json", "bad-count", "empty-seeds", "impossible-pool",
+                                     "insufficient-future-pairs"])
 def test_invalid_offline_input_preserves_both_reports(outputs, monkeypatch, problem):
     _, stored = outputs
     source = raw()
@@ -334,6 +382,12 @@ def test_invalid_offline_input_preserves_both_reports(outputs, monkeypatch, prob
         source["headline"]["per_seed"][0]["abc"] = 6
     elif problem == "empty-seeds":
         source["headline"]["per_seed"] = []
+    elif problem == "impossible-pool":
+        row = source["headline"]["per_seed"][0]
+        row.update(candidates=2, **dict.fromkeys(METHODS, 0))
+        row["abc"] = 2
+    elif problem == "insufficient-future-pairs":
+        source["headline"]["pairs_after"] = 0
     stored.write_text("{broken" if problem == "bad-json" else json.dumps(source))
     before = tuple(path.read_bytes() for path in outputs)
     forbid_readers(monkeypatch)
@@ -365,7 +419,8 @@ def test_preparation_failures_preserve_both_reports(
     assert_preserved(outputs, before)
 
 
-@pytest.mark.parametrize("problem", ["no-years", "no-seeds", "invalid-count"])
+@pytest.mark.parametrize("problem", ["no-years", "no-seeds", "invalid-count",
+                                     "insufficient-future-pairs"])
 def test_invalid_fresh_inputs_preserve_both_reports(
         outputs, monkeypatch, tmp_path, problem):
     synthetic_scan(monkeypatch, tmp_path)
@@ -375,7 +430,10 @@ def test_invalid_fresh_inputs_preserve_both_reports(
         monkeypatch.setattr(evaluation, "evaluate", lambda *args, **kwargs: None)
     else:
         source = raw()
-        source["headline"]["per_seed"][0]["abc"] = -1
+        if problem == "invalid-count":
+            source["headline"]["per_seed"][0]["abc"] = -1
+        else:
+            source["headline"]["pairs_after"] = 0
         synthetic_scan(monkeypatch, tmp_path, source)
     before = tuple(path.read_bytes() for path in outputs)
     assert evaluation.main(["--also-years"]) != 0
