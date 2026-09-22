@@ -89,6 +89,13 @@ REGISTRY = {
         "selects records/ only, preserving the MeSH and publication-type "
         "denominators declared by its callers. Input availability checks must "
         "not silently add recovered or update streams to published analyses."),
+    "census_snapshot.py": (
+        {"records"},
+        "Verifies the complete indexed baseline against its acquisition "
+        "manifest for direction review. The descriptor intersections require "
+        "indexed MeSH records, including the baseline's C04 and adjacent "
+        "population. Recovered and update streams are separate acquisitions; "
+        "merging them would change the declared review denominator."),
     "corpus_identity_index.py": (
         {"records", "records_unindexed", "records_updates"},
         "Deliberately ALL THREE, and this is the one script where the frozen "
