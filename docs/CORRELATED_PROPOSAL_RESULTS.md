@@ -80,7 +80,7 @@ and obtaining raw experimental replicates remain [separate requirements](INDEPEN
 
 ## Reproduce
 
-    python scripts/proposal_correlated_study.py --render-only
+    python scripts/run_correlated_study.py --render-only
 
 This verifies source and archive hashes, rebuilds proposals from the archived
 pilot endpoints, replays all production draws and recomputes every assessment.
@@ -88,3 +88,21 @@ Controls are regenerated from their declared seeds. The twelve compressed
 archives retain complete learned attempts; intermediate pilot trajectories
 are not independently replayed. The report and protocol state the offline commit-metadata
 and floating-point limits. Historical sources and studies retain their hashes.
+
+For a partial study, use the maintained entry point:
+
+    python scripts/run_correlated_study.py --resume
+
+Before generating any missing run, it validates the complete existing archive
+inventory, replays each existing record, and checks that their runtime and
+implementation provenance agree. An incomplete study also requires the current
+Python, NumPy, SciPy, bit generator and implementation commit to match those
+records. A mismatch stops before any new run is started; retain the archives
+and restore their recorded environment to resume. A complete set can be replayed
+under another supported runtime without generating new study runs.
+
+The same entry point without flags starts a study only when no planned archives
+already exist. The original `proposal_correlated_study.py` remains unchanged as
+part of the frozen numerical implementation. Use the maintained entry point for
+new or resumed work; this operational safeguard does not revise the completed
+experiment or its failed overall outcome.
