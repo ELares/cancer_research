@@ -11,6 +11,36 @@ import pytest
 ROOT = Path(__file__).resolve().parents[1]
 
 
+def report_with_recall_counts(data):
+    """A manuscript comparison over the same synthetic descriptor cohort."""
+    report = json.loads((ROOT / "analysis/manuscript-vs-census.json").read_text())
+    report["ferroptosis_records"] = data["subject_articles"]
+    table = report["modality_table"]
+    for row in table["rows"]:
+        if row["modality"] in data["arms"]:
+            row["census_ferroptosis"] = data["arms"][row["modality"]]["descriptor"]
+    pdt, sdt = (data["arms"][arm]["descriptor"] for arm in ("PDT", "SDT"))
+    ratio = pdt / sdt if sdt else None
+    measurable = min(pdt, sdt) >= table["min_for_a_ratio"]
+    table.update(census_pdt_sdt_ratio=ratio, ratio_is_measurable=measurable,
+                 census_exceeds_manuscript=bool(measurable and ratio > 2.93),
+                 direction_holds=bool(measurable and ratio > 1))
+    for variant in table["descriptor_variants"]:
+        variant.update(pdt=pdt, sdt=sdt, ratio=ratio)
+    table.update(ratio_range=[ratio, ratio],
+                 direction_holds_under_every_variant=bool(ratio and ratio > 1),
+                 understatement_holds_under_every_variant=bool(ratio and ratio > 2.93))
+    pdt_both, sdt_both = (data["arms"][arm]["both"] for arm in ("PDT", "SDT"))
+    pdt_pct = round(100 * pdt_both / pdt, 1) if pdt else 0
+    sdt_pct = round(100 * sdt_both / sdt, 1) if sdt else 0
+    gap = round(abs(pdt_pct - sdt_pct), 1)
+    table["on_modality_and_tumour"].update(
+        pdt_n=pdt_both, sdt_n=sdt_both, pdt_pct=pdt_pct, sdt_pct=sdt_pct,
+        gap_points=gap, symmetric_within_5_points=gap <= 5,
+        filtered_ratio=pdt_both / sdt_both if sdt_both else None)
+    return report
+
+
 @pytest.fixture
 def consumer(tmp_path, monkeypatch):
     spec = importlib.util.spec_from_file_location(
@@ -50,17 +80,15 @@ def consumer(tmp_path, monkeypatch):
 def test_interval_direction_controls_all_recall_consuming_prose(
         consumer, text_pdt, relation, phrase, descriptor_ratio):
     module, _path, write = consumer
-    write({"PDT": (text_pdt, 500, min(text_pdt, 400)),
-           "SDT": (100, 100, 80)})
+    pdt_descriptor = int(descriptor_ratio * 100)
+    data = write({"PDT": (text_pdt, pdt_descriptor,
+                          min(text_pdt, pdt_descriptor)),
+                  "SDT": (100, 100, 80)})
     checked = module._recall_check()
     assert checked["symmetric_ratio"] == text_pdt / 100
     assert checked["interval_relation"] == relation
     assert checked["symmetric_agrees"] == (relation == "above")
-    report = json.loads((ROOT / "analysis/manuscript-vs-census.json").read_text())
-    report["modality_table"].update(
-        census_pdt_sdt_ratio=descriptor_ratio,
-        census_exceeds_manuscript=descriptor_ratio > 2.93,
-        direction_holds=descriptor_ratio > 1)
+    report = report_with_recall_counts(data)
     rendered = module.render(report).lower()
     assert phrase in module._recall_caveat().lower()
     assert phrase in rendered
@@ -129,8 +157,28 @@ def test_required_recall_evidence_fails_closed(consumer):
         module._recall_check()
 
 
-def test_missing_required_recall_preserves_existing_output_pair(consumer, monkeypatch):
-    module, path, _write = consumer
+@pytest.mark.parametrize("mismatch", ["subject_articles", "PDT", "SDT"])
+def test_recall_from_a_different_census_cannot_restore_understatement(consumer, mismatch):
+    module, path, write = consumer
+    data = write({"PDT": (600, 600, 600), "SDT": (100, 100, 100)})
+    report = report_with_recall_counts(data)
+    assert "supports understatement" in module._headline(report)
+    if mismatch == "subject_articles":
+        data[mismatch] += 1
+    else:
+        # The same subject total does not excuse different descriptor margins.
+        data["arms"][mismatch]["descriptor"] += 1
+    path.write_text(json.dumps(data))
+    with pytest.raises(SystemExit, match="census counts"):
+        module._headline(report)
+    with pytest.raises(SystemExit, match="census counts"):
+        module.render(report)
+
+
+@pytest.mark.parametrize("evidence", ["missing", "subject_articles", "PDT", "SDT"])
+def test_unusable_required_recall_preserves_existing_output_pair(
+        consumer, monkeypatch, evidence):
+    module, path, write = consumer
     records = path.parent / "records"
     records.mkdir()
     with gzip.open(records / "fixture.jsonl.gz", "wt") as stream:
@@ -141,12 +189,19 @@ def test_missing_required_recall_preserves_existing_output_pair(consumer, monkey
     monkeypatch.setattr(module, "RECORDS", records)
     measured = module.scan()
     monkeypatch.setattr(module, "scan", lambda: measured)
+    if evidence != "missing":
+        data = write({"PDT": (1, 1, 1), "SDT": (1, 1, 1)})
+        data["subject_articles"] = 2 if evidence == "subject_articles" else 1
+        if evidence in {"PDT", "SDT"}:
+            data["arms"][evidence].update(descriptor=0, both=0)
+        path.write_text(json.dumps(data))
     outputs = [path.parent / "prior.json", path.parent / "prior.md"]
     monkeypatch.setattr(module, "OUT_JSON", outputs[0])
     monkeypatch.setattr(module, "OUT_MD", outputs[1])
     for output in outputs:
         output.write_bytes(b"published result sentinel\n")
-    with pytest.raises(SystemExit, match="missing"):
+    with pytest.raises(SystemExit, match="missing" if evidence == "missing"
+                       else "census counts"):
         module.main()
     assert all(output.read_bytes() == b"published result sentinel\n"
                for output in outputs)

@@ -274,3 +274,64 @@ def test_render_only_needs_no_raw_input_or_taxonomy(scanner, monkeypatch, failur
         assert module.OUT_MD.read_bytes() != before["OUT_MD"]
         assert module.OUT_JSON.read_bytes() == original
         assert module.OUT_MAP.read_bytes() == before["OUT_MAP"]
+
+
+@pytest.mark.parametrize('manifest', [
+    {}, {'files': []}, {'files': {'fixture': {}}},
+    {'files': {'fixture': {'cancer_text': -1}}},
+    {'files': {'fixture': {'cancer_text': True}}},
+    {'files': {'fixture': {'cancer_text': 0.5}}},
+])
+def test_invalid_manifest_population_preserves_all_outputs(scanner, manifest):
+    _write_shard(scanner.records / 'a.jsonl.gz', [LUNG, GENERIC])
+    (scanner.root / 'unindexed-manifest.json').write_text(json.dumps(manifest))
+    with pytest.raises(ValueError, match='manifest'):
+        scanner.module.main()
+    assert _snapshot(scanner.module) == SENTINELS
+
+
+def test_core_manifest_must_match_the_scanned_population(scanner):
+    _write_shard(scanner.records / 'a.jsonl.gz', [LUNG, LUNG, {'mesh': []}])
+    (scanner.root / 'manifest-c04only.json').write_text(
+        json.dumps({'files': {'fixture': {'cancer': 1}}}))
+    with pytest.raises(ValueError, match='C04'):
+        scanner.module.main()
+    assert _snapshot(scanner.module) == SENTINELS
+
+
+def test_valid_zero_manifest_populations_are_not_missing_inputs(scanner):
+    _write_shard(scanner.records / 'a.jsonl.gz', [{'mesh': []}])
+    (scanner.root / 'unindexed-manifest.json').write_text(
+        json.dumps({'files': {'fixture': {'cancer_text': 0}}}))
+    (scanner.root / 'manifest-c04only.json').write_text(json.dumps({'files': {}}))
+    scanner.module.main()
+    result = json.loads(scanner.module.OUT_JSON.read_text())
+    assert result['excluded_streams'] == {'text_matched_no_mesh': 0, 'c04_core': 0}
+
+
+@pytest.mark.parametrize('excluded', [
+    {'text_matched_no_mesh': -1}, {'text_matched_no_mesh': True},
+    {'c04_core': 1},
+])
+def test_offline_impossible_population_preserves_all_outputs(scanner, monkeypatch, excluded):
+    module = scanner.module
+    raw = json.loads((REPO / 'analysis/atlas-site-coverage.json').read_text())
+    raw['excluded_streams'] = excluded
+    module.OUT_JSON.write_text(json.dumps(raw))
+    before = _snapshot(module)
+    monkeypatch.setattr(sys, 'argv', ['atlas_site_coverage.py', '--render-only'])
+    with pytest.raises(ValueError):
+        module.main()
+    assert _snapshot(module) == before
+
+
+def test_generic_descriptor_does_not_imply_site_free_literature(scanner):
+    _write_shard(scanner.records / 'a.jsonl.gz', [
+        {'mesh': ['Neoplasms', 'Bone Neoplasms']}, {'mesh': None},
+    ])
+    scanner.module.main()
+    md = scanner.module.OUT_MD.read_text()
+    assert 'no record here can lack MeSH' not in md
+    assert 'Custom inputs may contain records without MeSH' in md
+    assert 'They may also name sites outside this list' in md
+    assert 'is the reading the original sentence described' not in md

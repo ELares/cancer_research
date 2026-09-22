@@ -170,12 +170,15 @@ def _matched_denominator():
     return d
 
 
-def _recall_check():
+def _recall_check(census=None):
     """Reconstruct the sibling measurement from its stored counts, offline.
 
     Missing, unreadable or invalid evidence stops rendering. Valid counts with
     an unavailable ratio remain explicitly unavailable; they cannot restore an
     understatement verdict. Stored intervals and decision flags are not reused.
+    A consuming report must share the subject total and descriptor marginals.
+    Matching these counts is necessary, but cannot establish cohort identity:
+    the historical artifacts do not retain record-level fingerprints.
     """
     path = PROJECT_ROOT / "analysis" / "atlas-descriptor-recall.json"
     if not path.exists():
@@ -217,6 +220,17 @@ def _recall_check():
     if mr != expected_ratio:
         raise SystemExit("The descriptor-recall artifact uses a different "
                          "manuscript comparison ratio from Section 8.2.")
+    if census is not None:
+        census_counts = {row["modality"]: row["census_ferroptosis"]
+                         for row in census["modality_table"]["rows"]}
+        if (d["subject_articles"] != census["ferroptosis_records"] or
+                any(d["arms"][arm]["descriptor"] != census_counts[arm]
+                    for arm in expected_descriptors)):
+            raise SystemExit(
+                "The descriptor-recall artifact does not match this manuscript "
+                "comparison's census counts (subject total or PDT/SDT "
+                "descriptor totals differ). Regenerate both reports from the "
+                "same census before applying the Section 8.2 qualification.")
     arms = d.get("arms") or {}
     # THE VERDICT RIDES THE INTERVAL, NOT THE POINT ESTIMATE. An earlier
     # version used `tr > mr`, a bare threshold: a reviewer flipped the
@@ -231,11 +245,7 @@ def _recall_check():
                 "below" if ci[1] < mr else "overlaps")
     return {"symmetric_ratio": tr, "manuscript_ratio": mr,
             "symmetric_ratio_ci": ci,
-            # BUILD FINGERPRINT. Both artifacts count the same ferroptosis
-            # subset, and nothing compared them -- so a recall measurement
-            # from a different census build could qualify this document's
-            # verdict unnoticed. The repo already learned this from
-            # comention_regression's `pairs_before`.
+            # A count cross-check, not a record-level cohort fingerprint.
             "subject_articles": d.get("subject_articles"),
             "symmetric_agrees": relation == "above",
             "interval_relation": relation,
@@ -574,7 +584,7 @@ def _headline(r: dict) -> str:
     # "understated" is a statement about indexing practice unless the
     # symmetric measurement agrees, and the decision is made by the data
     # rather than by a threshold invented here.
-    rec = _recall_check()
+    rec = _recall_check(r)
     if not mt["ratio_is_measurable"]:
         undecided.append("section 8.2 cannot be decided at census scale")
     elif rec["symmetric_agrees"]:
@@ -650,7 +660,7 @@ def render(r: dict) -> str:
         L += [f"On the census it is **{m['census_pdt_sdt_ratio']}:1** "
               f"({pdt['census_ferroptosis']} against {sdt['census_ferroptosis']}).",
               ""]
-        rec_here = _recall_check()
+        rec_here = _recall_check(r)
         descriptor_comparison = ("larger than" if m['census_pdt_sdt_ratio'] >
                                  m['manuscript_pdt_sdt_ratio'] else
                                  "smaller than" if m['census_pdt_sdt_ratio'] <

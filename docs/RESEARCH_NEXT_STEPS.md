@@ -129,6 +129,10 @@ not require another simulation mechanism or a larger unmeasured corpus.
    Offline rendering preserves both historical numerical snapshots and the
    committed site map. These changes protect reporting; they add no new census
    observations or biological adjudications.
+   Population manifests require valid counts and a consistent C04 total. The
+   manuscript comparison rejects recall evidence whose subject population or
+   descriptor counts differ from its own. Aggregate agreement remains a
+   necessary check, not a fingerprint of the underlying article identities.
    **Baseline verification and review preparation completed:** the
    [readiness report](../analysis/census-direction-review.md) reconciles all
    4,403,994 indexed records across 1,334 shards against the local acquisition

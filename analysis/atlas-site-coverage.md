@@ -10,7 +10,7 @@
 
 ## What is not in this denominator
 
-An earlier version of this table carried a row reading `carry no MeSH at all | 0 | 0.0%`. THAT ROW COULD NOT HAVE BEEN ANYTHING ELSE: `atlas_baseline.py` admits a record to this stream only when a MeSH DescriptorName matches, so no record here can lack MeSH. It measured the admission rule and read as a property of the literature. What is actually excluded is this:
+The standard `atlas_baseline.py` acquisition admits indexed records through matching MeSH descriptors. A zero count of records without MeSH in that acquisition reflects its admission rule, not a property of all cancer literature. Custom inputs may contain records without MeSH; this report retains them in the no-C04 group. Available population information follows:
 
 * **783,271 MeSH-less cancer articles** sit in a second census stream, `corpus/atlas/records_unindexed/`, recovered by text match and carrying no descriptors at all. They are excluded by choice and cannot be assigned by any descriptor list. Over both streams assignability is 2,546,944 / 5,187,265 = **49.1%**, not 57.8%.
 * **200,758 articles (4.6% of this stream)** carry NO C04 descriptor. Every site string is a C04 descriptor, so these are unassignable by construction. Over the C04 core alone (4,203,236 articles) assignability is **60.6%**.
@@ -80,12 +80,12 @@ Across 18 major sites, on the shallow list:
 An earlier version of this page said the remainder "is not a failure of the census: much cancer literature is about biology, methods or cancer in general rather than a site". That was narrated rather than measured. Of the 1,857,050 unassigned:
 
 * **405,299 (21.8%)** are the SAME 18 sites, named by a descriptor beneath the shallow list's own tree nodes.
-* 476,436 (25.7%) carry the generic `Neoplasms` descriptor, which is the reading the sentence describes.
+* 476,436 (25.7%) carry the generic `Neoplasms` descriptor. They may also name sites outside this list; this label does not establish that an article concerns cancer in general rather than a site.
 * 200,758 (10.8%) carry no C04 descriptor at all and could not be assigned by any list of C04 strings.
 * the residue's commonest descriptors, excluding check-tags and study-design terms: `diagnosis, differential` 52,435, `bone neoplasms` 45,186, `tomography, x-ray computed` 42,836, `multiple myeloma` 42,185, `magnetic resonance imaging` 35,384, `cysts` 31,823. An earlier version pointed at a descriptor list accumulated over ALL unassigned records, which included the generic-`Neoplasms` and no-C04 buckets the same sentence had just excluded. These descriptor counts alone do not establish how much of the residue is cancer at a site this list does not cover.
 * the remaining 774,557 (41.7%) is none of those three, and is the largest single bucket.
 
-So the honest version of the original sentence is much narrower: 21.8% of the remainder is a limit of THIS 18-site list rather than of the census, a further 25.7% is the reading the original sentence described, and 41.7% is neither and is not characterised here beyond the descriptors above.
+So the honest version of the original sentence is much narrower: 21.8% of the remainder is a limit of THIS 18-site list rather than of the census, a further 25.7% carries the generic descriptor without establishing article scope, and 41.7% is neither and is not characterised here beyond the descriptors above.
 
 The spread across sites is 63,046 to 375,499 articles, a factor of 6. That spread is the thing a burden ratio would divide into mortality, so it carries directly into every literature-per-death figure -- and the depth note above says how much of it is the list rather than the literature.
 

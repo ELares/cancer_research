@@ -509,6 +509,11 @@ Descriptor recall prepares both reports and derives its conclusions from the
 counts, including equality and reversals. Its approximate intervals account
 for within-arm descriptor/text overlap, but not cross-arm covariance; the text
 rules measure agreement, not independently adjudicated accuracy.
+Optional population manifests must provide nonnegative integer counts, and a
+C04 total must match the scanned C04 population. The manuscript comparison also
+checks the subject total and descriptor counts before using recall evidence.
+These count checks detect inconsistent populations; matching aggregates alone
+cannot establish that the underlying article sets are identical.
 
 To rebuild report prose from committed counts without downloading the census:
 

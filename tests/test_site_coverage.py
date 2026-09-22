@@ -270,7 +270,8 @@ def test_the_dead_no_mesh_row_is_gone_and_the_real_exclusions_are_stated():
     assert "no_mesh" not in d, (
         "the artifact still carries a count that the admission rule fixes at "
         "zero, which reads as a property of the literature")
-    assert "carry no MeSH at all" in md and "COULD NOT HAVE BEEN ANYTHING ELSE" in md
+    assert "reflects its admission rule" in md
+    assert "Custom inputs may contain records without MeSH" in md
     ex = d.get("excluded_streams") or {}
     assert ex.get("text_matched_no_mesh"), (
         "the MeSH-less census stream this denominator excludes is not counted")
