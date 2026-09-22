@@ -54,7 +54,10 @@ All 12 correlated runs passed the accepted-count, ESS, maximum-weight,
 relative-MCSE, mass-accuracy and region-mass screens. A high ESS and accurate
 regional masses still did not guarantee all the selected distributional checks.
 The experiment does not identify whether the remaining errors arose mainly
-from pilot coverage, local covariance fitting or production variation.
+from pilot coverage, local covariance fitting or production variation. An
+[archive-only follow-up](CORRELATED_PROPOSAL_DIAGNOSTICS.md) decomposes the
+observed errors and measures conditional precision and single-draw influence
+without changing any study outcome.
 
 All 12 full-target oracles passed. All 12 deliberately restricted oracles
 passed the usual weight screens but failed truth checks. Their missing support
@@ -67,8 +70,9 @@ on their pilots, despite a finite sample's possible imprecision.
 
 Correlation-aware production improved ESS on the two selected elongated boxes,
 but lowered ESS on the annulus and balls and did not pass the all-run rule.
-The next computational step is to inspect the archived weighted feature errors
-and separately freeze any regularization or mixture revision before evaluating
+The archived weighted feature errors have now been
+[diagnosed descriptively](CORRELATED_PROPOSAL_DIAGNOSTICS.md). Any regularization
+or mixture revision must still be frozen separately before evaluating
 it. All four geometries are now seen development cases; another prospective
 claim requires newly declared evaluation cases. Do not replace seeds, relax
 thresholds or reinterpret this completed benchmark as a pass.

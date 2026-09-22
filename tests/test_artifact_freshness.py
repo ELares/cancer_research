@@ -20,6 +20,8 @@ committed `.json` is what the generator would write, which is how a
 formatting drift was found. The synthetic importance studies permit only
 bounded floating-point differences in recomputed assessment fields across
 platforms; their formatting, raw inputs, decisions and provenance remain exact.
+The archive-only covariance diagnostic has a separate, explicitly named set of
+derived metric paths with the same tolerance; its other fields remain exact.
 Two explicitly pinned historical direction snapshots have a different contract:
 their original adjudications lack the record identities needed to bind them to
 a new cohort. Their JSON must remain unchanged, and their Markdown must render
@@ -214,7 +216,7 @@ LIVE = [g[0] for g in GENERATORS
 # Pinned EXACTLY, not as a floor. A floor with slack lets a generator drop out
 # of the gate silently: at `>= 25` against 26, deleting the marker from one
 # script left the suite green with two parametrised cases quietly gone.
-EXPECTED_GENERATORS = 85
+EXPECTED_GENERATORS = 86
 
 
 def test_the_generator_list_is_discovered_not_listed():
@@ -523,8 +525,50 @@ NUMERICAL_REASSEMBLY = frozenset({
 })
 
 
+DIAGNOSTIC_GENERATOR = "proposal_correlated_diagnostics"
+
+
+def _diagnostic_float_path(path):
+    """Only named derived metrics receive the diagnostic's replay tolerance.
+
+    In particular, being under ``diagnostics`` does not relax a raw input,
+    analytic truth, count, decision, or selected attempt index. This separate
+    schema does not change the four frozen studies' existing comparison rule.
+    """
+    if (len(path) < 5 or path[0] not in {"runs", "pilots"} or
+            type(path[1]) is not int or path[2] != "diagnostics"):
+        return False
+    if path[0] == "runs":
+        if len(path) == 5 and path[3] == "weights":
+            return path[4] in {
+                "ess", "max_normalized_weight", "top_1_weight", "top_5_weight",
+                "top_20_weight",
+            }
+        if path[3] == "features" and isinstance(path[4], str):
+            if len(path) == 6:
+                return path[5] in {
+                    "estimate", "signed_error", "conditional_mcse", "error_over_mcse",
+                }
+            return (len(path) == 7 and path[5] == "single_deletion" and
+                    path[6] in {"signed_change", "absolute_change"})
+        if path[3] == "decomposition":
+            if len(path) == 5:
+                return path[4] in {"total_signed_error", "between_regions", "within_regions"}
+            return (len(path) == 7 and path[4] == "regions" and
+                    isinstance(path[5], str) and path[6] in {
+                        "estimated_mass", "conditional_estimate",
+                        "between_contribution", "within_contribution",
+                    })
+        return False
+    if len(path) == 6 and path[3] == "pooled":
+        return path[4] in {"feature_means", "region_fractions"} and isinstance(path[5], str)
+    return (len(path) == 8 and path[3] == "islands" and type(path[4]) is int and
+            path[5] == "summary" and path[6] in {"feature_means", "region_fractions"} and
+            isinstance(path[7], str))
+
+
 def _assert_reassembled_json(name, produced_text, committed_text):
-    if name not in NUMERICAL_REASSEMBLY:
+    if name not in NUMERICAL_REASSEMBLY and name != DIAGNOSTIC_GENERATOR:
         if produced_text != committed_text:
             raise AssertionError(f"{name}: generated JSON bytes differ from the committed artifact")
         return
@@ -555,9 +599,11 @@ def _assert_reassembled_json(name, produced_text, committed_text):
                 raise AssertionError(f"{label}: JSON list lengths differ")
             for index, (left, right) in enumerate(zip(actual, expected)):
                 check(left, right, (*path, index))
-        elif (isinstance(expected, float) and len(path) >= 4 and
-              path[0] in assessment_branches and
-              isinstance(path[1], int) and path[2] == "assessment"):
+        elif (isinstance(expected, float) and (
+                (name in NUMERICAL_REASSEMBLY and len(path) >= 4 and
+                 path[0] in assessment_branches and
+                 isinstance(path[1], int) and path[2] == "assessment") or
+                (name == DIAGNOSTIC_GENERATOR and _diagnostic_float_path(path)))):
             if (not math.isfinite(actual) or not math.isfinite(expected) or
                     not math.isclose(actual, expected, rel_tol=1e-12, abs_tol=1e-14)):
                 raise AssertionError(f"{label}: derived float differs ({actual!r} versus {expected!r})")

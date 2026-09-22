@@ -58,8 +58,15 @@ not require another simulation mechanism or a larger unmeasured corpus.
    The [results](CORRELATED_PROPOSAL_RESULTS.md) retain all 36 arms and explain
    why higher ESS does not establish complete distributional accuracy.
    The revision remains experimental; no biological sampler was replaced.
-   **Next deliverable:** diagnose the archived weighted feature errors and
-   separately freeze any regularization or mixture revision. All four fixtures
+   **Archive-only diagnostic completed:** the
+   [feature-error analysis](CORRELATED_PROPOSAL_DIAGNOSTICS.md) retains all 36
+   arms and decomposes the two failed features. The annular error is mostly
+   associated with sector-mass imbalance; the shifted-box error lies within
+   octants. Conditional MCSE and single-draw influence do not identify whether
+   pilot fitting or production variation caused the errors. No new draws were
+   made and no benchmark result changed.
+   **Next deliverable:** separately freeze any regularization or mixture
+   revision, including its evaluation design and decision rules. All four fixtures
    are now seen cases, so a further prospective claim needs new declared
    challenges. Preserve every completed study. In parallel, establish the
    model-to-assay mapping and missing independent replicate metadata below.
