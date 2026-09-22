@@ -2,6 +2,8 @@
 //!
 //! Geometry and treatment seeds intentionally reproduce the historical 2D
 //! matrix. They do not use the 3D condition-name hashing scheme.
+//! The separate replicate entry point changes only the initialization seed
+//! and corresponding treatment seeds, retaining the canonical observation mode.
 
 use std::ffi::OsString;
 
@@ -12,6 +14,8 @@ use crate::*;
 
 const GRID_SEED: u64 = 42;
 const TREATMENT_SEED_STRIDE: u64 = 10_000_000;
+const REPLICATE_BLOCKS: u32 = 20;
+const REPLICATE_SEED_STRIDE: u64 = 1_u64 << 32;
 const ARMS: [(Treatment, &str); 3] = [
     (Treatment::Control, "Control"),
     (Treatment::RSL3, "RSL3"),
@@ -29,9 +33,37 @@ pub(super) fn validate_args(args: &[String], ferro_env: &[OsString]) {
     );
 }
 
-fn condition_seed(tx: Treatment) -> u64 {
+pub(super) fn replicate_requested(args: &[String]) -> bool {
+    args.iter().any(|arg| arg.starts_with("--immune-replicate"))
+}
+
+pub(super) fn validate_replicate_args(args: &[String], ferro_env: &[OsString]) -> u32 {
+    assert!(
+        args.len() == 3 && args[1] == "--immune-replicate",
+        "use --immune-replicate <block_id>; extra or mixed mode arguments are unsupported"
+    );
+    assert!(
+        ferro_env.is_empty(),
+        "--immune-replicate requires every FERRO_* environment variable to be absent"
+    );
+    let block: u32 = args[2]
+        .parse()
+        .expect("replicate block must be an integer from 1 through 20");
+    assert!(
+        (1..=REPLICATE_BLOCKS).contains(&block) && args[2] == block.to_string(),
+        "replicate block must be written as an integer from 1 through 20"
+    );
+    block
+}
+
+fn replicate_seed(block: u32) -> u64 {
+    assert!((1..=REPLICATE_BLOCKS).contains(&block));
+    GRID_SEED + u64::from(block) * REPLICATE_SEED_STRIDE
+}
+
+fn condition_seed(tx: Treatment, grid_seed: u64) -> u64 {
     assert!(ARMS.iter().any(|&(arm, _)| arm == tx));
-    GRID_SEED.wrapping_add((tx as u64) * TREATMENT_SEED_STRIDE)
+    grid_seed.wrapping_add((tx as u64) * TREATMENT_SEED_STRIDE)
 }
 
 fn spatial_config() -> SpatialParams {
@@ -41,7 +73,7 @@ fn spatial_config() -> SpatialParams {
     }
 }
 
-fn configuration() -> serde_json::Value {
+fn configuration(grid_seed: u64) -> serde_json::Value {
     let immune = SpatialImmuneConfig::for_2d();
     serde_json::json!({
         "grid_rows": GRID_SIZE,
@@ -49,7 +81,7 @@ fn configuration() -> serde_json::Value {
         "cell_size_um": CELL_SIZE_UM,
         "tumor_radius_um": GRID_SIZE as f64 * TUMOR_RADIUS_FRACTION * CELL_SIZE_UM,
         "n_steps": N_STEPS,
-        "seed": GRID_SEED,
+        "seed": grid_seed,
         "immune_start_step": IMMUNE_START_STEP,
         "damp_kill_threshold": DAMP_KILL_THRESHOLD,
         "o2_lambda_um": ZONE_REF_LAMBDA,
@@ -84,6 +116,7 @@ fn configuration() -> serde_json::Value {
 fn run_condition(
     tx: Treatment,
     grid_size: usize,
+    grid_seed: u64,
     diagnostics: ImmuneDiagnostics<'_>,
 ) -> (ConditionResult, Vec<f64>) {
     let tx_name = ARMS
@@ -94,7 +127,7 @@ fn run_condition(
     let params = Params::default();
     let spatial = spatial_config();
     let immune = SpatialImmuneConfig::for_2d();
-    let mut grid = TumorGrid::generate(grid_size, grid_size, CELL_SIZE_UM, GRID_SEED);
+    let mut grid = TumorGrid::generate(grid_size, grid_size, CELL_SIZE_UM, grid_seed);
     let stromal_mask = stromal_adjacency_mask_2d(&grid);
     let stromal_adj_count = stromal_mask.iter().filter(|&&b| b).count();
     let supply: Vec<f64> = apply_o2_gradient(&mut grid, ZONE_REF_LAMBDA)
@@ -109,7 +142,7 @@ fn run_condition(
         &immune,
         None,
         None,
-        condition_seed(tx),
+        condition_seed(tx, grid_seed),
         Some(&supply),
         0.0,
         diagnostics,
@@ -158,6 +191,14 @@ fn observer(n_cells: usize) -> Measurements {
 }
 
 pub(super) fn run(output_dir: &Path) {
+    run_seeded(output_dir, GRID_SEED, None);
+}
+
+pub(super) fn run_replicate(output_dir: &Path, block: u32) {
+    run_seeded(output_dir, replicate_seed(block), Some(block));
+}
+
+fn run_seeded(output_dir: &Path, grid_seed: u64, block: Option<u32>) {
     let conditions: Vec<_> = ARMS
         .into_iter()
         .map(|(tx, name)| {
@@ -165,6 +206,7 @@ pub(super) fn run(output_dir: &Path) {
             let (result, damp) = run_condition(
                 tx,
                 GRID_SIZE,
+                grid_seed,
                 ImmuneDiagnostics {
                     measurements: Some(&mut measurements),
                     #[cfg(test)]
@@ -181,22 +223,29 @@ pub(super) fn run(output_dir: &Path) {
             );
             serde_json::json!({
                 "condition_name": format!("immune_{name}"),
-                "seed": condition_seed(tx),
+                "seed": condition_seed(tx, grid_seed),
                 "result": result,
                 "final_damp": {"total": total, "peak": peak},
                 "measurements": measurements,
             })
         })
         .collect();
-    let output = serde_json::json!({
+    let mut output = serde_json::json!({
         "schema_version": 2,
         "simulator": "sim-tme",
         "dimension": 2,
-        "config": configuration(),
+        "config": configuration(grid_seed),
         "conditions": conditions,
     });
+    if let Some(block) = block {
+        output["replicate_block"] = block.into();
+    }
     fs::create_dir_all(output_dir).expect("create immune measurement directory");
-    let path = output_dir.join("immune_measurements.json");
+    let path = output_dir.join(if block.is_some() {
+        "immune_replicate.json"
+    } else {
+        "immune_measurements.json"
+    });
     fs::write(
         &path,
         serde_json::to_vec(&output).expect("serialize immune measurements"),
@@ -217,6 +266,7 @@ mod tests {
             let (original, original_damp) = run_condition(
                 tx,
                 size,
+                GRID_SEED,
                 ImmuneDiagnostics {
                     measurements: None,
                     snapshots: Some(&mut baseline),
@@ -227,6 +277,7 @@ mod tests {
             let (measured, measured_damp) = run_condition(
                 tx,
                 size,
+                GRID_SEED,
                 ImmuneDiagnostics {
                     measurements: Some(&mut ledger),
                     snapshots: Some(&mut snapshots),
@@ -259,6 +310,7 @@ mod tests {
             run_condition(
                 tx,
                 size,
+                GRID_SEED,
                 ImmuneDiagnostics {
                     measurements: Some(&mut repeated),
                     ..Default::default()
@@ -290,16 +342,16 @@ mod tests {
             args.push(extra.into());
             assert!(std::panic::catch_unwind(|| validate_args(&args, &[])).is_err());
         }
-        assert!(std::panic::catch_unwind(|| condition_seed(Treatment::PDT)).is_err());
+        assert!(std::panic::catch_unwind(|| condition_seed(Treatment::PDT, GRID_SEED)).is_err());
         assert_eq!(
-            ARMS.map(|(tx, _)| condition_seed(tx)),
+            ARMS.map(|(tx, _)| condition_seed(tx, GRID_SEED)),
             [42, 10_000_042, 20_000_042]
         );
     }
 
     #[test]
     fn immune_measurements_configuration_matches_runtime_defaults() {
-        let config = configuration();
+        let config = configuration(GRID_SEED);
         let frozen: serde_json::Value = serde_json::from_str(include_str!(
             "../../../scripts/immune_2d_measurement_config_v1.json"
         ))
@@ -320,5 +372,170 @@ mod tests {
         assert_eq!(config["tumor_radius_um"], 4500.0);
         assert_eq!(config["immune_config"]["dc_activation_kd"], 50.0);
         assert_eq!(config["immune_config"]["damp_diffusion_fraction"], 0.08);
+    }
+
+    #[test]
+    fn immune_replicate_roots_have_disjoint_additive_seed_namespaces() {
+        // Bound every seed used for initialization, biochemistry and immune
+        // killing across all three arms, cells and simulated steps. This does
+        // not claim that the treatment arms are independent within a block.
+        let maximum_treatment_offset = 20_000_000;
+        let last_cell = (GRID_SIZE * GRID_SIZE - 1) as u64;
+        let last_step = u64::from(N_STEPS - 1);
+        let stream_span = maximum_treatment_offset
+            + last_cell
+            + (500_000 + last_step * 1_000_000).max(900_000_000 + last_step * 2_000_000);
+        assert_eq!(stream_span, 1_278_249_999);
+        let mut previous_end = 61 + stream_span; // All historical roots 42–61.
+        for block in 1..=20 {
+            let root = replicate_seed(block);
+            assert_eq!(root, 42 + u64::from(block) * 4_294_967_296);
+            assert!(previous_end < root, "replicate namespaces must not overlap");
+            previous_end = root.checked_add(stream_span).expect("no u64 seed wrapping");
+            assert_eq!(
+                ARMS.map(|(tx, _)| condition_seed(tx, root)),
+                [root, root + 10_000_000, root + 20_000_000]
+            );
+        }
+        for invalid in [0, 21, u32::MAX] {
+            assert!(std::panic::catch_unwind(|| replicate_seed(invalid)).is_err());
+        }
+    }
+
+    #[test]
+    fn immune_replicate_configuration_changes_only_the_declared_seed() {
+        let frozen: serde_json::Value = serde_json::from_str(include_str!(
+            "../../../scripts/immune_2d_measurement_config_v1.json"
+        ))
+        .unwrap();
+        for block in 1..=20 {
+            let mut expected = frozen["config"].clone();
+            expected["seed"] = replicate_seed(block).into();
+            assert_eq!(configuration(replicate_seed(block)), expected);
+        }
+        assert_eq!(configuration(GRID_SEED), frozen["config"]);
+    }
+
+    #[test]
+    fn immune_replicate_arguments_reject_malformed_mixed_or_overridden_runs() {
+        for block in 1..=20 {
+            let args = vec![
+                "sim-tme".into(),
+                "--immune-replicate".into(),
+                block.to_string(),
+            ];
+            assert!(replicate_requested(&args));
+            assert_eq!(validate_replicate_args(&args, &[]), block);
+        }
+        for value in [
+            "0",
+            "21",
+            "-1",
+            "+1",
+            "01",
+            "1.0",
+            "1e1",
+            " 1",
+            "1 ",
+            "",
+            "１",
+            "4294967296",
+        ] {
+            let args = vec!["sim-tme".into(), "--immune-replicate".into(), value.into()];
+            assert!(std::panic::catch_unwind(|| validate_replicate_args(&args, &[])).is_err());
+        }
+        for args in [
+            vec!["sim-tme", "--immune-replicate"],
+            vec!["sim-tme", "--immune-replicate=1"],
+            vec!["sim-tme", "--immune-replicates", "1"],
+            vec!["sim-tme", "--immune-replicate", "1", "2"],
+            vec![
+                "sim-tme",
+                "--immune-replicate",
+                "1",
+                "--immune-measurements",
+            ],
+            vec![
+                "sim-tme",
+                "--immune-measurements",
+                "--immune-replicate",
+                "1",
+            ],
+            vec!["sim-tme", "--other", "--immune-replicate", "1"],
+        ] {
+            let args: Vec<String> = args.into_iter().map(str::to_owned).collect();
+            assert!(
+                replicate_requested(&args),
+                "reject malformed requests before default simulation"
+            );
+            assert!(std::panic::catch_unwind(|| validate_replicate_args(&args, &[])).is_err());
+            if args.iter().any(|arg| arg == "--immune-measurements") {
+                assert!(std::panic::catch_unwind(|| validate_args(&args, &[])).is_err());
+            }
+        }
+        let valid = vec!["sim-tme".into(), "--immune-replicate".into(), "1".into()];
+        for variable in ["FERRO_SEED", "FERRO_PARAM_OVERRIDES", "FERRO_FUTURE_KNOB"] {
+            assert!(std::panic::catch_unwind(|| validate_replicate_args(
+                &valid,
+                &[variable.into()]
+            ))
+            .is_err());
+        }
+        assert!(!replicate_requested(&["sim-tme".into()]));
+        assert!(!replicate_requested(&[
+            "sim-tme".into(),
+            "--immune-measurements".into()
+        ]));
+    }
+
+    #[test]
+    fn immune_replicate_observer_preserves_every_arm_and_step_at_extreme_blocks() {
+        let size = 20;
+        for block in [1, 20] {
+            for (tx, _) in ARMS {
+                let root = replicate_seed(block);
+                let mut baseline = Vec::new();
+                let (original, original_damp) = run_condition(
+                    tx,
+                    size,
+                    root,
+                    ImmuneDiagnostics {
+                        measurements: None,
+                        snapshots: Some(&mut baseline),
+                    },
+                );
+                let mut snapshots = Vec::new();
+                let mut ledger = observer(size * size);
+                let (measured, measured_damp) = run_condition(
+                    tx,
+                    size,
+                    root,
+                    ImmuneDiagnostics {
+                        measurements: Some(&mut ledger),
+                        snapshots: Some(&mut snapshots),
+                    },
+                );
+                assert_eq!(baseline.len(), N_STEPS as usize);
+                assert_eq!(
+                    baseline, snapshots,
+                    "block {block}, arm {tx:?}: every phase-state snapshot"
+                );
+                assert_eq!(
+                    serde_json::to_vec(&original).unwrap(),
+                    serde_json::to_vec(&measured).unwrap()
+                );
+                assert_eq!(original_damp, measured_damp);
+                ledger.validate_totals(
+                    measured.ferroptosis_kills.unwrap(),
+                    measured.immune_kills.unwrap(),
+                    measured.total_dead,
+                    measured_damp.iter().sum(),
+                );
+                if tx == Treatment::SDT {
+                    assert!(!ledger.ferroptotic_events.is_empty());
+                    assert!(!ledger.eligible_cells.is_empty());
+                }
+            }
+        }
     }
 }

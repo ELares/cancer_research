@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "study": "immune-2d-activation-replication",
+  "simulator": "sim-tme",
+  "dimension": 2,
+  "block_ids": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20],
+  "base_seed": 42,
+  "block_seed_stride": 4294967296,
+  "arms": ["Control", "RSL3", "SDT"],
+  "primary_endpoint": "activation_sum_per_initial_tumor_cell",
+  "contrast": ["SDT", "RSL3"],
+  "bootstrap": {
+    "unit": "whole_three_arm_block",
+    "statistic": "arithmetic_mean_of_paired_differences",
+    "resamples": 10000,
+    "seed": 20260922,
+    "quantiles": [0.025, 0.975],
+    "interpolation": "linear"
+  }
+}
