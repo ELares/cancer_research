@@ -360,8 +360,8 @@
   }
  ],
  "shared_modules": 5,
- "shared_code_lines": 818,
- "shared_pub_fns": 58,
+ "shared_code_lines": 860,
+ "shared_pub_fns": 59,
  "manuscript_words_in_sections": 75215,
  "manuscript_words_attributed": 25069,
  "sections_naming_more_than_one_arm": {
