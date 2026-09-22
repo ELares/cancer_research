@@ -16,6 +16,7 @@ import pytest
 REPO = Path(__file__).resolve().parent.parent
 SCANNERS = (
     "census_mechanism_growth",
+    "census_mechanism_profile",
     "census_unnamed_modalities",
     "census_protocol_precedent",
     "census_modality_comparison",
@@ -147,6 +148,10 @@ def test_render_only_works_without_raw_records(scanner, scanner_name, monkeypatc
     scanner.OUT_JSON.write_bytes(committed.read_bytes())
     monkeypatch.setattr(sys, "argv", [f"{scanner_name}.py", "--render-only"])
     assert not scanner.RECORDS.exists()
+    if scanner_name == "census_mechanism_profile":
+        # Rebuilding from committed counts must not reopen either raw map.
+        monkeypatch.setattr(scanner, "SITE_MAP", scanner.OUT_JSON.parent / "missing-sites.tsv")
+        monkeypatch.setattr(scanner, "MECH_MAP", scanner.OUT_JSON.parent / "missing-mechanisms.yaml")
 
     assert scanner.main() == 0
 
@@ -193,6 +198,177 @@ def test_parser_failure_after_valid_record_preserves_reports(scanner):
         scanner.main()
 
     _assert_preserved(scanner)
+
+
+@pytest.mark.parametrize("scanner_name", ["census_mechanism_profile"], indirect=True)
+def test_profile_stride_selects_sorted_shards_and_keeps_every_selected_record(
+        scanner, tmp_path, monkeypatch):
+    mechanism_map = tmp_path / "mechanisms.yaml"
+    mechanism_map.write_text("mechanisms:\n  target:\n    descriptors: [Target]\n")
+    monkeypatch.setattr(scanner, "MECH_MAP", mechanism_map)
+    monkeypatch.setattr(scanner, "load_sites", lambda: {})
+    # Creation order differs from name order; each shard has multiple records.
+    for name, years in (("part-c", [2023, 2024, 2025]),
+                        ("part-a", [2015, 2016]),
+                        ("part-b", [2018, 2019, 2020, 2021])):
+        _write_shard(scanner.RECORDS / f"{name}.jsonl.gz", [
+            {"pmid": str(year), "year": year, "mesh": ["Target"],
+             "pub_types": ["Clinical Trial"] if year in {2015, 2025} else []}
+            for year in years
+        ])
+    (scanner.RECORDS / "ignored.jsonl").write_text("invalid uncompressed input\n")
+    glob = Path.glob
+
+    def unsorted_glob(path, pattern):
+        if path == scanner.RECORDS and pattern == "*.jsonl.gz":
+            return iter(scanner.RECORDS / f"part-{name}.jsonl.gz" for name in "cab")
+        return glob(path, pattern)
+
+    # Directory enumeration order is filesystem-dependent; force a real
+    # unsorted inventory so omitting the sort fails on every test platform.
+    monkeypatch.setattr(Path, "glob", unsorted_glob)
+    monkeypatch.setattr(sys, "argv", ["census_mechanism_profile.py", "--stride", "2"])
+
+    assert scanner.main() == 0
+
+    result = json.loads(scanner.OUT_JSON.read_text())
+    assert result["census"] == 5
+    assert result["count"] == {"target": 5}
+    assert result["trials"] == {"target": 2}
+    assert result["by_year"] == {"target": {
+        "2015": 1, "2016": 1, "2023": 1, "2024": 1, "2025": 1,
+    }}
+
+
+@pytest.mark.parametrize("scanner_name", ["census_mechanism_profile"], indirect=True)
+def test_profile_empty_selected_shards_preserve_reports_despite_unselected_records(
+        scanner, monkeypatch):
+    _write_shard(scanner.RECORDS / "part-a.jsonl.gz", [])
+    _write_shard(scanner.RECORDS / "part-b.jsonl.gz", [UNMATCHED])
+    _write_shard(scanner.RECORDS / "part-c.jsonl.gz", [])
+    monkeypatch.setattr(sys, "argv", ["census_mechanism_profile.py", "--stride", "2"])
+
+    with pytest.raises(SystemExit, match="No census records"):
+        scanner.main()
+
+    _assert_preserved(scanner)
+
+
+@pytest.mark.parametrize("scanner_name", ["census_mechanism_profile"], indirect=True)
+@pytest.mark.parametrize("render_only", [False, True], ids=["scan", "render-only"])
+def test_profile_serialization_failure_preserves_both_reports(
+        scanner, monkeypatch, render_only):
+    if render_only:
+        raw = json.loads((REPO / "analysis/census-mechanism-profile.json").read_text())
+        before_json = json.dumps(raw, separators=(",", ":")).encode() + b"\n"
+        scanner.OUT_JSON.write_bytes(before_json)
+        monkeypatch.setattr(sys, "argv", ["census_mechanism_profile.py", "--render-only"])
+    else:
+        before_json = EXISTING_JSON
+        _write_shard(scanner.RECORDS / "part.jsonl.gz", [UNMATCHED])
+    assemble = scanner.assemble
+
+    def unserializable_assemble(raw):
+        result = assemble(raw)
+        result["unserializable"] = object()
+        return result
+
+    monkeypatch.setattr(scanner, "assemble", unserializable_assemble)
+
+    with pytest.raises(TypeError, match="not JSON serializable"):
+        scanner.main()
+
+    assert scanner.OUT_JSON.read_bytes() == before_json
+    assert scanner.OUT_MD.read_bytes() == EXISTING_MD
+
+
+@pytest.mark.parametrize("scanner_name", ["census_mechanism_profile"], indirect=True)
+@pytest.mark.parametrize("content,error,message", [
+    (None, FileNotFoundError, "sites.tsv"),
+    ("", SystemExit, "No site descriptors found"),
+    ("# Site descriptor map\n\n", SystemExit, "No site descriptors found"),
+    ("site-a\tC04.588\tSite A\nbroken mapping\n", SystemExit, "Invalid site map"),
+    ("site-a\tC04.588\tSite A\nsite-b\tC04.588\t \n", SystemExit, "Invalid site map"),
+], ids=["missing", "empty", "comments-only", "malformed-later-row", "blank-descriptor"])
+def test_profile_invalid_site_map_preserves_reports(
+        scanner, tmp_path, monkeypatch, content, error, message):
+    _write_shard(scanner.RECORDS / "part.jsonl.gz", [UNMATCHED])
+    site_map = tmp_path / "sites.tsv"
+    if content is not None:
+        site_map.write_text(content)
+    monkeypatch.setattr(scanner, "SITE_MAP", site_map)
+
+    with pytest.raises(error, match=message):
+        scanner.main()
+
+    _assert_preserved(scanner)
+
+
+@pytest.mark.parametrize("scanner_name", ["census_mechanism_profile"], indirect=True)
+@pytest.mark.parametrize("content", [
+    "mechanisms: {}\n",
+    "mechanisms:\n  target:\n    descriptors: []\n",
+    "mechanisms:\n  target:\n    descriptors: Target\n",
+    "mechanisms:\n  target:\n    descriptors: {Target: true}\n",
+    "mechanisms:\n  target:\n    descriptors: ['   ']\n",
+    "- mechanisms\n",
+    "mechanisms: [target]\n",
+    "mechanisms:\n  target: Target\n",
+    "mechanisms:\n  target:\n    descriptors: [Target]\n  later:\n    descriptors: Broken\n",
+    "mechanisms:\n  target:\n    descriptors: [Target, 42]\n",
+    "mechanisms:\n  '   ':\n    descriptors: [Target]\n",
+], ids=["empty-map", "all-descriptors-empty", "scalar-descriptors", "mapping-descriptors",
+        "blank-descriptor", "sequence-document", "sequence-mechanisms", "scalar-configuration",
+        "invalid-later-entry", "nontext-descriptor", "unnamed-mechanism"])
+def test_profile_invalid_mechanism_map_preserves_reports(
+        scanner, tmp_path, monkeypatch, content):
+    # Valid, scientifically matching input makes an accidental empty result
+    # distinguishable from a legitimate census with no mechanism matches.
+    _write_shard(scanner.RECORDS / "part.jsonl.gz", [
+        {"pmid": "42", "mesh": ["Target", "Site A"]},
+    ])
+    site_map = tmp_path / "sites.tsv"
+    site_map.write_text("site-a\tC04.588\tSite A\n")
+    monkeypatch.setattr(scanner, "SITE_MAP", site_map)
+    mechanism_map = tmp_path / "mechanisms.yaml"
+    mechanism_map.write_text(content)
+    monkeypatch.setattr(scanner, "MECH_MAP", mechanism_map)
+
+    with pytest.raises(SystemExit, match="Invalid mechanism map"):
+        scanner.main()
+
+    _assert_preserved(scanner)
+
+
+@pytest.mark.parametrize("scanner_name", ["census_mechanism_profile"], indirect=True)
+def test_profile_valid_map_keeps_unmeasurable_mechanisms_absent_and_descriptor_matching_unchanged(
+        scanner, tmp_path, monkeypatch):
+    _write_shard(scanner.RECORDS / "part.jsonl.gz", [
+        {"pmid": "41", "mesh": ["Target", "Site A"], "pub_types": ["Clinical Trial"]},
+        {"pmid": "42", "mesh": ["Unmatched", "Site A"]},
+    ])
+    site_map = tmp_path / "sites.tsv"
+    site_map.write_text("site-a\tC04.588\tSite A\n")
+    monkeypatch.setattr(scanner, "SITE_MAP", site_map)
+    mechanism_map = tmp_path / "mechanisms.yaml"
+    mechanism_map.write_text(
+        "mechanisms:\n"
+        "  target:\n    descriptors: [TaRgEt]\n"
+        "  unmeasurable:\n    descriptors: []\n"
+        "  spaced-descriptor:\n    descriptors: [' Target ']\n"
+    )
+    monkeypatch.setattr(scanner, "MECH_MAP", mechanism_map)
+
+    assert scanner.main() == 0
+
+    result = json.loads(scanner.OUT_JSON.read_text())
+    assert result["census"] == 2
+    assert result["count"] == {"target": 1}
+    assert result["trials"] == {"target": 1}
+    assert result["site_totals"] == {"site-a": 2}
+    assert result["by_site"] == {"target": {"site-a": 1}}
+    assert [row["mechanism"] for row in result["rows"]] == ["target"]
+    assert scanner.OUT_MD.read_text().startswith("# ")
 
 
 @pytest.mark.parametrize("scanner_name", ["census_mechanism_growth"], indirect=True)

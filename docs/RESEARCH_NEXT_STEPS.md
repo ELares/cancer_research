@@ -75,7 +75,7 @@ not require another simulation mechanism or a larger unmeasured corpus.
    checks cannot establish complete within-region distributions or precise tails;
    agreeing biological runs cannot rule out a shared unseen region.
 
-2. **Census input protection is implemented in sixteen analysis entry points.**
+2. **Census input protection is implemented in seventeen analysis entry points.**
    The shared [streaming helper](../scripts/census_input.py) honors
    `FERRO_ATLAS_ROOT`, validates shard stride, and rejects missing or empty
    inputs before replacing reports. Valid records with zero scientific matches
@@ -104,12 +104,24 @@ not require another simulation mechanism or a larger unmeasured corpus.
    Tied counts share a competition rank. The access split is explicitly a PMC
    identifier proxy, without current-access or licence verification. The
    committed numerical snapshots are unchanged.
+   Mechanism-profile now uses the shared reader and prepares both JSON and
+   Markdown before writing either report. Its full-scan default and whole-shard
+   sampling are preserved; offline reconstruction still derives summaries from
+   stored raw counts. Parser, serialization and rendering failures preserve the
+   existing pair. This preparation does not make the two writes atomic against
+   disk failures or interruption. Tied mechanism counts have a deterministic
+   name order, and sites below the 20-article reporting threshold no longer
+   imply an absence of anatomical concentration. Empty or malformed site maps
+   and unusable mechanism maps fail before output. Individual mechanisms may
+   retain empty descriptor lists, but at least one usable descriptor is required
+   across the map. The profile distinguishes NLM article indexing from
+   the project's curated mechanism and site groupings. Historical profile
+   counts and derived JSON remain byte-identical; only report prose is updated.
    **Next deliverable:** acquire the intended census snapshot and review the
    complete exported direction candidates, preferably with independent readers
    and documented disagreements. This code change supplies no new biological
-   adjudications. Extend preparation-before-write protection to the remaining
-   analysis entry points, starting with mechanism-profile, whose existing
-   missing-input checks already distinguish unavailable input from zero matches.
+   adjudications. Extend preparation-before-write protection to remaining
+   atlas analysis entry points after auditing their inputs and output contracts.
    Preserve each sampling design when extending the shared reader.
    **Complete when:** each migrated entry point distinguishes unavailable input
    from an observed zero and its offline rendering remains reproducible.

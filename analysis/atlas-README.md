@@ -464,7 +464,7 @@ Bulk data is gitignored. `FERRO_ATLAS_ROOT` and `FERRO_ATLAS_FULLTEXT` move it t
 external storage. Unit guards that need neither network nor data:
 `pytest tests/test_atlas.py`.
 
-Sixteen census reports use the shared
+Seventeen census reports use the shared
 [`census_input.py`](../scripts/census_input.py) reader. It honors
 `FERRO_ATLAS_ROOT` and reads the indexed `records/` stream. Missing shards,
 empty sampled inputs, and invalid sampling strides stop before either report
@@ -474,6 +474,7 @@ result. `--stride` samples sorted shard files, not individual records.
 | Reports (`scripts/census_*.py`) | Additional input or sampling requirements |
 |---|---|
 | `mechanism_growth`, `mechanism_sites`, `unnamed_modalities`, `modality_comparison`, `normal_tissue`, `protocol_precedent` | Existing shared-reader group; committed maps and supporting annotations remain inputs to each report. |
+| `mechanism_profile` | Defaults to all indexed shards; a stride selects whole sorted shards. Fresh scans require a nonempty site map with complete rows and a mechanism map containing descriptor lists with at least one usable descriptor overall. Individual empty lists remain valid for unmeasurable mechanisms. Offline reconstruction re-derives trial shares, site enrichments, partner ordering and growth from stored counts without reading either map. |
 | `fulltext_ceiling`, `mechanism_cancer_matrix`, `translation_lag` | Missing comparison populations or denominators are reported as unavailable. A measured zero remains zero. |
 | `synergy_metrics` | The subject arm uses `--stride`; the control independently uses every 40th sorted shard. Zero metric counts do not establish a leading metric. |
 | `external_check` | The complete selected census input is read before live PubMed requests begin. Use `--render-only` for offline reconstruction. |
@@ -486,13 +487,14 @@ To rebuild report prose from committed counts without downloading the census:
 ```bash
 python scripts/census_mechanism_growth.py --render-only
 python scripts/census_mechanism_sites.py --render-only
+python scripts/census_mechanism_profile.py --render-only
 python scripts/census_external_check.py --render-only
 python scripts/census_diagnostic_chains.py --render-only
 python scripts/census_evidence_design.py --render-only
 python scripts/census_oa_bias.py --render-only
 ```
 
-All sixteen reports support the same option. JSON serialization and Markdown
+All seventeen reports support the same option. JSON serialization and Markdown
 rendering finish before either output is written, so parser and rendering errors
 preserve the existing pair. This does not make two filesystem writes an atomic
 transaction against disk failures or process interruption.
