@@ -74,13 +74,37 @@ def load_sites() -> dict[str, set[str]]:
     return dict(out)
 
 
-def scan(stride: int = 1) -> dict:
+def load_mechanisms() -> dict[str, set[str]]:
     import yaml
 
-    shards = census_shards(RECORDS, stride)
+    def invalid(reason: str) -> SystemExit:
+        return SystemExit(
+            f"Invalid mechanism map at {MECH_MAP}: {reason}; "
+            "existing reports were not changed."
+        )
 
-    mp = yaml.safe_load(MECH_MAP.read_text(encoding="utf-8"))["mechanisms"]
-    mech = {k: {x.lower() for x in v["descriptors"]} for k, v in mp.items()}
+    raw = yaml.safe_load(MECH_MAP.read_text(encoding="utf-8"))
+    mappings = raw.get("mechanisms") if isinstance(raw, dict) else None
+    if not isinstance(mappings, dict) or not mappings:
+        raise invalid("expected a nonempty mechanisms mapping")
+    mechanisms = {}
+    for name, entry in mappings.items():
+        if not isinstance(name, str) or not name.strip() or not isinstance(entry, dict):
+            raise invalid("each mechanism needs a name and a descriptor-list entry")
+        descriptors = entry.get("descriptors")
+        if not isinstance(descriptors, list) or any(
+                not isinstance(value, str) or not value.strip() for value in descriptors):
+            raise invalid(f"{name!r} descriptors must be a list of nonblank strings")
+        # Empty lists intentionally mark mechanisms without a usable descriptor.
+        mechanisms[name] = {value.lower() for value in descriptors}
+    if not any(mechanisms.values()):
+        raise invalid("no usable mechanism descriptors found")
+    return mechanisms
+
+
+def scan(stride: int = 1) -> dict:
+    shards = census_shards(RECORDS, stride)
+    mech = load_mechanisms()
     sites = load_sites()
 
     count: Counter = Counter()

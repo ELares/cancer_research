@@ -112,7 +112,9 @@ not require another simulation mechanism or a larger unmeasured corpus.
    disk failures or interruption. Tied mechanism counts have a deterministic
    name order, and sites below the 20-article reporting threshold no longer
    imply an absence of anatomical concentration. Empty or malformed site maps
-   fail before output, and the profile distinguishes NLM article indexing from
+   and unusable mechanism maps fail before output. Individual mechanisms may
+   retain empty descriptor lists, but at least one usable descriptor is required
+   across the map. The profile distinguishes NLM article indexing from
    the project's curated mechanism and site groupings. Historical profile
    counts and derived JSON remain byte-identical; only report prose is updated.
    **Next deliverable:** acquire the intended census snapshot and review the

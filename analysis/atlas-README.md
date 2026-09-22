@@ -474,7 +474,7 @@ result. `--stride` samples sorted shard files, not individual records.
 | Reports (`scripts/census_*.py`) | Additional input or sampling requirements |
 |---|---|
 | `mechanism_growth`, `mechanism_sites`, `unnamed_modalities`, `modality_comparison`, `normal_tissue`, `protocol_precedent` | Existing shared-reader group; committed maps and supporting annotations remain inputs to each report. |
-| `mechanism_profile` | Defaults to all indexed shards; a stride selects whole sorted shards. Fresh scans require a nonempty site map with complete rows. Offline reconstruction re-derives trial shares, site enrichments, partner ordering and growth from stored counts without reading that map. |
+| `mechanism_profile` | Defaults to all indexed shards; a stride selects whole sorted shards. Fresh scans require a nonempty site map with complete rows and a mechanism map containing descriptor lists with at least one usable descriptor overall. Individual empty lists remain valid for unmeasurable mechanisms. Offline reconstruction re-derives trial shares, site enrichments, partner ordering and growth from stored counts without reading either map. |
 | `fulltext_ceiling`, `mechanism_cancer_matrix`, `translation_lag` | Missing comparison populations or denominators are reported as unavailable. A measured zero remains zero. |
 | `synergy_metrics` | The subject arm uses `--stride`; the control independently uses every 40th sorted shard. Zero metric counts do not establish a leading metric. |
 | `external_check` | The complete selected census input is read before live PubMed requests begin. Use `--render-only` for offline reconstruction. |
