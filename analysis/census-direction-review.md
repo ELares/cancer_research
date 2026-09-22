@@ -2,7 +2,7 @@
 
 **Unreviewed: no biological decisions have been assigned.** The local packet contains complete blank worksheets for the singly classified hypoxia and thesis candidates. Historical reports and labels remain separate.
 
-Captured 2026-09-22T15:46:44.307597Z with Python 3.14.6. The indexed `records/` snapshot has 4,403,994 parsed records across 1,334 shards; its manifest declares 4,403,994. Every sorted shard was read (`stride=1`). This validates the acquired local snapshot, not its coverage of literature published since acquisition.
+Captured 2026-09-22T16:08:52.756432Z with Python 3.14.6. The indexed `records/` snapshot has 4,403,994 parsed records across 1,334 shards; its manifest declares 4,403,994. Every sorted shard was read (`stride=1`). This validates the acquired local snapshot, not its coverage of literature published since acquisition.
 
 The local packet retains 765 complete records in the union of the two descriptor intersections. This public report contains counts and fingerprints without article text.
 
@@ -58,7 +58,7 @@ Acquisition manifest SHA-256: `c6d300992fcbb336c6d0b0927442fb7faed88bd940b18bc44
 
 Baseline manifest SHA-256: `6d56da3c5ba6d9b53b457abfe1176effa3ce260b584c3f2fbfe5d8167523814b`.
 
-Git context: `aee75335957869814866a7def305b370adf7f7b8`; working tree dirty: `False`. Source hashes below are authoritative for the code used; the Git head alone may predate uncommitted code.
+Git context: `257e9523d5a37b42ddd69b24fac1846c29cd8b92`; working tree dirty: `False`. Source hashes below are authoritative for the code used; the Git head alone may predate uncommitted code.
 
 | Analysis | Cohort SHA-256 |
 |---|---|
@@ -67,7 +67,7 @@ Git context: `aee75335957869814866a7def305b370adf7f7b8`; working tree dirty: `Fa
 
 | Source file | SHA-256 |
 |---|---|
-| `scripts/census_direction_review.py` | `cdda228104f04900bd92a00f94bdb7b76cc1657258e3a3a0af394567451132cf` |
+| `scripts/census_direction_review.py` | `f76dbb656ea3a3cac1014f3097123d4f6570d6919c6ecc28e200a11329d1bcd4` |
 | `scripts/census_snapshot.py` | `783aeb63a4f5a9da471fd9be66520cacc62b3b69e41758b1c4bae39b886e9db6` |
 | `scripts/census_hypoxia_direction.py` | `8ed7db36ae862167e5a16d64f1f546915b0e3367a13596e86d1286ccfffaae54` |
 | `scripts/census_thesis_direction.py` | `02cab7828710b33e132629e49a89283e94b9866f85bab0ca8313af64128c65c1` |

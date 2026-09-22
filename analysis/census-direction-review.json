@@ -8023,12 +8023,12 @@
   "inventory_sha256": "ebf586c5dd2d276b70fa688c818103454570534b57575cb5c943e917eb7f0224"
  },
  "provenance": {
-  "created_utc": "2026-09-22T15:46:44.307597Z",
+  "created_utc": "2026-09-22T16:08:52.756432Z",
   "python_version": "3.14.6",
-  "git_head": "aee75335957869814866a7def305b370adf7f7b8",
+  "git_head": "257e9523d5a37b42ddd69b24fac1846c29cd8b92",
   "git_dirty": false,
   "source_sha256": {
-   "scripts/census_direction_review.py": "cdda228104f04900bd92a00f94bdb7b76cc1657258e3a3a0af394567451132cf",
+   "scripts/census_direction_review.py": "f76dbb656ea3a3cac1014f3097123d4f6570d6919c6ecc28e200a11329d1bcd4",
    "scripts/census_snapshot.py": "783aeb63a4f5a9da471fd9be66520cacc62b3b69e41758b1c4bae39b886e9db6",
    "scripts/census_hypoxia_direction.py": "8ed7db36ae862167e5a16d64f1f546915b0e3367a13596e86d1286ccfffaae54",
    "scripts/census_thesis_direction.py": "02cab7828710b33e132629e49a89283e94b9866f85bab0ca8313af64128c65c1",
