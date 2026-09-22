@@ -117,10 +117,23 @@ not require another simulation mechanism or a larger unmeasured corpus.
    across the map. The profile distinguishes NLM article indexing from
    the project's curated mechanism and site groupings. Historical profile
    counts and derived JSON remain byte-identical; only report prose is updated.
-   **Next deliverable:** acquire the intended census snapshot and review the
-   complete exported direction candidates, preferably with independent readers
-   and documented disagreements. This code change supplies no new biological
-   adjudications. Extend preparation-before-write protection to remaining
+   **Baseline verification and review preparation completed:** the
+   [readiness report](../analysis/census-direction-review.md) reconciles all
+   4,403,994 indexed records across 1,334 shards against the local acquisition
+   manifest, retaining compressed-shard and source-code fingerprints. The
+   preserved local packet holds the complete 765-record union of the two
+   intersections, including both/neither classes. Blank worksheets contain
+   32 hypoxia and 266 thesis candidates; one thesis candidate lacks an abstract.
+   The public report contains counts and fingerprints, with article text kept
+   outside the repository. Offline verification reconstructs the packet from
+   retained evidence but cannot revalidate absent census shards or establish
+   scientific accuracy. Historical direction reports remain unchanged.
+   **Next deliverable:** independently review the complete exported direction
+   candidates, check source evidence, and document disagreements. Preserve the
+   original packet and fill separate worksheet copies as described in the
+   [adjudication workflow](CENSUS_DIRECTION_ADJUDICATION.md). This preparation
+   supplies no new biological adjudications. Extend preparation-before-write
+   protection to remaining
    atlas analysis entry points after auditing their inputs and output contracts.
    Preserve each sampling design when extending the shared reader.
    **Complete when:** each migrated entry point distinguishes unavailable input

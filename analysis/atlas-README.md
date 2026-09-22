@@ -504,6 +504,16 @@ reloading adjudication CSVs or rewriting the numerical artifact. New review
 worksheets and complete-label imports are documented in the
 [direction adjudication workflow](../docs/CENSUS_DIRECTION_ADJUDICATION.md).
 
+The separate [`census_direction_review.py`](../scripts/census_direction_review.py)
+builder verifies the complete indexed baseline against its acquisition manifest
+and creates a local evidence packet outside the repository. Its
+[readiness report](census-direction-review.md) reconciles 4,403,994 records in
+1,334 shards and records 32 hypoxia and 266 thesis candidates awaiting independent
+review. The packet retains both complete intersections, including both/neither
+classes; only counts and fingerprints are published here. One thesis candidate
+lacks an abstract. See the workflow above for preservation, offline verification,
+and review instructions; no new biological labels have been assigned.
+
 These protections cover the listed entry points, not every atlas script.
 See the [next steps](../docs/RESEARCH_NEXT_STEPS.md) before extending them.
 
