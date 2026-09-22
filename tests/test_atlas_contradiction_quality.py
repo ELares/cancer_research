@@ -225,6 +225,34 @@ def test_invalid_offline_counts_preserve_the_existing_reports(outputs, mutation)
     assert md.read_text() == "previous markdown"
 
 
+@pytest.mark.parametrize("supports, field, lowered_count", [
+    ([(10, 5, 0)], "unique_papers_in_conflicts", 8),
+    ([(5, 3, 2), (5, 3, 0)], "unique_papers_with_overlap", 1),
+    ([(13, 3, 0)] + [(5, 3, 0)] * 4, "unique_papers_in_conflicts", 10),
+    ([(12, 4, 4)] + [(5, 3, 0)] * 4, "unique_papers_in_conflicts", 9),
+    ([(1021, 3, 0)] + [(5, 3, 0)] * 128, "unique_papers_in_conflicts", 16),
+], ids=["pair-pmid-total", "overlap-total", "largest-bin-no-overlap",
+        "largest-bin-with-overlap", "capped-largest-bin"])
+def test_impossible_unique_paper_lower_bounds_preserve_reports(
+        outputs, supports, field, lowered_count):
+    _, md, raw_path = outputs
+    pos, neg = {}, {}
+    for index, (positive, negative, overlap) in enumerate(supports):
+        pair = (f"entity{index}", f"partner{index}")
+        pos[pair] = {str(p) for p in range(positive)}
+        neg[pair] = {str(p) for p in range(positive - overlap,
+                                          positive - overlap + negative)}
+    raw = quality.analyze(pos, neg, set(), bootstrap=0)
+    # These feasible examples share PMIDs across pairs, including at bin edges.
+    assert quality.render(raw)
+    raw[field] = lowered_count
+    raw_path.write_text(json.dumps(raw))
+    before = raw_path.read_bytes()
+    assert quality.main(["--render-only"]) != 0
+    assert raw_path.read_bytes() == before
+    assert md.read_text() == "previous markdown"
+
+
 @pytest.mark.parametrize("scan", [None, {}, {"by_type": {}},
                                  {"by_type": {"gene": {"sense_rows": None}}}])
 def test_invalid_ambiguity_input_preserves_both_outputs(outputs, scan):

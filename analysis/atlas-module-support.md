@@ -104,7 +104,7 @@ docs should explain their evidence and how they handle the opposing claims.
 > The set has limited coverage, so this does not exclude unmeasured
 > conflation, extraction errors or differences in biological context.
 
-> The separate raw directional diagnostic reports a 1.45x association
+> The historical raw directional diagnostic reported a 1.45x association
 > between measured collisions and contradiction flags after stratification
 > by directional support (`analysis/atlas-contradiction-quality.md`).
 > Its eligibility rule differs from this module-claim check and the

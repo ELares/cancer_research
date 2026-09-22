@@ -235,12 +235,15 @@ def _validate(raw):
     overlap = raw["self_contradicting_assertions"]
     total = raw["total_assertions_in_conflicts"]
     minimum_support = maximum_support = 0
+    largest_flagged_support_lower = 0
     unbounded_support = False
     for bucket, stratum in raw["strata"].items():
         flagged = stratum["amb"][1] + stratum["clean"][1]
         lower = 2 ** int(bucket)
         minimum_support += flagged * lower
         maximum_support += flagged * (2 * lower - 1)
+        if flagged:
+            largest_flagged_support_lower = max(largest_flagged_support_lower, lower)
         unbounded_support |= int(bucket) == MAX_BUCKET and flagged > 0
     if total < minimum_support or (not unbounded_support and total > maximum_support):
         raise ValueError("directional incidence total is outside the retained stratum bounds")
@@ -255,6 +258,13 @@ def _validate(raw):
         if (papers > total - overlap or both_papers > min(papers, overlap)
                 or bool(papers) != bool(total) or bool(both_papers) != bool(overlap)):
             raise ValueError("inconsistent unique-paper counts")
+        # Necessary bounds, not complete feasibility checks. Pair-PMID incidences
+        # cannot exceed unique PMIDs times pairs. One pair's directional support
+        # cannot exceed distinct PMIDs plus overlapping PMIDs across all pairs.
+        if (papers * raw["conflicting_pairs"] < total - overlap
+                or both_papers * overlap_pairs < overlap
+                or papers + both_papers < largest_flagged_support_lower):
+            raise ValueError("unique-paper counts are below retained incidence bounds")
     ci = raw.get("mh_ci95")
     if ci is not None:
         if (not isinstance(ci, list) or len(ci) != 2

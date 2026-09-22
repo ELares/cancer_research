@@ -598,21 +598,20 @@ def main() -> None:
                  f"{cited} | {con} |")
 
     # Which claims, if any, rest on an entity measured as a sense collision.
+    from atlas_contradiction_quality import load_contested
+
     try:
-        _scan = json.loads(
-            (PROJECT_ROOT / "analysis" / "atlas-ambiguity.json").read_text())
-        _collide = set()
-        for _t in ("gene", "chemical", "disease"):
-            for _r in _scan["by_type"][_t]["sense_rows"]:
-                _collide |= {_r["top"]["id"], _r["runner_up"]["id"]}
-    except (OSError, ValueError, KeyError):
-        _collide = set()
+        _collide = load_contested(json.loads(
+            (PROJECT_ROOT / "analysis" / "atlas-ambiguity.json").read_text()))
+    except (OSError, ValueError):
+        _collide = None
     colliding = []
-    for r in rows:
-        hits = [n for n in (r["a"], r["b"])
-                if resolve(idx, n) in _collide]
-        if hits:
-            colliding.append((r["module"], hits))
+    if _collide is not None:
+        for r in rows:
+            hits = [n for n in (r["a"], r["b"])
+                    if resolve(idx, n) in _collide]
+            if hits:
+                colliding.append((r["module"], hits))
 
     contested = [r for r in rows if r.get("contested")]
     if contested:
@@ -634,7 +633,12 @@ def main() -> None:
         # The raw directional diagnostic associates measured sense collisions
         # with a higher flag rate; it does not attribute the excess to conflation
         # or establish that an unflagged identifier is unambiguous.
-        if colliding:
+        if _collide is None:
+            L += ["> **The collision check is unavailable.**",
+                  "> The ambiguity scan could not be read or validated, so these claims",
+                  "> were not checked for measured collisions. Unmeasured conflation,",
+                  "> extraction errors and differences in biological context also remain possible.", ""]
+        elif colliding:
             L += ["> **These claims need a conflation check.** They involve identifiers",
                   "> measured as sense collisions. An apparent conflict can arise when",
                   "> claims about different entities are merged "
@@ -645,7 +649,7 @@ def main() -> None:
                   f"> None of the {len(rows)} claims matched the collision set used here.",
                   "> The set has limited coverage, so this does not exclude unmeasured",
                   "> conflation, extraction errors or differences in biological context.", ""]
-        L += ["> The separate raw directional diagnostic reports a 1.45x association",
+        L += ["> The historical raw directional diagnostic reported a 1.45x association",
               "> between measured collisions and contradiction flags after stratification",
               "> by directional support (`analysis/atlas-contradiction-quality.md`).",
               "> Its eligibility rule differs from this module-claim check and the",
