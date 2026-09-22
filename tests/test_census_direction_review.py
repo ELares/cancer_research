@@ -219,6 +219,29 @@ def test_publishing_does_not_replace_an_existing_packet(review, prepared, tmp_pa
     assert {name: (bundle / name).read_bytes() for name in PATHS} == before
 
 
+@pytest.mark.parametrize("via_symlink", [False, True])
+def test_cli_rejects_article_text_packet_inside_repository_before_scanning(
+        review, root, tmp_path, monkeypatch, via_symlink):
+    repository = tmp_path / "repository"
+    repository.mkdir()
+    monkeypatch.setattr(review, "REPO", repository)
+    parent = repository
+    if via_symlink:
+        parent = tmp_path / "alias"
+        parent.symlink_to(repository, target_is_directory=True)
+    bundle = parent / "review-packet"
+
+    def forbidden(*args):
+        pytest.fail("invalid packet destination must fail before scanning")
+
+    monkeypatch.setattr(review, "prepare_bundle", forbidden)
+    monkeypatch.setattr(sys, "argv", ["census_direction_review.py", "--atlas-root", str(root),
+                                     "--bundle-dir", str(bundle)])
+    with pytest.raises(SystemExit, match="outside the repository"):
+        review.main()
+    assert not bundle.exists()
+
+
 @pytest.mark.parametrize("failure", ["late-json", "render"])
 def test_cli_preparation_failures_preserve_public_outputs_and_leave_no_packet(
         review, root, tmp_path, monkeypatch, failure):

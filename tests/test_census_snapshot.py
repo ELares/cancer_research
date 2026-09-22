@@ -212,15 +212,24 @@ def test_shard_is_opened_once_for_both_hashing_and_parsing(reader, tmp_path, mon
     root = write_snapshot(tmp_path, {"part-a.jsonl.gz": [{"pmid": "1"}]})
     shard = root / "records/part-a.jsonl.gz"
     opened = []
+    depth = 0
 
     def watch(original):
         def open_file(file, *args, **kwargs):
-            if isinstance(file, (str, os.PathLike)) and Path(file) == shard:
+            nonlocal depth
+            if depth == 0 and isinstance(file, (str, os.PathLike)) and Path(file) == shard:
                 opened.append(Path(file))
                 assert len(opened) == 1, "hashing and parsing must share one compressed read"
-            return original(file, *args, **kwargs)
+            depth += 1
+            try:
+                return original(file, *args, **kwargs)
+            finally:
+                depth -= 1
         return open_file
 
+    # Older pathlib caches its opener; count public entry points without
+    # double-counting their delegation to io.open on newer Python versions.
+    monkeypatch.setattr(Path, "open", watch(Path.open))
     monkeypatch.setattr(builtins, "open", watch(builtins.open))
     monkeypatch.setattr(io, "open", watch(io.open))
     report, records = reader.read_snapshot(root, lambda record: True)

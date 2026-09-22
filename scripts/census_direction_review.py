@@ -309,9 +309,10 @@ def publish_bundle(bundle: Path, files: dict[str, bytes]) -> None:
 
 def _check_bundle_path(bundle: Path, root: Path) -> None:
     target = bundle.resolve()
-    for protected in (root.resolve(), OUT_JSON.resolve(), OUT_MD.resolve()):
+    for protected in (REPO.resolve(), root.resolve(), OUT_JSON.resolve(), OUT_MD.resolve()):
         if target == protected or target in protected.parents or protected in target.parents:
-            raise SystemExit("Review packet directory must not overlap census input or public report paths.")
+            raise SystemExit("Review packet directory must be outside the repository and must not "
+                             "overlap census input or public report paths.")
     if _exists(bundle):
         raise SystemExit(f"Review packet directory already exists: {bundle}")
 
