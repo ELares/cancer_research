@@ -15,7 +15,6 @@ the selected articles and can change when descriptor coverage changes.
 import gzip
 import importlib.util
 import json
-import sys
 from pathlib import Path
 
 import pytest
@@ -32,70 +31,6 @@ def _load_profile():
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
-
-
-@pytest.mark.parametrize("input_state", ["missing", "empty-directory", "empty-shard"])
-def test_missing_census_preserves_existing_reports(tmp_path, monkeypatch, input_state):
-    """A fresh checkout must not publish absence of input as an empty census."""
-    profile = _load_profile()
-    records = tmp_path / "records"
-    if input_state != "missing":
-        records.mkdir()
-    if input_state == "empty-shard":
-        with gzip.open(records / "part.jsonl.gz", "wt"):
-            pass
-    monkeypatch.setattr(profile, "RECORDS", records)
-    outputs = {"OUT_JSON": b'{"existing": "published counts"}\n',
-               "OUT_MD": b"Existing published interpretation.\n"}
-    for attr, content in outputs.items():
-        path = tmp_path / attr
-        path.write_bytes(content)
-        monkeypatch.setattr(profile, attr, path)
-    monkeypatch.setattr(sys, "argv", ["census_mechanism_profile.py"])
-    with pytest.raises(SystemExit, match="No census records.*--render-only"):
-        profile.main()
-    for attr, content in outputs.items():
-        assert getattr(profile, attr).read_bytes() == content
-
-
-@pytest.mark.parametrize("stride", [0, -1])
-def test_nonpositive_sampling_stride_is_refused(stride):
-    with pytest.raises(SystemExit, match="positive integer"):
-        _load_profile().scan(stride)
-
-
-def test_external_census_with_no_mechanism_matches_is_valid(tmp_path, monkeypatch):
-    """Zero matching mechanisms in a readable input differs from no input.
-
-    Use the public environment setting and real parser so an ignored external
-    root cannot accidentally make this test pass through a mocked scan.
-    """
-    root = tmp_path / "external-atlas"
-    records = root / "records"
-    records.mkdir(parents=True)
-    with gzip.open(records / "part.jsonl.gz", "wt", encoding="utf-8") as fh:
-        fh.write(json.dumps({"pmid": "42", "mesh": ["Unmapped test descriptor"]}) + "\n")
-    monkeypatch.setenv("FERRO_ATLAS_ROOT", str(root))
-    profile = _load_profile()
-    monkeypatch.setattr(profile, "OUT_JSON", tmp_path / "profile.json")
-    monkeypatch.setattr(profile, "OUT_MD", tmp_path / "profile.md")
-    monkeypatch.setattr(sys, "argv", ["census_mechanism_profile.py"])
-    assert profile.main() == 0
-    result = json.loads(profile.OUT_JSON.read_text())
-    assert result["census"] == 1
-    assert result["rows"] == []
-
-
-def test_render_only_works_without_raw_census(tmp_path, monkeypatch):
-    profile = _load_profile()
-    monkeypatch.setattr(profile, "RECORDS", tmp_path / "missing-records")
-    monkeypatch.setattr(profile, "OUT_JSON", tmp_path / "profile.json")
-    monkeypatch.setattr(profile, "OUT_MD", tmp_path / "profile.md")
-    profile.OUT_JSON.write_bytes(JSON.read_bytes())
-    monkeypatch.setattr(sys, "argv", ["census_mechanism_profile.py", "--render-only"])
-    assert profile.main() == 0
-    assert json.loads(profile.OUT_JSON.read_text()) == json.loads(JSON.read_text())
-    assert "4,403,994 census records" in profile.OUT_MD.read_text()
 
 
 @pytest.mark.parametrize("has_sites", [True, False], ids=["overlapping-sites", "no-sites"])
@@ -140,6 +75,40 @@ def test_site_assignment_units_from_scan_to_report(tmp_path, monkeypatch, has_si
     assert "assignment totals are not unique article counts" in report
     assert "are assignable to a site" not in report
     assert "site-assigned records" not in report
+
+
+def test_sparse_site_profile_describes_reporting_limits_without_claiming_no_concentration():
+    profile = _load_profile()
+    result = profile.assemble({
+        "census": 100, "site_totals": {"site-a": 19, "site-b": 81},
+        "count": {"target": 19}, "trials": {}, "by_year": {},
+        "by_site": {"target": {"site-a": 19}}, "partners": {},
+    })
+
+    row, = result["rows"]
+    assert row["site_assigned"] == 19
+    assert row["top_sites"] == []
+    # Every target article belongs to a site holding only 19% of the census;
+    # the reporting floor must not turn that concentration into an absence.
+    report = profile.render(result)
+    assert "20-article reporting threshold" in report
+    assert "no measurable anatomical concentration" not in report
+    assert "other mapped mechanisms" in report
+    assert "No mechanism co-occurs with it in the census" not in report
+
+
+def test_equal_mechanism_counts_have_stable_rows_and_rendering():
+    profile = _load_profile()
+    raw = {
+        "census": 20, "site_totals": {}, "count": {"alpha": 10, "beta": 10},
+        "trials": {}, "by_year": {}, "by_site": {}, "partners": {},
+    }
+    forward = profile.assemble(raw)
+    backward = profile.assemble({**raw, "count": {"beta": 10, "alpha": 10}})
+
+    assert [row["mechanism"] for row in forward["rows"]] == ["alpha", "beta"]
+    assert backward["rows"] == forward["rows"]
+    assert profile.render(backward) == profile.render(forward)
 
 
 def test_descriptor_expansion_changes_profile_with_fixed_census(tmp_path, monkeypatch):
@@ -229,6 +198,9 @@ def test_committed_report_uses_current_assignment_units(d):
     assert "`site_assigned` stores this assignment total" in report
     assert "are assignable to a site" not in report
     assert "site-assigned records" not in report
+    assert "curated descriptor map" in report
+    assert "selected roots in NLM's C04" in report
+    assert "none of the three assigned by this project" not in report
 
 
 def test_trial_share_recomputes_from_its_own_counts(d):

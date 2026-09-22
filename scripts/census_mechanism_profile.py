@@ -30,14 +30,13 @@ corpus/atlas/, or use --render-only to regenerate from the committed counts
 without reading raw records. A missing or empty input never replaces a report.
 """
 import argparse
-import gzip
 import json
 import sys
 from collections import Counter, defaultdict
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from atlas_baseline import atlas_root  # noqa: E402
+from census_input import atlas_root, census_shards, iter_census_shards  # noqa: E402
 
 REPO = Path(__file__).resolve().parent.parent
 RECORDS = atlas_root() / "records"
@@ -57,28 +56,28 @@ TOP_N = 6
 
 def load_sites() -> dict[str, set[str]]:
     out: dict[str, set[str]] = defaultdict(set)
-    for ln in SITE_MAP.read_text(encoding="utf-8").splitlines():
+    for line_number, ln in enumerate(
+            SITE_MAP.read_text(encoding="utf-8").splitlines(), start=1):
         if ln.startswith("#") or not ln.strip():
             continue
         p = ln.split("\t")
-        if len(p) >= 3:
-            out[p[0]].add(p[2].strip().lower())
+        if len(p) < 3 or any(not field.strip() for field in p[:3]):
+            raise SystemExit(
+                f"Invalid site map row at {SITE_MAP}:{line_number}; expected "
+                "site, tree root and descriptor. Existing reports were not changed."
+            )
+        out[p[0]].add(p[2].strip().lower())
+    if not out:
+        raise SystemExit(
+            f"No site descriptors found at {SITE_MAP}; existing reports were not changed."
+        )
     return dict(out)
 
 
 def scan(stride: int = 1) -> dict:
     import yaml
 
-    if stride < 1:
-        raise SystemExit("--stride must be a positive integer")
-    shards = sorted(RECORDS.glob("*.jsonl.gz"))[::stride]
-    missing_data = (
-        f"No census records found at {RECORDS}; existing reports were not changed. "
-        "Set FERRO_ATLAS_ROOT to the census data root, or use --render-only "
-        "to regenerate from the committed counts."
-    )
-    if not shards:
-        raise SystemExit(missing_data)
+    shards = census_shards(RECORDS, stride)
 
     mp = yaml.safe_load(MECH_MAP.read_text(encoding="utf-8"))["mechanisms"]
     mech = {k: {x.lower() for x in v["descriptors"]} for k, v in mp.items()}
@@ -91,35 +90,30 @@ def scan(stride: int = 1) -> dict:
     partners: dict[str, Counter] = defaultdict(Counter)
     site_tot: Counter = Counter()
     n = 0
-    for f in shards:
-        with gzip.open(f, "rt", encoding="utf-8") as fh:
-            for line in fh:
-                r = json.loads(line)
-                n += 1
-                ms = {m.lower() for m in (r.get("mesh") or [])}
-                if not ms:
-                    continue
-                hit_sites = [s for s, d in sites.items() if ms & d]
-                for s in hit_sites:
-                    site_tot[s] += 1
-                hits = [k for k, d in mech.items() if ms & d]
-                if not hits:
-                    continue
-                is_trial = bool(set(r.get("pub_types") or []) & TRIAL_TYPES)
-                y = r.get("year")
-                for k in hits:
-                    count[k] += 1
-                    if is_trial:
-                        trials[k] += 1
-                    if isinstance(y, int):
-                        by_year[k][y] += 1
-                    for s in hit_sites:
-                        by_site[k][s] += 1
-                    for other in hits:
-                        if other != k:
-                            partners[k][other] += 1
-    if not n:
-        raise SystemExit(missing_data)
+    for r in iter_census_shards(shards, RECORDS):
+        n += 1
+        ms = {m.lower() for m in (r.get("mesh") or [])}
+        if not ms:
+            continue
+        hit_sites = [s for s, d in sites.items() if ms & d]
+        for s in hit_sites:
+            site_tot[s] += 1
+        hits = [k for k, d in mech.items() if ms & d]
+        if not hits:
+            continue
+        is_trial = bool(set(r.get("pub_types") or []) & TRIAL_TYPES)
+        y = r.get("year")
+        for k in hits:
+            count[k] += 1
+            if is_trial:
+                trials[k] += 1
+            if isinstance(y, int):
+                by_year[k][y] += 1
+            for s in hit_sites:
+                by_site[k][s] += 1
+            for other in hits:
+                if other != k:
+                    partners[k][other] += 1
     return {
         "census": n,
         "site_totals": dict(site_tot),
@@ -135,7 +129,7 @@ def assemble(d: dict) -> dict:
     st = d["site_totals"]
     base_tot = sum(st.values()) or 1
     rows = []
-    for k, n in sorted(d["count"].items(), key=lambda x: -x[1]):
+    for k, n in sorted(d["count"].items(), key=lambda x: (-x[1], x[0])):
         sites = d["by_site"].get(k, {})
         assigned = sum(sites.values())
         # Enrichment compares the mechanism's site-assignment shares with the
@@ -189,9 +183,10 @@ def render(d: dict) -> str:
     L = ["# Per-mechanism census profile\n"]
     L.append(
         f"Generated by `scripts/census_mechanism_profile.py` over "
-        f"{d['census']:,} census records. Mechanisms are labelled by MeSH "
-        f"descriptor, sites by NLM's C04 tree, and trial status by NLM "
-        f"publication type -- none of the three assigned by this project.\n"
+        f"{d['census']:,} census records. Articles carry NLM-assigned MeSH "
+        f"descriptors and publication types. Mechanisms use the project's "
+        f"curated descriptor map; sites use its selected roots in NLM's C04 "
+        f"tree; trial status uses the configured publication-type set.\n"
     )
     L.append(
         "Volume is NOT comparable across mechanisms and no cross-mechanism "
@@ -239,20 +234,22 @@ def render(d: dict) -> str:
                      + ", ".join(f"{s['site']} {s['enrichment']}x ({s['n']:,})"
                                  for s in r["top_sites"]) + ".\n")
         else:
-            L.append("No site holds 20 or more of its articles, so it has no "
-                     "measurable anatomical concentration here.\n")
+            L.append("No site meets the 20-article reporting threshold, so no "
+                     "site-enrichment ranking is reported for these records.\n")
         if r["top_partners"]:
             L.append("Most frequent co-occurring mechanisms: "
                      + ", ".join(f"{p['mechanism']} ({p['n']:,})"
                                  for p in r["top_partners"]) + ".\n")
         else:
-            L.append("No mechanism co-occurs with it in the census.\n")
+            L.append("No co-occurrences with other mapped mechanisms were "
+                     "observed in these records.\n")
     return "\n".join(L)
 
 
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--stride", type=int, default=1)
+    ap.add_argument("--stride", type=int, default=1,
+                    help="read every Nth sorted shard (default: all shards)")
     ap.add_argument("--render-only", action="store_true")
     a = ap.parse_args()
     if a.render_only:
@@ -265,11 +262,13 @@ def main() -> int:
         # costs nothing and makes the stored fields checkable rather than
         # merely carried forward.
         d = assemble(json.loads(OUT_JSON.read_text()))
-        OUT_JSON.write_text(json.dumps(d, indent=1) + "\n")
     else:
         d = assemble(scan(a.stride))
-        OUT_JSON.write_text(json.dumps(d, indent=1) + "\n")
-    OUT_MD.write_text(render(d))
+    # Complete both representations before replacing either published report.
+    json_text = json.dumps(d, indent=1) + "\n"
+    md_text = render(d)
+    OUT_JSON.write_text(json_text)
+    OUT_MD.write_text(md_text)
     print(f"wrote {OUT_MD}")
     return 0
 
