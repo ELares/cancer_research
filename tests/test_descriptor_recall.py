@@ -55,6 +55,21 @@ def _mod():
     return m
 
 
+def test_scan_delegates_input_availability_to_the_shared_reader():
+    """Keep census availability checks centralized as generators evolve."""
+    import ast
+    tree = ast.parse(SCRIPT.read_text())
+    imports = [node for node in tree.body if isinstance(node, ast.ImportFrom)
+               and node.module == "census_input"]
+    assert any(alias.name == "iter_census_records"
+               for node in imports for alias in node.names)
+    scan = next(node for node in tree.body
+                if isinstance(node, ast.FunctionDef) and node.name == "scan")
+    assert any(isinstance(node, ast.Call)
+               and isinstance(node.func, ast.Name)
+               and node.func.id == "iter_census_records" for node in ast.walk(scan))
+
+
 def test_the_text_rule_is_structurally_symmetric():
     """The finding is an asymmetric comparison; the fix must not be one.
 
@@ -216,11 +231,15 @@ def test_the_verdict_follows_the_measurement_and_can_flip():
                 "the report claims reproduction as a live claim; overlapping "
                 "intervals establish only that the two cannot be told apart")
     # and it must render differently when the numbers say otherwise
-    flipped = {**d, "ratio_by_text": ms * 3}
+    from copy import deepcopy
+    flipped = deepcopy(d)
+    flipped["arms"]["PDT"]["text"] *= 3
     out = m.render(flipped)
-    assert f"{ms * 3:.2f}:1" in out, (
+    expected = flipped["arms"]["PDT"]["text"] / flipped["arms"]["SDT"]["text"]
+    assert f"{expected:.2f}:1" in out, (
         "the rendered ratio is not read from the data, so the verdict cannot "
         "follow a different measurement")
+    assert "understates the text-matched ratio" in out
 
 
 def test_the_inverted_over_estimate_caveat_does_not_return():
@@ -270,11 +289,13 @@ def test_it_does_not_claim_the_manuscript_is_wrong():
         "'they agree'; the data supports only the former")
 
 
-def test_an_unmeasurable_arm_refuses_to_render():
-    src = SCRIPT.read_text()
-    assert "matched nothing on one axis" in src
-    assert "raise SystemExit" in src
-    assert "is not a finding" in src
+def test_an_unmeasurable_arm_renders_unavailable_rates():
+    d = _doc()
+    d["arms"]["SDT"].update(text=0, descriptor=0, both=0)
+    out = _mod().render(d)
+    assert "| SDT | `Ultrasonic Therapy` | 0 | 0 | 0 | **n/a** | n/a |" in out
+    assert "a recall difference cannot be assessed" in out
+    assert "text-route interval is unavailable" in out
 
 
 def test_the_two_artifacts_describe_the_same_census_build():

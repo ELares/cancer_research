@@ -13,11 +13,11 @@
 An earlier version of this table carried a row reading `carry no MeSH at all | 0 | 0.0%`. THAT ROW COULD NOT HAVE BEEN ANYTHING ELSE: `atlas_baseline.py` admits a record to this stream only when a MeSH DescriptorName matches, so no record here can lack MeSH. It measured the admission rule and read as a property of the literature. What is actually excluded is this:
 
 * **783,271 MeSH-less cancer articles** sit in a second census stream, `corpus/atlas/records_unindexed/`, recovered by text match and carrying no descriptors at all. They are excluded by choice and cannot be assigned by any descriptor list. Over both streams assignability is 2,546,944 / 5,187,265 = **49.1%**, not 57.8%.
-* **200,758 articles (4.6% of this stream)** are admitted only by the nine adjacent experimental-context descriptors and carry NO C04 descriptor. Every site string is a C04 descriptor, so these are unassignable by construction. Over the C04 core alone (4,203,236 articles) assignability is **60.6%**.
+* **200,758 articles (4.6% of this stream)** carry NO C04 descriptor. Every site string is a C04 descriptor, so these are unassignable by construction. Over the C04 core alone (4,203,236 articles) assignability is **60.6%**.
 
 ## The list is shallow, but not uniformly shallow
 
-The 18 sites are matched by 42 descriptors between them -- but not evenly. `stomach`, `ovary`, `bladder` and `thyroid` get one each while `brain/CNS` and `head and neck` get four, and the tree holds far more under some of those nodes than others. So the per-site column is understated by a different factor for every site, and it is the column a burden ratio divides into mortality.
+The 18 sites are matched by 42 descriptors between them -- but not evenly. `stomach`, `ovary`, `bladder` and `thyroid` get one each while `brain/CNS` and `head and neck` get four, and the tree holds far more under some of those nodes than others. The per-site counts change by different factors under the two lists, and it is this column a burden ratio divides into mortality.
 
 Measured against the SAME 18 sites walked down NLM's own tree -- every C04 descriptor at or beneath the nodes the shallow list already occupies, 233 placements over 225 distinct descriptors (7 sit in more than one of these sites), committed at `analysis/site-descriptor-map.tsv`. There is no rule to dispute beyond the shallow list itself: an earlier version of this section matched descriptor NAMES and put `Ganglion Cysts` and `Paraganglioma` under brain/CNS, a benign salivary tumour under lymphoma, and merged plasma-cell myeloma into lymphoma, which moved the headline rank.
 
@@ -44,7 +44,7 @@ Measured against the SAME 18 sites walked down NLM's own tree -- every C04 descr
 
 **Read the deep column with its overlaps.** NLM's tree does not draw this page's 18 boundaries: `head and neck` subsumes `oesophagus`, `thyroid`. Those sites are listed separately here, so the deep column double-counts across the page's own list and its rank order is partly a statement about MeSH rather than about the literature. That is a reason to read the ratio column rather than the deep ranks, and a reason a burden analysis has to pick its boundaries before it picks its depth.
 
-The gap between the two lists is not uniform and it is not small (a `*` marks a site whose subtree contains another of these sites, so its figure counts descriptors this table lists separately): `head and neck`* 2.72x, `leukaemia` 2.04x, `lymphoma` 1.67x, `brain/CNS` 1.45x against `prostate` 1.00x, `stomach` 1.00x, `oesophagus` 1.00x, `bladder` 1.00x. 11 of 17 rankable sites change rank, `leukaemia` 9 -> 3, `lymphoma` 11 -> 8, `skin/melanoma` 4 -> 6. So the per-site column is comparable within a list and not across sites, and any burden ratio built on it inherits that.
+The gap between the two lists varies by site (a `*` marks a site whose subtree contains another of these sites, so its figure counts descriptors this table lists separately): `head and neck`* 2.72x, `leukaemia` 2.04x, `lymphoma` 1.67x, `brain/CNS` 1.45x against `prostate` 1.00x, `stomach` 1.00x, `oesophagus` 1.00x, `bladder` 1.00x. 11 of 17 rankable sites change rank, `leukaemia` 9 -> 3, `lymphoma` 11 -> 8, `skin/melanoma` 4 -> 6. So the per-site column is comparable within a list and not across sites, and any burden ratio built on it inherits that.
 
 Assignability itself goes **57.8%** shallow -> **67.0%** on the subtree walk (+405,299 articles). The shallow figure is the one this page leads with, because it is the shorter and more conservative list -- NOT because it is more auditable, which the bullet below retracts. It is a floor, not the census's limit, and a deeper list can also over-reach: membership here is NLM's tree, so an accident of naming cannot cause that, but a site's subtree still carries entities its shallow row does not.
 
@@ -77,12 +77,12 @@ Across 18 major sites, on the shallow list:
 
 **57.8% of the census is assignable to one of these sites** on the shallow list.
 
-An earlier version of this page said the remainder "is not a failure of the census: much cancer literature is about biology, methods or cancer in general rather than a site". That was narrated rather than measured, and it is wrong for a large share of it. Of the 1,857,050 unassigned:
+An earlier version of this page said the remainder "is not a failure of the census: much cancer literature is about biology, methods or cancer in general rather than a site". That was narrated rather than measured. Of the 1,857,050 unassigned:
 
-* **405,299 (21.8%)** are the SAME 18 sites, named by a descriptor beneath the shallow list's own tree nodes. The great majority of them name a site.
+* **405,299 (21.8%)** are the SAME 18 sites, named by a descriptor beneath the shallow list's own tree nodes.
 * 476,436 (25.7%) carry the generic `Neoplasms` descriptor, which is the reading the sentence describes.
 * 200,758 (10.8%) carry no C04 descriptor at all and could not be assigned by any list of C04 strings.
-* the rest is not featureless, and it is largely CANCER AT A SITE THIS LIST DOES NOT COVER -- the same correction bullet one makes, one level out. Its commonest descriptors, excluding check-tags and study-design terms: `diagnosis, differential` 52,435, `bone neoplasms` 45,186, `tomography, x-ray computed` 42,836, `multiple myeloma` 42,185, `magnetic resonance imaging` 35,384, `cysts` 31,823. An earlier version pointed at a descriptor list accumulated over ALL unassigned records, which included the generic-`Neoplasms` and no-C04 buckets the same sentence had just excluded.
+* the residue's commonest descriptors, excluding check-tags and study-design terms: `diagnosis, differential` 52,435, `bone neoplasms` 45,186, `tomography, x-ray computed` 42,836, `multiple myeloma` 42,185, `magnetic resonance imaging` 35,384, `cysts` 31,823. An earlier version pointed at a descriptor list accumulated over ALL unassigned records, which included the generic-`Neoplasms` and no-C04 buckets the same sentence had just excluded. These descriptor counts alone do not establish how much of the residue is cancer at a site this list does not cover.
 * the remaining 774,557 (41.7%) is none of those three, and is the largest single bucket.
 
 So the honest version of the original sentence is much narrower: 21.8% of the remainder is a limit of THIS 18-site list rather than of the census, a further 25.7% is the reading the original sentence described, and 41.7% is neither and is not characterised here beyond the descriptors above.

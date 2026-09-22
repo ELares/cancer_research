@@ -11,19 +11,17 @@ evidence lead" should test its own published claims first.
 
 WHAT THIS IS NOT
 ----------------
-Not a replication and not a refutation exercise. Both claims tested here
-SURVIVE, which is reported as prominently as any failure would be. A document
-that only ever finds its own work wanting is as unreliable as one that only
-ever confirms it.
+Not a replication and not a refutation exercise. Conclusions follow the
+measured comparisons, including intervals that fall below the manuscript's
+ratio or cannot be estimated. A document that only ever finds its own work
+wanting is as unreliable as one that only ever confirms it.
 
 An earlier version of this file went further and said Section 8.2 was
 UNDERSTATED by the manuscript. That is WITHDRAWN. The census ratio divides two
-MeSH descriptor counts, and those descriptors recall their concepts at
-substantially different rates, so the gap was largely a measurement of indexing
-practice rather than of literature. One text rule applied to both arms
-is not shown to exceed the manuscript's -- its interval covers that figure --
-so the evidence for understatement disappears. That is weaker than agreement,
-and this file does not claim agreement.
+MeSH descriptor counts. Their different agreement with title and abstract
+text can confound that comparison. The current verdict is reconstructed from
+the sibling report's raw counts; its historical interval covered the
+manuscript's figure. Such coverage does not establish agreement.
 
 Every figure behind that is measured in `analysis/atlas-descriptor-recall.md`
 and interpolated here at render time. None is written into this docstring,
@@ -56,7 +54,11 @@ import collections
 import gzip
 import math
 import json
+import sys
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from atlas_descriptor_recall import assemble as assemble_recall
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 RECORDS = PROJECT_ROOT / "corpus" / "atlas" / "records"
@@ -79,6 +81,7 @@ MODALITIES = [
 
 # A ratio below this many articles on either side is not a ratio.
 MIN_FOR_A_RATIO = 10
+TEXT_AGREEMENT_GAP_POINTS = 5.0
 
 # DESCRIPTOR SENSITIVITY. MeSH gives PDT both a procedure and an agent
 # descriptor while SDT has only a procedure one plus generic physics terms, so
@@ -168,16 +171,11 @@ def _matched_denominator():
 
 
 def _recall_check():
-    """The sibling recall measurement, or None.
+    """Reconstruct the sibling measurement from its stored counts, offline.
 
-    Read from analysis/atlas-descriptor-recall.json rather than recomputed,
-    and every number this file quotes from it is interpolated at render time.
-    Typing them here is the defect tests/test_no_handwritten_figures_in_generators.py
-    exists to catch: a sentence that outlives the measurement beside it.
-
-    Fail-open: a missing artifact adds no qualification, because silently
-    withdrawing a verdict because a file is absent is worse than leaving it
-    standing where a reader can see it.
+    Missing, unreadable or invalid evidence stops rendering. Valid counts with
+    an unavailable ratio remain explicitly unavailable; they cannot restore an
+    understatement verdict. Stored intervals and decision flags are not reused.
     """
     path = PROJECT_ROOT / "analysis" / "atlas-descriptor-recall.json"
     if not path.exists():
@@ -192,20 +190,33 @@ def _recall_check():
             "its case, which is withdrawn. Run "
             "`python scripts/atlas_descriptor_recall.py` first.")
     try:
-        d = json.loads(path.read_text())
-    except (OSError, ValueError) as exc:
+        d = assemble_recall(json.loads(path.read_text()))
+    except (OSError, ValueError, KeyError, TypeError) as exc:
         raise SystemExit(
             f"analysis/atlas-descriptor-recall.json is unreadable ({exc}). "
             "The Section 8.2 verdict depends on it; failing open here "
             "silently re-asserts the withdrawn claim.") from exc
     tr, mr = d.get("ratio_by_text"), d.get("manuscript_ratio")
-    if tr is None or not mr:
-        # NOT fail-open. A partial regeneration leaves this field null, and
-        # returning None here silently restored the WITHDRAWN verdict.
+    expected_descriptors = {name: [descriptor.lower()]
+                            for name, descriptor, _n, _icd in MODALITIES
+                            if name in {"PDT", "SDT"}}
+    manuscript_counts = {row[0]: row[2] for row in MODALITIES}
+    expected_ratio = round(manuscript_counts["PDT"] / manuscript_counts["SDT"], 2)
+    if (d.get("subject") != "ferroptosis" or
+            d.get("ratio_pair") != ["PDT", "SDT"] or
+            any(d["arms"][arm].get("descriptors") != descriptors
+                for arm, descriptors in expected_descriptors.items())):
+        raise SystemExit("The descriptor-recall artifact does not describe the "
+                         "ferroptosis PDT:SDT descriptor comparison required "
+                         "by Section 8.2.")
+    if not isinstance(mr, (float, int)) or not math.isfinite(mr) or mr <= 0:
         raise SystemExit(
-            "analysis/atlas-descriptor-recall.json carries no symmetric ratio "
-            "(partial regeneration?). Re-run "
+            "analysis/atlas-descriptor-recall.json carries no valid manuscript "
+            "comparison ratio. Re-run "
             "`python scripts/atlas_descriptor_recall.py`.")
+    if mr != expected_ratio:
+        raise SystemExit("The descriptor-recall artifact uses a different "
+                         "manuscript comparison ratio from Section 8.2.")
     arms = d.get("arms") or {}
     # THE VERDICT RIDES THE INTERVAL, NOT THE POINT ESTIMATE. An earlier
     # version used `tr > mr`, a bare threshold: a reviewer flipped the
@@ -215,7 +226,9 @@ def _recall_check():
     # Understatement is only claimed when the symmetric interval EXCLUDES the
     # manuscript's figure from below.
     ci = d.get("ratio_by_text_ci")
-    agrees = bool(ci and ci[0] > mr)
+    relation = ("unavailable" if ci is None else
+                "above" if ci[0] > mr else
+                "below" if ci[1] < mr else "overlaps")
     return {"symmetric_ratio": tr, "manuscript_ratio": mr,
             "symmetric_ratio_ci": ci,
             # BUILD FINGERPRINT. Both artifacts count the same ferroptosis
@@ -224,7 +237,9 @@ def _recall_check():
             # verdict unnoticed. The repo already learned this from
             # comention_regression's `pairs_before`.
             "subject_articles": d.get("subject_articles"),
-            "symmetric_agrees": agrees,
+            "symmetric_agrees": relation == "above",
+            "interval_relation": relation,
+            "ratio_pair": d["ratio_pair"],
             "recall_asymmetry": d.get("recall_asymmetry"),
             "recalls": {k: v.get("recall") for k, v in arms.items()},
             "precisions": {k: v.get("precision") for k, v in arms.items()},
@@ -243,46 +258,65 @@ def _recall_gap_phrase():
         return ("the recall of those descriptors is measured in "
                 "analysis/atlas-descriptor-recall.md")
     hi, lo = max(recs.values()), min(recs.values())
-    return (f"analysis/atlas-descriptor-recall.md measures the two arms"
-            f" recalling their concepts at {100*hi:.1f}% and {100*lo:.1f}%")
+    return (f"analysis/atlas-descriptor-recall.md measures text-agreement recall "
+            f"at {100*hi:.1f}% and {100*lo:.1f}% for the two arms")
 
 
 def _recall_caveat():
-    """The recall asymmetry, interpolated from the sibling artifact.
-
-    Every number here is read at render time. An earlier draft typed them into
-    the string and tripped the repo's own hand-written-figure guard, which is
-    the correct outcome: this file's whole subject is a sentence that outlived
-    the measurement beside it.
-    """
+    """Describe measured agreement without assuming either axis differs."""
     rec = _recall_check()
-    if not rec:
-        return ("* The relative-breadth worry above is a PRECISION check. The "
-                "RECALL of each descriptor is not measured here; see "
-                "`analysis/atlas-descriptor-recall.md`.")
-    recs = {k: v for k, v in rec["recalls"].items() if v is not None}
-    if len(recs) < 2:
-        return ("* Recall was not measurable for both arms; see "
-                "`analysis/atlas-descriptor-recall.md`.")
-    hi = max(recs, key=recs.get)
-    lo = min(recs, key=recs.get)
-    verb = ("cannot be distinguished from" if not rec["symmetric_agrees"]
-            else "still exceeds")
-    return (
-        "* **Both descriptors are broader than their modality, and that is not "
-        "the axis that matters.** The relative-breadth worry above is a "
-        "PRECISION check and precision really is symmetric. The axis nobody "
-        f"measured is RECALL, and it is lopsided: "
-        f"`{rec['descriptors'].get(hi, hi)}` recalls {100*recs[hi]:.1f}% of "
-        f"{hi} papers while `{rec['descriptors'].get(lo, lo)}` recalls "
-        f"{100*recs[lo]:.1f}% of {lo} papers, a "
-        f"{recs[hi]/recs[lo]:.2f}x gap. One text rule applied to both arms "
-        f"gives {rec['symmetric_ratio']:.2f}:1 against the manuscript's "
-        f"{rec['manuscript_ratio']:.2f}:1, so the census {verb} the "
-        f"manuscript on this ratio. "
-        "See `analysis/atlas-descriptor-recall.md`. The variant sweep below "
-        "cannot see this: every variant is built from descriptors and "
-        "inherits the same gap.")
+    parts = ["* The relative-breadth worry above is a PRECISION check. "
+             "The axis nobody measured is RECALL; the sibling report measures "
+             "agreement with each record's title and abstract."]
+    recalls = []
+    for arm in rec["ratio_pair"]:
+        recall, precision = rec["recalls"][arm], rec["precisions"][arm]
+        values = ((f"{100*recall:.1f}% recall" if recall is not None else
+                   "recall unavailable"),
+                  (f"{100*precision:.1f}% precision" if precision is not None else
+                   "precision unavailable"))
+        parts.append(f"`{rec['descriptors'][arm]}` ({arm}): " + ", ".join(values) + ".")
+        if recall is not None:
+            recalls.append(recall)
+    if len(recalls) == 2:
+        hi, lo = max(recalls), min(recalls)
+        if hi == lo:
+            parts.append("The observed recalls are equal.")
+        elif lo == 0:
+            parts.append("One observed recall is zero; a finite fold gap is unavailable.")
+        else:
+            parts.append(f"The observed recalls differ by {hi/lo:.2f}x.")
+    else:
+        parts.append("Recall cannot be compared for both arms.")
+    if rec["symmetric_ratio"] is not None:
+        parts.append("One text rule applied to both arms gives "
+                     f"{rec['symmetric_ratio']:.2f}:1 against the manuscript's "
+                     f"{rec['manuscript_ratio']:.2f}:1.")
+    parts.append(_symmetric_comparison(rec))
+    parts.append("These approximate intervals retain the sibling report's "
+                 "Poisson model, which omits covariance between arms; text "
+                 "agreement does not establish the true literature ratio.")
+    parts.append("See `analysis/atlas-descriptor-recall.md`. A sweep over "
+                 "descriptor sets does not test descriptor-versus-text agreement.")
+    return " ".join(parts)
+
+
+def _symmetric_comparison(rec):
+    """State only the comparison supported by the reconstructed interval."""
+    return {
+        "above": "Under the count model, the approximate symmetric interval "
+                 "lies above the manuscript's ratio.",
+        "below": "Under the count model, the approximate symmetric interval "
+                 "lies below the manuscript's ratio; "
+                 "the earlier understatement verdict is withdrawn.",
+        "overlaps": "Under the count model, the approximate symmetric interval "
+                    "contains the manuscript's ratio, "
+                    "so this measurement cannot distinguish the two. The "
+                    "earlier understatement verdict is withdrawn; this does "
+                    "not establish agreement.",
+        "unavailable": "The symmetric interval is unavailable, so this "
+                       "comparison cannot decide understatement.",
+    }[rec["interval_relation"]]
 
 
 def understates(census_ratio, manuscript_ratio, measurable) -> bool:
@@ -452,7 +486,7 @@ def main() -> int:
                 "pdt_pct": pdt_on, "sdt_pct": sdt_on,
                 "pdt_n": om["PDT"], "sdt_n": om["SDT"],
                 "gap_points": round(abs(pdt_on - sdt_on), 1),
-                "symmetric_within_5_points": abs(pdt_on - sdt_on) <= 5.0,
+                "symmetric_within_5_points": abs(pdt_on - sdt_on) <= TEXT_AGREEMENT_GAP_POINTS,
                 "filtered_ratio": round(om["PDT"] / om["SDT"], 2) if om["SDT"] else None,
             },
             "direction_holds": bool(
@@ -502,8 +536,10 @@ def main() -> int:
                          for y in sorted(yt)],
         },
     }
-    OUT_JSON.write_text(json.dumps(res, indent=2, sort_keys=True) + "\n")
-    OUT_MD.write_text(render(res), encoding="utf-8")
+    json_text = json.dumps(res, indent=2, sort_keys=True) + "\n"
+    markdown = render(res)
+    OUT_JSON.write_text(json_text)
+    OUT_MD.write_text(markdown, encoding="utf-8")
     print(f"wrote {OUT_MD}\nwrote {OUT_JSON}")
     print(f"  section 8.2 PDT:SDT  manuscript {ms_ratio} -> census {cs_ratio}")
     print(f"  section 3.7 growth   corpus {corpus} vs field {field} "
@@ -534,27 +570,18 @@ def _headline(r: dict) -> str:
     # three times it does not do.
     # THE UNDERSTATEMENT CLAIM IS CONFOUNDED BY DESCRIPTOR RECALL.
     # `census_exceeds_manuscript` divides two descriptor counts, and
-    # analysis/atlas-descriptor-recall.md measures those descriptors recalling
-    # their concepts at 80.2% and 46.0% -- a 1.74x gap. One rule applied to
-    # both arms does not show the census exceeding the manuscript. So
+    # analysis/atlas-descriptor-recall.md measures their text agreement.
     # "understated" is a statement about indexing practice unless the
     # symmetric measurement agrees, and the decision is made by the data
     # rather than by a threshold invented here.
     rec = _recall_check()
     if not mt["ratio_is_measurable"]:
         undecided.append("section 8.2 cannot be decided at census scale")
-    elif mt["census_exceeds_manuscript"] and rec and not rec["symmetric_agrees"]:
-        held.append(
-            "section 8.2 survives; a symmetric rule CANNOT DISTINGUISH the "
-            "census from the manuscript, so the earlier 'understated by the "
-            "manuscript' verdict is withdrawn")
-    elif mt["census_exceeds_manuscript"]:
-        held.append("section 8.2 survives, understated by the manuscript")
-    elif mt["direction_holds"]:
-        held.append("section 8.2 holds in direction but on a smaller ratio "
-                    "than the manuscript argued from")
+    elif rec["symmetric_agrees"]:
+        held.append("section 8.2: the approximate symmetric text-count interval "
+                    "supports understatement under the count model")
     else:
-        failed.append("section 8.2 does not survive")
+        undecided.append("section 8.2: " + _symmetric_comparison(rec))
     if not g["claim_still_made"]:
         # Not a verdict. The manuscript now reports the census figure directly,
         # so there is no corpus claim left to test -- and this measurement is
@@ -624,19 +651,19 @@ def render(r: dict) -> str:
               f"({pdt['census_ferroptosis']} against {sdt['census_ferroptosis']}).",
               ""]
         rec_here = _recall_check()
-        if m["census_exceeds_manuscript"] and rec_here and \
-                not rec_here["symmetric_agrees"]:
-            L += ["**The ferroptosis-count leg of the claim survives.** The",
-                  "DESCRIPTOR ratio is larger than the manuscript's, but a",
-                  "symmetric rule applied to both arms is not, so this analysis",
-                  "does not claim the census argues from a larger ratio -- an",
-                  "earlier version said exactly that here, in synonyms, well",
-                  "below a headline withdrawing it.", "",]
+        descriptor_comparison = ("larger than" if m['census_pdt_sdt_ratio'] >
+                                 m['manuscript_pdt_sdt_ratio'] else
+                                 "smaller than" if m['census_pdt_sdt_ratio'] <
+                                 m['manuscript_pdt_sdt_ratio'] else "equal to")
+        L += [f"The DESCRIPTOR ratio is {descriptor_comparison} the manuscript's.", ""]
+        if not rec_here["symmetric_agrees"]:
+            L += [_symmetric_comparison(rec_here), ""]
             L += ["That is the whole of what a count ratio can establish, and",
                   "the manuscript's claim is broader than it.", "",]
-        elif m["census_exceeds_manuscript"]:
-            L += ["**The ferroptosis-count leg of the claim survives, on a larger",
-                  "ratio than the manuscript argued from.** That is the whole of",
+        else:
+            L += [_symmetric_comparison(rec_here),
+                  "This supports understatement for the text-count comparison",
+                  "under the approximate count model. That is the whole of",
                   "what a count ratio can establish, and the manuscript's claim",
                   "is broader than it.", "",
                   "NOT confirmed here, and each for a different reason: the",
@@ -650,10 +677,6 @@ def render(r: dict) -> str:
                   "approved photosensitizers' is not a literature-count claim",
                   "either. A count ratio speaks to attention, not to any of",
                   "those.", ""]
-        else:
-            L += ["**The census ratio is smaller than the manuscript's**, so the",
-                  "strength of the claim needs revisiting even though its",
-                  "direction holds.", ""]
     else:
         L += ["The census cannot decide the ratio: one side falls below the",
               f"{m['min_for_a_ratio']}-article floor this analysis uses.", ""]
@@ -672,34 +695,34 @@ def render(r: dict) -> str:
           + (" **Every variant exceeds the manuscript's**, so the DIRECTION"
              " does not rest on the descriptor pair chosen here. It does not"
              " establish understatement: every variant is built from"
-             " descriptors, and " + _recall_gap_phrase() + ", so all of them"
-             " inherit the same gap. A sweep over descriptor sets cannot"
+             " descriptors. The separate text comparison is required: "
+             + _recall_gap_phrase() + ". A sweep over descriptor sets cannot"
              " detect a descriptor-versus-text recall problem."
              if m["understatement_holds_under_every_variant"] else
              " **Not every variant exceeds the manuscript's**, so the"
              " conclusion depends on which descriptors are used and the"
              " point estimate should not be read alone."), "",
-          "### Is the over-estimation symmetric?", "",
-          "Both descriptors are broader than the modality they name, so the",
-          "ratio is only as good as their RELATIVE over-estimation. An earlier",
-          "version stated that and never measured it, which left a named",
-          "invalidator sitting beside an unconditional verdict. Measured by",
-          "asking whether each record's own title and abstract discuss the",
-          "modality and a tumour:", "",
+          "### Do the descriptor text-agreement rates differ?", "",
+          "Descriptors can be broader than the modality they name. This check",
+          "asks whether each record's own title and abstract discuss the",
+          "modality and a tumour. A text miss is not an adjudicated indexing",
+          "error, and similar agreement rates do not establish equal recall:", "",
           "| | on modality and tumour | of |", "|---|--:|--:|",
           f"| PDT | {om['pdt_n']} ({om['pdt_pct']}%) | "
           f"{next(x['census_ferroptosis'] for x in m['rows'] if x['modality'] == 'PDT')} |",
           f"| SDT | {om['sdt_n']} ({om['sdt_pct']}%) | "
           f"{next(x['census_ferroptosis'] for x in m['rows'] if x['modality'] == 'SDT')} |",
           "",
-          (f"The gap is {om['gap_points']} points, so the over-estimation is "
-           f"symmetric and the ratio survives it: filtering to on-modality "
+          (f"The gap is {om['gap_points']} points, so text agreement is "
+           f"within the {TEXT_AGREEMENT_GAP_POINTS:g}-point descriptive threshold: filtering to text-matching "
            f"records gives {om['filtered_ratio']} against the raw "
            f"{m['census_pdt_sdt_ratio']}."
            if om["symmetric_within_5_points"] else
-           f"The gap is {om['gap_points']} points, so one descriptor is "
-           "materially broader than the other and the raw ratio is inflated. "
+           f"The gap is {om['gap_points']} points, so text agreement differs "
+           f"by more than the {TEXT_AGREEMENT_GAP_POINTS:g}-point descriptive threshold. "
            f"The filtered ratio is {om['filtered_ratio']}."), "",
+          "This comparison alone does not establish descriptor breadth, "
+          "ratio inflation, or the true literature ratio.", "",
           "### What this table cannot test", "",
           f"* **{', '.join(m['untestable_rows'])}** has no MeSH descriptor, so the",
           "  manuscript's figure for it can be neither confirmed nor",

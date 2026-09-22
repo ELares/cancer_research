@@ -331,13 +331,11 @@ REGISTRY = {
         "comparable with them."),
     "atlas_descriptor_recall.py": (
         {"records"},
-        "measures how completely two MeSH descriptors recall their concepts, "
-        "so it must read the stream those descriptors are assigned in. "
-        "records_unindexed/ carries no MeSH at all, so including it would put "
-        "articles in the denominator that CANNOT contribute to the numerator "
-        "and depress both recalls by construction -- and unequally, since the "
-        "un-indexed share differs by topic. The comparison is between two "
-        "descriptors on the same articles, which is what makes it symmetric."),
+        "measures descriptor/text agreement within the ferroptosis-indexed "
+        "subject cohort, using the same text-rule shape for both arms. "
+        "The unindexed stream has no MeSH descriptors and cannot meet that "
+        "subject inclusion rule. These are conditional agreement estimates, "
+        "not recall over all cancer literature or independent adjudication."),
     "atlas_thesis_rank.py": (
         {"records"},
         "ranks the ferroptosis-modality intersection over the same frozen "

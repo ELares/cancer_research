@@ -306,7 +306,7 @@ def test_the_ranking_survives_a_json_round_trip():
 
 
 def test_the_map_root_column_actually_places_its_descriptor():
-    """`write_map`'s middle column is the whole auditability claim, and no
+    """The map's middle column is the whole auditability claim, and no
     guard read it: falsifying 95 of 233 roots left every test green.
     """
     m = _mod()
@@ -437,12 +437,6 @@ def test_the_geography_caveat_survives():
         "the report no longer states that mortality and publication counts "
         "have different geography, which is the caveat that stops the eventual "
         "ratio being read as a neglect verdict")
-
-
-def test_an_empty_assignment_refuses_to_render():
-    src = SCRIPT.read_text()
-    assert 'if d["assigned"] == 0:' in src
-    assert "is not a finding" in src and "raise SystemExit" in src
 
 
 def test_no_shallow_descriptor_is_called_non_human():

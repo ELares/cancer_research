@@ -7,7 +7,7 @@ or over live PubMed queries run once. The census is the whole indexed
 cancer literature with expert MeSH labels, so several claims the frozen
 corpus could not test now are testable.
 
-**Section 8.2 survives; a symmetric rule cannot distinguish the census from the manuscript, so the earlier 'understated by the manuscript' verdict is withdrawn, and section 3.7's corpus growth claim has been retired from the manuscript, which now reports the census measurement below.** That is reported as prominently as the opposite
+**Section 8.2: under the count model, the approximate symmetric interval contains the manuscript's ratio, so this measurement cannot distinguish the two. the earlier understatement verdict is withdrawn; this does not establish agreement. and section 3.7's corpus growth claim has been retired from the manuscript, which now reports the census measurement below.** That is reported as prominently as the opposite
 would be: a document that only ever finds its own work wanting is as
 unreliable as one that only ever confirms it.
 
@@ -39,12 +39,9 @@ and reads it as PDT dominating SDT by approximately three to one.
 
 On the census it is **4.75:1** (152 against 32).
 
-**The ferroptosis-count leg of the claim survives.** The
-DESCRIPTOR ratio is larger than the manuscript's, but a
-symmetric rule applied to both arms is not, so this analysis
-does not claim the census argues from a larger ratio -- an
-earlier version said exactly that here, in synonyms, well
-below a headline withdrawing it.
+The DESCRIPTOR ratio is larger than the manuscript's.
+
+Under the count model, the approximate symmetric interval contains the manuscript's ratio, so this measurement cannot distinguish the two. The earlier understatement verdict is withdrawn; this does not establish agreement.
 
 That is the whole of what a count ratio can establish, and
 the manuscript's claim is broader than it.
@@ -64,23 +61,23 @@ this analysis made. Every defensible variant:
 | PDT widened | 202 | 32 | 6.31 |
 | both widened | 202 | 47 | 4.3 |
 
-The ratio ranges 3.23 to 6.31. **Every variant exceeds the manuscript's**, so the DIRECTION does not rest on the descriptor pair chosen here. It does not establish understatement: every variant is built from descriptors, and analysis/atlas-descriptor-recall.md measures the two arms recalling their concepts at 80.2% and 46.0%, so all of them inherit the same gap. A sweep over descriptor sets cannot detect a descriptor-versus-text recall problem.
+The ratio ranges 3.23 to 6.31. **Every variant exceeds the manuscript's**, so the DIRECTION does not rest on the descriptor pair chosen here. It does not establish understatement: every variant is built from descriptors. The separate text comparison is required: analysis/atlas-descriptor-recall.md measures text-agreement recall at 80.2% and 46.0% for the two arms. A sweep over descriptor sets cannot detect a descriptor-versus-text recall problem.
 
-### Is the over-estimation symmetric?
+### Do the descriptor text-agreement rates differ?
 
-Both descriptors are broader than the modality they name, so the
-ratio is only as good as their RELATIVE over-estimation. An earlier
-version stated that and never measured it, which left a named
-invalidator sitting beside an unconditional verdict. Measured by
-asking whether each record's own title and abstract discuss the
-modality and a tumour:
+Descriptors can be broader than the modality they name. This check
+asks whether each record's own title and abstract discuss the
+modality and a tumour. A text miss is not an adjudicated indexing
+error, and similar agreement rates do not establish equal recall:
 
 | | on modality and tumour | of |
 |---|--:|--:|
 | PDT | 138 (90.8%) | 152 |
 | SDT | 28 (87.5%) | 32 |
 
-The gap is 3.3 points, so the over-estimation is symmetric and the ratio survives it: filtering to on-modality records gives 4.93 against the raw 4.75.
+The gap is 3.3 points, so text agreement is within the 5-point descriptive threshold: filtering to text-matching records gives 4.93 against the raw 4.75.
+
+This comparison alone does not establish descriptor breadth, ratio inflation, or the true literature ratio.
 
 ### What this table cannot test
 
@@ -94,7 +91,7 @@ The gap is 3.3 points, so the over-estimation is symmetric and the ratio survive
 * **The ICD column is not measurable.** Both sides are below the 10-article floor (3 and 1), so no ratio is computed from it.
   The manuscript's ICD figures came from a broader keyword query,
   not a descriptor intersection.
-* **Both descriptors are broader than their modality, and that is not the axis that matters.** The relative-breadth worry above is a PRECISION check and precision really is symmetric. The axis nobody measured is RECALL, and it is lopsided: `photochemotherapy` recalls 80.2% of PDT papers while `ultrasonic therapy` recalls 46.0% of SDT papers, a 1.74x gap. One text rule applied to both arms gives 2.89:1 against the manuscript's 2.93:1, so the census cannot be distinguished from the manuscript on this ratio. See `analysis/atlas-descriptor-recall.md`. The variant sweep below cannot see this: every variant is built from descriptors and inherits the same gap.
+* The relative-breadth worry above is a PRECISION check. The axis nobody measured is RECALL; the sibling report measures agreement with each record's title and abstract. `photochemotherapy` (PDT): 80.2% recall, 96.1% precision. `ultrasonic therapy` (SDT): 46.0% recall, 90.6% precision. The observed recalls differ by 1.74x. One text rule applied to both arms gives 2.89:1 against the manuscript's 2.93:1. Under the count model, the approximate symmetric interval contains the manuscript's ratio, so this measurement cannot distinguish the two. The earlier understatement verdict is withdrawn; this does not establish agreement. These approximate intervals retain the sibling report's Poisson model, which omits covariance between arms; text agreement does not establish the true literature ratio. See `analysis/atlas-descriptor-recall.md`. A sweep over descriptor sets does not test descriptor-versus-text agreement.
 
 ## Section 3.7: the growth claim
 
