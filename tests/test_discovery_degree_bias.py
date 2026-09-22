@@ -114,3 +114,73 @@ def test_the_document_credits_the_prior_observation():
     assert "already suspected this" in txt, (
         "the document presents a measurement of an existing observation as a "
         "new observation")
+
+
+def test_degree_snapshot_renders_offline_without_replacing_json(monkeypatch, tmp_path):
+    """Prose repair must not silently rebuild a different graph or data snapshot."""
+    import importlib
+    import sys
+    sys.path.insert(0, str(REPO_ROOT / "scripts"))
+    mod = importlib.import_module("atlas_discovery_degree_bias")
+    source = RAW.read_bytes()
+    raw = tmp_path / "snapshot.json"
+    md = tmp_path / "report.md"
+    raw.write_bytes(source)
+    md.write_text("old report")
+    monkeypatch.setattr(mod, "OUT_JSON", raw)
+    monkeypatch.setattr(mod, "OUT_MD", md)
+
+    def unavailable(*args, **kwargs):
+        raise AssertionError("offline replay accessed graph inputs")
+
+    for name in ("atlas_root", "load_index", "pmid_years", "pair_first_year", "load_corrections"):
+        monkeypatch.setattr(mod, name, unavailable)
+    assert mod.main(["--render-only"]) == 0
+    assert raw.read_bytes() == source
+    assert md.read_text() == mod.render(json.loads(source)) == DOC.read_text()
+    assert "candidate-selection control" in md.read_text()
+
+
+def test_degree_render_failure_preserves_both_reports(monkeypatch, tmp_path):
+    import importlib
+    import sys
+    import pytest
+    sys.path.insert(0, str(REPO_ROOT / "scripts"))
+    mod = importlib.import_module("atlas_discovery_degree_bias")
+    source = RAW.read_bytes()
+    raw, md = tmp_path / "snapshot.json", tmp_path / "report.md"
+    raw.write_bytes(source)
+    md.write_text("old report")
+    monkeypatch.setattr(mod, "OUT_JSON", raw)
+    monkeypatch.setattr(mod, "OUT_MD", md)
+
+    def broken(_):
+        raise ValueError("render failure")
+
+    monkeypatch.setattr(mod, "render", broken)
+    with pytest.raises(ValueError, match="render failure"):
+        mod.main(["--render-only"])
+    assert raw.read_bytes() == source
+    assert md.read_text() == "old report"
+
+
+def test_degree_snapshot_rejects_invalid_metrics_before_writing(monkeypatch, tmp_path):
+    import importlib
+    import sys
+    import pytest
+    sys.path.insert(0, str(REPO_ROOT / "scripts"))
+    mod = importlib.import_module("atlas_discovery_degree_bias")
+    raw, md = tmp_path / "snapshot.json", tmp_path / "report.md"
+    monkeypatch.setattr(mod, "OUT_JSON", raw)
+    monkeypatch.setattr(mod, "OUT_MD", md)
+    for medians in ({}, {**_raw()["median_L"], "abc": float("nan")},
+                    {**_raw()["median_L"], "abc": -1}):
+        data = _raw()
+        data["median_L"] = medians
+        raw.write_text(json.dumps(data))
+        source = raw.read_bytes()
+        md.write_text("old report")
+        with pytest.raises(ValueError):
+            mod.main(["--render-only"])
+        assert raw.read_bytes() == source
+        assert md.read_text() == "old report"

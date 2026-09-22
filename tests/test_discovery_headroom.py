@@ -109,19 +109,16 @@ def test_the_identifiability_limit_is_stated():
         "the result is stated over all combinations when one family was tested")
 
 
-def test_the_findings_page_no_longer_asserts_the_second_half():
-    """'A good candidate generator and a bad ranker' was half-wrong.
-
-    The first half stands -- the candidate set beats random severalfold. The
-    second does not follow, and this is the page where that claim travels
-    furthest, so it must carry the qualification rather than the slogan.
+def test_the_findings_page_limits_ranking_and_generator_claims():
+    """Within-pool ranking comparisons establish neither generator benefit
+    nor biological discovery value; the public summary must retain that scope.
     """
     import re
 
     page = REPO_ROOT / "analysis" / "census-findings.md"
     assert page.exists(), "the findings page is missing"
     txt = page.read_text()
-    anchor = "Literature-based discovery does not work"
+    anchor = "Discovery ranking is evaluated within a fixed candidate pool"
     assert anchor in txt, (
         "the discovery finding is gone from the findings page, or its heading "
         "was reworded -- this guard used to return silently in that case")
@@ -138,15 +135,15 @@ def test_the_findings_page_no_longer_asserts_the_second_half():
         "shows a degree-correcting ranker and a bad one are indistinguishable "
         "on this metric")
     assert "does not follow" in section
+    assert "same candidate pool" in section or "same pool" in section
 
 
 def test_the_mission_statement_carries_the_same_correction():
     """MISSION.md quotes this finding, and its wording outlives the analysis.
 
     It ended with the same "a good generator, a bad ranker" summary the findings
-    page carried. The first half stands; the second does not follow. Guarded in
-    the same conditional way, so if a method ever shows headroom the original
-    summary becomes defensible again rather than being frozen out.
+    page carried. Neither generator benefit nor biological utility follows
+    from this within-pool comparison, even if a future ranker beats popularity.
     """
     import re
 
@@ -166,6 +163,7 @@ def test_the_mission_statement_carries_the_same_correction():
     assert not re.search(r"^\s*>?\s*A good generator, a bad ranker", section, re.M), (
         "MISSION.md still ends on the retracted summary")
     assert "does not follow" in section
+    assert "same candidate pool" in section or "same pool" in section
     assert "not identifiable" in section, (
         "the mission statement asserts the metric's limit without the stronger "
         "limit that hub-selection's correctness is unidentifiable here")

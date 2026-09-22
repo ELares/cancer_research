@@ -422,35 +422,29 @@ def main() -> int:
         L += ["*Source:* `comention-regression.md`, "
               "`comention-authority-result.md`", ""]
     if disc:
-        p = disc["headline"]["precision"]
-        L += [f"**Literature-based discovery does not work as built.** The shipped ABC",
-              f"ranking scores {100*p['abc']:.1f}% precision@20 against",
-              f"{100*p['popularity']:.1f}% for ranking the same candidates by",
-              "popularity, and no standard link predictor beats that baseline either."]
-        # "and a bad ranker" was the second half of this finding for months. It
-        # does not follow, and two later measurements say why -- so it is stated
-        # conditionally on them rather than asserted.
-        head = load("atlas-discovery-headroom.json")
-        bias = load("atlas-discovery-degree-bias.json")
-        if head and bias and not head.get("any_headroom"):
-            L += [
-                "The candidate SET is genuinely informative, so that half stands. "
-                "The obvious second half -- a bad RANKER -- does not follow, and "
-                "two later measurements say why. Ordering the seven measured "
-                "methods by how hub-selecting each one is reproduces the "
-                f"precision leaderboard exactly (rank correlation "
-                f"{bias['spearman_L_vs_precision']:.2f} over those seven points), "
-                "so the metric rewards NOT correcting for candidate degree; and "
-                "blending each of the five seed-aware signals into a degree-only "
-                "prior adds nothing measurable, at any weight tested and under "
-                "three combination schemes outside the blend family. Among every "
-                "ranker measured, a degree-correcting one and a bad one cannot be "
-                "told apart on this metric.",
-                "*Source:* `atlas-discovery-eval.md`, "
-                "`atlas-discovery-degree-bias.md`, `atlas-discovery-headroom.md`", ""]
-        else:
-            L += ["A good candidate generator and a bad ranker.",
-                  "*Source:* `atlas-discovery-eval.md`", ""]
+        from atlas_discovery_eval import assemble
+        evaluated = assemble(disc)["headline"]
+        p, q = evaluated["precision"], evaluated["paired"]
+        lo, hi = q["ci95"]
+        direction = ("higher" if lo > 0 else "lower" if hi < 0
+                     else "not resolved as higher or lower")
+        L += ["**Discovery ranking is evaluated within a fixed candidate pool.** The shipped ABC",
+              f"ranking scores {100*p['abc']:.1f}% precision@{evaluated['top_k']} against",
+              f"{100*p['popularity']:.1f}% for ranking the same candidates by popularity.",
+              f"Its mean paired hit difference is {q['mean_diff']:+.2f} per seed, with",
+              f"a seed-bootstrap 95% interval [{lo:+.2f}, {hi:+.2f}]; ABC is {direction}",
+              "under that statistic. These comparisons concern later dated, observed",
+              "literature assertions, not independently validated biological relations.", "",
+              "All methods, including random, rank the same candidate pool. Better",
+              "performance than that random baseline does not establish that the candidate",
+              "generator improves on an unrestricted or alternative pool. Candidate-generator",
+              "value remains unmeasured by this comparison. Nor does biological usefulness",
+              "or lack of it follow from this endpoint alone.", "",
+              "The separate degree-selectivity and blending studies describe the particular",
+              "methods and combination families evaluated. A general verdict about the",
+              "quality of a discovery method does not follow from those finite comparisons.",
+              "*Source:* `atlas-discovery-eval.md`, `atlas-discovery-degree-bias.md`, "
+              "`atlas-discovery-headroom.md`", ""]
     if repl:
         # The censored series is read from the artifact. It used to be quoted
         # from atlas-replication.md's PROSE, where it was a remembered figure

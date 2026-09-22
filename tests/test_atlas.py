@@ -774,7 +774,8 @@ def test_degree_correction_monotonically_hurts():
     # Jaccard corrects hardest and must sit far below the uncorrected baselines
     assert prec["jaccard"] < prec["abc"] < prec["popularity"]
     assert prec["jaccard"] < prec["adamic_adar"]
-    # The candidate SET works, shown by the methods that actually demonstrate it.
+    # The stored rankings differ within their shared candidate pool; this does
+    # not test the benefit of candidate generation.
     # This used to be asserted as "even Jaccard beats chance". That held on one
     # build, failed on the next when Jaccard fell UNDER random, and now holds
     # again -- Jaccard 3.8% against random 3.0% on the widened year map. Both
@@ -783,8 +784,8 @@ def test_degree_correction_monotonically_hurts():
     # nothing here asserts it in either direction.
     assert prec["abc"] > 3 * prec["random"], (
         "even the most degree-corrected ranking that still selects hubs should "
-        "beat chance severalfold; if it does not, the candidate set is the "
-        "problem rather than the ordering")
+        "beat within-pool random severalfold in this retained snapshot; if it "
+        "does not, revisit the reported ordering comparison")
     # The shape, measured rather than asserted from the formulas: precision is
     # monotone in how hub-selecting a method is (analysis/atlas-discovery-degree-bias).
     bias_f = REPO_ROOT / "analysis" / "atlas-discovery-degree-bias.json"
@@ -1894,12 +1895,22 @@ def test_census_findings_is_generated_not_hand_written():
 def test_census_findings_reports_what_it_did_not_support():
     """A findings page that only lists wins is marketing.
 
-    The discovery layer failing and the replication collapse being an artifact
-    of my own measurement both belong here as prominently as the successes.
+    The measured discovery ranking deficit and the replication collapse being
+    an observation-window artifact belong here alongside the successes.
     """
+    import json
+
     md = (REPO_ROOT / "analysis" / "census-findings.md").read_text()
     assert "did NOT support" in md
-    assert "does not work as built" in md
+    anchor = "Discovery ranking is evaluated within a fixed candidate pool"
+    section = md[md.index(anchor):]
+    section = " ".join(section[:section.index("*Source:*")].split())
+    head = json.loads((REPO_ROOT / "analysis/atlas-discovery-eval.json").read_text())["headline"]
+    assert head["paired"]["ci95"][1] < 0
+    assert f"{100 * head['precision']['abc']:.1f}%" in section
+    assert f"{100 * head['precision']['popularity']:.1f}%" in section
+    assert "ABC is lower" in section
+    assert "value remains unmeasured" in section
     assert "was not" in md and "observation window" in md
 
 

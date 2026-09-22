@@ -381,17 +381,15 @@ tract (TOPAZ-1).
 
 ### Discovery, and its measured hit rate — `atlas_discovery.py`, `atlas_discovery_eval.py`
 
-Swanson ABC: if A relates to B and B to C, but A and C have never been discussed
-together, the A–C link is a hypothesis the literature implies and nobody has
-stated. This is the analysis the census was built for, and a 4,830-article corpus
-cannot do it — discovery needs both literatures present at once, and the whole
-point is that they do not cite each other.
+Swanson ABC uses shared intermediates to propose A–C hypotheses where no direct
+edge is recorded. Such an absent edge need not be unknown: corpus coverage and
+extraction can miss earlier assertions. Broad coverage supplies more candidate
+paths, but does not by itself establish their novelty or biological validity.
 
-**It has now been measured, and the ranking fails.** A time split rebuilds the
-graph as it stood before year Y, ranks the absent candidates, and counts a hit
-when the literature first asserts that pair in Y or later. The comparison that
-matters is not against random — almost anything beats random on a clustered
-co-occurrence graph — but against ranking the *same candidates* by popularity:
+**The retained temporal evaluation favors popularity over ABC.** A time split
+uses pairs whose earliest dated, observed assertion precedes year Y, ranks the
+eligible candidates, and counts a hit when that earliest assertion is in Y or
+later. Every ranking, including random, orders the same candidate pool:
 
 | ranking | degree correction | measured selectivity | precision@20 |
 |---|---|---|---|
@@ -411,41 +409,31 @@ stream, so 18.5% of the graph's articles could not be dated and were dropped).
 Every ranking gained, the ordering held, and the conclusion did not move: the
 shipped ranker is still measurably worse than asking which candidate is already
 famous. The one thing that DID change is the bottom of the table — Jaccard and
-random now swap, so precision is monotone in selectivity across the five real
+random now swap, so precision is monotone in selectivity across the six nonrandom
 methods rather than all seven. Both are near the floor and within a point of
 each other, which is a fact about the floor, not a correction that rescues
 Jaccard.
 
-The "degree correction" column was hand-written from what each formula does.
-The selectivity column measures it — mean degree of a ranking's top 20 over the
-mean degree of the pool it drew them from, so 1× is degree-neutral. The measured
-order confirms the written one, and the rank correlation between selectivity and
-precision is 0.99 over the six methods that carry any signal
-(`analysis/atlas-discovery-degree-bias.md`). That is why the second half of the
-conclusion below — a bad ranker — does not follow: on this metric a
-degree-correcting ranker and a bad one cannot be told apart.
+The degree-selectivity measure is the mean degree of a ranking's top 20
+relative to its candidate pool mean. Its association with precision is 0.96
+across all seven methods and 1.00 after excluding random in the retained
+[degree-bias study](atlas-discovery-degree-bias.md). This describes the methods
+measured; it does not rule out a better future ranker or identify why degree
+predicts later assertions.
 
-**Nothing beats popularity**, and the rankings order themselves by how hard each
-corrects for degree — the harder the correction, the worse it does. So this
-cannot be repaired by swapping in a better link predictor; the standard ones were
-tried. New edges genuinely do attach preferentially to well-connected entities,
-so removing degree removes most of what predicts the next edge.
+All evaluated non-baseline methods have lower precision than popularity in
+this snapshot. Adamic-Adar and raw bridge count also have negative seed-bootstrap
+intervals; they are not tied with popularity under that statistic. The
+[evaluation report](atlas-discovery-eval.md) reconstructs these comparisons from
+stored per-seed counts with `python scripts/atlas_discovery_eval.py --render-only`.
 
-> **A good candidate generator and a bad ranker.** Both rankings beat random by
-> ~6×, so restricting attention to 2-hop bridged entities is genuinely
-> informative; the ordering within that set is what fails. `atlas_discovery.py`
-> claimed to correct for popularity — measured against what the literature went
-> on to say, it does not, and its docstring now says so.
->
-> Nor is popularity a *good* ranking. On a graph where well-studied entities keep
-> accruing edges, predicting that a famous gene gains another relation is easy and
-> not very useful.
->
-> **And the evaluation's own target is arguable.** It scores a ranking by whether
-> it anticipates the literature, while Swanson-style discovery is *for*
-> connections the literature is slow to reach — a genuinely overlooked pair scores
-> here as a miss. The narrow claim is the one the module made and failed: it says
-> it corrects for popularity, and doing so does not help.
+Every ranking, including random, uses the same candidate pool. These comparisons
+measure ordering within that pool, not whether two-hop candidate generation
+outperforms an unrestricted or alternative candidate set. Generator value remains
+unmeasured by this design. Biological usefulness also does not follow from
+predicting what the literature later asserts: an overlooked connection can count
+as a miss, and an extracted assertion can be wrong. See the report for dating,
+follow-up-window and seed-dependence limitations.
 
 ## Two traps that have already bitten
 

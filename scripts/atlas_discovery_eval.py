@@ -3,39 +3,35 @@
 
 WHY
 ---
-`atlas_discovery.py` emits a ranked list of A-C pairs the literature implies but
-has never stated. It is careful about its limits and calls the output "a ranked
-reading list, nothing here is a finding". What it has never had is a HIT RATE.
+`atlas_discovery.py` emits a ranked list of A-C pairs absent from its relation
+graph. It calls the output "a ranked reading list, nothing here is a finding".
+This evaluation measures a hit rate against later dated, observed assertions.
 
 Without one there is no way to tell the layer apart from a list of famous
 entities. Run on GPX4 it returns ERK, caspase-3, cyclin D1, MMP-9 and ATP --
 exactly what a popularity ranking would return, which is the failure mode the
 module's own docstring says it corrects for.
 
-So this measures it, the standard way: a TIME SPLIT. Build the graph as it stood
-before year Y, predict which absent A-C pairs will appear, and check against what
-the literature actually did next.
+Use a TIME SPLIT: reconstruct the graph from dated assertions before year Y,
+predict which absent A-C pairs will appear, and check the remaining observations.
 
 THE COMPARISON THAT MATTERS
 ---------------------------
-Not "does ABC beat random" -- almost anything beats random here, because
-co-occurrence graphs are heavily clustered and any 2-hop neighbour is more likely
-to link than an arbitrary node. The question is whether ABC beats **ranking the
-same candidates by popularity**. If a degree ranking does as well, the ABC
-machinery -- bridges, hub filtering, hypergeometric tails -- is decoration, and
-the honest thing is to say so.
+The question is whether ABC beats **ranking the same candidates by popularity**.
+The random baseline also samples that same candidate pool. Beating it measures
+ordering within the pool; it cannot establish the value of candidate generation.
 
-Three rankings over an IDENTICAL candidate set, so only the ordering differs:
+Seven rankings use an IDENTICAL candidate set, including:
 
   * `abc`        -- the shipped ranking (hypergeometric tail over bridge counts)
   * `popularity` -- rank by candidate degree in the before-graph
-  * `random`     -- a seeded shuffle, the floor
+  * `random`     -- a seeded shuffle within the pool
 
 WHAT COUNTS AS A HIT
 --------------------
-A predicted pair A-C is a hit if the literature first asserts it in year >= Y.
-Pairs already asserted before Y are excluded from prediction by construction, so
-a hit is genuinely a NEW statement, not a rediscovery.
+A predicted pair A-C is a hit if its earliest dated, observed assertion is in
+year >= Y. Undated or missing assertions can conceal prior knowledge, so this
+does not establish novelty.
 
 WHAT THIS CANNOT SHOW
 ---------------------
@@ -47,10 +43,12 @@ this graph can support.
 Usage:
     python scripts/atlas_discovery_eval.py
     python scripts/atlas_discovery_eval.py --split-year 2018 --seeds 40 --top 20
+    python scripts/atlas_discovery_eval.py --render-only
 """
 
 import argparse
 import collections
+import functools
 import glob
 import gzip
 import json
@@ -67,10 +65,13 @@ from atlas_discovery import HUB_PERCENTILE, MIN_BRIDGES, MIN_CANDIDATE_DEGREE  #
 from atlas_graph import load_index, load_corrections, _corrected  # noqa: E402
 from config import PROJECT_ROOT  # noqa: E402
 
-OUT = PROJECT_ROOT / "analysis" / "atlas-discovery-eval.md"
-RAW = PROJECT_ROOT / "analysis" / "atlas-discovery-eval.json"
+OUT_MD = PROJECT_ROOT / "analysis" / "atlas-discovery-eval.md"
+OUT_JSON = PROJECT_ROOT / "analysis" / "atlas-discovery-eval.json"
+OUT, RAW = OUT_MD, OUT_JSON  # Historical import names.
 
 SEED_RNG = 20260803
+METHODS = ("abc", "popularity", "adamic_adar", "resource_alloc",
+           "jaccard", "bridges", "random")
 # Seeds are sampled from this degree band. Too low and there is no 2-hop
 # neighbourhood to rank; too high and the seed is a hub whose candidate set is
 # most of the graph.
@@ -239,13 +240,122 @@ def rank_all(adj_before, degrees, cutoff, n_nodes, seed_id, rng):
     }
 
 
+
+def _integer(value, label, minimum=0):
+    if type(value) is not int or value < minimum:
+        raise ValueError(f"{label} must be an integer >= {minimum}")
+    return value
+
+
+@functools.lru_cache(maxsize=128)
+def _paired_summary(differences):
+    """The original bootstrap, cached only by its immutable ordered input.
+
+    Re-rendering must not change the RNG draws, seed order, or interval method.
+    Returning an immutable tuple keeps callers from mutating the cached result.
+    """
+    n = len(differences)
+    boot = random.Random(SEED_RNG + 1)
+    means = sorted(sum(differences[boot.randrange(n)] for _ in range(n)) / n
+                   for _ in range(10000))
+    lo, hi = means[int(0.025 * len(means))], means[int(0.975 * len(means))]
+    return (sum(differences) / n, lo, hi, hi < 0 or lo > 0,
+            sum(1 for x in differences if x > 0),
+            sum(1 for x in differences if x < 0))
+
+
+def _assemble_split(raw):
+    if not isinstance(raw, dict):
+        raise ValueError("each split must be an object")
+    metadata = {}
+    for key, minimum in (("split_year", 1), ("top_k", 1),
+                         ("pairs_before", 0), ("pairs_after", 0)):
+        metadata[key] = _integer(raw.get(key), key, minimum)
+    rows = raw.get("per_seed")
+    if not isinstance(rows, list) or not rows:
+        raise ValueError("per_seed must contain at least one evaluable seed")
+    per_seed, seen = [], set()
+    top = metadata["top_k"]
+    for position, row in enumerate(rows):
+        if not isinstance(row, dict):
+            raise ValueError(f"per_seed[{position}] must be an object")
+        sid = row.get("seed")
+        if not isinstance(sid, str) or not sid.strip():
+            raise ValueError(f"per_seed[{position}].seed must be a nonempty string")
+        if sid in seen:
+            raise ValueError(f"duplicate seed {sid!r} in split {metadata['split_year']}")
+        seen.add(sid)
+        name = row.get("seed_name")
+        if not isinstance(name, str):
+            raise ValueError(f"seed_name for {sid!r} must be a string")
+        degree = _integer(row.get("degree"), f"degree for {sid!r}")
+        candidates = _integer(row.get("candidates"), f"candidates for {sid!r}", 1)
+        copied = {"seed": sid, "seed_name": name, "degree": degree,
+                  "candidates": candidates}
+        selected = min(top, candidates)
+        for method in METHODS:
+            count = _integer(row.get(method), f"{method} hits for {sid!r}")
+            if count > selected:
+                raise ValueError(f"{method} hits for {sid!r} exceed {selected} predictions")
+            copied[method] = count
+        per_seed.append(copied)
+
+    hits = {m: sum(r[m] for r in per_seed) for m in METHODS}
+    denominator = sum(min(top, r["candidates"]) for r in per_seed)
+    shown = {m: denominator for m in METHODS}
+    precision = {m: hits[m] / denominator for m in METHODS}
+    paired_all = {}
+    for method in METHODS:
+        if method == "popularity":
+            continue
+        differences = tuple(r[method] - r["popularity"] for r in per_seed)
+        mean, lo, hi, decided, ahead, behind = _paired_summary(differences)
+        paired_all[method] = {"mean_diff": mean, "ci95": [lo, hi],
+                              "decided": decided, "ahead": ahead, "behind": behind}
+    abc = paired_all["abc"]
+    return {
+        "split_year": metadata["split_year"], "seeds_evaluated": len(per_seed),
+        "top_k": top, "pairs_before": metadata["pairs_before"],
+        "pairs_after": metadata["pairs_after"],
+        "hits": hits, "predictions": shown, "precision": precision,
+        "abc_over_popularity": (precision["abc"] / precision["popularity"]
+                                if precision["popularity"] else None),
+        "paired": {"mean_diff": abc["mean_diff"], "ci95": list(abc["ci95"]),
+                   "decided": abc["decided"], "abc_ahead": abc["ahead"],
+                   "abc_behind": abc["behind"]},
+        "paired_all": paired_all, "per_seed": per_seed,
+    }
+
+
+def assemble(raw):
+    """Validate observations and recompute summaries without mutating the input.
+
+    Stored hits, precision, ratios, verdicts, and intervals are derived fields;
+    none is trusted as evidence. The historical per-seed order is retained.
+    """
+    if not isinstance(raw, dict):
+        raise ValueError("evaluation must be an object")
+    robustness = raw.get("robustness", [])
+    if not isinstance(robustness, list):
+        raise ValueError("robustness must be a list")
+    splits = [_assemble_split(raw.get("headline"))]
+    splits.extend(_assemble_split(split) for split in robustness)
+    seen = set()
+    for split in splits:
+        year = split["split_year"]
+        if year in seen:
+            raise ValueError(f"duplicate split year {year}")
+        seen.add(year)
+    return {"headline": splits[0], "robustness": splits[1:]}
+
+
 def evaluate(first, idx, Y, seeds_n, top, log=True):
-    """One split: build the before-graph, rank, score against what came next."""
+    """One split: build the before-graph, rank, score against later observations."""
     before = {k for k, y in first.items() if y < Y}
     after = {k for k, y in first.items() if y >= Y}
     if log:
-        print(f"  before {Y}: {len(before):,} pairs; first asserted {Y} or later: "
-              f"{len(after):,}", flush=True)
+        print(f"  before {Y}: {len(before):,} pairs; earliest dated assertion "
+              f"{Y} or later: {len(after):,}", flush=True)
 
     adj_before = collections.defaultdict(set)
     for a, b in before:
@@ -264,10 +374,6 @@ def evaluate(first, idx, Y, seeds_n, top, log=True):
         return None
     seeds = rng.sample(pool, min(seeds_n, len(pool)))
 
-    METHODS = ("abc", "popularity", "adamic_adar", "resource_alloc",
-               "jaccard", "bridges", "random")
-    hits = {m: 0 for m in METHODS}
-    shown = {m: 0 for m in hits}
     per_seed = []
     for sid in seeds:
         ranks = rank_all(adj_before, degrees, cutoff, n_nodes, sid, rng)
@@ -277,249 +383,242 @@ def evaluate(first, idx, Y, seeds_n, top, log=True):
                "degree": degrees.get(sid, 0), "candidates": len(ranks["abc"])}
         for method, order in ranks.items():
             sel = order[:top]
-            h = sum(1 for c in sel
-                    if ((sid, c) if sid <= c else (c, sid)) in after)
-            hits[method] += h
-            shown[method] += len(sel)
-            row[method] = h
+            row[method] = sum(1 for c in sel
+                              if ((sid, c) if sid <= c else (c, sid)) in after)
         per_seed.append(row)
     if not per_seed:
         return None
-
-    prec = {m: (hits[m] / shown[m] if shown[m] else 0.0) for m in hits}
-
-    # PAIRED comparison. The three rankings run on the same seeds over the same
-    # candidate set, so per-seed differences are paired; an interval on two
-    # independent proportions would be the wrong test.
-    n = len(per_seed)
-    paired_all = {}
-    for m in METHODS:
-        if m == "popularity":
-            continue
-        d = [r[m] - r["popularity"] for r in per_seed]
-        boot = random.Random(SEED_RNG + 1)
-        means = sorted(sum(d[boot.randrange(n)] for _ in range(n)) / n
-                       for _ in range(10000))
-        lo, hi = means[int(0.025 * len(means))], means[int(0.975 * len(means))]
-        paired_all[m] = {"mean_diff": sum(d) / n, "ci95": [lo, hi],
-                         "decided": hi < 0 or lo > 0,
-                         "ahead": sum(1 for x in d if x > 0),
-                         "behind": sum(1 for x in d if x < 0)}
-    ci = tuple(paired_all["abc"]["ci95"])
-    mean_diff = paired_all["abc"]["mean_diff"]
-    return {
-        "split_year": Y, "seeds_evaluated": n, "top_k": top,
-        "pairs_before": len(before), "pairs_after": len(after),
-        "hits": hits, "predictions": shown, "precision": prec,
-        "abc_over_popularity": (prec["abc"] / prec["popularity"]
-                                if prec["popularity"] else float("inf")),
-        "paired": {"mean_diff": mean_diff, "ci95": list(ci),
-                   "decided": paired_all["abc"]["decided"],
-                   "abc_ahead": paired_all["abc"]["ahead"],
-                   "abc_behind": paired_all["abc"]["behind"]},
-        "paired_all": paired_all,
-        "per_seed": per_seed,
-    }
+    return _assemble_split({
+        "split_year": Y, "top_k": top, "pairs_before": len(before),
+        "pairs_after": len(after), "per_seed": per_seed,
+    })
 
 
-def main() -> int:
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--split-year", type=int, default=2018,
-                    help="the headline split")
-    ap.add_argument("--also-years", type=int, nargs="*", default=[2015, 2021],
-                    help="extra splits run as a robustness check; the pair "
-                         "dating pass is shared so each costs almost nothing")
-    ap.add_argument("--seeds", type=int, default=200)
-    ap.add_argument("--top", type=int, default=20)
-    args = ap.parse_args()
+def _direction(paired):
+    lo, hi = paired["ci95"]
+    if lo > 0:
+        return "higher than popularity"
+    if hi < 0:
+        return "lower than popularity"
+    return "interval includes zero"
 
-    root = atlas_root()
-    idx = load_index(root)
-    print("loading year map ...", flush=True)
-    years = pmid_years(root)
-    if not years:
-        print("no dated records; run scripts/atlas_baseline.py first", file=sys.stderr)
-        return 1
-    span = (min(years.values()), max(years.values()))
-    print(f"  {len(years):,} dated PMIDs spanning {span[0]}-{span[1]}", flush=True)
-    if span[1] < args.split_year:
-        print(f"year map ends at {span[1]}, before the split at {args.split_year}; "
-              "the census is probably still rebuilding (baseline files are "
-              "chronological)", file=sys.stderr)
-        return 1
 
-    print("dating every pair ...", flush=True)
-    first = pair_first_year(root, years, load_corrections())
-    print(f"  {len(first):,} pairs carry a first-assertion year", flush=True)
+def _verdict(paired):
+    direction = _direction(paired)
+    if direction == "higher than popularity":
+        return "ABC ranking beats popularity on observed future assertions"
+    if direction == "lower than popularity":
+        return "ABC ranking performs worse than popularity on observed future assertions"
+    return "The ABC versus popularity comparison is inconclusive"
 
-    head = evaluate(first, idx, args.split_year, args.seeds, args.top)
-    if not head:
-        print("no evaluable seeds", file=sys.stderr)
-        return 1
-    robust = []
-    for y in sorted(set(args.also_years) - {args.split_year}):
-        r = evaluate(first, idx, y, args.seeds, args.top)
-        if r:
-            robust.append(r)
 
+def _cell(value):
+    """Keep a canonical entity name within its Markdown table cell."""
+    return " ".join(str(value).split()).replace("|", "\\|")
+
+
+def render(raw):
+    """Render only recomputed results; this function performs no file or graph I/O."""
+    data = assemble(raw)
+    head, robust = data["headline"], data["robustness"]
+    year, top = head["split_year"], head["top_k"]
     prec, paired = head["precision"], head["paired"]
-    if not paired["decided"]:
-        verdict = "ABC and popularity are indistinguishable at this sample size"
-    elif paired["mean_diff"] > 0:
-        verdict = "ABC ranking beats popularity"
-    else:
-        verdict = "ABC ranking is WORSE than ranking by popularity"
-
-    Y = args.split_year
-    L = [
+    short = sum(r["candidates"] < top for r in head["per_seed"])
+    lines = [
         "# Does literature-based discovery predict anything? (#ATLAS-LBD-EVAL)", "",
-        "Generated by `scripts/atlas_discovery_eval.py`. `atlas_discovery.py` emits a",
-        "ranked list of pairs the literature implies but has never stated. This gives",
-        "it a hit rate, which it has never had.", "",
+        "Generated by `scripts/atlas_discovery_eval.py`. This evaluates how rankings",
+        "anticipate later dated, observed assertions within a shared candidate pool.", "",
         "## Method", "",
-        f"A time split at **{Y}**. The graph is rebuilt as it stood before {Y}",
-        f"({head['pairs_before']:,} pairs), candidates are ranked, and a prediction",
-        f"counts as a hit if the literature first asserts that pair in {Y} or later",
-        f"({head['pairs_after']:,} pairs did). Pairs already asserted before {Y} are",
-        "excluded from prediction by construction, so a hit is a NEW statement rather",
-        "than a rediscovery.", "",
-        "Three rankings run over an **identical** candidate set, so only the ordering",
-        "differs. The comparison that matters is not ABC against random -- almost",
-        "anything beats random in a clustered co-occurrence graph -- but ABC against",
-        "ranking those same candidates by popularity.", "",
-        f"{head['seeds_evaluated']} seed entities, sampled with a fixed seed from",
-        f"degree band {SEED_DEGREE_MIN}-{SEED_DEGREE_MAX}, top {args.top} each.", "",
+        f"A time split at **{year}** uses {head['pairs_before']:,} pairs whose earliest",
+        f"dated, observed assertion is before {year}. A prediction is a hit when the",
+        f"pair's earliest dated, observed assertion is in {year} or later",
+        f"({head['pairs_after']:,} pairs across the graph). Pairs observed in dated",
+        "pre-split records are excluded from prediction. Missing or undated earlier",
+        "assertions can conceal prior knowledge, so a hit does not establish novelty.", "",
+        "All seven rankings use an **identical candidate set** for each seed.",
+        "Candidates are eligible two-hop neighbors in the pre-split graph; the",
+        "existing bridge, hub, and candidate-degree filters apply. Popularity ranks",
+        "by pre-split candidate degree. Random is one seeded shuffle **within the",
+        "same candidate pool**, not a sample from unrestricted graph pairs.", "",
+        f"The report includes {head['seeds_evaluated']} evaluable seed entities from",
+        f"the fixed-seed sample in degree band {SEED_DEGREE_MIN}-{SEED_DEGREE_MAX}.",
+        f"Each method selects up to {top} candidates per seed: min(k, candidate count).",
+        f"{short} seeds have fewer than {top} candidates. Precision is total hits",
+        "divided by the actual number of predictions, pooled over those seeds.", "",
         "## Result", "",
-        f"| ranking | hits | predictions | precision@{args.top} | paired vs popularity |",
+        f"| ranking | hits | predictions | precision@{top} | paired vs popularity |",
         "|---|---|---|---|---|",
     ]
-    for m in sorted(prec, key=lambda k: -prec[k]):
-        pa = head["paired_all"].get(m)
-        vs = ("baseline" if m == "popularity" else
-              f"{pa['mean_diff']:+.2f} [{pa['ci95'][0]:+.2f}, {pa['ci95'][1]:+.2f}]"
-              + ("" if pa["decided"] else " (spans 0)"))
-        L.append(f"| {m} | {head['hits'][m]:,} | {head['predictions'][m]:,} | "
-                 f"**{100*prec[m]:.1f}%** | {vs} |")
-    L += [
-        "", "### Is that difference real?", "",
-        "Paired bootstrap over seeds, 10,000 resamples:", "",
-        f"* mean per-seed difference (abc minus popularity): "
-        f"**{paired['mean_diff']:+.2f}** hits out of {args.top}",
-        f"* 95% CI **[{paired['ci95'][0]:+.2f}, {paired['ci95'][1]:+.2f}]**",
-        f"* abc ahead on {paired['abc_ahead']} seeds, behind on "
-        f"{paired['abc_behind']}", "",
-    ]
+    for method in sorted(prec, key=lambda m: -prec[m]):
+        comparison = "baseline"
+        if method != "popularity":
+            pa = head["paired_all"][method]
+            lo, hi = pa["ci95"]
+            comparison = (f"{pa['mean_diff']:+.2f} [{lo:+.2f}, {hi:+.2f}]; "
+                          f"{_direction(pa)}")
+        lines.append(f"| {method} | {head['hits'][method]:,} | "
+                     f"{head['predictions'][method]:,} | **{100*prec[method]:.1f}%** | "
+                     f"{comparison} |")
+
+    lines.extend([
+        "", "### Paired uncertainty", "",
+        "Paired bootstrap over seeds, 10,000 resamples. Differences are hits per",
+        f"seed, with at most {top} predictions per seed; they are not percentage points.",
+        f"The mean difference (ABC minus popularity) is **{paired['mean_diff']:+.2f}**",
+        f"with 95% percentile interval **[{paired['ci95'][0]:+.2f}, "
+        f"{paired['ci95'][1]:+.2f}]**. ABC is ahead on {paired['abc_ahead']} seeds",
+        f"and behind on {paired['abc_behind']}.", "",
+        "Intervals are unadjusted comparisons against popularity, not simultaneous",
+        "95% guarantees for all methods. An interval including zero leaves the",
+        "difference unresolved; it does not establish that two rankings are equal.", "",
+        f"### Verdict: {_verdict(paired)}", "",
+    ])
+    if not paired["decided"]:
+        mean = paired["mean_diff"]
+        if mean > 0:
+            lines.append("The point estimate favors ABC, but its interval includes zero.")
+        elif mean < 0:
+            lines.append("The point estimate favors popularity, but its interval includes zero.")
+        else:
+            lines.append("The point estimates are equal, and the interval includes zero.")
+        lines.append("")
+    lines.extend([
+        "These comparisons describe ordering within the evaluated candidate pools.",
+        "Outperforming the within-pool random baseline does **not** establish that",
+        "the candidate generator improves on unrestricted candidate selection.",
+        "No such control is evaluated here. Nor does this comparison establish",
+        "biological validity or the usefulness of an overlooked hypothesis.", "",
+    ])
     if robust:
-        L += ["### Robustness across split years", "",
-              "| split | abc | popularity | random | paired diff | 95% CI |",
-              "|---|---|---|---|---|---|"]
-        for r in [head] + robust:
-            pp, q = r["precision"], r["paired"]
-            L.append(f"| {r['split_year']} | {100*pp['abc']:.1f}% | "
-                     f"{100*pp['popularity']:.1f}% | {100*pp['random']:.1f}% | "
-                     f"{q['mean_diff']:+.2f} | [{q['ci95'][0]:+.2f}, "
-                     f"{q['ci95'][1]:+.2f}] |")
-        L.append("")
+        lines.extend([
+            "### Comparisons across split years", "",
+            "| split | k | abc | popularity | random | paired diff | 95% CI | conclusion |",
+            "|---|---|---|---|---|---|---|---|",
+        ])
+        for split in [head] + robust:
+            pp, pa = split["precision"], split["paired"]
+            lo, hi = pa["ci95"]
+            lines.append(f"| {split['split_year']} | {split['top_k']} | "
+                         f"{100*pp['abc']:.1f}% | {100*pp['popularity']:.1f}% | "
+                         f"{100*pp['random']:.1f}% | {pa['mean_diff']:+.2f} | "
+                         f"[{lo:+.2f}, {hi:+.2f}] | {_direction(pa)} |")
+        directions = {_direction(split["paired"]) for split in [head] + robust}
+        if len(directions) == 1 and paired["decided"]:
+            lines.extend(["", f"ABC is {_direction(paired)} in every evaluated split."])
+        else:
+            lines.extend(["", "The evaluated splits do not all resolve the ABC comparison in the same direction."])
+        lines.extend([
+            "Each split follows assertions through the available corpus snapshot;",
+            "follow-up lengths and sampled seeds can differ. This is not a comparison",
+            "at a common prediction horizon. Overlapping years are not independent replications.", "",
+        ])
 
-    L += [
-        "### The pattern in that table", "",
-        "The rankings do not scatter. They order themselves by **how hard each one",
-        "corrects for degree**, and the harder the correction, the worse it does:", "",
-        "| ranking | degree correction | precision@%d |" % args.top,
-        "|---|---|---|",
-        "| popularity | none -- it IS degree | %.1f%% |" % (100 * prec["popularity"]),
-        "| raw bridge count | none | %.1f%% |" % (100 * prec["bridges"]),
-        "| Adamic-Adar | down-weights hub bridges | %.1f%% |" % (100 * prec["adamic_adar"]),
-        "| resource allocation | down-weights them harder | %.1f%% |" % (100 * prec["resource_alloc"]),
-        "| ABC (hypergeometric) | divides out candidate degree | %.1f%% |" % (100 * prec["abc"]),
-        "| Jaccard | normalises by BOTH degrees | %.1f%% |" % (100 * prec["jaccard"]),
-        "| random | -- | %.1f%% |" % (100 * prec["random"]),
-        "",
-        "Jaccard, the most aggressive correction, lands barely above chance. That is",
-        "not a bug in any one method; it says the thing being corrected away is the",
-        "signal. New edges in this graph genuinely do attach preferentially to",
-        "well-connected entities, because attention concentrates -- so a ranking that",
-        "removes degree removes most of what predicts the next edge.", "",
-        "This also answers the obvious follow-up. The shipped ranking cannot be",
-        "repaired by swapping in a better-known link predictor: the standard ones were",
-        "tried here and none beats the baseline. Adamic-Adar and the raw bridge count",
-        "tie with it (their intervals span zero); everything else loses.", "",
-        "### The objection to this whole evaluation", "",
-        "It is worth stating against my own result. This scores a ranking by whether",
-        "it anticipates what the literature went on to assert. But Swanson-style",
-        "discovery is FOR finding connections the literature is slow to reach -- the",
-        "fish-oil/Raynaud case mattered precisely because nobody was about to publish",
-        "it. On that reading, a method that beats popularity at predicting next year's",
-        "edges may be selecting for the LEAST interesting hypotheses, and a method that",
-        "loses to popularity is not thereby useless.", "",
-        "So the defensible claim is narrow and it is the one the module actually made:",
-        "`atlas_discovery.py` says it corrects for popularity, and measured against",
-        "what the literature did next it does not help. Whether predicting the",
-        "literature is the right target for a discovery layer at all is a separate",
-        "question this evaluation cannot settle, and a genuinely overlooked connection",
-        "would be scored here as a miss.", "",
-        f"### Verdict: {verdict}", ""]
-    if paired["decided"] and paired["mean_diff"] < 0:
-        L += [
-            "This is a negative result about this repository's own layer, and it is",
-            "why the evaluation was worth writing. The bridge counting, hub filtering",
-            "and hypergeometric tail do not order candidates better than asking which",
-            "of them is already famous -- they order them measurably worse, at every",
-            "split year tested.", "",
-            "**But the candidate SET is doing real work.** Both rankings beat random by",
-            f"roughly {prec['popularity']/prec['random']:.0f}x, so restricting attention",
-            "to 2-hop bridged entities is genuinely informative; it is the ranking",
-            "within that set that fails. The honest summary is that",
-            "`atlas_discovery.py` is a good candidate GENERATOR and a bad RANKER, and",
-            "its output should be read as a popularity-weighted reading list.", "",
-            "The module's docstring says it corrects for popularity. Measured against",
-            "what the literature went on to say, it does not.", "",
-        ]
-    elif not paired["decided"]:
-        L += [
-            "No claim either way survives this sample size. The point estimate favours",
-            "popularity but the paired interval spans zero, so the honest statement is",
-            "that the ABC machinery has not been SHOWN to add ordering information --",
-            "not that it has been shown to lack it.", "",
-        ]
-    else:
-        L += [
-            "The ABC machinery orders candidates better than popularity, so the bridge",
-            "structure carries information the degree distribution does not. That is a",
-            "floor, not a validation: absolute precision is still low and every limit",
-            "in `atlas_discovery.py` still applies.", "",
-        ]
-
-    L += ["## Per-seed detail", "",
-          f"| seed | degree before {Y} | candidates | abc | popularity | random |",
-          "|---|---|---|---|---|---|"]
-    for r in sorted(head["per_seed"], key=lambda r: -r["abc"])[:25]:
-        L.append(f"| {r['seed_name']} | {r['degree']:,} | {r['candidates']:,} | "
-                 f"{r['abc']} | {r['popularity']} | {r['random']} |")
-
-    L += [
+    lines.extend([
+        "## Per-seed detail", "",
+        "Up to 25 seeds with the most ABC hits are shown; aggregate metrics use every evaluable seed.", "",
+        f"| seed | degree before {year} | candidates | abc | popularity | random |",
+        "|---|---|---|---|---|---|",
+    ])
+    for row in sorted(head["per_seed"], key=lambda r: -r["abc"])[:25]:
+        lines.append(f"| {_cell(row['seed_name'])} | {row['degree']:,} | "
+                     f"{row['candidates']:,} | {row['abc']} | "
+                     f"{row['popularity']} | {row['random']} |")
+    lines.extend([
         "", "## What this cannot show", "",
-        "* That a hit is a real biological relation. A new edge may be a new",
-        "  extraction of an old idea, and PubTator's extractor has its own error rate.",
-        "  This measures whether a ranking anticipates what the literature went on to",
-        "  say, which is the most this graph supports.",
-        "* Anything about pairs the literature will assert after the census ends. A",
-        "  correct prediction not yet published counts here as a miss, so every",
-        "  precision figure is a lower bound.",
-        "* Anything about seeds outside the sampled degree band. Hubs and",
-        "  near-isolated nodes behave differently and are excluded by construction.",
-        "* Recall. Only the top-k are scored, so a ranking that buries a true pair at",
-        "  position k+1 is indistinguishable here from one that omits it.",
-        "* That popularity is a GOOD ranking. It is a better one, on a graph where",
-        "  well-studied entities keep accruing edges. Predicting that a famous gene",
-        "  will gain another relation is easy and not very useful.",
-    ]
+        "* Biological validity or genuinely new knowledge. The extractor can miss or",
+        "  misidentify assertions, and absent dated evidence is not absence of prior knowledge.",
+        "* Eventual precision beyond the available corpus. Unobserved future assertions",
+        "  count as misses here. The stored results do not record an observation end year.",
+        "* Uncertainty for a new corpus or extraction process. The bootstrap resamples",
+        "  seeds and assumes exchangeability; overlapping entities, papers, and pairs",
+        "  can violate independence. Its intervals are conditional on this corpus and",
+        "  the observed per-seed outcomes, not calibrated biological confidence bounds.",
+        "* Performance outside the sampled degree band or for seeds without eligible",
+        "  candidates. Those seeds do not contribute to the reported denominator.",
+        "* Recall or candidate-generator benefit. Only the selected top-k hits are",
+        "  evaluated, and all ranking baselines share the same candidate pool.",
+        "* Whether popularity reflects biology, publication attention, or both. This",
+        "  design does not separate those explanations or validate discovery utility.", "",
+        "An objection to the target itself: discovery can aim at overlooked",
+        "connections that the literature is slow to reach. Those hypotheses count",
+        "as misses here until a dated assertion is observed, so predicting later",
+        "assertions and identifying useful discoveries are different objectives.", "",
+    ])
+    return "\n".join(lines)
 
-    OUT.write_text("\n".join(L) + "\n")
-    RAW.write_text(json.dumps({"headline": head, "robustness": robust}, indent=2) + "\n")
-    print(f"\nabc {100*prec['abc']:.1f}%  popularity {100*prec['popularity']:.1f}%  "
-          f"random {100*prec['random']:.1f}%  ->  {verdict}")
-    print(f"wrote {OUT}\nwrote {RAW}")
+
+def _positive_int(value):
+    try:
+        number = int(value)
+    except (TypeError, ValueError):
+        raise argparse.ArgumentTypeError("must be a positive integer") from None
+    if number <= 0:
+        raise argparse.ArgumentTypeError("must be a positive integer")
+    return number
+
+
+def main(argv=None) -> int:
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--split-year", type=_positive_int, default=2018,
+                    help="the headline split")
+    ap.add_argument("--also-years", type=_positive_int, nargs="*", default=[2015, 2021],
+                    help="additional requested splits; all must be evaluable")
+    ap.add_argument("--seeds", type=_positive_int, default=200)
+    ap.add_argument("--top", type=_positive_int, default=20)
+    ap.add_argument("--render-only", action="store_true",
+                    help="rebuild Markdown from stored per-seed counts without graph I/O")
+    args = ap.parse_args(argv)
+
+    try:
+        if args.render_only:
+            raw = json.loads(OUT_JSON.read_text(encoding="utf-8"))
+            data = assemble(raw)
+        else:
+            root = atlas_root()
+            idx = load_index(root)
+            print("loading year map ...", flush=True)
+            years = pmid_years(root)
+            if not years:
+                raise ValueError("no dated records; run scripts/atlas_baseline.py first "
+                                 "or use --render-only for stored results")
+            for value in years.values():
+                _integer(value, "publication year", 1)
+            span = (min(years.values()), max(years.values()))
+            print(f"  {len(years):,} dated PMIDs spanning {span[0]}-{span[1]}", flush=True)
+            requested = [args.split_year] + sorted(set(args.also_years) - {args.split_year})
+            unavailable = [year for year in requested if not span[0] < year <= span[1]]
+            if unavailable:
+                raise ValueError(f"requested split years {unavailable} unavailable in dated "
+                                 f"record span {span[0]}-{span[1]}; each needs observations "
+                                 "before and at or after the split")
+            print("dating every pair ...", flush=True)
+            first = pair_first_year(root, years, load_corrections())
+            print(f"  {len(first):,} pairs carry an earliest dated assertion year", flush=True)
+            results = []
+            for year in requested:
+                result = evaluate(first, idx, year, args.seeds, args.top)
+                if not result:
+                    raise ValueError(f"no evaluable seeds for requested split {year}; "
+                                     "reports were not updated")
+                results.append(result)
+            raw = {"headline": results[0], "robustness": results[1:]}
+            data = assemble(raw)
+    except (OSError, ValueError, TypeError) as exc:
+        print(f"discovery evaluation unavailable: {exc}", file=sys.stderr)
+        return 1
+
+    # Both payloads must be valid before either artifact is replaced. Replay
+    # deliberately preserves the original JSON bytes and historical observations.
+    json_text = json.dumps(data, indent=2, allow_nan=False) + "\n"
+    markdown = render(data)
+    if not args.render_only:
+        OUT_JSON.write_text(json_text, encoding="utf-8")
+    OUT_MD.write_text(markdown, encoding="utf-8")
+    head = data["headline"]
+    print(f"abc {100*head['precision']['abc']:.1f}%  "
+          f"popularity {100*head['precision']['popularity']:.1f}%  "
+          f"random {100*head['precision']['random']:.1f}%  -> {_verdict(head['paired'])}")
+    print(f"wrote {OUT_MD}" + ("" if args.render_only else f"\nwrote {OUT_JSON}"))
     return 0
 
 
