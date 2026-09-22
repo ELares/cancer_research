@@ -19,6 +19,7 @@ ROOT = Path(__file__).resolve().parents[1]
 CAL = ROOT / "analysis" / "calibration"
 sys.path.insert(0, str(ROOT / "scripts"))
 import abc_joint_resample as driver  # noqa: E402
+import archived_numerical_sources as provenance  # noqa: E402
 
 
 @pytest.fixture(autouse=True)
@@ -67,6 +68,11 @@ def test_report_json_and_markdown_rebuild_without_simulator():
     assert driver.render(stored) == markdown
     assert "No pooled posterior is published." in markdown
     assert stored["stability"]["passed"] == all(stored["stability"]["checks"].values())
+    # Reconstruction retains the original numerical-program identity; it does
+    # not claim today's archive-verification code generated the old attempts.
+    assert rebuilt["source_hashes"] == stored["source_hashes"]
+    assert rebuilt["source_hashes"]["scripts/abc_joint_resample.py"] != hashlib.sha256(
+        (ROOT / "scripts/abc_joint_resample.py").read_bytes()).hexdigest()
 
 
 @pytest.mark.parametrize("seed", driver.SEEDS)
@@ -86,7 +92,99 @@ def test_archive_source_hashes_cover_all_frozen_numerical_inputs(archives, seed)
                     (ROOT / "simulations" / "ferroptosis-core" / "src").rglob("*.rs"))
     assert set(archive["source_hashes"]) == required
     for relative, digest in archive["source_hashes"].items():
-        assert hashlib.sha256((ROOT / relative).read_bytes()).hexdigest() == digest, relative
+        original = provenance.resolve_source_bytes(relative, digest, root=ROOT)
+        assert hashlib.sha256(original).hexdigest() == digest, relative
+
+
+def source_registry(tmp_path):
+    """Small historical-byte fixture independent of production snapshots."""
+    relative = "scripts/original.py"
+    original = b"original numerical input\n"
+    digest = hashlib.sha256(original).hexdigest()
+    current = tmp_path / relative
+    current.parent.mkdir(parents=True)
+    current.write_bytes(b"new reader or model input\n")
+    folder = tmp_path / provenance.SNAPSHOTS
+    folder.mkdir(parents=True)
+    (folder / f"{digest}.source").write_bytes(original)
+    (folder / "manifest.json").write_text(json.dumps({
+        "schema_version": 1, "sources": {relative: {digest: {"recovered_from_commit": "a" * 40}}}}))
+    return relative, digest, original, folder
+
+
+def test_matching_current_source_bytes_need_no_historical_registry(tmp_path):
+    relative = "scripts/current.py"
+    path = tmp_path / relative
+    path.parent.mkdir()
+    blob = b"still the original source\n"
+    path.write_bytes(blob)
+    digest = hashlib.sha256(blob).hexdigest()
+    assert provenance.resolve_source_bytes(relative, digest, root=tmp_path) == blob
+    provenance.verify_source_hashes({relative: digest}, root=tmp_path)
+    assert not (tmp_path / provenance.SNAPSHOTS).exists()
+
+
+def test_registered_historical_bytes_resolve_after_current_source_changes(tmp_path):
+    relative, digest, original, _ = source_registry(tmp_path)
+    assert provenance.resolve_source_bytes(relative, digest, root=tmp_path) == original
+    provenance.verify_source_hashes({relative: digest}, root=tmp_path)
+
+
+@pytest.mark.parametrize("mutation", ["missing_snapshot", "tampered_snapshot", "unknown_path",
+                                     "unknown_hash", "unregistered_pair", "missing_registry", "symlink_snapshot"])
+def test_historical_sources_require_registered_matching_bytes(tmp_path, mutation):
+    relative, digest, _, folder = source_registry(tmp_path)
+    snapshot = folder / f"{digest}.source"
+    if mutation == "missing_snapshot":
+        snapshot.unlink()
+    elif mutation == "tampered_snapshot":
+        snapshot.write_bytes(b"changed historical source\n")
+    elif mutation == "unknown_path":
+        relative = "scripts/another.py"
+    elif mutation == "unknown_hash":
+        digest = "0" * 64
+    elif mutation == "unregistered_pair":
+        manifest = json.loads((folder / "manifest.json").read_text())
+        manifest["sources"] = {"scripts/another.py": manifest["sources"][relative]}
+        (folder / "manifest.json").write_text(json.dumps(manifest))
+    elif mutation == "missing_registry":
+        (folder / "manifest.json").unlink()
+    else:
+        original = snapshot.read_bytes()
+        snapshot.unlink()
+        (tmp_path / "borrowed.source").write_bytes(original)
+        snapshot.symlink_to(tmp_path / "borrowed.source")
+    with pytest.raises(ValueError):
+        provenance.verify_source_hashes({relative: digest}, root=tmp_path)
+
+
+@pytest.mark.parametrize("relative", ["../original.py", "/tmp/original.py", "scripts/../original.py"])
+def test_archived_source_paths_cannot_escape_the_repository(tmp_path, relative):
+    with pytest.raises(ValueError, match="invalid archived source identity"):
+        provenance.resolve_source_bytes(relative, "0" * 64, root=tmp_path)
+
+
+@pytest.mark.parametrize("mutation", ["manifest_list", "boolean_schema", "path_list", "path_string",
+                                     "record_list", "invalid_commit"])
+def test_historical_registry_requires_its_declared_structure(tmp_path, mutation):
+    relative, digest, _, folder = source_registry(tmp_path)
+    path = folder / "manifest.json"
+    manifest = json.loads(path.read_text())
+    if mutation == "manifest_list":
+        manifest = []
+    elif mutation == "boolean_schema":
+        manifest["schema_version"] = True
+    elif mutation == "path_list":
+        manifest["sources"][relative] = [digest]
+    elif mutation == "path_string":
+        manifest["sources"][relative] = digest
+    elif mutation == "record_list":
+        manifest["sources"][relative][digest] = []
+    else:
+        manifest["sources"][relative][digest]["recovered_from_commit"] = "not-a-commit"
+    path.write_text(json.dumps(manifest))
+    with pytest.raises(ValueError):
+        provenance.resolve_source_bytes(relative, digest, root=tmp_path)
 
 
 @pytest.mark.parametrize("seed", driver.SEEDS)

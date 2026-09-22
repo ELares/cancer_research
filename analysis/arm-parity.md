@@ -39,7 +39,7 @@ TWO TIERS, and collapsing them would flatter the engine. 3 arms act on selecting
 | Cytotoxic chemotherapy | 282 | 0.074x | 3,535 |
 | Antibody-drug conjugate | 123 | 0.032x | 3,694 |
 
-Shared machinery -- 5 modules, 818 lines -- is credited to NO arm, so every row above is a lower bound. It is not divided up because dividing it would be a judgement about how much of the immune model belongs to checkpoint blockade rather than to CAR-T, and no such split is measurable from the code.
+Shared machinery -- 5 modules, 860 lines -- is credited to NO arm, so every row above is a lower bound. It is not divided up because dividing it would be a judgement about how much of the immune model belongs to checkpoint blockade rather than to CAR-T, and no such split is measurable from the code.
 
 ## Where the arms are in the literature
 

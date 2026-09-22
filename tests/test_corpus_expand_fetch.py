@@ -656,8 +656,12 @@ def _drive(tmp_path, monkeypatch, pages, fail_ids=(), sources=(("MED", True),)):
 
 
 def _page(ids, nxt):
+    # Preserve identity across pages without Python's randomized, truncated
+    # hashes: a collision correctly deduplicates two otherwise distinct test
+    # records. The nonzero prefix makes this UTF-8 encoding injective.
     return {"resultList": {"result": [
-        {"id": i, "pmid": None, "pmcid": f"PMC{abs(hash(i)) % 10**7}",
+        {"id": i, "pmid": None,
+         "pmcid": f"PMC{int.from_bytes(('record:' + i).encode('utf-8'), 'big')}",
          "doi": f"10.1234/{i}",
          "inEPMC": "Y", "isOpenAccess": "Y", "license": "cc by",
          "title": i, "pubYear": "2026"} for i in ids]},

@@ -189,14 +189,23 @@ not require another simulation mechanism or a larger unmeasured corpus.
    [interpretation](IMMUNE_2D_REPLICATION_RESULTS.md) explains the primary
    exposure denominator, historical seed reuse and uncertainty limits.
    Both old archives and their golden outputs are unchanged.
-   **Next deliverable:** define a controlled comparison that separates death
-   density, release amount, timing and survival, while resolving assay mapping
-   below. Fix interventions, matched quantities, independent units and error
-   criteria before evaluation. Neither seed replication nor passive observation
-   supplies experimental validation or a replacement P5 threshold.
-   **Complete when:** the declared controlled outcomes are published, including
-   failures and null results, with a clear distinction between model mechanism
-   tests and independent biological validation.
+   **Controlled comparison completed:** the separately frozen
+   [source/recipient study](IMMUNE_2D_CONTROLLED_RESULTS.md) publishes all 18
+   deterministic conditions and 36 contrasts, including two zero controls.
+   Source masks, total release, pulse timing and fixed recipient availability
+   are prescribed independently of biochemical deaths or immune killing.
+   Equal-total-mass contrasts increase exposure for the denser declared source
+   pattern; all eligible observations remain below half-maximal activation.
+   This does not apportion the historical treatment contrast among mechanisms:
+   source layouts are artificial and endogenous recipient survival is absent.
+   **Next deliverable:** assess dependence on spatial layout and externally
+   imposed recipient-loss timing under a new, separately frozen design, while
+   resolving assay mapping below. The present masks and budgets are now seen;
+   do not relabel them as an unseen validation challenge. Prespecify matched
+   source histories, layouts, recipient-loss calendars and error criteria.
+   **Complete when:** every declared comparison, including failures and nulls,
+   is published with the distinction between controlled model behavior and
+   independent biological validation intact. These studies do not replace P5.
 
 4. **Validate one observable against independent raw assay replicates.** Deliver
    a validation report with a named source/accession, raw replicate measurements,

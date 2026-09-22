@@ -1,0 +1,1288 @@
+{
+  "conditions": [
+    {
+      "activation_sum": 237.60148976384954,
+      "activation_sum_per_available_recipient": 0.061875387959335816,
+      "activation_sum_per_reference_recipient": 0.061875387959335816,
+      "condition_id": "n64_m1280_t30_r3840",
+      "conditional_mean_activation": 0.0008280297815766256,
+      "conditional_mean_damp": 0.0414545710395955,
+      "damp_ge_9kd_opportunities": 0,
+      "damp_ge_kd_opportunities": 0,
+      "final_field_mass": 13.273031026513936,
+      "local_damp_sum": 11895.30625066985,
+      "max_eligible_damp": 0.21757919976250034,
+      "opportunities": 286948,
+      "per_source_damp": 20.0,
+      "recipient_count": 3840,
+      "release_step": 30,
+      "source_count": 64,
+      "threshold_fractions": {
+        "damp_ge_9kd_opportunities": 0.0,
+        "damp_ge_kd_opportunities": 0.0
+      },
+      "total_damp": 1280.0,
+      "unique_eligible_cells": 3840
+    },
+    {
+      "activation_sum": 59.400372440962386,
+      "activation_sum_per_available_recipient": 0.061875387959335816,
+      "activation_sum_per_reference_recipient": 0.015468846989833954,
+      "condition_id": "n64_m1280_t30_r960",
+      "conditional_mean_activation": 0.0008280297815766256,
+      "conditional_mean_damp": 0.0414545710395955,
+      "damp_ge_9kd_opportunities": 0,
+      "damp_ge_kd_opportunities": 0,
+      "final_field_mass": 13.273031026513936,
+      "local_damp_sum": 2973.8265626674624,
+      "max_eligible_damp": 0.2175791997625003,
+      "opportunities": 71737,
+      "per_source_damp": 20.0,
+      "recipient_count": 960,
+      "release_step": 30,
+      "source_count": 64,
+      "threshold_fractions": {
+        "damp_ge_9kd_opportunities": 0.0,
+        "damp_ge_kd_opportunities": 0.0
+      },
+      "total_damp": 1280.0,
+      "unique_eligible_cells": 960
+    },
+    {
+      "activation_sum": 651.6735288025201,
+      "activation_sum_per_available_recipient": 0.16970664812565628,
+      "activation_sum_per_reference_recipient": 0.16970664812565628,
+      "condition_id": "n64_m1280_t60_r3840",
+      "conditional_mean_activation": 0.001669502302614439,
+      "conditional_mean_damp": 0.0839754517915042,
+      "damp_ge_9kd_opportunities": 0,
+      "damp_ge_kd_opportunities": 0,
+      "final_field_mass": 33.09924454632309,
+      "local_damp_sum": 32778.97785229575,
+      "max_eligible_damp": 1.5656576000000002,
+      "opportunities": 390340,
+      "per_source_damp": 20.0,
+      "recipient_count": 3840,
+      "release_step": 60,
+      "source_count": 64,
+      "threshold_fractions": {
+        "damp_ge_9kd_opportunities": 0.0,
+        "damp_ge_kd_opportunities": 0.0
+      },
+      "total_damp": 1280.0,
+      "unique_eligible_cells": 3840
+    },
+    {
+      "activation_sum": 162.91838220063002,
+      "activation_sum_per_available_recipient": 0.16970664812565628,
+      "activation_sum_per_reference_recipient": 0.04242666203141407,
+      "condition_id": "n64_m1280_t60_r960",
+      "conditional_mean_activation": 0.001669502302614439,
+      "conditional_mean_damp": 0.0839754517915042,
+      "damp_ge_9kd_opportunities": 0,
+      "damp_ge_kd_opportunities": 0,
+      "final_field_mass": 33.09924454632309,
+      "local_damp_sum": 8194.744463073937,
+      "max_eligible_damp": 1.5656576000000002,
+      "opportunities": 97585,
+      "per_source_damp": 20.0,
+      "recipient_count": 960,
+      "release_step": 60,
+      "source_count": 64,
+      "threshold_fractions": {
+        "damp_ge_9kd_opportunities": 0.0,
+        "damp_ge_kd_opportunities": 0.0
+      },
+      "total_damp": 1280.0,
+      "unique_eligible_cells": 960
+    },
+    {
+      "activation_sum": 1017.9138429882023,
+      "activation_sum_per_available_recipient": 0.26508172994484436,
+      "activation_sum_per_reference_recipient": 0.26508172994484436,
+      "condition_id": "n64_m5120_t30_r3840",
+      "conditional_mean_activation": 0.0022833214663578664,
+      "conditional_mean_damp": 0.11471395462865772,
+      "damp_ge_9kd_opportunities": 0,
+      "damp_ge_kd_opportunities": 0,
+      "final_field_mass": 53.092124106056424,
+      "local_damp_sum": 51139.939829274124,
+      "max_eligible_damp": 0.8703184860845784,
+      "opportunities": 445804,
+      "per_source_damp": 80.0,
+      "recipient_count": 3840,
+      "release_step": 30,
+      "source_count": 64,
+      "threshold_fractions": {
+        "damp_ge_9kd_opportunities": 0.0,
+        "damp_ge_kd_opportunities": 0.0
+      },
+      "total_damp": 5120.0,
+      "unique_eligible_cells": 3840
+    },
+    {
+      "activation_sum": 254.47846074705058,
+      "activation_sum_per_available_recipient": 0.26508172994484436,
+      "activation_sum_per_reference_recipient": 0.06627043248621109,
+      "condition_id": "n64_m5120_t30_r960",
+      "conditional_mean_activation": 0.0022833214663578664,
+      "conditional_mean_damp": 0.11471395462865772,
+      "damp_ge_9kd_opportunities": 0,
+      "damp_ge_kd_opportunities": 0,
+      "final_field_mass": 53.092124106056424,
+      "local_damp_sum": 12784.984957318531,
+      "max_eligible_damp": 0.8703184860845783,
+      "opportunities": 111451,
+      "per_source_damp": 80.0,
+      "recipient_count": 960,
+      "release_step": 30,
+      "source_count": 64,
+      "threshold_fractions": {
+        "damp_ge_9kd_opportunities": 0.0,
+        "damp_ge_kd_opportunities": 0.0
+      },
+      "total_damp": 5120.0,
+      "unique_eligible_cells": 960
+    },
+    {
+      "activation_sum": 2598.8887042371384,
+      "activation_sum_per_available_recipient": 0.6767939333950881,
+      "activation_sum_per_reference_recipient": 0.6767939333950881,
+      "condition_id": "n64_m5120_t60_r3840",
+      "conditional_mean_activation": 0.005756580157525602,
+      "conditional_mean_damp": 0.2944697515148509,
+      "damp_ge_9kd_opportunities": 0,
+      "damp_ge_kd_opportunities": 0,
+      "final_field_mass": 132.39697818529277,
+      "local_damp_sum": 132942.49189790065,
+      "max_eligible_damp": 6.262630400000001,
+      "opportunities": 451464,
+      "per_source_damp": 80.0,
+      "recipient_count": 3840,
+      "release_step": 60,
+      "source_count": 64,
+      "threshold_fractions": {
+        "damp_ge_9kd_opportunities": 0.0,
+        "damp_ge_kd_opportunities": 0.0
+      },
+      "total_damp": 5120.0,
+      "unique_eligible_cells": 3840
+    },
+    {
+      "activation_sum": 649.7221760592846,
+      "activation_sum_per_available_recipient": 0.6767939333950881,
+      "activation_sum_per_reference_recipient": 0.16919848334877202,
+      "condition_id": "n64_m5120_t60_r960",
+      "conditional_mean_activation": 0.005756580157525602,
+      "conditional_mean_damp": 0.2944697515148509,
+      "damp_ge_9kd_opportunities": 0,
+      "damp_ge_kd_opportunities": 0,
+      "final_field_mass": 132.39697818529277,
+      "local_damp_sum": 33235.62297447516,
+      "max_eligible_damp": 6.262630400000001,
+      "opportunities": 112866,
+      "per_source_damp": 80.0,
+      "recipient_count": 960,
+      "release_step": 60,
+      "source_count": 64,
+      "threshold_fractions": {
+        "damp_ge_9kd_opportunities": 0.0,
+        "damp_ge_kd_opportunities": 0.0
+      },
+      "total_damp": 5120.0,
+      "unique_eligible_cells": 960
+    },
+    {
+      "activation_sum": 248.4165077642069,
+      "activation_sum_per_available_recipient": 0.06469179889692887,
+      "activation_sum_per_reference_recipient": 0.06469179889692887,
+      "condition_id": "n256_m1280_t30_r3840",
+      "conditional_mean_activation": 0.000854005403405505,
+      "conditional_mean_damp": 0.04275415992698887,
+      "damp_ge_9kd_opportunities": 0,
+      "damp_ge_kd_opportunities": 0,
+      "final_field_mass": 13.273031026514133,
+      "local_damp_sum": 12436.501056202229,
+      "max_eligible_damp": 0.12313087454838802,
+      "opportunities": 290884,
+      "per_source_damp": 5.0,
+      "recipient_count": 3840,
+      "release_step": 30,
+      "source_count": 256,
+      "threshold_fractions": {
+        "damp_ge_9kd_opportunities": 0.0,
+        "damp_ge_kd_opportunities": 0.0
+      },
+      "total_damp": 1280.0,
+      "unique_eligible_cells": 3840
+    },
+    {
+      "activation_sum": 62.104126941051724,
+      "activation_sum_per_available_recipient": 0.06469179889692887,
+      "activation_sum_per_reference_recipient": 0.01617294972423222,
+      "condition_id": "n256_m1280_t30_r960",
+      "conditional_mean_activation": 0.000854005403405505,
+      "conditional_mean_damp": 0.04275415992698887,
+      "damp_ge_9kd_opportunities": 0,
+      "damp_ge_kd_opportunities": 0,
+      "final_field_mass": 13.273031026514133,
+      "local_damp_sum": 3109.1252640505572,
+      "max_eligible_damp": 0.12313087454838802,
+      "opportunities": 72721,
+      "per_source_damp": 5.0,
+      "recipient_count": 960,
+      "release_step": 30,
+      "source_count": 256,
+      "threshold_fractions": {
+        "damp_ge_9kd_opportunities": 0.0,
+        "damp_ge_kd_opportunities": 0.0
+      },
+      "total_damp": 1280.0,
+      "unique_eligible_cells": 960
+    },
+    {
+      "activation_sum": 677.7221920963469,
+      "activation_sum_per_available_recipient": 0.176490154191757,
+      "activation_sum_per_reference_recipient": 0.176490154191757,
+      "condition_id": "n256_m1280_t60_r3840",
+      "conditional_mean_activation": 0.0016763185818575359,
+      "conditional_mean_damp": 0.08409429533558156,
+      "damp_ge_9kd_opportunities": 0,
+      "damp_ge_kd_opportunities": 0,
+      "final_field_mass": 33.09924454632295,
+      "local_damp_sum": 33998.65084981294,
+      "max_eligible_damp": 0.49591000128,
+      "opportunities": 404292,
+      "per_source_damp": 5.0,
+      "recipient_count": 3840,
+      "release_step": 60,
+      "source_count": 256,
+      "threshold_fractions": {
+        "damp_ge_9kd_opportunities": 0.0,
+        "damp_ge_kd_opportunities": 0.0
+      },
+      "total_damp": 1280.0,
+      "unique_eligible_cells": 3840
+    },
+    {
+      "activation_sum": 169.43054802408673,
+      "activation_sum_per_available_recipient": 0.176490154191757,
+      "activation_sum_per_reference_recipient": 0.04412253854793925,
+      "condition_id": "n256_m1280_t60_r960",
+      "conditional_mean_activation": 0.0016763185818575359,
+      "conditional_mean_damp": 0.08409429533558156,
+      "damp_ge_9kd_opportunities": 0,
+      "damp_ge_kd_opportunities": 0,
+      "final_field_mass": 33.09924454632295,
+      "local_damp_sum": 8499.662712453235,
+      "max_eligible_damp": 0.49591000128,
+      "opportunities": 101073,
+      "per_source_damp": 5.0,
+      "recipient_count": 960,
+      "release_step": 60,
+      "source_count": 256,
+      "threshold_fractions": {
+        "damp_ge_9kd_opportunities": 0.0,
+        "damp_ge_kd_opportunities": 0.0
+      },
+      "total_damp": 1280.0,
+      "unique_eligible_cells": 960
+    },
+    {
+      "activation_sum": 1060.5522106888238,
+      "activation_sum_per_available_recipient": 0.2761854715335479,
+      "activation_sum_per_reference_recipient": 0.2761854715335479,
+      "condition_id": "n256_m5120_t30_r3840",
+      "conditional_mean_activation": 0.002367959459066402,
+      "conditional_mean_damp": 0.11895937088927776,
+      "damp_ge_9kd_opportunities": 0,
+      "damp_ge_kd_opportunities": 0,
+      "final_field_mass": 53.09212410605639,
+      "local_damp_sum": 53279.047196406165,
+      "max_eligible_damp": 0.49252349819355207,
+      "opportunities": 447876,
+      "per_source_damp": 20.0,
+      "recipient_count": 3840,
+      "release_step": 30,
+      "source_count": 256,
+      "threshold_fractions": {
+        "damp_ge_9kd_opportunities": 0.0,
+        "damp_ge_kd_opportunities": 0.0
+      },
+      "total_damp": 5120.0,
+      "unique_eligible_cells": 3840
+    },
+    {
+      "activation_sum": 265.13805267220596,
+      "activation_sum_per_available_recipient": 0.2761854715335479,
+      "activation_sum_per_reference_recipient": 0.06904636788338697,
+      "condition_id": "n256_m5120_t30_r960",
+      "conditional_mean_activation": 0.002367959459066402,
+      "conditional_mean_damp": 0.11895937088927776,
+      "damp_ge_9kd_opportunities": 0,
+      "damp_ge_kd_opportunities": 0,
+      "final_field_mass": 53.09212410605639,
+      "local_damp_sum": 13319.761799101541,
+      "max_eligible_damp": 0.49252349819355207,
+      "opportunities": 111969,
+      "per_source_damp": 20.0,
+      "recipient_count": 960,
+      "release_step": 30,
+      "source_count": 256,
+      "threshold_fractions": {
+        "damp_ge_9kd_opportunities": 0.0,
+        "damp_ge_kd_opportunities": 0.0
+      },
+      "total_damp": 5120.0,
+      "unique_eligible_cells": 960
+    },
+    {
+      "activation_sum": 2717.982127804189,
+      "activation_sum_per_available_recipient": 0.7078078457823409,
+      "activation_sum_per_reference_recipient": 0.7078078457823409,
+      "condition_id": "n256_m5120_t60_r3840",
+      "conditional_mean_activation": 0.005921736112379057,
+      "conditional_mean_damp": 0.29995648571144423,
+      "damp_ge_9kd_opportunities": 0,
+      "damp_ge_kd_opportunities": 0,
+      "final_field_mass": 132.39697818529226,
+      "local_damp_sum": 137675.22763778153,
+      "max_eligible_damp": 1.98364000512,
+      "opportunities": 458984,
+      "per_source_damp": 20.0,
+      "recipient_count": 3840,
+      "release_step": 60,
+      "source_count": 256,
+      "threshold_fractions": {
+        "damp_ge_9kd_opportunities": 0.0,
+        "damp_ge_kd_opportunities": 0.0
+      },
+      "total_damp": 5120.0,
+      "unique_eligible_cells": 3840
+    },
+    {
+      "activation_sum": 679.4955319510473,
+      "activation_sum_per_available_recipient": 0.7078078457823409,
+      "activation_sum_per_reference_recipient": 0.17695196144558523,
+      "condition_id": "n256_m5120_t60_r960",
+      "conditional_mean_activation": 0.005921736112379057,
+      "conditional_mean_damp": 0.29995648571144423,
+      "damp_ge_9kd_opportunities": 0,
+      "damp_ge_kd_opportunities": 0,
+      "final_field_mass": 132.39697818529226,
+      "local_damp_sum": 34418.80690944538,
+      "max_eligible_damp": 1.98364000512,
+      "opportunities": 114746,
+      "per_source_damp": 20.0,
+      "recipient_count": 960,
+      "release_step": 60,
+      "source_count": 256,
+      "threshold_fractions": {
+        "damp_ge_9kd_opportunities": 0.0,
+        "damp_ge_kd_opportunities": 0.0
+      },
+      "total_damp": 5120.0,
+      "unique_eligible_cells": 960
+    },
+    {
+      "activation_sum": 0.0,
+      "activation_sum_per_available_recipient": 0.0,
+      "activation_sum_per_reference_recipient": 0.0,
+      "condition_id": "zero_r3840",
+      "conditional_mean_activation": null,
+      "conditional_mean_damp": null,
+      "damp_ge_9kd_opportunities": 0,
+      "damp_ge_kd_opportunities": 0,
+      "final_field_mass": 0.0,
+      "local_damp_sum": 0.0,
+      "max_eligible_damp": null,
+      "opportunities": 0,
+      "per_source_damp": 0.0,
+      "recipient_count": 3840,
+      "release_step": 60,
+      "source_count": 64,
+      "threshold_fractions": {
+        "damp_ge_9kd_opportunities": null,
+        "damp_ge_kd_opportunities": null
+      },
+      "total_damp": 0.0,
+      "unique_eligible_cells": 0
+    },
+    {
+      "activation_sum": 0.0,
+      "activation_sum_per_available_recipient": 0.0,
+      "activation_sum_per_reference_recipient": 0.0,
+      "condition_id": "zero_r960",
+      "conditional_mean_activation": null,
+      "conditional_mean_damp": null,
+      "damp_ge_9kd_opportunities": 0,
+      "damp_ge_kd_opportunities": 0,
+      "final_field_mass": 0.0,
+      "local_damp_sum": 0.0,
+      "max_eligible_damp": null,
+      "opportunities": 0,
+      "per_source_damp": 0.0,
+      "recipient_count": 960,
+      "release_step": 60,
+      "source_count": 64,
+      "threshold_fractions": {
+        "damp_ge_9kd_opportunities": null,
+        "damp_ge_kd_opportunities": null
+      },
+      "total_damp": 0.0,
+      "unique_eligible_cells": 0
+    }
+  ],
+  "contrasts": [
+    {
+      "contrast_id": "equal_total_mass__n256_m1280_t30_r3840__minus__n64_m1280_t30_r3840",
+      "difference": 0.002816410937593057,
+      "endpoint": "activation_sum_per_reference_recipient",
+      "kind": "equal_total_mass",
+      "left": "n256_m1280_t30_r3840",
+      "right": "n64_m1280_t30_r3840"
+    },
+    {
+      "contrast_id": "equal_total_mass__n256_m1280_t30_r960__minus__n64_m1280_t30_r960",
+      "difference": 0.0007041027343982643,
+      "endpoint": "activation_sum_per_reference_recipient",
+      "kind": "equal_total_mass",
+      "left": "n256_m1280_t30_r960",
+      "right": "n64_m1280_t30_r960"
+    },
+    {
+      "contrast_id": "equal_total_mass__n256_m1280_t60_r3840__minus__n64_m1280_t60_r3840",
+      "difference": 0.006783506066100731,
+      "endpoint": "activation_sum_per_reference_recipient",
+      "kind": "equal_total_mass",
+      "left": "n256_m1280_t60_r3840",
+      "right": "n64_m1280_t60_r3840"
+    },
+    {
+      "contrast_id": "equal_total_mass__n256_m1280_t60_r960__minus__n64_m1280_t60_r960",
+      "difference": 0.0016958765165251827,
+      "endpoint": "activation_sum_per_reference_recipient",
+      "kind": "equal_total_mass",
+      "left": "n256_m1280_t60_r960",
+      "right": "n64_m1280_t60_r960"
+    },
+    {
+      "contrast_id": "equal_total_mass__n256_m5120_t30_r3840__minus__n64_m5120_t30_r3840",
+      "difference": 0.01110374158870353,
+      "endpoint": "activation_sum_per_reference_recipient",
+      "kind": "equal_total_mass",
+      "left": "n256_m5120_t30_r3840",
+      "right": "n64_m5120_t30_r3840"
+    },
+    {
+      "contrast_id": "equal_total_mass__n256_m5120_t30_r960__minus__n64_m5120_t30_r960",
+      "difference": 0.0027759353971758827,
+      "endpoint": "activation_sum_per_reference_recipient",
+      "kind": "equal_total_mass",
+      "left": "n256_m5120_t30_r960",
+      "right": "n64_m5120_t30_r960"
+    },
+    {
+      "contrast_id": "equal_total_mass__n256_m5120_t60_r3840__minus__n64_m5120_t60_r3840",
+      "difference": 0.031013912387252818,
+      "endpoint": "activation_sum_per_reference_recipient",
+      "kind": "equal_total_mass",
+      "left": "n256_m5120_t60_r3840",
+      "right": "n64_m5120_t60_r3840"
+    },
+    {
+      "contrast_id": "equal_total_mass__n256_m5120_t60_r960__minus__n64_m5120_t60_r960",
+      "difference": 0.0077534780968132044,
+      "endpoint": "activation_sum_per_reference_recipient",
+      "kind": "equal_total_mass",
+      "left": "n256_m5120_t60_r960",
+      "right": "n64_m5120_t60_r960"
+    },
+    {
+      "contrast_id": "release_amount__n64_m5120_t30_r3840__minus__n64_m1280_t30_r3840",
+      "difference": 0.20320634198550855,
+      "endpoint": "activation_sum_per_reference_recipient",
+      "kind": "release_amount",
+      "left": "n64_m5120_t30_r3840",
+      "right": "n64_m1280_t30_r3840"
+    },
+    {
+      "contrast_id": "release_amount__n64_m5120_t30_r960__minus__n64_m1280_t30_r960",
+      "difference": 0.05080158549637714,
+      "endpoint": "activation_sum_per_reference_recipient",
+      "kind": "release_amount",
+      "left": "n64_m5120_t30_r960",
+      "right": "n64_m1280_t30_r960"
+    },
+    {
+      "contrast_id": "release_amount__n64_m5120_t60_r3840__minus__n64_m1280_t60_r3840",
+      "difference": 0.5070872852694318,
+      "endpoint": "activation_sum_per_reference_recipient",
+      "kind": "release_amount",
+      "left": "n64_m5120_t60_r3840",
+      "right": "n64_m1280_t60_r3840"
+    },
+    {
+      "contrast_id": "release_amount__n64_m5120_t60_r960__minus__n64_m1280_t60_r960",
+      "difference": 0.12677182131735795,
+      "endpoint": "activation_sum_per_reference_recipient",
+      "kind": "release_amount",
+      "left": "n64_m5120_t60_r960",
+      "right": "n64_m1280_t60_r960"
+    },
+    {
+      "contrast_id": "release_amount__n256_m5120_t30_r3840__minus__n256_m1280_t30_r3840",
+      "difference": 0.211493672636619,
+      "endpoint": "activation_sum_per_reference_recipient",
+      "kind": "release_amount",
+      "left": "n256_m5120_t30_r3840",
+      "right": "n256_m1280_t30_r3840"
+    },
+    {
+      "contrast_id": "release_amount__n256_m5120_t30_r960__minus__n256_m1280_t30_r960",
+      "difference": 0.05287341815915475,
+      "endpoint": "activation_sum_per_reference_recipient",
+      "kind": "release_amount",
+      "left": "n256_m5120_t30_r960",
+      "right": "n256_m1280_t30_r960"
+    },
+    {
+      "contrast_id": "release_amount__n256_m5120_t60_r3840__minus__n256_m1280_t60_r3840",
+      "difference": 0.531317691590584,
+      "endpoint": "activation_sum_per_reference_recipient",
+      "kind": "release_amount",
+      "left": "n256_m5120_t60_r3840",
+      "right": "n256_m1280_t60_r3840"
+    },
+    {
+      "contrast_id": "release_amount__n256_m5120_t60_r960__minus__n256_m1280_t60_r960",
+      "difference": 0.132829422897646,
+      "endpoint": "activation_sum_per_reference_recipient",
+      "kind": "release_amount",
+      "left": "n256_m5120_t60_r960",
+      "right": "n256_m1280_t60_r960"
+    },
+    {
+      "contrast_id": "release_timing__n64_m1280_t60_r3840__minus__n64_m1280_t30_r3840",
+      "difference": 0.10783126016632047,
+      "endpoint": "activation_sum_per_reference_recipient",
+      "kind": "release_timing",
+      "left": "n64_m1280_t60_r3840",
+      "right": "n64_m1280_t30_r3840"
+    },
+    {
+      "contrast_id": "release_timing__n64_m1280_t60_r960__minus__n64_m1280_t30_r960",
+      "difference": 0.026957815041580117,
+      "endpoint": "activation_sum_per_reference_recipient",
+      "kind": "release_timing",
+      "left": "n64_m1280_t60_r960",
+      "right": "n64_m1280_t30_r960"
+    },
+    {
+      "contrast_id": "release_timing__n64_m5120_t60_r3840__minus__n64_m5120_t30_r3840",
+      "difference": 0.41171220345024373,
+      "endpoint": "activation_sum_per_reference_recipient",
+      "kind": "release_timing",
+      "left": "n64_m5120_t60_r3840",
+      "right": "n64_m5120_t30_r3840"
+    },
+    {
+      "contrast_id": "release_timing__n64_m5120_t60_r960__minus__n64_m5120_t30_r960",
+      "difference": 0.10292805086256093,
+      "endpoint": "activation_sum_per_reference_recipient",
+      "kind": "release_timing",
+      "left": "n64_m5120_t60_r960",
+      "right": "n64_m5120_t30_r960"
+    },
+    {
+      "contrast_id": "release_timing__n256_m1280_t60_r3840__minus__n256_m1280_t30_r3840",
+      "difference": 0.11179835529482814,
+      "endpoint": "activation_sum_per_reference_recipient",
+      "kind": "release_timing",
+      "left": "n256_m1280_t60_r3840",
+      "right": "n256_m1280_t30_r3840"
+    },
+    {
+      "contrast_id": "release_timing__n256_m1280_t60_r960__minus__n256_m1280_t30_r960",
+      "difference": 0.027949588823707034,
+      "endpoint": "activation_sum_per_reference_recipient",
+      "kind": "release_timing",
+      "left": "n256_m1280_t60_r960",
+      "right": "n256_m1280_t30_r960"
+    },
+    {
+      "contrast_id": "release_timing__n256_m5120_t60_r3840__minus__n256_m5120_t30_r3840",
+      "difference": 0.431622374248793,
+      "endpoint": "activation_sum_per_reference_recipient",
+      "kind": "release_timing",
+      "left": "n256_m5120_t60_r3840",
+      "right": "n256_m5120_t30_r3840"
+    },
+    {
+      "contrast_id": "release_timing__n256_m5120_t60_r960__minus__n256_m5120_t30_r960",
+      "difference": 0.10790559356219825,
+      "endpoint": "activation_sum_per_reference_recipient",
+      "kind": "release_timing",
+      "left": "n256_m5120_t60_r960",
+      "right": "n256_m5120_t30_r960"
+    },
+    {
+      "contrast_id": "recipient_availability__n64_m1280_t30_r960__minus__n64_m1280_t30_r3840",
+      "difference": -0.046406540969501864,
+      "endpoint": "activation_sum_per_reference_recipient",
+      "kind": "recipient_availability",
+      "left": "n64_m1280_t30_r960",
+      "right": "n64_m1280_t30_r3840"
+    },
+    {
+      "contrast_id": "recipient_availability__n64_m1280_t60_r960__minus__n64_m1280_t60_r3840",
+      "difference": -0.1272799860942422,
+      "endpoint": "activation_sum_per_reference_recipient",
+      "kind": "recipient_availability",
+      "left": "n64_m1280_t60_r960",
+      "right": "n64_m1280_t60_r3840"
+    },
+    {
+      "contrast_id": "recipient_availability__n64_m5120_t30_r960__minus__n64_m5120_t30_r3840",
+      "difference": -0.19881129745863327,
+      "endpoint": "activation_sum_per_reference_recipient",
+      "kind": "recipient_availability",
+      "left": "n64_m5120_t30_r960",
+      "right": "n64_m5120_t30_r3840"
+    },
+    {
+      "contrast_id": "recipient_availability__n64_m5120_t60_r960__minus__n64_m5120_t60_r3840",
+      "difference": -0.507595450046316,
+      "endpoint": "activation_sum_per_reference_recipient",
+      "kind": "recipient_availability",
+      "left": "n64_m5120_t60_r960",
+      "right": "n64_m5120_t60_r3840"
+    },
+    {
+      "contrast_id": "recipient_availability__n256_m1280_t30_r960__minus__n256_m1280_t30_r3840",
+      "difference": -0.04851884917269665,
+      "endpoint": "activation_sum_per_reference_recipient",
+      "kind": "recipient_availability",
+      "left": "n256_m1280_t30_r960",
+      "right": "n256_m1280_t30_r3840"
+    },
+    {
+      "contrast_id": "recipient_availability__n256_m1280_t60_r960__minus__n256_m1280_t60_r3840",
+      "difference": -0.13236761564381777,
+      "endpoint": "activation_sum_per_reference_recipient",
+      "kind": "recipient_availability",
+      "left": "n256_m1280_t60_r960",
+      "right": "n256_m1280_t60_r3840"
+    },
+    {
+      "contrast_id": "recipient_availability__n256_m5120_t30_r960__minus__n256_m5120_t30_r3840",
+      "difference": -0.20713910365016092,
+      "endpoint": "activation_sum_per_reference_recipient",
+      "kind": "recipient_availability",
+      "left": "n256_m5120_t30_r960",
+      "right": "n256_m5120_t30_r3840"
+    },
+    {
+      "contrast_id": "recipient_availability__n256_m5120_t60_r960__minus__n256_m5120_t60_r3840",
+      "difference": -0.5308558843367557,
+      "endpoint": "activation_sum_per_reference_recipient",
+      "kind": "recipient_availability",
+      "left": "n256_m5120_t60_r960",
+      "right": "n256_m5120_t60_r3840"
+    },
+    {
+      "contrast_id": "equal_per_source_amount__n256_m5120_t30_r3840__minus__n64_m1280_t30_r3840",
+      "difference": 0.21431008357421208,
+      "endpoint": "activation_sum_per_reference_recipient",
+      "kind": "equal_per_source_amount",
+      "left": "n256_m5120_t30_r3840",
+      "right": "n64_m1280_t30_r3840"
+    },
+    {
+      "contrast_id": "equal_per_source_amount__n256_m5120_t30_r960__minus__n64_m1280_t30_r960",
+      "difference": 0.05357752089355302,
+      "endpoint": "activation_sum_per_reference_recipient",
+      "kind": "equal_per_source_amount",
+      "left": "n256_m5120_t30_r960",
+      "right": "n64_m1280_t30_r960"
+    },
+    {
+      "contrast_id": "equal_per_source_amount__n256_m5120_t60_r3840__minus__n64_m1280_t60_r3840",
+      "difference": 0.5381011976566846,
+      "endpoint": "activation_sum_per_reference_recipient",
+      "kind": "equal_per_source_amount",
+      "left": "n256_m5120_t60_r3840",
+      "right": "n64_m1280_t60_r3840"
+    },
+    {
+      "contrast_id": "equal_per_source_amount__n256_m5120_t60_r960__minus__n64_m1280_t60_r960",
+      "difference": 0.13452529941417116,
+      "endpoint": "activation_sum_per_reference_recipient",
+      "kind": "equal_per_source_amount",
+      "left": "n256_m5120_t60_r960",
+      "right": "n64_m1280_t60_r960"
+    }
+  ],
+  "plan": {
+    "conditions": [
+      {
+        "condition_id": "n64_m1280_t30_r3840",
+        "per_source_damp": 20.0,
+        "recipient_count": 3840,
+        "release_step": 30,
+        "source_count": 64,
+        "total_damp": 1280.0
+      },
+      {
+        "condition_id": "n64_m1280_t30_r960",
+        "per_source_damp": 20.0,
+        "recipient_count": 960,
+        "release_step": 30,
+        "source_count": 64,
+        "total_damp": 1280.0
+      },
+      {
+        "condition_id": "n64_m1280_t60_r3840",
+        "per_source_damp": 20.0,
+        "recipient_count": 3840,
+        "release_step": 60,
+        "source_count": 64,
+        "total_damp": 1280.0
+      },
+      {
+        "condition_id": "n64_m1280_t60_r960",
+        "per_source_damp": 20.0,
+        "recipient_count": 960,
+        "release_step": 60,
+        "source_count": 64,
+        "total_damp": 1280.0
+      },
+      {
+        "condition_id": "n64_m5120_t30_r3840",
+        "per_source_damp": 80.0,
+        "recipient_count": 3840,
+        "release_step": 30,
+        "source_count": 64,
+        "total_damp": 5120.0
+      },
+      {
+        "condition_id": "n64_m5120_t30_r960",
+        "per_source_damp": 80.0,
+        "recipient_count": 960,
+        "release_step": 30,
+        "source_count": 64,
+        "total_damp": 5120.0
+      },
+      {
+        "condition_id": "n64_m5120_t60_r3840",
+        "per_source_damp": 80.0,
+        "recipient_count": 3840,
+        "release_step": 60,
+        "source_count": 64,
+        "total_damp": 5120.0
+      },
+      {
+        "condition_id": "n64_m5120_t60_r960",
+        "per_source_damp": 80.0,
+        "recipient_count": 960,
+        "release_step": 60,
+        "source_count": 64,
+        "total_damp": 5120.0
+      },
+      {
+        "condition_id": "n256_m1280_t30_r3840",
+        "per_source_damp": 5.0,
+        "recipient_count": 3840,
+        "release_step": 30,
+        "source_count": 256,
+        "total_damp": 1280.0
+      },
+      {
+        "condition_id": "n256_m1280_t30_r960",
+        "per_source_damp": 5.0,
+        "recipient_count": 960,
+        "release_step": 30,
+        "source_count": 256,
+        "total_damp": 1280.0
+      },
+      {
+        "condition_id": "n256_m1280_t60_r3840",
+        "per_source_damp": 5.0,
+        "recipient_count": 3840,
+        "release_step": 60,
+        "source_count": 256,
+        "total_damp": 1280.0
+      },
+      {
+        "condition_id": "n256_m1280_t60_r960",
+        "per_source_damp": 5.0,
+        "recipient_count": 960,
+        "release_step": 60,
+        "source_count": 256,
+        "total_damp": 1280.0
+      },
+      {
+        "condition_id": "n256_m5120_t30_r3840",
+        "per_source_damp": 20.0,
+        "recipient_count": 3840,
+        "release_step": 30,
+        "source_count": 256,
+        "total_damp": 5120.0
+      },
+      {
+        "condition_id": "n256_m5120_t30_r960",
+        "per_source_damp": 20.0,
+        "recipient_count": 960,
+        "release_step": 30,
+        "source_count": 256,
+        "total_damp": 5120.0
+      },
+      {
+        "condition_id": "n256_m5120_t60_r3840",
+        "per_source_damp": 20.0,
+        "recipient_count": 3840,
+        "release_step": 60,
+        "source_count": 256,
+        "total_damp": 5120.0
+      },
+      {
+        "condition_id": "n256_m5120_t60_r960",
+        "per_source_damp": 20.0,
+        "recipient_count": 960,
+        "release_step": 60,
+        "source_count": 256,
+        "total_damp": 5120.0
+      },
+      {
+        "condition_id": "zero_r3840",
+        "per_source_damp": 0.0,
+        "recipient_count": 3840,
+        "release_step": 60,
+        "source_count": 64,
+        "total_damp": 0.0
+      },
+      {
+        "condition_id": "zero_r960",
+        "per_source_damp": 0.0,
+        "recipient_count": 960,
+        "release_step": 60,
+        "source_count": 64,
+        "total_damp": 0.0
+      }
+    ],
+    "config": {
+      "cell_size_um": 20.0,
+      "damp_clearance_rate": 0.03,
+      "damp_diffusion_fraction": 0.08,
+      "damp_kill_threshold": 0.01,
+      "dc_activation_kd": 50.0,
+      "diffusion_source_cutoff": 0.001,
+      "grid_cols": 500,
+      "grid_rows": 500,
+      "immune_start_step": 60,
+      "n_steps": 180
+    },
+    "contrast_operation": "left_minus_right",
+    "contrasts": [
+      {
+        "contrast_id": "equal_total_mass__n256_m1280_t30_r3840__minus__n64_m1280_t30_r3840",
+        "kind": "equal_total_mass",
+        "left": "n256_m1280_t30_r3840",
+        "right": "n64_m1280_t30_r3840"
+      },
+      {
+        "contrast_id": "equal_total_mass__n256_m1280_t30_r960__minus__n64_m1280_t30_r960",
+        "kind": "equal_total_mass",
+        "left": "n256_m1280_t30_r960",
+        "right": "n64_m1280_t30_r960"
+      },
+      {
+        "contrast_id": "equal_total_mass__n256_m1280_t60_r3840__minus__n64_m1280_t60_r3840",
+        "kind": "equal_total_mass",
+        "left": "n256_m1280_t60_r3840",
+        "right": "n64_m1280_t60_r3840"
+      },
+      {
+        "contrast_id": "equal_total_mass__n256_m1280_t60_r960__minus__n64_m1280_t60_r960",
+        "kind": "equal_total_mass",
+        "left": "n256_m1280_t60_r960",
+        "right": "n64_m1280_t60_r960"
+      },
+      {
+        "contrast_id": "equal_total_mass__n256_m5120_t30_r3840__minus__n64_m5120_t30_r3840",
+        "kind": "equal_total_mass",
+        "left": "n256_m5120_t30_r3840",
+        "right": "n64_m5120_t30_r3840"
+      },
+      {
+        "contrast_id": "equal_total_mass__n256_m5120_t30_r960__minus__n64_m5120_t30_r960",
+        "kind": "equal_total_mass",
+        "left": "n256_m5120_t30_r960",
+        "right": "n64_m5120_t30_r960"
+      },
+      {
+        "contrast_id": "equal_total_mass__n256_m5120_t60_r3840__minus__n64_m5120_t60_r3840",
+        "kind": "equal_total_mass",
+        "left": "n256_m5120_t60_r3840",
+        "right": "n64_m5120_t60_r3840"
+      },
+      {
+        "contrast_id": "equal_total_mass__n256_m5120_t60_r960__minus__n64_m5120_t60_r960",
+        "kind": "equal_total_mass",
+        "left": "n256_m5120_t60_r960",
+        "right": "n64_m5120_t60_r960"
+      },
+      {
+        "contrast_id": "release_amount__n64_m5120_t30_r3840__minus__n64_m1280_t30_r3840",
+        "kind": "release_amount",
+        "left": "n64_m5120_t30_r3840",
+        "right": "n64_m1280_t30_r3840"
+      },
+      {
+        "contrast_id": "release_amount__n64_m5120_t30_r960__minus__n64_m1280_t30_r960",
+        "kind": "release_amount",
+        "left": "n64_m5120_t30_r960",
+        "right": "n64_m1280_t30_r960"
+      },
+      {
+        "contrast_id": "release_amount__n64_m5120_t60_r3840__minus__n64_m1280_t60_r3840",
+        "kind": "release_amount",
+        "left": "n64_m5120_t60_r3840",
+        "right": "n64_m1280_t60_r3840"
+      },
+      {
+        "contrast_id": "release_amount__n64_m5120_t60_r960__minus__n64_m1280_t60_r960",
+        "kind": "release_amount",
+        "left": "n64_m5120_t60_r960",
+        "right": "n64_m1280_t60_r960"
+      },
+      {
+        "contrast_id": "release_amount__n256_m5120_t30_r3840__minus__n256_m1280_t30_r3840",
+        "kind": "release_amount",
+        "left": "n256_m5120_t30_r3840",
+        "right": "n256_m1280_t30_r3840"
+      },
+      {
+        "contrast_id": "release_amount__n256_m5120_t30_r960__minus__n256_m1280_t30_r960",
+        "kind": "release_amount",
+        "left": "n256_m5120_t30_r960",
+        "right": "n256_m1280_t30_r960"
+      },
+      {
+        "contrast_id": "release_amount__n256_m5120_t60_r3840__minus__n256_m1280_t60_r3840",
+        "kind": "release_amount",
+        "left": "n256_m5120_t60_r3840",
+        "right": "n256_m1280_t60_r3840"
+      },
+      {
+        "contrast_id": "release_amount__n256_m5120_t60_r960__minus__n256_m1280_t60_r960",
+        "kind": "release_amount",
+        "left": "n256_m5120_t60_r960",
+        "right": "n256_m1280_t60_r960"
+      },
+      {
+        "contrast_id": "release_timing__n64_m1280_t60_r3840__minus__n64_m1280_t30_r3840",
+        "kind": "release_timing",
+        "left": "n64_m1280_t60_r3840",
+        "right": "n64_m1280_t30_r3840"
+      },
+      {
+        "contrast_id": "release_timing__n64_m1280_t60_r960__minus__n64_m1280_t30_r960",
+        "kind": "release_timing",
+        "left": "n64_m1280_t60_r960",
+        "right": "n64_m1280_t30_r960"
+      },
+      {
+        "contrast_id": "release_timing__n64_m5120_t60_r3840__minus__n64_m5120_t30_r3840",
+        "kind": "release_timing",
+        "left": "n64_m5120_t60_r3840",
+        "right": "n64_m5120_t30_r3840"
+      },
+      {
+        "contrast_id": "release_timing__n64_m5120_t60_r960__minus__n64_m5120_t30_r960",
+        "kind": "release_timing",
+        "left": "n64_m5120_t60_r960",
+        "right": "n64_m5120_t30_r960"
+      },
+      {
+        "contrast_id": "release_timing__n256_m1280_t60_r3840__minus__n256_m1280_t30_r3840",
+        "kind": "release_timing",
+        "left": "n256_m1280_t60_r3840",
+        "right": "n256_m1280_t30_r3840"
+      },
+      {
+        "contrast_id": "release_timing__n256_m1280_t60_r960__minus__n256_m1280_t30_r960",
+        "kind": "release_timing",
+        "left": "n256_m1280_t60_r960",
+        "right": "n256_m1280_t30_r960"
+      },
+      {
+        "contrast_id": "release_timing__n256_m5120_t60_r3840__minus__n256_m5120_t30_r3840",
+        "kind": "release_timing",
+        "left": "n256_m5120_t60_r3840",
+        "right": "n256_m5120_t30_r3840"
+      },
+      {
+        "contrast_id": "release_timing__n256_m5120_t60_r960__minus__n256_m5120_t30_r960",
+        "kind": "release_timing",
+        "left": "n256_m5120_t60_r960",
+        "right": "n256_m5120_t30_r960"
+      },
+      {
+        "contrast_id": "recipient_availability__n64_m1280_t30_r960__minus__n64_m1280_t30_r3840",
+        "kind": "recipient_availability",
+        "left": "n64_m1280_t30_r960",
+        "right": "n64_m1280_t30_r3840"
+      },
+      {
+        "contrast_id": "recipient_availability__n64_m1280_t60_r960__minus__n64_m1280_t60_r3840",
+        "kind": "recipient_availability",
+        "left": "n64_m1280_t60_r960",
+        "right": "n64_m1280_t60_r3840"
+      },
+      {
+        "contrast_id": "recipient_availability__n64_m5120_t30_r960__minus__n64_m5120_t30_r3840",
+        "kind": "recipient_availability",
+        "left": "n64_m5120_t30_r960",
+        "right": "n64_m5120_t30_r3840"
+      },
+      {
+        "contrast_id": "recipient_availability__n64_m5120_t60_r960__minus__n64_m5120_t60_r3840",
+        "kind": "recipient_availability",
+        "left": "n64_m5120_t60_r960",
+        "right": "n64_m5120_t60_r3840"
+      },
+      {
+        "contrast_id": "recipient_availability__n256_m1280_t30_r960__minus__n256_m1280_t30_r3840",
+        "kind": "recipient_availability",
+        "left": "n256_m1280_t30_r960",
+        "right": "n256_m1280_t30_r3840"
+      },
+      {
+        "contrast_id": "recipient_availability__n256_m1280_t60_r960__minus__n256_m1280_t60_r3840",
+        "kind": "recipient_availability",
+        "left": "n256_m1280_t60_r960",
+        "right": "n256_m1280_t60_r3840"
+      },
+      {
+        "contrast_id": "recipient_availability__n256_m5120_t30_r960__minus__n256_m5120_t30_r3840",
+        "kind": "recipient_availability",
+        "left": "n256_m5120_t30_r960",
+        "right": "n256_m5120_t30_r3840"
+      },
+      {
+        "contrast_id": "recipient_availability__n256_m5120_t60_r960__minus__n256_m5120_t60_r3840",
+        "kind": "recipient_availability",
+        "left": "n256_m5120_t60_r960",
+        "right": "n256_m5120_t60_r3840"
+      },
+      {
+        "contrast_id": "equal_per_source_amount__n256_m5120_t30_r3840__minus__n64_m1280_t30_r3840",
+        "kind": "equal_per_source_amount",
+        "left": "n256_m5120_t30_r3840",
+        "right": "n64_m1280_t30_r3840"
+      },
+      {
+        "contrast_id": "equal_per_source_amount__n256_m5120_t30_r960__minus__n64_m1280_t30_r960",
+        "kind": "equal_per_source_amount",
+        "left": "n256_m5120_t30_r960",
+        "right": "n64_m1280_t30_r960"
+      },
+      {
+        "contrast_id": "equal_per_source_amount__n256_m5120_t60_r3840__minus__n64_m1280_t60_r3840",
+        "kind": "equal_per_source_amount",
+        "left": "n256_m5120_t60_r3840",
+        "right": "n64_m1280_t60_r3840"
+      },
+      {
+        "contrast_id": "equal_per_source_amount__n256_m5120_t60_r960__minus__n64_m1280_t60_r960",
+        "kind": "equal_per_source_amount",
+        "left": "n256_m5120_t60_r960",
+        "right": "n64_m1280_t60_r960"
+      }
+    ],
+    "dimension": 2,
+    "factors": {
+      "recipient_counts": [
+        3840,
+        960
+      ],
+      "release_steps": [
+        30,
+        60
+      ],
+      "source_counts": [
+        64,
+        256
+      ],
+      "total_damp_budgets": [
+        1280.0,
+        5120.0
+      ]
+    },
+    "masks": {
+      "reduced_recipient_modulus": 2,
+      "reduced_recipient_remainder": 0,
+      "reference_recipient_count": 3840,
+      "region_start": 218,
+      "region_stop": 282,
+      "source_offsets": [
+        2,
+        5
+      ],
+      "tile_size": 8
+    },
+    "primary_endpoint": "activation_sum_per_reference_recipient",
+    "reference_recipient_count": 3840,
+    "schema_version": 1,
+    "simulator": "sim-tme",
+    "study": "immune-2d-controlled-source-recipient",
+    "tolerances": {
+      "absolute": 1e-08,
+      "relative": 1e-10
+    }
+  },
+  "provenance": {
+    "artifacts": {
+      "baseline-summary.json": "e04f9699ddca9b84145cdecbcd8e21abb0bc760dc3d909908358d4554a5eee98",
+      "canonical-observations.json.gz": "840fbe76ed06b16edccdf94420e9dc77e1ac3d643e11b04e04c1acdf2e621136",
+      "capture-logs.tar.gz": "e4ef79032daa651f93e1bcdded1b60dfb0daf77c3e13fc47047448b3268bfd3a",
+      "observations.json.gz": "2020d752a871e094df9e6c6236257c17648eda2ce5d725950d17d6be938ade1a",
+      "sources.tar.gz": "522cfe824ded907d5d86725b01c301a671a49f6ff6cee9d592aa20a4a3744d06"
+    },
+    "baseline_reference": {
+      "binary_sha256": "8acc5804528c436f60f0a4b5ce8923ed4807bd6869249d6fd61ab7c1ffa00f35",
+      "source_commit": "e9ec92c022ede1b00258789fecdcb9a46d9481d8",
+      "summary_sha256": "e04f9699ddca9b84145cdecbcd8e21abb0bc760dc3d909908358d4554a5eee98",
+      "toolchain": "rustc 1.96.0 (ac68faa20 2026-05-25); aarch64-apple-darwin; serial execution."
+    },
+    "binary_sha256": "70c0c4817f7cf11ddab0328b75f21a10402182dae86414d2b281e827316817d4",
+    "captured_at_utc": "2026-09-22T21:13:44.699058+00:00",
+    "complete": true,
+    "execution": "serial",
+    "platform": "macOS-26.5.1-arm64-arm-64bit-Mach-O",
+    "python": {
+      "implementation": "CPython",
+      "version": "3.14.6"
+    },
+    "runs": [
+      {
+        "elapsed_seconds": 176.52997687458992,
+        "name": "baseline"
+      },
+      {
+        "elapsed_seconds": 17.515547707676888,
+        "name": "canonical"
+      },
+      {
+        "elapsed_seconds": 7.152130417525768,
+        "name": "controlled"
+      }
+    ],
+    "rustc": "rustc 1.96.0 (ac68faa20 2026-05-25)",
+    "schema_version": 1,
+    "source_commit": "421603d2a347b8db6087287ed8cba426ba5dfe1c",
+    "sources": {
+      "analysis/immune-2d-measurements/manifest.json": "3ed6d9841cf4818e2d50391ba9c45c1fa88f18213d00067f2ee48a5983977b5c",
+      "docs/IMMUNE_2D_CONTROLLED_PROTOCOL.md": "60b051854837060ddc4943d114e019b09e732188e67ccbf7f359c9b1c85ea14d",
+      "docs/IMMUNE_2D_MEASUREMENT_PROTOCOL.md": "04a69195e7260b2d52c1acf808c84ff342c4db97cfddfe89023ed08642d54a67",
+      "scripts/immune_2d_controlled_plan.json": "90560e4758aefa12b92a502dfe28fa0afca08594efe184dfd5d4ac677bb547e0",
+      "scripts/immune_2d_controlled_report.py": "a05cceec545f29d589a5984ec71d3b6507d85fc57f87967411728b7d373f583d",
+      "scripts/immune_2d_measurement_config_v1.json": "0fa0467af1dcc0948201eef7c2c384ff6fc383a6c892ea7bbc039a4e9247331f",
+      "scripts/immune_2d_measurement_report.py": "97dcb833d9239074b07651812cb977e42fab2ee06e0495e7a5e6a61542adacb6",
+      "scripts/immune_measurement_report.py": "b4148b684a0de46310ab709d54e480d505dec8e4fc0371a07dcecc34980b94c7",
+      "simulations/.cargo/config.toml": "045e70e233000ab75f3faa25f9d37132686f233c58f46ab9b9c64d0298a47cf6",
+      "simulations/Cargo.lock": "59d190c84c1168a6ec6e1d0d40c264ff0ca62328e20e4f394ba0ca4ceb2642f6",
+      "simulations/Cargo.toml": "58c0a8053229a33aa17f80133649607cdd36d03edeb6711bfd5479a232f6d1fd",
+      "simulations/ferroptosis-core/Cargo.toml": "469c2ac73c3d1053433ede736fb25a54eacee05644de9ace3c1b6650b7a25f80",
+      "simulations/ferroptosis-core/examples/basic_usage.rs": "7e6c20315d8615a2ee41989ed43c1066a833bea7ab7634492d560912387a9225",
+      "simulations/ferroptosis-core/examples/rd_field_dump.rs": "13cf3b6f2fec8fa7604893ff37eb9d3d5e78bc48abbd1414e4304fd7b052b85b",
+      "simulations/ferroptosis-core/src/ablation.rs": "1342d23c65de87672e1bfdf63baba519f8520ee0532ff71e7c1c3dde4dec3b1c",
+      "simulations/ferroptosis-core/src/acsl4.rs": "b352f35f56bf6343f61f9b6b8b4b728cd76e39c7705cc100f0aa79e27fee398a",
+      "simulations/ferroptosis-core/src/adc.rs": "07abb852ef7a855a848088c675d0fa8be4101d31f5dcabc16162792feae900cc",
+      "simulations/ferroptosis-core/src/adoptive.rs": "143edbc37346f24d1f5a2ee3fac554166554eca589177b0cd665501e5d7e09d3",
+      "simulations/ferroptosis-core/src/alox.rs": "807794a174bf2635012b82d0e020036d35a37f9fe778407872e1b2d58b18d9e3",
+      "simulations/ferroptosis-core/src/biochem.rs": "ead06fd3f499920b4b0e1880e9864bf89e5ede3d143934a6ac39bf045dc622a6",
+      "simulations/ferroptosis-core/src/cell.rs": "f639b584b7532fcb1eacc0a730c94ae64f888913e6e0361ba694122874360fa2",
+      "simulations/ferroptosis-core/src/checkpoint.rs": "0bd4c30f4210e5dbdb590098d7bfa5f9e7a551f23e2e6e3fc895196465db7d4d",
+      "simulations/ferroptosis-core/src/chemo.rs": "d465aef866e70fcd89cd2b6604ece06133beb5120875a41cbf1f1061c4d6a1b9",
+      "simulations/ferroptosis-core/src/clonal.rs": "62a632bae4c195b279db6d8aeb177ef0a58b53d27227e90c6b6606a114358d05",
+      "simulations/ferroptosis-core/src/contact.rs": "85daecbbc996e97ca1acd85897168d4cbfed51972e8055b2038441a714cde7a3",
+      "simulations/ferroptosis-core/src/copper.rs": "e79cbc6f8dfbcc0f83492d8ee8ad99c818284474542031d0a567837b787c079f",
+      "simulations/ferroptosis-core/src/dose_schedule.rs": "1acafc1dcc8a44f46f01b8fc1b4808a1a1f4c6cb0cb34d6e8370c12b30c3f39e",
+      "simulations/ferroptosis-core/src/drug_transport.rs": "9815e0f1240ddadbfd4ed5a0675b18236490bb611a4e0e2d0ee1413eae70053d",
+      "simulations/ferroptosis-core/src/grid.rs": "590d7f9f541bcadf7f7d5a6f1621c8f156ce647713b2493a62c64765d77c7ad4",
+      "simulations/ferroptosis-core/src/ifngamma.rs": "99ab72137385656eb3658d730b4ca59c803794eab0f386d6f1e5c7fa07514921",
+      "simulations/ferroptosis-core/src/immune.rs": "d3dfb859902676cc9247f0c46dc9e2a8869b13112d96accda3730a132071a722",
+      "simulations/ferroptosis-core/src/immune_spatial.rs": "63f57a079cf43246c9ff1fbbf3a44f17de2c1d10b58b29d1f9ca039fd4ef70c6",
+      "simulations/ferroptosis-core/src/io.rs": "1188bf1412ec0ac69d2a8abd69fbaf835affe4c6673a356fc7b4d03bac29eafc",
+      "simulations/ferroptosis-core/src/lib.rs": "1f1d0c2cd88dd91edd436caba73b1f477f1c24e57984f4b30eae22a1c93605cc",
+      "simulations/ferroptosis-core/src/nutrient.rs": "7f92d1e19ad02fdec5f76dcd7ed25b0c32820717808e3030cbaa6020ea96c394",
+      "simulations/ferroptosis-core/src/oncolytic.rs": "cd972e3e5914247a01982d95b39be4a078b3849dbdfd6d8250059533cdd06613",
+      "simulations/ferroptosis-core/src/oxygen.rs": "87127e84842572cfa362b3bc096242b5710b27fc417fb7c930934170b8d7b58e",
+      "simulations/ferroptosis-core/src/params.rs": "8c6584569bbe8073a959c17f8eaf8b57f04fe564f65ad017547e29ca846d140a",
+      "simulations/ferroptosis-core/src/persister.rs": "8150b051d08978bafab491f90fbbd1f10301825abc2a64091b4d92751e06931d",
+      "simulations/ferroptosis-core/src/ph.rs": "d22ab498f3eb6cf3fc51dd79a0a3a99cfa7765cc9fd0394b7deae86e138d67bd",
+      "simulations/ferroptosis-core/src/phenotype_mufa.rs": "29792309b7a0d9e946d5c070366bd529a7dddb83ea4ded82087e323b5437fb5f",
+      "simulations/ferroptosis-core/src/photosensitizer_pk.rs": "7faf4029f0105ae563623e1b2c63baf756c48120b4ce604128e6bc7771e61119",
+      "simulations/ferroptosis-core/src/physics.rs": "20b84eaab5fbb8a9481935101f5a7cb48ab9fef4af724e74392b95aae960b18e",
+      "simulations/ferroptosis-core/src/radiation.rs": "af693516919d803bef888762de27bb6c4755ac3ca4d1fb896f7f96fea97d8a6f",
+      "simulations/ferroptosis-core/src/reaction_diffusion.rs": "794075195021bf0bab2f532e97ed91f9a1e8aee72a14762e8733ace6113baac8",
+      "simulations/ferroptosis-core/src/repair.rs": "acead760f730d3d825becdb909540e2a2bacf3c308d3ee0372dbb6769f35a5f9",
+      "simulations/ferroptosis-core/src/senescence.rs": "2be624fe0730174718f772c1fa5bc8f918f1305cc6901165e1d7671b73d98986",
+      "simulations/ferroptosis-core/src/slab.rs": "6418b3aa1bde1f9c8e6db9f84c23be2dbb1bcf97549679dba72053ccc6539971",
+      "simulations/ferroptosis-core/src/sonodynamic.rs": "4b653bd16f43deafc842973f51701193141bcf4a84553cc1f5588af9850cea13",
+      "simulations/ferroptosis-core/src/spheroid.rs": "df47d2063c4ee81274173269c0fb5b9d280eaaa1de6886ce63951ebabe3ea2b3",
+      "simulations/ferroptosis-core/src/stats.rs": "871844becad66d2229843b3ce8e1ad615dde6b90df10283f3ac270c6cfb4e5f5",
+      "simulations/ferroptosis-core/src/stromal.rs": "2cd186f8c654aeade67607b6d076c1a74e92da56af1ff49bb688fb2616014c31",
+      "simulations/ferroptosis-core/src/trigger_wave.rs": "ab27f6f8e7355ad1f340cbd33c4e41df9c955812f061ee7f2efc14540b8b751b",
+      "simulations/ferroptosis-core/src/tumor_pk.rs": "f8d686ee6955a7c7af48952079f06b63b523019287b5ced8298d66166268c110",
+      "simulations/ferroptosis-core/src/vasculature.rs": "be6509bf5b0598a5dc7f5aca3d2f50b27e7cdde723132024f83c38dffb4140b2",
+      "simulations/ferroptosis-ffi/Cargo.toml": "5f64cd8783a61815d331e0dfe67aa0c0ec9665919fd5d2893e8e5b7b71a0577a",
+      "simulations/ferroptosis-ffi/build.rs": "6a4ad506622b5e4d3ddb86c3fc1170bbae4bbe4946ae50791d77ea7c9259ecc6",
+      "simulations/ferroptosis-ffi/cbindgen.toml": "b37f7c24ea0fe9f788b34ffec545d409573ecde532ad31d34b86dc3c8b645f43",
+      "simulations/ferroptosis-ffi/src/lib.rs": "85fba146a53bfbe842393c8684ce0d6140cb6929ae0322942de359930b5d7ef7",
+      "simulations/ferroptosis-python/Cargo.toml": "e7525830716908a6e9c89a88961eff1f54bf5d7928da19ebef8c1f53a46edef7",
+      "simulations/ferroptosis-python/pyproject.toml": "903d4e88bf2807c48cab494da3169f626fac5533da4930d338b96221d801eecc",
+      "simulations/ferroptosis-python/src/lib.rs": "8eb558bf0fd35588c37e3b8a7c07794c49540e7f97bab822a7b0a9d5b578f983",
+      "simulations/observers/immune_measurements.rs": "0636370a87e54ece20a5caf67b48e01eb2485e74c3d69a2c58cc7f41cffab253",
+      "simulations/rust-toolchain.toml": "14e3882647ecdcb192664239effae80fbd23296193075a1183ecebf4658d4edf",
+      "simulations/sim-combo-mech/Cargo.toml": "a24e84c482a0fa14b0118f3f277e4233e7278b7e1efdf11141cee07c29946f08",
+      "simulations/sim-combo-mech/src/main.rs": "b074e5b08655c5dffb46d572774c30a96530879e83b812a82b3c0536529749a8",
+      "simulations/sim-combo/Cargo.toml": "14453951626e81d1fbc710fe84ce6da5b9c2ed10cfc3db790ea8095bc7aface1",
+      "simulations/sim-combo/src/main.rs": "ab3d26dc805b55f9462aca71e4b95c28aac5ba3c6e6d00850e9ef7a218536c36",
+      "simulations/sim-icd/Cargo.toml": "069c9693de8fb873d04c96092f87f5454614a26efdc6e5187576bb816d5bb5f6",
+      "simulations/sim-icd/src/main.rs": "5eaa662651d3bf7f6ea3f2adf17d8dd6ca3db1c06f8014884bffc7f5ecb4058e",
+      "simulations/sim-invivo/Cargo.toml": "5ba4b66837fefe11c74abd5c51a491266f8ddd9aa89b01f3cecb5f95fd94807f",
+      "simulations/sim-invivo/src/main.rs": "df184804e46fb7c196688e5ef25a1635b8e6c13af033d60f7079a6633754494a",
+      "simulations/sim-modality-panel/Cargo.toml": "63035ff542906c5320b2395ae85d578957740a7c12724e523ccaf8e0ce180c2f",
+      "simulations/sim-modality-panel/src/main.rs": "4acae037a15a194d1a561f0febdf70f26b1f87800f62b01f185c65cac6bd0135",
+      "simulations/sim-original/Cargo.toml": "c148600b77c0ee95a0fc54ee44f242131159e43c5c2bfd2746075cf35ef54e96",
+      "simulations/sim-original/src/main.rs": "d58331dcd09edcf3e1b3bc669a53d2446f54aaa7b3d2fc02d551f1980a2c22f0",
+      "simulations/sim-scale/Cargo.toml": "4fca69f719ea41df3fd8ef870f873032734e0a2fc656f0eff6bce2bee3998b5b",
+      "simulations/sim-scale/src/main.rs": "a85d50fd990a650796e1b7d0f078d821a2bc474034c84cec35789e427a40989f",
+      "simulations/sim-spatial/Cargo.toml": "52561934714fb144a798816d94755ea1269607185299c51702366c7f6845d126",
+      "simulations/sim-spatial/src/main.rs": "5073b76323b701bccc4ad0591fbced71d0bec0a159ac60f3a288bcfa34f0790d",
+      "simulations/sim-tissue-pk/Cargo.toml": "80bdf21389b9b0343244011b698c8fc86b94c6a8e168ecdee89f3d80f8321a8f",
+      "simulations/sim-tissue-pk/src/main.rs": "b5dea647c2e86569201f4a77d843e10f8d479ef22be27d3660b2e51fcb6c6a24",
+      "simulations/sim-tme-3d/Cargo.toml": "bfc3a0e4840d316f0ac7b524dba1bea7361997a4369b70483518f04733271e5b",
+      "simulations/sim-tme-3d/src/immune_measurements.rs": "2a6343dd297d877c31ed7c2767e3000be17dbbbac5c21043087fd0fb999244a5",
+      "simulations/sim-tme-3d/src/main.rs": "898bf258b880143c3e932298e3d94ecc25c1f1e330c3929eb579c3da5c1a9e15",
+      "simulations/sim-tme-3d/src/npy.rs": "dcbfe0e1eb06de312f9970bbfa310ec93a193e478b052bede37b1cfd052addf4",
+      "simulations/sim-tme-3d/src/snapshot.rs": "2691b01343a93a978356d3292bff07e0476826335671e98d4fe452096fd95db5",
+      "simulations/sim-tme/Cargo.toml": "31a71ef085780fd65232574e22605f53054433e9d95c671bc00daeabf013ebe6",
+      "simulations/sim-tme/expected_summary.sha256": "d0e1eacf8968ea7aa475d1566742ae2b4b13f916ee4da96cb31ef91f6da003ea",
+      "simulations/sim-tme/src/immune_measurements.rs": "d5d9315994ae5589945e99a8416c0b06e8c45d22977954ab98722ea992088793",
+      "simulations/sim-tme/src/main.rs": "19e43bb9e5803fe1bae569bab7cdde379e759dfb5d204052a85d07e3339c4840",
+      "simulations/sim-tumor-pk/Cargo.toml": "dcecb44dbbd42da8c7031fc565d80a43cf9fa4cb340203d7ca4999304e09f3f1",
+      "simulations/sim-tumor-pk/src/main.rs": "edc56fddd672ae33af74078e376aa704cc2dcd6858e43741807737c68f626449",
+      "simulations/sim-window/Cargo.toml": "e36902750745f8f091366bc560a6c705952e41ea8498cf21ee113c4731b8f513",
+      "simulations/sim-window/src/main.rs": "f720c3ea2800fa4d6521efc83c78c7fbffd45750ecf31909a05a4098e6665da2",
+      "tests/fixtures/flagship_tme_rows.json": "dd3eeeed6ebc27cb6c68cc2f6e32918fabe1040c6e75c9d139daf2b7a6248c31",
+      "tests/test_immune_2d_controlled_report.py": "fcd02a0002351a1aee859680fc749fa8172db8ca8b39f7663eaa364f64a12a32"
+    },
+    "study": "immune-2d-controlled-source-recipient"
+  },
+  "schema_version": 1,
+  "study": "immune-2d-controlled-source-recipient"
+}
