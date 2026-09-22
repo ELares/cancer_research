@@ -188,7 +188,7 @@ None of these were computational errors. Every one was a true statement describi
 ## Every layer now carries a bound
 
 * co-mention precision: **88% measured** on the layer as shipped (blind panel 88%, hostile bound 80%), superseding both the 60.1%-89.4% corroboration bound and the 42% the layer measured before the authority filter was turned on
-* contradictions: ambiguity inflates the flag rate 1.45x
+* contradictions: measured sense collisions are associated with a 1.45x flag rate after stratification by directional support in the raw directional diagnostic (95% pair-resampling interval 1.39–1.50); its cohort differs from the contradiction queue, and shared papers and entities limit the interval's interpretation
 * emergence: 99.0% precision, 99.6% recall
 * FSP1 disambiguation: 97.4%, with 75% of corrections extrapolated and that extrapolation independently tested
 

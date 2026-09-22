@@ -33,21 +33,26 @@ LIMITS
 judgements; the extractor scores ~79.6 F1 on BioRED, so some conflicts are
 extraction error rather than scientific disagreement.
 
-Two of those failure modes have since been MEASURED
-(`scripts/atlas_contradiction_quality.py`), with opposite answers:
+Two diagnostics are available in `scripts/atlas_contradiction_quality.py`.
+They use raw directional support, a different eligibility rule from this queue's
+support across all predicates, so their cohort is not this queue's denominator:
 
-  * A single paper extracted as asserting both directions would be inconsistency
-    rather than disagreement. It happens to 1 paper in 115,024. This mode is
-    effectively absent, and the conflicts really are between studies.
-  * Merging two entities under one identifier merges two literatures, which will
-    disagree. Pairs involving an identifier measured as a SENSE COLLISION are
-    **1.45x** more likely to be flagged contradictory (95% CI 1.37-1.53). That
-    survives stratifying by assertion count, so it is not the popularity artifact
-    it could have been, and it rises with assertion count -- the direction
-    conflation predicts. Check any conflict involving a blocklisted symbol for
-    conflation before reading it as a scientific dispute. Directionality is also not
-preserved: the graph does not record which entity is subject. And no context is
-attached -- a relation true in one cell line and false in another appears here
+  * Among 6,373 conflicting pairs, one pair-PMID observation carries both
+    directions, out of 196,363 distinct pair-PMID observations (196,364 direction
+    incidences). The archive cannot recover a unique-paper denominator. This
+    rare overlap alone cannot establish extraction accuracy: one paper can
+    describe different contexts, and errors can occur without within-paper overlap.
+  * Pairs involving an identifier measured as a SENSE COLLISION have a pooled
+    Mantel-Haenszel association of **1.45x** with a contradiction flag after
+    stratification by directional support (95% pair-resampling interval 1.39-1.50).
+    Pairs can share papers and entities; this interval does not account for that
+    dependence. Stratification does not establish that confounding is removed,
+    and the stratum ratios do not rise monotonically. Check flagged symbols for
+    conflation; an unflagged symbol can still have an unmeasured collision.
+
+Directionality is also not preserved: the graph does not record which entity is
+subject. And no context is attached -- a relation true in one cell line and false
+in another appears here
 as a contradiction. Treat the output as a QUEUE FOR READING, not a verdict.
 
 Usage:

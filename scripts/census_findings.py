@@ -37,6 +37,23 @@ def load(name):
 MANUSCRIPT_RATIO = 9.1
 
 
+def _contradiction_summary(d: dict | None) -> str:
+    if not d:
+        return ""
+    ratio, ci = d.get("mantel_haenszel"), d.get("mh_ci95")
+    point = ("the pooled flag-rate ratio for measured sense collisions is not estimable"
+             if ratio is None else
+             f"measured sense collisions are associated with a {ratio:.2f}x flag rate")
+    interval = ("95% pair-resampling interval unavailable" if ci is None else
+                f"95% pair-resampling interval {ci[0]:.2f}–{ci[1]:.2f}")
+    dependence = ("shared papers and entities remain a source of dependence"
+                  if ci is None else
+                  "shared papers and entities limit the interval's interpretation")
+    return (f"* contradictions: {point} after stratification by directional support "
+            f"in the raw directional diagnostic ({interval}); its cohort differs "
+            f"from the contradiction queue, and {dependence}")
+
+
 def _volume(land) -> dict:
     """The volume claim's figures, DERIVED from the landscape artifact.
 
@@ -556,8 +573,7 @@ def main() -> int:
             L += ["---", "", "## Every layer now carries a bound", "",
                   f"* co-mention precision: {100*lo:.1f}% to {100*hi:.1f}%",]
         L += [
-              (f"* contradictions: ambiguity inflates the flag rate "
-               f"{contra['mantel_haenszel']:.2f}x" if contra else ""),
+              _contradiction_summary(contra),
               "* emergence: 99.0% precision, 99.6% recall",
               f"* FSP1 disambiguation: 97.4%, with 75% of corrections extrapolated "
               "and that extrapolation independently tested", ""]

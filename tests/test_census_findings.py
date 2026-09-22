@@ -207,3 +207,46 @@ def test_no_headline_figure_is_a_literal():
     assert not bad, (
         "these decimal figures are typed into the generator rather than "
         f"derived: {bad}")
+
+
+@pytest.mark.parametrize("scenario, expected_ratio", [
+    ("no-eligible-pairs", None),
+    ("no-comparison-arm", None),
+    ("finite-without-interval", 1.0),
+    ("zero-association", 0.0),
+])
+def test_findings_accepts_sparse_quality_outputs(
+        scenario, expected_ratio, monkeypatch, tmp_path):
+    """A valid diagnostic may lack a point estimate, an interval, or both."""
+    quality = _mod(REPO_ROOT / "scripts" / "atlas_contradiction_quality.py", "quality")
+    positive, negative = {}, {}
+    if scenario != "no-eligible-pairs":
+        positive[("ambiguous", "a")] = {str(i) for i in range(8)}
+        if scenario != "zero-association":
+            negative[("ambiguous", "a")] = {"8", "9", "10"}
+    if scenario in {"finite-without-interval", "zero-association"}:
+        positive[("other", "b")] = {str(i) for i in range(8)}
+        negative[("other", "b")] = {"8", "9", "10"}
+    raw = quality.analyze(positive, negative, {"ambiguous"}, bootstrap=0)
+    assert raw["mantel_haenszel"] == expected_ratio
+    assert raw["mh_ci95"] is None
+    source = tmp_path / "quality.json"
+    source.write_text(json.dumps(raw))
+
+    m = _mod()
+    original_load = m.load
+    monkeypatch.setattr(m, "load", lambda name: (
+        json.loads(source.read_text()) if name == "atlas-contradiction-quality.json"
+        else original_load(name)))
+    monkeypatch.setattr(m, "OUT", tmp_path / "findings.md")
+    assert m.main() == 0
+    line = next(line for line in m.OUT.read_text().splitlines()
+                if line.startswith("* contradictions:"))
+    assert "95% pair-resampling interval unavailable" in line
+    assert "shared papers and entities remain a source of dependence" in line
+    if expected_ratio is None:
+        assert "ratio for measured sense collisions is not estimable" in line
+        assert "0.00x" not in line
+    else:
+        assert f"a {expected_ratio:.2f}x flag rate" in line
+        assert "not estimable" not in line

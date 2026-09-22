@@ -94,16 +94,21 @@ single paper and its docs do not mention the disagreement. See
 | `erastin` | erastin - SLC7A11 | 5 | 42 | 0.12 | 22632970 |
 | `ifngamma` | IFNG - SLC7A11 | 1 | 14 | 0.07 | 31043744 |
 
-A high balance means the field is genuinely split; a low one means the module
-is on the majority side of a mostly-settled question. Neither says the module
-is wrong -- it says the module docs should state which side they took.
+A high balance means similar extracted support for both directions; a low
+one means one direction dominates. These counts do not establish whether
+the field is divided or which direction the module implements. The module
+docs should explain their evidence and how they handle the opposing claims.
 
-> **Conflation does not explain these.** Across the graph, pairs built on a
-> measured sense collision are 1.45x more likely to be flagged contradictory
-> (`analysis/atlas-contradiction-quality.md`), so that had to be excluded.
-> All 20 claims here rest on entities with no measured collision,
-> so these conflicts are disagreements between studies rather than two
-> literatures merged under one identifier.
+> **This check identified no measured collision in these claims.**
+> None of the 20 claims matched the collision set used here.
+> The set has limited coverage, so this does not exclude unmeasured
+> conflation, extraction errors or differences in biological context.
+
+> The historical raw directional diagnostic reported a 1.45x association
+> between measured collisions and contradiction flags after stratification
+> by directional support (`analysis/atlas-contradiction-quality.md`).
+> Its eligibility rule differs from this module-claim check and the
+> contradiction queue. It does not establish a cause of any conflict here.
 
 
 ## Reading
