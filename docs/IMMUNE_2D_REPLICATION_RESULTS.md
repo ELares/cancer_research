@@ -93,7 +93,7 @@ python3 scripts/immune_2d_replication_report.py
 ```
 
 The offline reader verifies every compressed payload and frozen source hash,
-the complete source inventory, all event/activation ledgers, seed coverage and
+the frozen source inventory, all event/activation ledgers, seed coverage and
 configuration, then recomputes every endpoint and the bootstrap interval. It
 requires neither Rust nor a new simulation. The archive contains all 20
 observation files, capture logs, the complete default baseline, canonical
@@ -105,3 +105,46 @@ Before new blocks, the built executable reproduced the full historical
 33-condition summary and the canonical observer JSON byte for byte. The
 published archive was validated before a directory rename; the derived JSON
 and Markdown writes remain sequential rather than an atomic pair.
+
+### Reproduce the frozen source tests
+
+Review found that the original source snapshot includes all runtime analysis
+dependencies but omits `tests/test_immune_2d_measurement_report.py`, a fixture
+module imported by both replication test modules. Offline reconstruction above
+is unaffected. The original archive and protocol remain unchanged; future
+captures include this fixture, with an isolated test-collection regression guard.
+
+To run the tests bundled with the original snapshot, start in a Git clone of
+this repository with Python 3.10 or later and pytest installed. Fetch the PR's
+history (the pre-production commit is not on the squash-merged main history),
+extract into a new temporary directory and recover the fixture from that exact
+commit, checking its SHA-256 before running anything. The temporary Git index
+is needed because the capture fixtures enumerate tracked Rust source paths
+with `git ls-files`.
+
+```bash
+repo_root="$(git rev-parse --show-toplevel)"
+reproduction_dir="$(mktemp -d)"
+tar -xzf "$repo_root/analysis/immune-2d-replication/sources.tar.gz" -C "$reproduction_dir"
+git -C "$repo_root" fetch origin refs/pull/892/head
+git -C "$repo_root" show \
+  595269cacc05abf32f484ec8ba2025fd9b317391:tests/test_immune_2d_measurement_report.py \
+  > "$reproduction_dir/tests/test_immune_2d_measurement_report.py"
+(
+  set -e
+  cd "$reproduction_dir"
+  printf '%s  %s\n' \
+    '1303aabd6e3afd818ce1d9889a7b75f47429e73dc64a1be0609ed3ba9ea4eef3' \
+    'tests/test_immune_2d_measurement_report.py' | shasum -a 256 -c -
+  git init -q
+  git add .
+  python3 -m pytest -q tests/test_immune_seed_blocks.py \
+    tests/test_immune_2d_replication_report.py \
+    tests/test_immune_2d_replication_capture.py
+)
+```
+
+Expected for these frozen tests: **124 passed, 1 skipped**. The skipped test
+requires the production observations, which are not included in the source
+snapshot. The commands run synthetic fixtures only; they do not build Rust or
+rerun simulations. Keep the temporary directory if you want to inspect it.

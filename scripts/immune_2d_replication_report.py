@@ -236,7 +236,11 @@ def source_paths() -> list[str]:
     return sorted(set(measurement.source_paths()) | {
         PLAN, PROTOCOL, CANONICAL_MANIFEST, "scripts/immune_seed_blocks.py",
         "scripts/immune_2d_replication_report.py", "tests/test_immune_seed_blocks.py",
-        "tests/test_immune_2d_replication_report.py", "tests/test_immune_2d_replication_capture.py"})
+        "tests/test_immune_2d_replication_report.py", "tests/test_immune_2d_replication_capture.py",
+        # Both replication test modules import fixtures from this older suite.
+        # The original frozen archive is preserved; its recovery recipe is in
+        # docs/IMMUNE_2D_REPLICATION_RESULTS.md.
+        "tests/test_immune_2d_measurement_report.py"})
 
 
 def capture(destination: Path) -> None:

@@ -13,6 +13,21 @@ import immune_2d_replication_report as report
 from test_immune_2d_measurement_report import source_fixture
 
 
+def test_source_snapshot_collects_bundled_tests_without_checkout_dependencies(tmp_path):
+    for name in report.source_paths():
+        target = tmp_path / name
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes((report.ROOT / name).read_bytes())
+    collected = subprocess.run(
+        [sys.executable, "-I", "-m", "pytest", "--collect-only", "-q",
+         "--rootdir", str(tmp_path), "--confcutdir", str(tmp_path),
+         "tests/test_immune_2d_replication_report.py",
+         "tests/test_immune_2d_replication_capture.py"],
+        cwd=tmp_path, capture_output=True, text=True, timeout=60,
+    )
+    assert collected.returncode == 0, collected.stdout + collected.stderr
+
+
 def synthetic_capture(monkeypatch, tmp_path, *, fail_at=None, corrupt_canonical=False):
     root = tmp_path / "source"
     root.mkdir()
