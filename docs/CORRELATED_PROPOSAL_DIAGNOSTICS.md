@@ -89,6 +89,14 @@ randomness. Unlike the original study's replay, it does not reconstruct random
 streams or intermediate pilot paths. A changed or missing input stops before
 the diagnostic outputs are replaced.
 
+Freshness checks allow bounded floating-point differences only in named derived
+metrics. For error-to-MCSE ratios, a small denominator can amplify a last-bit
+difference in the error. An extra allowance requires both errors and MCSEs to
+pass the usual comparisons and each ratio to match its own operands. Any extra
+ratio difference is bounded by the observed operand differences. This does not relax
+archive hashes, analytic truths, counts, classifications or selected attempt
+indices, and does not change the recorded diagnostic values.
+
 The next experiment still needs a separately frozen proposal formula,
 regularization or mixture coefficients, budgets, streams, controls and decision
 rules. The four current geometries are now development cases; a prospective

@@ -158,6 +158,127 @@ def test_absolute_and_relative_tolerances_have_material_boundaries(old, new):
         freshness._assert_reassembled_json(NAME, _dump(changed), _dump(original))
 
 
+def _ratio_artifact(error, mcse, ratio=None):
+    artifact = _artifact()
+    feature = _value(artifact, FEATURE)
+    feature.update(signed_error=error, conditional_mcse=mcse,
+                   error_over_mcse=error / mcse if ratio is None else ratio)
+    return artifact
+
+
+@pytest.mark.parametrize("mac_values,linux_values", [
+    ((0.00010733349182123764, 0.010855194671453867, 0.00988775375014644),
+     (0.00010733349182112661, 0.010855194671453869, 0.009887753750136213)),
+    ((3.524269081633946e-05, 0.004717634063751292, 0.007470416386707992),
+     (3.5242690816450484e-05, 0.0047176340637512925, 0.007470416386731523)),
+])
+def test_recorded_linux_ratio_replay_passes_in_both_directions(mac_values, linux_values):
+    # Archived macOS values and Linux CI replays of annular mean_x2/mean_x4.
+    mac, linux = _ratio_artifact(*mac_values), _ratio_artifact(*linux_values)
+    assert not math.isclose(_value(mac, (*FEATURE, "error_over_mcse")),
+                            _value(linux, (*FEATURE, "error_over_mcse")),
+                            rel_tol=1e-12, abs_tol=1e-14)
+    freshness._assert_reassembled_json(NAME, _dump(linux), _dump(mac))
+    freshness._assert_reassembled_json(NAME, _dump(mac), _dump(linux))
+
+
+@pytest.mark.parametrize("ea,sa,eb,sb", [
+    (0.0001, 0.01, 0.0001 + 1e-16, 0.01),
+    (-0.0001, 0.01, -0.0001 - 1e-16, 0.01),
+    (0.0, 0.025, 5e-15, 0.025),
+    (0.0, 1e-6, -5e-15, 1e-6),
+    (0.08, 1e-5, 0.08, 1e-5 + 5e-15),
+])
+def test_ratio_bound_tracks_observed_numerator_and_denominator_differences(ea, sa, eb, sb):
+    left, right = _ratio_artifact(ea, sa), _ratio_artifact(eb, sb)
+    assert not math.isclose(ea / sa, eb / sb, rel_tol=1e-12, abs_tol=1e-14)
+    freshness._assert_reassembled_json(NAME, _dump(left), _dump(right))
+    freshness._assert_reassembled_json(NAME, _dump(right), _dump(left))
+
+
+def test_ratio_fallback_is_not_used_when_the_original_tolerance_passes(monkeypatch):
+    def forbidden(*args):
+        pytest.fail("the original ratio tolerance must be tried first")
+
+    monkeypatch.setattr(freshness, "_diagnostic_ratio_close", forbidden)
+    original = _artifact()
+    changed = deepcopy(original)
+    _replace(changed, (*FEATURE, "error_over_mcse"), math.nextafter(3.2, math.inf))
+    freshness._assert_reassembled_json(NAME, _dump(changed), _dump(original))
+
+
+def test_stale_ratio_cannot_exploit_a_large_propagated_bound():
+    original = _ratio_artifact(0.08, 1e-8)
+    changed = _ratio_artifact(0.08, 1e-8 + 5e-15)
+    feature = _value(changed, FEATURE)
+    # Move toward the other ratio, remaining inside the propagated bound but
+    # no longer describing this artifact's own signed error and MCSE.
+    feature["error_over_mcse"] += 0.1
+    for left, right in ((changed, original), (original, changed)):
+        with pytest.raises(AssertionError, match="derived float differs"):
+            freshness._assert_reassembled_json(NAME, _dump(left), _dump(right))
+
+
+@pytest.mark.parametrize("ea,sa,eb,sb", [
+    (0.0, 0.025, 2e-14, 0.025),
+    (0.08, 1e-5, 0.08, 1e-5 + 2e-14),
+])
+def test_ratio_fallback_cannot_relax_either_operand_tolerance(ea, sa, eb, sb):
+    left, right = _ratio_artifact(ea, sa), _ratio_artifact(eb, sb)
+    assert not freshness._diagnostic_ratio_close(
+        ea / sa, eb / sb, _value(left, FEATURE), _value(right, FEATURE))
+    with pytest.raises(AssertionError, match="derived float differs"):
+        freshness._assert_reassembled_json(NAME, _dump(left), _dump(right))
+
+
+@pytest.mark.parametrize("field,value", [
+    ("conditional_mcse", None), ("conditional_mcse", 0.0),
+    ("conditional_mcse", -0.025), ("conditional_mcse", math.inf),
+    ("conditional_mcse", math.nan), ("conditional_mcse", 1),
+    ("signed_error", None), ("signed_error", math.inf),
+    ("signed_error", math.nan), ("signed_error", True),
+    ("error_over_mcse", math.inf), ("error_over_mcse", math.nan),
+    ("error_over_mcse", 1),
+])
+def test_ratio_fallback_requires_finite_float_operands_and_positive_mcse(field, value):
+    valid = _value(_artifact(), FEATURE)
+    invalid = deepcopy(valid)
+    invalid[field] = value
+    for left, right in ((invalid, valid), (valid, invalid)):
+        assert not freshness._diagnostic_ratio_close(
+            left["error_over_mcse"], right["error_over_mcse"], left, right)
+
+
+@pytest.mark.parametrize("errors,mcses,ratios", [
+    ((0.5, 0.5), (1e-308, 1e-14), (5e307, 5e13)),
+    ((1e308, 1e308), (1e-308, 1e-308), (1.0, 2.0)),
+])
+def test_nonfinite_propagated_bound_or_quotient_fails_closed(errors, mcses, ratios):
+    left = _ratio_artifact(errors[0], mcses[0], ratios[0])
+    right = _ratio_artifact(errors[1], mcses[1], ratios[1])
+    for actual, expected in ((left, right), (right, left)):
+        with pytest.raises(AssertionError, match="derived float differs"):
+            freshness._assert_reassembled_json(NAME, _dump(actual), _dump(expected))
+
+
+def test_ratio_name_outside_the_production_feature_path_keeps_its_original_rule():
+    original = _ratio_artifact(0.0, 0.025)
+    changed = _ratio_artifact(5e-15, 0.025)
+    for prefix in (("metadata",), ("runs", 0, "raw")):
+        left, right = deepcopy(changed), deepcopy(original)
+        _replace(left, (*prefix, "error_over_mcse"), 2e-13)
+        _replace(right, (*prefix, "error_over_mcse"), 0.0)
+        with pytest.raises(AssertionError, match="exact JSON value differs"):
+            freshness._assert_reassembled_json(NAME, _dump(left), _dump(right))
+    # A pilot feature with the same name receives its original float tolerance,
+    # not the production feature ratio fallback.
+    path = (*POOLED, "feature_means", "error_over_mcse")
+    _replace(changed, path, 2e-13)
+    _replace(original, path, 0.0)
+    with pytest.raises(AssertionError, match="derived float differs"):
+        freshness._assert_reassembled_json(NAME, _dump(changed), _dump(original))
+
+
 @pytest.mark.parametrize("path", [
     ("truth", "annular_cylinder", "moments", "angular_sin_2"),
     ("truth", "annular_cylinder", "region_masses", "sector_0"),

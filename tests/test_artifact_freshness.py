@@ -21,7 +21,9 @@ formatting drift was found. The synthetic importance studies permit only
 bounded floating-point differences in recomputed assessment fields across
 platforms; their formatting, raw inputs, decisions and provenance remain exact.
 The archive-only covariance diagnostic has a separate, explicitly named set of
-derived metric paths with the same tolerance; its other fields remain exact.
+derived metric paths with the same tolerance. Its error-to-MCSE ratio also
+permits the propagation of accepted operand differences through division;
+its other fields remain exact.
 Two explicitly pinned historical direction snapshots have a different contract:
 their original adjudications lack the record identities needed to bind them to
 a new cohort. Their JSON must remain unchanged, and their Markdown must render
@@ -567,6 +569,31 @@ def _diagnostic_float_path(path):
             isinstance(path[7], str))
 
 
+def _diagnostic_ratio_close(actual, expected, actual_feature, expected_feature):
+    """Bound ratio replay drift using only the observed operand differences.
+
+    For q=e/s, the exact identity q_a-q_b = (e_a-e_b-q_b*(s_a-s_b))/s_a
+    bounds the difference by (|delta e| + max(|q_a|, |q_b|)*|delta s|)/min(s).
+    The existing ratio tolerance covers final floating-point division. Each
+    operand pair and each ratio's own quotient must still pass the original
+    tolerance, so this cannot excuse a stale ratio or a changed input metric.
+    """
+    ea, eb = actual_feature.get("signed_error"), expected_feature.get("signed_error")
+    sa, sb = actual_feature.get("conditional_mcse"), expected_feature.get("conditional_mcse")
+    if (any(type(value) is not float or not math.isfinite(value)
+            for value in (actual, expected, ea, eb, sa, sb)) or sa <= 0 or sb <= 0):
+        return False
+    qa, qb = ea / sa, eb / sb
+    if (not math.isfinite(qa) or not math.isfinite(qb) or
+            any(not math.isclose(left, right, rel_tol=1e-12, abs_tol=1e-14)
+                for left, right in ((ea, eb), (sa, sb), (actual, qa), (expected, qb)))):
+        return False
+    propagated = (abs(ea - eb) + max(abs(qa), abs(qb)) * abs(sa - sb)) / min(sa, sb)
+    ratio_tolerance = max(1e-14, 1e-12 * max(abs(actual), abs(expected)))
+    bound = propagated + ratio_tolerance
+    return math.isfinite(bound) and abs(actual - expected) <= bound
+
+
 def _assert_reassembled_json(name, produced_text, committed_text):
     if name not in NUMERICAL_REASSEMBLY and name != DIAGNOSTIC_GENERATOR:
         if produced_text != committed_text:
@@ -606,6 +633,15 @@ def _assert_reassembled_json(name, produced_text, committed_text):
                 (name == DIAGNOSTIC_GENERATOR and _diagnostic_float_path(path)))):
             if (not math.isfinite(actual) or not math.isfinite(expected) or
                     not math.isclose(actual, expected, rel_tol=1e-12, abs_tol=1e-14)):
+                if (name == DIAGNOSTIC_GENERATOR and len(path) == 6 and
+                        path[0] == "runs" and type(path[1]) is int and
+                        path[2:4] == ("diagnostics", "features") and
+                        isinstance(path[4], str) and path[5] == "error_over_mcse" and
+                        _diagnostic_ratio_close(
+                            actual, expected,
+                            produced["runs"][path[1]]["diagnostics"]["features"][path[4]],
+                            committed["runs"][path[1]]["diagnostics"]["features"][path[4]])):
+                    return
                 raise AssertionError(f"{label}: derived float differs ({actual!r} versus {expected!r})")
         elif json.dumps(actual) != json.dumps(expected):
             raise AssertionError(f"{label}: exact JSON value differs")
