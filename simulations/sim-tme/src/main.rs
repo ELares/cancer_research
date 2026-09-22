@@ -1003,6 +1003,15 @@ fn main() {
         immune_measurements::run(Path::new("output/tme"));
         return;
     }
+    if immune_measurements::replicate_requested(&args) {
+        let ferro_env: Vec<_> = std::env::vars_os()
+            .map(|(name, _)| name)
+            .filter(|name| name.to_string_lossy().starts_with("FERRO_"))
+            .collect();
+        let block = immune_measurements::validate_replicate_args(&args, &ferro_env);
+        immune_measurements::run_replicate(Path::new("output/tme"), block);
+        return;
+    }
 
     eprintln!("=== Tumor Microenvironment: Oxygen Gradients ===");
     eprintln!(
