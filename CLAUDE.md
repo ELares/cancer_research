@@ -26,6 +26,7 @@ The repo exists to compare therapeutic mechanisms, evidence depth, resistant-sta
 
 ## Current Workstreams
 
+- controlled 2D DAMP source/recipient comparison: a frozen deterministic design, 18 conditions and 36 contrasts, unchanged production/observer outputs, and offline aggregate-ledger reconstruction; see `docs/IMMUNE_2D_CONTROLLED_RESULTS.md`. This tests existing model rules with imposed masks and pulses, not biological validation or attribution of the historical SDT–RSL3 contrast. Layout dependence and endogenous survival remain unresolved.
 - manuscript drafting and revision (Parts I–V substantially complete: ~270 pages at 6x9 trade trim, 12 chapters + 3 appendices; the book design lives in `article/drafts/bookdesign.sty` and nothing about layout lives in the generator)
 - corpus fetching, enrichment, tagging, and indexing
 - evidence-tier audits and coverage caveats (gold-set evaluation: 46% exact, 96% binary evidence-presence precision, 55% recall on the production keyword tagger; an off-by-default MeSH-descriptor fallback (#346, `FERRO_MESH_EXPANSION=1`) lifts gold-set evidence-detection recall to 67.8% at 95.2% precision, see `analysis/evidence-gold-mesh-eval.md` — not applied to the production corpus, so the 55% figure remains the corpus reality)

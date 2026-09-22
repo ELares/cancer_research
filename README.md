@@ -62,6 +62,13 @@ in accumulated activation steps per initial tumor cell. No eligible opportunity
 reaches half-maximal activation in any arm or block. All observations, null
 outcomes, frozen sources and offline reconstruction are archived; these are
 model results, not experimental validation.
+The [controlled source/recipient study](docs/IMMUNE_2D_CONTROLLED_RESULTS.md)
+now separates imposed source patterns, total release, timing and fixed recipient
+availability across 18 conditions and 36 declared contrasts. Equal-total-release
+comparisons increase accumulated activation for the denser declared source mask,
+without half-maximal activation. All conditions, zero controls and frozen sources
+are archived. This tests the existing model rules; it does not attribute the
+historical treatment contrast or validate biological immunogenicity.
 The [paired partner comparison](analysis/paired-partner-agreement.md) now
 measures frozen-keyword versus MeSH ranking agreement on 3,889 shared articles
 and 16 common mechanism groups. It reports complete pair counts, tie-aware
