@@ -136,6 +136,30 @@ def test_packet_verifies_offline_after_the_original_census_is_unavailable(review
     assert "does not reread the full census" in " ".join(wording.split())
 
 
+@pytest.mark.parametrize("separator", ["\u0085", "\u2028", "\u2029"],
+                         ids=["next-line", "line-separator", "paragraph-separator"])
+def test_unicode_line_separators_in_article_text_are_not_jsonl_record_boundaries(
+        review, tmp_path, separator):
+    title = f"Hypoxia protects cells{separator}across conditions"
+    abstract = f"First paragraph.{separator}Second paragraph."
+    records = [
+        {"pmid": "1", "mesh": ["Ferroptosis", "Hypoxia"],
+         "title": title, "abstract": abstract},
+        {"pmid": "2", "mesh": ["Ferroptosis", "Drug Resistance, Neoplasm"],
+         "title": "Overcoming drug resistance", "abstract": abstract},
+    ]
+    root = write_snapshot(tmp_path, {"part-a.jsonl.gz": records})
+    report, files = review.prepare_bundle(root)
+    assert separator.encode("utf-8") in files["intersection-records.jsonl"]
+    assert report["union_records"] == 2
+    shutil.rmtree(root)
+    assert review.verify_bundle(_save_bundle(tmp_path / "bundle", files)) == report
+    rows = list(csv.DictReader(io.StringIO(files["hypoxia/candidates.csv"].decode())))
+    assert len(rows) == 1
+    assert rows[0]["title"] == title
+    assert rows[0]["abstract"] == abstract
+
+
 @pytest.mark.parametrize("name", ["intersection-records.jsonl", "hypoxia/candidates.csv",
                                   "thesis/census-thesis-direction.json",
                                   "hypoxia/census-hypoxia-direction.md", "readiness.md"])

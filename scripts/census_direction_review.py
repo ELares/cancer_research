@@ -265,7 +265,9 @@ def verify_bundle(bundle: Path) -> dict:
         expected_hashes = {name: _sha256(files[name]) for name in PAYLOAD_PATHS}
         if report["payload_sha256"] != expected_hashes:
             raise ValueError("payload fingerprints do not match readiness.json")
-        records = [json.loads(line) for line in files["intersection-records.jsonl"].decode("utf-8").splitlines()]
+        # Split before decoding: Unicode line/paragraph separators inside a
+        # JSON string are article text, not JSONL record delimiters.
+        records = [json.loads(line) for line in files["intersection-records.jsonl"].splitlines()]
         if any(not isinstance(record, dict) or not _selected(record) for record in records):
             raise ValueError("intersection sidecar contains an invalid or out-of-scope record")
         summaries, regenerated = _analysis_files(records)
