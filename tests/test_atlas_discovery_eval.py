@@ -39,6 +39,20 @@ def raw(rows=None, robustness=None):
             "robustness": robustness if robustness is not None else []}
 
 
+def inventory():
+    return {"fingerprint_kind": "filesystem-metadata-v1",
+            "inventory_sha256": "a" * 64,
+            "shards_per_stream": {name: int(name == "records")
+                                  for name in evaluation.YEAR_STREAMS}}
+
+
+def date_support():
+    return {"schema_version": 1, "year_policy": "earliest-year-per-pmid",
+            "dated_pmids": 2, "record_year_min": 2010, "record_year_max": 2024,
+            "dated_pairs": 150, "pair_first_year_min": 2010,
+            "pair_first_year_max": 2024, "source_inventory": inventory()}
+
+
 def flat(text):
     return " ".join(text.lower().split())
 
@@ -61,7 +75,7 @@ def forbid_readers(monkeypatch):
     def forbidden(*args, **kwargs):
         pytest.fail("raw atlas input was accessed")
 
-    for name in ("atlas_root", "load_index", "pmid_years", "_scan_pmid_years",
+    for name in ("atlas_root", "load_index", "pmid_years", "load_pmid_years", "_scan_pmid_years",
                  "load_corrections", "pair_first_year", "evaluate"):
         monkeypatch.setattr(evaluation, name, forbidden)
 
@@ -70,11 +84,12 @@ def synthetic_scan(monkeypatch, tmp_path, result=None):
     source = raw() if result is None else result
     monkeypatch.setattr(evaluation, "atlas_root", lambda: tmp_path / "atlas")
     monkeypatch.setattr(evaluation, "load_index", lambda *args: {"canon": {}})
-    monkeypatch.setattr(evaluation, "pmid_years",
-                        lambda *args: {"1": 2010, "2": 2024})
+    monkeypatch.setattr(evaluation, "load_pmid_years",
+                        lambda *args: ({"1": 2010, "2": 2024}, inventory()))
     monkeypatch.setattr(evaluation, "load_corrections", lambda *args: {})
     monkeypatch.setattr(evaluation, "pair_first_year",
-                        lambda *args: {("a", "b"): 2010, ("a", "c"): 2024})
+                        lambda *args: {**{("a", f"old{i}"): 2010 for i in range(100)},
+                                      **{("a", f"new{i}"): 2024 for i in range(50)}})
     monkeypatch.setattr(evaluation, "evaluate",
                         lambda *args, **kwargs: copy.deepcopy(source["headline"]))
 
@@ -425,7 +440,8 @@ def test_invalid_fresh_inputs_preserve_both_reports(
         outputs, monkeypatch, tmp_path, problem):
     synthetic_scan(monkeypatch, tmp_path)
     if problem == "no-years":
-        monkeypatch.setattr(evaluation, "pmid_years", lambda *args: {})
+        monkeypatch.setattr(evaluation, "load_pmid_years",
+                            lambda *args: ({}, inventory()))
     elif problem == "no-seeds":
         monkeypatch.setattr(evaluation, "evaluate", lambda *args, **kwargs: None)
     else:
@@ -486,3 +502,123 @@ def test_fresh_zero_hit_results_serialize_strictly_and_render(outputs, monkeypat
     assert result["headline"]["hits"] == dict.fromkeys(METHODS, 0)
     assert result["headline"]["abc_over_popularity"] is None
     assert md.read_text() == evaluation.render(result)
+
+
+def test_fresh_date_support_is_retained_and_rendered_without_claiming_a_cutoff(
+        outputs, monkeypatch, tmp_path):
+    synthetic_scan(monkeypatch, tmp_path)
+    assert evaluation.main(["--also-years"]) == 0
+    md, stored = outputs
+    published = json.loads(stored.read_text())
+    assert published["date_support"] == date_support()
+    original = copy.deepcopy(published)
+    rebuilt = evaluation.assemble(published)
+    assert rebuilt == published
+    rebuilt["date_support"]["source_inventory"]["shards_per_stream"]["records"] = 9
+    assert published == original
+    prose = flat(md.read_text())
+    assert "2 dated pmids spanning **2010-2024**" in prose
+    assert "150 dated pairs" in prose
+    assert "not a complete observation cutoff" in prose
+    assert "filesystem metadata, not article contents" in prose
+    before_json = stored.read_bytes()
+    forbid_readers(monkeypatch)
+    assert evaluation.main(["--render-only"]) == 0
+    assert stored.read_bytes() == before_json
+    assert md.read_text() == evaluation.render(published)
+
+
+@pytest.mark.parametrize("key,value", [
+    ("schema_version", True), ("schema_version", 2),
+    ("year_policy", "last-seen-year"), ("dated_pmids", 0),
+    ("dated_pmids", True), ("record_year_min", None),
+    ("record_year_max", "2024"), ("record_year_min", 2025),
+    ("record_year_max", 2009), ("dated_pairs", 149),
+    ("pair_first_year_min", 2009), ("pair_first_year_max", 2025),
+    ("pair_first_year_min", 2025), ("pair_first_year_min", 2018),
+    ("pair_first_year_max", 2017), ("source_inventory", None),
+])
+def test_invalid_retained_date_support_preserves_reports(
+        outputs, monkeypatch, key, value):
+    md, stored = outputs
+    source = raw()
+    source["date_support"] = date_support()
+    source["date_support"][key] = value
+    stored.write_text(json.dumps(source))
+    before = tuple(path.read_bytes() for path in outputs)
+    forbid_readers(monkeypatch)
+    assert evaluation.main(["--render-only"]) != 0
+    assert_preserved(outputs, before)
+
+
+@pytest.mark.parametrize("key,value", [
+    ("fingerprint_kind", "sha256-content"),
+    ("inventory_sha256", None), ("inventory_sha256", "a" * 63),
+    ("inventory_sha256", "Z" * 64), ("shards_per_stream", []),
+    ("shards_per_stream", {"records": 1}),
+    ("shards_per_stream", dict.fromkeys(evaluation.YEAR_STREAMS, 0)),
+    ("shards_per_stream", dict.fromkeys(evaluation.YEAR_STREAMS, True)),
+    ("shards_per_stream", dict.fromkeys(evaluation.YEAR_STREAMS, -1)),
+])
+def test_invalid_retained_inventory_provenance_is_rejected(key, value):
+    source = raw()
+    source["date_support"] = date_support()
+    source["date_support"]["source_inventory"][key] = value
+    with pytest.raises(ValueError):
+        evaluation.assemble(source)
+
+
+@pytest.mark.parametrize("support", [None, [], "unrecorded"])
+def test_present_but_invalid_support_is_not_treated_as_legacy(support):
+    source = raw()
+    source["date_support"] = support
+    with pytest.raises(ValueError, match="date_support"):
+        evaluation.render(source)
+
+
+def test_all_splits_must_reconcile_with_the_same_dated_pair_population():
+    source = raw(robustness=[split(year=2021)])
+    source["date_support"] = date_support()
+    assert evaluation.assemble(source)["date_support"] == date_support()
+    source["robustness"][0]["pairs_before"] += 1
+    with pytest.raises(ValueError, match="dated_pairs"):
+        evaluation.assemble(source)
+
+
+def test_record_span_may_extend_beyond_pair_dates_and_zero_future_pairs_are_valid():
+    rows = [seed("zero", 0, 0)]
+    rows[0].update(dict.fromkeys(METHODS, 0))
+    source = raw(rows)
+    source["headline"].update(pairs_before=150, pairs_after=0)
+    support = date_support()
+    support["pair_first_year_max"] = 2017
+    source["date_support"] = support
+    assert evaluation.assemble(source)["date_support"] == support
+    assert "**2010-2017**" in evaluation.render(source)
+
+
+def test_added_revision_shard_changes_pair_from_future_hit_to_prior_knowledge(tmp_path):
+    import gzip
+
+    records, updates, relations = (tmp_path / name for name in
+                                   ("records", "records_updates", "relations"))
+    for path in (records, updates, relations):
+        path.mkdir()
+    with gzip.open(records / "base.jsonl.gz", "wt") as stream:
+        stream.write(json.dumps({"pmid": "1", "year": 2025}) + "\n")
+    with gzip.open(relations / "relations.tsv.gz", "wt") as stream:
+        stream.write("1\trelation\tGene|a\tGene|b\n")
+    years = evaluation.pmid_years(tmp_path)
+    assert evaluation.pair_first_year(tmp_path, years, {}) == {("a", "b"): 2025}
+    with gzip.open(updates / "revision.jsonl.gz", "wt") as stream:
+        stream.write(json.dumps({"pmid": "1", "year": 2010}) + "\n")
+    years = evaluation.pmid_years(tmp_path)
+    assert evaluation.pair_first_year(tmp_path, years, {}) == {("a", "b"): 2010}
+
+
+@pytest.mark.parametrize("count", ["dated_pmids", "dated_pairs"])
+def test_single_dated_observation_cannot_claim_multiple_years(count):
+    support = date_support()
+    support[count] = 1
+    with pytest.raises(ValueError, match="single"):
+        evaluation._assemble_date_support(support, [])

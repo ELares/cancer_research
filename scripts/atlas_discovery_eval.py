@@ -49,11 +49,9 @@ Usage:
 import argparse
 import collections
 import functools
-import glob
 import gzip
 import json
 import math
-import pickle
 import random
 import sys
 from pathlib import Path
@@ -61,6 +59,10 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from atlas_baseline import atlas_root  # noqa: E402
+# Re-export the historical helpers for the analyses that import them here.
+from atlas_discovery_dates import (  # noqa: E402, F401
+    YEAR_STREAMS, _scan_pmid_years, load_pmid_years, pmid_years,
+)
 from atlas_discovery import HUB_PERCENTILE, MIN_BRIDGES, MIN_CANDIDATE_DEGREE  # noqa: E402
 from atlas_graph import load_index, load_corrections, _corrected  # noqa: E402
 from config import PROJECT_ROOT  # noqa: E402
@@ -76,69 +78,6 @@ METHODS = ("abc", "popularity", "adamic_adar", "resource_alloc",
 # neighbourhood to rank; too high and the seed is a hub whose candidate set is
 # most of the graph.
 SEED_DEGREE_MIN, SEED_DEGREE_MAX = 30, 800
-
-
-# Every stream that carries a `year`. NOT a cosmetic list: the two names this
-# tuple used to hold were `records` and `records_c04only`, and c04only is a
-# strict SUBSET of records -- measured, it adds exactly zero PMIDs -- so a loop
-# that read like a merge merged nothing, while the two streams holding the most
-# recent literature were never named. The layer whose subject is recency was
-# blind to 814,015 dated articles, overwhelmingly from 2021 onward.
-YEAR_STREAMS = ("records", "records_c04only", "records_unindexed", "records_updates")
-
-
-def pmid_years(root: Path) -> dict:
-    """Cached wrapper: the raw scan reads 2.2 GB of census records.
-
-    THE CACHE RECORDS WHICH STREAMS BUILT IT. Keyed by path alone, it would
-    have silently defeated the fix that widened YEAR_STREAMS: the map was
-    rebuilt to cover 814,015 more articles, and every consumer would have gone
-    on loading the old pickle without a word. A cache whose key omits an input
-    is a way of not applying a change.
-    """
-    cache = root / "records" / ".pmid-years.pkl"
-    try:
-        if cache.exists():
-            with open(cache, "rb") as fh:
-                got = pickle.load(fh)
-            if isinstance(got, dict) and got.get("streams") == list(YEAR_STREAMS):
-                years = got["years"]
-                print(f"  year map from cache ({len(years):,} PMIDs); "
-                      f"delete {cache.name} to rebuild", flush=True)
-                return years
-            print(f"  {cache.name} was built from a different stream set; "
-                  "rebuilding", flush=True)
-    except Exception:
-        pass
-    got = _scan_pmid_years(root)
-    try:
-        with open(cache, "wb") as fh:
-            pickle.dump({"streams": list(YEAR_STREAMS), "years": got}, fh, protocol=5)
-    except OSError:
-        pass
-    return got
-
-
-def _scan_pmid_years(root: Path) -> dict:
-    """PMID -> publication year, merged across every census directory present.
-
-    Merged rather than taken from one, because PubMed baseline files are
-    chronological: a partially-rebuilt census holds only the OLDEST literature,
-    which would date every pair as ancient and silently zero the split.
-    """
-    years = {}
-    for d in YEAR_STREAMS:
-        for f in sorted(glob.glob(str(root / d / "*.jsonl.gz"))):
-            with gzip.open(f, "rt", encoding="utf-8") as fh:
-                for line in fh:
-                    r = json.loads(line)
-                    y = r.get("year")
-                    if y:
-                        p = r["pmid"]
-                        # keep the EARLIEST year seen for a PMID
-                        if p not in years or y < years[p]:
-                            years[p] = y
-    return years
 
 
 def pair_first_year(root: Path, years: dict, corrections: dict) -> dict:
@@ -337,6 +276,57 @@ def _assemble_split(raw):
     }
 
 
+def _assemble_date_support(raw, splits):
+    """Validate retained dating metadata without guessing a collection cutoff."""
+    if not isinstance(raw, dict):
+        raise ValueError("date_support must be an object")
+    if type(raw.get("schema_version")) is not int or raw["schema_version"] != 1:
+        raise ValueError("unsupported date_support schema_version")
+    if raw.get("year_policy") != "earliest-year-per-pmid":
+        raise ValueError("unsupported date_support year_policy")
+    data = {"schema_version": 1, "year_policy": "earliest-year-per-pmid"}
+    for key in ("dated_pmids", "record_year_min", "record_year_max", "dated_pairs",
+                "pair_first_year_min", "pair_first_year_max"):
+        data[key] = _integer(raw.get(key), f"date_support.{key}", 1)
+    if not (data["record_year_min"] <= data["pair_first_year_min"] <=
+            data["pair_first_year_max"] <= data["record_year_max"]):
+        raise ValueError("date_support year ranges are inconsistent")
+    for count, low, high in (("dated_pmids", "record_year_min", "record_year_max"),
+                             ("dated_pairs", "pair_first_year_min", "pair_first_year_max")):
+        if data[count] == 1 and data[low] != data[high]:
+            raise ValueError(f"a single {count} observation cannot span multiple years")
+    for split in splits:
+        if split["pairs_before"] + split["pairs_after"] != data["dated_pairs"]:
+            raise ValueError("date_support dated_pairs differs from split pair counts")
+        year = split["split_year"]
+        if not data["record_year_min"] < year <= data["record_year_max"]:
+            raise ValueError("split year is outside date_support record years")
+        if bool(split["pairs_before"]) != (data["pair_first_year_min"] < year):
+            raise ValueError("pre-split pair count contradicts date_support")
+        if bool(split["pairs_after"]) != (data["pair_first_year_max"] >= year):
+            raise ValueError("post-split pair count contradicts date_support")
+    inventory = raw.get("source_inventory")
+    if not isinstance(inventory, dict):
+        raise ValueError("date_support source_inventory must be an object")
+    if inventory.get("fingerprint_kind") != "filesystem-metadata-v1":
+        raise ValueError("unsupported date_support inventory fingerprint_kind")
+    digest = inventory.get("inventory_sha256")
+    if not isinstance(digest, str) or len(digest) != 64 or any(
+            char not in "0123456789abcdef" for char in digest):
+        raise ValueError("date_support inventory_sha256 must be a lowercase SHA256")
+    counts = inventory.get("shards_per_stream")
+    if not isinstance(counts, dict) or set(counts) != set(YEAR_STREAMS):
+        raise ValueError("date_support must count every configured year stream")
+    counts = {name: _integer(counts[name], f"shards_per_stream.{name}")
+              for name in YEAR_STREAMS}
+    if not sum(counts.values()):
+        raise ValueError("date_support needs at least one source shard")
+    data["source_inventory"] = {"fingerprint_kind": "filesystem-metadata-v1",
+                                "inventory_sha256": digest,
+                                "shards_per_stream": counts}
+    return data
+
+
 def assemble(raw):
     """Validate observations and recompute summaries without mutating the input.
 
@@ -356,7 +346,10 @@ def assemble(raw):
         if year in seen:
             raise ValueError(f"duplicate split year {year}")
         seen.add(year)
-    return {"headline": splits[0], "robustness": splits[1:]}
+    data = {"headline": splits[0], "robustness": splits[1:]}
+    if "date_support" in raw:
+        data["date_support"] = _assemble_date_support(raw["date_support"], splits)
+    return data
 
 
 def evaluate(first, idx, Y, seeds_n, top, log=True):
@@ -455,10 +448,31 @@ def render(raw):
         f"Each method selects up to {top} candidates per seed: min(k, candidate count).",
         f"{short} seeds have fewer than {top} candidates. Precision is total hits",
         "divided by the actual number of predictions, pooled over those seeds.", "",
+    ]
+    if "date_support" in data:
+        support = data["date_support"]
+        inventory = support["source_inventory"]
+        streams = ", ".join(f"{name}: {count:,}"
+                            for name, count in inventory["shards_per_stream"].items())
+        lines.extend([
+            "### Date support and source inventory", "",
+            f"The earliest-year-per-PMID map contains {support['dated_pmids']:,} dated",
+            f"PMIDs spanning **{support['record_year_min']}-{support['record_year_max']}**.",
+            f"The {support['dated_pairs']:,} dated pairs have earliest assertion years",
+            f"spanning **{support['pair_first_year_min']}-{support['pair_first_year_max']}**.",
+            "These are ranges after earliest-year merging, not a complete observation",
+            "cutoff or evidence that every publication through those years is included.", "",
+            f"Source shards: {streams}.",
+            f"Local inventory fingerprint: `{inventory['inventory_sha256']}`.",
+            "This hashes relative paths and filesystem metadata, not article contents.",
+            "It supports cache freshness checks; it does not fingerprint the relation",
+            "graph, entity corrections, or a portable, independently verified corpus.", "",
+        ])
+    lines.extend([
         "## Result", "",
         f"| ranking | hits | predictions | precision@{top} | paired vs popularity |",
         "|---|---|---|---|---|",
-    ]
+    ])
     for method in sorted(prec, key=lambda m: -prec[m]):
         comparison = "baseline"
         if method != "popularity":
@@ -538,7 +552,9 @@ def render(raw):
         "* Biological validity or genuinely new knowledge. The extractor can miss or",
         "  misidentify assertions, and absent dated evidence is not absence of prior knowledge.",
         "* Eventual precision beyond the available corpus. Unobserved future assertions",
-        "  count as misses here. The stored results do not record an observation end year.",
+        ("  count as misses here. Publication-date ranges do not establish a complete observation cutoff."
+         if "date_support" in data else
+         "  count as misses here. The stored results do not record an observation end year."),
         "* Uncertainty for a new corpus or extraction process. The bootstrap resamples",
         "  seeds and assumes exchangeability; overlapping entities, papers, and pairs",
         "  can violate independence. Its intervals are conditional on this corpus and",
@@ -587,7 +603,7 @@ def main(argv=None) -> int:
             root = atlas_root()
             idx = load_index(root)
             print("loading year map ...", flush=True)
-            years = pmid_years(root)
+            years, inventory = load_pmid_years(root)
             if not years:
                 raise ValueError("no dated records; run scripts/atlas_baseline.py first "
                                  "or use --render-only for stored results")
@@ -611,7 +627,15 @@ def main(argv=None) -> int:
                     raise ValueError(f"no evaluable seeds for requested split {year}; "
                                      "reports were not updated")
                 results.append(result)
-            raw = {"headline": results[0], "robustness": results[1:]}
+            raw = {"headline": results[0], "robustness": results[1:],
+                   "date_support": {
+                       "schema_version": 1, "year_policy": "earliest-year-per-pmid",
+                       "dated_pmids": len(years), "record_year_min": span[0],
+                       "record_year_max": span[1], "dated_pairs": len(first),
+                       "pair_first_year_min": min(first.values()),
+                       "pair_first_year_max": max(first.values()),
+                       "source_inventory": inventory,
+                   }}
             data = assemble(raw)
     except (OSError, ValueError, TypeError) as exc:
         print(f"discovery evaluation unavailable: {exc}", file=sys.stderr)

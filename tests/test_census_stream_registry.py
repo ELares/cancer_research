@@ -376,10 +376,11 @@ REGISTRY = {
         "denominator. The graph covers every stream, so a narrower year map "
         "silently DROPS pairs it cannot date -- and the dropped ones are "
         "overwhelmingly recent, which is exactly what this layer measures."),
-    "atlas_discovery_eval.py": (
+    "atlas_discovery_dates.py": (
         {"records", "records_c04only", "records_unindexed", "records_updates"},
-        "the same dating table, and the one with the widest blast radius: four "
-        "other analyses import it, so a narrow year map propagated everywhere."),
+        "the shared earliest-year dating table used by the evaluator and four "
+        "other analyses through its compatibility reexports. Its cache binds "
+        "to all available shards; a narrow year map would propagate everywhere."),
 }
 
 
