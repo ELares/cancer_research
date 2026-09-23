@@ -286,7 +286,10 @@ REGISTRY = {
         "held article should get its relations and entity annotations."),
     "atlas_recent_window.py": (
         {"records", "records_unindexed", "records_updates"},
-        "its whole subject is the difference between the streams."),
+        "Its subject is the difference between three separately validated "
+        "streams. Both baseline populations define already-held articles; "
+        "omitting the unindexed stream would turn revisions into new articles "
+        "and remove the denominator for indexing resolution."),
 
     # --- reads the frozen census alone, ON PURPOSE ---
     "atlas_coverage.py": (
@@ -350,7 +353,9 @@ REGISTRY = {
         {"records"},
         "measures the mechanism taxonomy's field of view against the census the "
         "rest of the repo quotes, so it must use the same 4,403,994 denominator "
-        "every capture figure is compared to."),
+        "every capture figure is compared to. MeSH reach uses the whole indexed "
+        "stream; keyword reach takes every Nth record across sorted shards, "
+        "not every Nth shard or a merged stream."),
     "atlas_unindexed.py": (
         {"records_unindexed"},
         "it WRITES that stream; it is the recovery layer itself."),

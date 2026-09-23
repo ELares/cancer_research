@@ -1,9 +1,11 @@
-"""Read the indexed census without mistaking unavailable inputs for zero matches.
+"""Read a declared census stream without mistaking unavailable input for zero matches.
 
 Consumers must exhaust the iterator before writing reports: an existing set of
 gzip shards can still contain no records. Counts are checked before any
 consumer-specific filtering, so a readable census with no matching mechanisms
-is valid. Only the indexed ``records/`` stream is selected here.
+is valid. The default selects only indexed ``records/``. Callers may supply an
+explicit directory to validate other streams separately; this reader never
+merges them or changes a caller's population definition.
 """
 import gzip
 import json

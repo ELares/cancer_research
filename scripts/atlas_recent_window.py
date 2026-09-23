@@ -58,14 +58,16 @@ Usage:
 """
 
 import argparse
-import gzip
 import json
 import math
 from collections import Counter, defaultdict
 from pathlib import Path
 
+from atlas_baseline import atlas_root
+from census_input import census_shards, iter_census_shards
+
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-ATLAS = PROJECT_ROOT / "corpus" / "atlas"
+ATLAS = atlas_root()
 OUT_MD = PROJECT_ROOT / "analysis" / "atlas-recent-window.md"
 OUT_JSON = PROJECT_ROOT / "analysis" / "atlas-recent-window.json"
 
@@ -91,15 +93,30 @@ FERRO = "Ferroptosis"
 
 
 def _shards(sub):
-    d = ATLAS / sub
-    return sorted(d.glob("*.jsonl.gz")) if d.exists() else []
+    return census_shards(ATLAS / sub)
 
 
 def _read(sub):
-    for f in _shards(sub):
-        with gzip.open(f, "rt", encoding="utf-8") as fh:
-            for line in fh:
-                yield json.loads(line)
+    for record in iter_census_shards(_shards(sub), ATLAS / sub):
+        if not isinstance(record, dict):
+            raise ValueError(f"{sub}: each record must be an object")
+        pid = record.get("pmid")
+        if (not isinstance(pid, (str, int)) or isinstance(pid, bool)
+                or not str(pid).strip() or (type(pid) is int and pid <= 0)):
+            raise ValueError(f"{sub}: a nonempty PMID is required")
+        year = record.get("year")
+        if "year" not in record or (year is not None
+                                    and (type(year) is not int or year <= 0)):
+            raise ValueError(f"{sub}: year must be a positive integer or null")
+        # The text-recovered unindexed stream intentionally has no MeSH field.
+        # An explicit empty list in an indexed record is distinct from a
+        # missing or malformed field, even when both would match no topic.
+        if sub != "records_unindexed":
+            terms = record.get("mesh")
+            if (not isinstance(terms, list)
+                    or any(not isinstance(term, str) or not term.strip() for term in terms)):
+                raise ValueError(f"{sub}: mesh must be a list of nonempty descriptor strings")
+        yield record
 
 
 def katz_lcb(a, n1, b, n2, z=LCB_Z):
@@ -127,6 +144,7 @@ def collect():
     desc_by_year = defaultdict(Counter)
     census_pmids = set()
     ferro_year_census = Counter()
+    ferro_undated_census = 0
     leg_census = defaultdict(Counter)
 
     for r in _read("records"):
@@ -144,6 +162,8 @@ def collect():
         if FERRO in terms:
             if y:
                 ferro_year_census[int(y)] += 1
+            else:
+                ferro_undated_census += 1
             for name, ds in LEGS.items():
                 if any(d in terms for d in ds) and y:
                     leg_census[name][int(y)] += 1
@@ -158,9 +178,11 @@ def collect():
     new_total = 0
     new_pmids = set()
     ferro_year_new = Counter()
+    ferro_undated_new = 0
     leg_new = defaultdict(Counter)
     seen_update = set()
     resolved_unindexed = Counter()   # by the year the BASELINE recorded
+    resolved_unindexed_total = 0
 
     for r in _read("records_updates"):
         pid = str(r.get("pmid") or "")
@@ -168,6 +190,7 @@ def collect():
             continue
         seen_update.add(pid)
         if pid in unindexed:
+            resolved_unindexed_total += 1
             y = unindexed[pid]
             if y:
                 resolved_unindexed[int(y)] += 1
@@ -182,6 +205,8 @@ def collect():
         if FERRO in terms:
             if y:
                 ferro_year_new[int(y)] += 1
+            else:
+                ferro_undated_new += 1
             for name, ds in LEGS.items():
                 if any(d in terms for d in ds) and y:
                     leg_new[name][int(y)] += 1
@@ -190,6 +215,9 @@ def collect():
     for y in unindexed.values():
         if y:
             unindexed_by_year[int(y)] += 1
+
+    if not census_year:
+        raise ValueError("no dated indexed census records; temporal comparisons are unavailable")
 
     return {
         "census_total": len(census_pmids),
@@ -201,8 +229,11 @@ def collect():
         "unindexed_total": len(unindexed),
         "unindexed_by_year": dict(unindexed_by_year),
         "resolved_unindexed": dict(resolved_unindexed),
+        "resolved_unindexed_total": resolved_unindexed_total,
         "ferro_year_census": dict(ferro_year_census),
         "ferro_year_new": dict(ferro_year_new),
+        "ferro_undated_census": ferro_undated_census,
+        "ferro_undated_new": ferro_undated_new,
         "leg_census": {k: dict(v) for k, v in leg_census.items()},
         "leg_new": {k: dict(v) for k, v in leg_new.items()},
     }
@@ -215,12 +246,6 @@ def composition(raw, comparators):
     new_desc = raw["new_desc"]
     n_new, n_all = raw["new_total"], raw["census_total"]
 
-    if not new_desc:
-        raise SystemExit(
-            "no MeSH descriptors found in the update stream. The records field "
-            "is `mesh`; an earlier version read `mesh_terms`, which does not "
-            "exist, and rendered '0 descriptors (0.0%)' as though a missing "
-            "field were a measurement.")
     pool = []
     for d, a in new_desc.items():
         if a < MIN_NEW:
@@ -249,7 +274,7 @@ def composition(raw, comparators):
         mirror_one = 0       # 99% interval excluding 1.0
         point_floor = 0      # point estimate at or below LCB_FLOOR
         near = 0             # within 10% of the point cut
-        sweep = {}
+        sweep = {cut: 0 for cut in (0.95, 1.0, 1.05)}
         for d, a, b in pool:
             c = dy.get(d, 0)
             rr_all = (a / n_new) / (b / n_all) if b else float("inf")
@@ -282,7 +307,7 @@ def composition(raw, comparators):
             "n_within_10pct_of_cut": near,
             "point_cut_sweep": {str(k): v for k, v in sorted(sweep.items())},
             "flat_or_down": flat,
-            "flat_share": round(100 * flat / len(pool), 1) if pool else 0.0,
+            "flat_share": round(100 * flat / len(pool), 1) if pool else None,
             "demonstrably_falling": falling,
             "examples": [
                 {"descriptor": d, "rr_vs_census": round(ra, 2),
@@ -312,9 +337,12 @@ def indexing(raw):
     # maximum over every cohort old enough for the claim to be about, which
     # CAN exceed 1% and does.
     shown = rows[:12]
-    newest = max((r["year"] for r in rows), default=0)
-    older = [r for r in rows if r["year"] <= newest - 2]
+    newest = max((r["year"] for r in rows), default=None)
+    cutoff = newest - 2 if newest is not None else None
+    older = [r for r in rows if cutoff is not None and r["year"] <= cutoff]
     settled = [r for r in older if r["rate_pct"] < 1.0]
+    resolved_total = raw.get("resolved_unindexed_total", sum(got.values()))
+    reference_rate = next((r["rate_pct"] for r in rows if r["year"] == cutoff), None)
     return {
         "rows": shown,
         # EVERY cohort, not just the twelve the table prints. The counts in
@@ -327,14 +355,13 @@ def indexing(raw):
         "n_cohorts_shown": len(shown),
         "n_shown_under_1pct": sum(1 for r in shown if r["rate_pct"] < 1.0),
         "pool_total": raw["unindexed_total"],
-        "resolved_total": sum(got.values()),
+        "resolved_total": resolved_total,
         "resolved_share_pct": round(
-            100 * sum(got.values()) / max(raw["unindexed_total"], 1), 3),
-        "older_cutoff_year": newest - 2,
+            100 * resolved_total / max(raw["unindexed_total"], 1), 3),
+        "older_cutoff_year": cutoff,
         "n_older_cohorts": len(older),
         "settled_years": len(settled),
-        "older_max_rate_pct": round(max((r["rate_pct"] for r in older),
-                                        default=0.0), 3),
+        "older_max_rate_pct": max((r["rate_pct"] for r in older), default=None),
         "older_max_rate_year": max(older, key=lambda r: r["rate_pct"])["year"]
         if older else None,
         # THE MONOTONICITY THE PROSE ASSUMED. Cohorts that resolve FASTER than
@@ -347,13 +374,11 @@ def indexing(raw):
         "older_than_and_faster_than_reference": sorted(
             ({"year": r["year"], "rate_pct": r["rate_pct"]}
              for r in rows
-             if r["year"] < newest - 2
-             and r["rate_pct"] > next((x["rate_pct"] for x in rows
-                                       if x["year"] == newest - 2), 0.0)),
+             if cutoff is not None and reference_rate is not None
+             and r["year"] < cutoff and r["rate_pct"] > reference_rate),
             key=lambda r: -r["rate_pct"]),
-        "reference_year": newest - 2,
-        "reference_rate_pct": next(
-            (r["rate_pct"] for r in rows if r["year"] == newest - 2), None),
+        "reference_year": cutoff,
+        "reference_rate_pct": reference_rate,
     }
 
 
@@ -392,10 +417,12 @@ def legs(raw):
         "complete_through": complete,
         "ferroptosis_all_years_before": sum(fc.values()),
         "ferroptosis_all_years_after": sum(fc.values()) + gain_total,
+        "ferroptosis_undated_before": raw.get("ferro_undated_census", 0),
+        "ferroptosis_undated_new": raw.get("ferro_undated_new", 0),
         "gain_total": gain_total,
         "gain_in_trailing_year": gain_trailing,
         "gain_trailing_share_pct": round(
-            100 * gain_trailing / max(gain_total, 1), 1),
+            100 * gain_trailing / gain_total, 1) if gain_total else None,
         "ferroptosis_complete_before": ferro_before,
         "ferroptosis_complete_after": ferro_after,
         # BOTH COLUMNS, because the complete-year one CANNOT MOVE. The update
@@ -438,22 +465,89 @@ def _roundtrip(d: dict) -> dict:
     input replaces a rank with an alphabet, which flipped a published verdict
     elsewhere in this repo.
     """
-    return json.loads(json.dumps(d, sort_keys=True))
+    return json.loads(json.dumps(d, sort_keys=True, allow_nan=False))
+
+
+def _render_sparse(d):
+    """Report valid empty selections without inheriting historical conclusions."""
+    comp, idx, lg = d["composition"], d["indexing"], d["legs"]
+
+    def retained_count(key):
+        return f"{lg[key]:,}" if key in lg else "not retained"
+
+    lines = [f"# The recent window: {d['new_total']:,} articles the census did not have", "",
+             "*Generated by `scripts/atlas_recent_window.py` from separately read census, "
+             "unindexed, and update streams.*", "", "## Descriptor comparisons", ""]
+    if comp["pool_size"] == 0:
+        lines += ["No MeSH descriptors meet the rising-topic selection rule: "
+                  f"at least {comp['min_new']} occurrences in the new window and a 99% "
+                  f"lower rate-ratio bound above {comp['lcb_floor']} against the census.", "",
+                  "The selected pool contains **0 descriptors**. Its shares are undefined; "
+                  "this does not establish that topics are declining.", ""]
+    else:
+        lines += [f"**{comp['pool_size']:,} descriptors** meet the selection rule "
+                  f"(at least {comp['min_new']} new-window occurrences and a 99% lower "
+                  f"rate-ratio bound above {comp['lcb_floor']}).", ""]
+    lines += ["| comparator year | articles | no longer rising | share |",
+              "|---|--:|--:|--:|"]
+    for year in sorted(comp["by_comparator"], key=int):
+        row = comp["by_comparator"][year]
+        # Older failed runs wrote zero shares for an empty selected pool before
+        # the renderer rejected them. Replay must use the actual denominator.
+        share = ("undefined" if not comp["pool_size"] or row["flat_share"] is None
+                 else f"{row['flat_share']}%")
+        lines.append(f"| {year} | {row['comparator_n']:,} | {row['flat_or_down']:,} | {share} |")
+    resolved_share = (f"{idx['resolved_share_pct']}%" if idx["pool_total"]
+                      else "share undefined: no baseline unindexed articles")
+    lines += ["", "No longer rising uses a point rate ratio at or below 1.0; "
+              "admission uses a 99% lower confidence bound. These are different rules.", "",
+              "## Indexing during the update window", "",
+              f"Of {idx['pool_total']:,} baseline unindexed articles, "
+              f"**{idx['resolved_total']:,} ({resolved_share})** appear in "
+              "the indexed update stream. Totals include articles with an unknown "
+              "publication year; dated cohort rates exclude them.", ""]
+    if idx["rows"]:
+        lines += ["| publication year | un-indexed pool | acquired indexing | rate |",
+                  "|---|--:|--:|--:|"]
+        for row in idx["rows"]:
+            lines.append(f"| {row['year']} | {row['pool']:,} | {row['resolved']:,} | {row['rate_pct']}% |")
+        lines += [""]
+    else:
+        lines += ["No dated publication-year cohort meets the 1,000-article reporting floor.", ""]
+    lines += ["These observations cover one update window and do not establish lifetime indexing rates.", "",
+              "## The thesis legs, on complete years and on all years", "",
+              f"The window adds **{lg['gain_total']:,} dated ferroptosis-indexed articles**, "
+              f"taking the count across all known publication years from {lg['ferroptosis_all_years_before']:,} "
+              f"to {lg['ferroptosis_all_years_after']:,}. Through {lg['complete_through']}, "
+              f"the count changes from {lg['ferroptosis_complete_before']:,} "
+              f"to {lg['ferroptosis_complete_after']:,}.", "",
+              f"Ferroptosis-indexed articles with an unknown publication year: "
+              f"baseline: **{retained_count('ferroptosis_undated_before')}**; "
+              f"new in this window: **{retained_count('ferroptosis_undated_new')}**. "
+              "These articles are excluded from the dated ferroptosis and leg counts below.", "",
+              f"| leg | through {lg['complete_through']} | all dated years | gain, all dated years | of which the filter excludes |",
+              "|---|--:|--:|--:|--:|"]
+    for name, row in lg["legs"].items():
+        lines.append(f"| {name} | {row['before']:,} -> {row['after']:,} | "
+                     f"{row['all_years_before']:,} -> {row['all_years_after']:,} | "
+                     f"{row['gain_all_years']:,} | {row['gain_excluded_by_the_filter']:,} |")
+    lines += ["", "The update stream remains separate from the baseline census. "
+              "Zero selected matches do not imply that a required input stream was absent.", ""]
+    return "\n".join(lines) + "\n"
 
 
 def render(d):
     comp, idx, lg = d["composition"], d["indexing"], d["legs"]
+    if (comp["pool_size"] == 0 or not idx["rows"] or idx["resolved_total"] == 0
+            or idx.get("reference_rate_pct") is None or lg["gain_total"] == 0
+            or lg.get("ferroptosis_undated_before", 0) or lg.get("ferroptosis_undated_new", 0)):
+        return _render_sparse(d)
     # The most recent COMPLETE year, not the newest. The trailing year is
     # partially indexed, so comparing against it inflates the share -- the same
     # incomplete-year effect the thesis-leg section below has to strip out.
     years_desc = sorted(comp["by_comparator"], key=lambda y: int(y), reverse=True)
     best = years_desc[1] if len(years_desc) > 1 else years_desc[0]
     b = comp["by_comparator"][best]
-    if comp["pool_size"] == 0:
-        raise SystemExit(
-            "the rising-descriptor pool is empty, which is not a finding -- it "
-            "is what a wrong field name or a floor set above the data looks "
-            "like. Refusing to render.")
     L = [f"# The recent window: {d['new_total']:,} articles the census did not have", ""]
     L += ["*Generated by `scripts/atlas_recent_window.py`. Every figure is "
           "recomputed; none is transcribed.*", ""]
@@ -656,11 +750,11 @@ def render(d):
     return "\n".join(L) + "\n"
 
 
-def main():
+def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--render-only", action="store_true",
                     help="rebuild the report from the committed JSON")
-    args = ap.parse_args()
+    args = ap.parse_args(argv)
 
     if args.render_only:
         d = json.loads(OUT_JSON.read_text())
@@ -674,11 +768,14 @@ def main():
             "indexing": indexing(raw),
             "legs": legs(raw),
         }
-        OUT_JSON.write_text(json.dumps(d, indent=1, sort_keys=True) + "\n",
-                            encoding="utf-8")
-    OUT_MD.write_text(render(_roundtrip(d)), encoding="utf-8")
+    json_text = json.dumps(d, indent=1, sort_keys=True, allow_nan=False) + "\n"
+    markdown = render(_roundtrip(d))
+    if not args.render_only:
+        OUT_JSON.write_text(json_text, encoding="utf-8")
+    OUT_MD.write_text(markdown, encoding="utf-8")
     print(f"wrote {OUT_MD}")
-    print(f"wrote {OUT_JSON}")
+    if not args.render_only:
+        print(f"wrote {OUT_JSON}")
 
 
 if __name__ == "__main__":
