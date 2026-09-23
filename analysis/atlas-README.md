@@ -432,6 +432,8 @@ of dated pairs, plus source shard counts and a local filesystem-metadata
 fingerprint. These publication-year ranges are not a complete observation
 cutoff. Historical snapshots did not retain this provenance; offline rendering
 does not infer it from today's corpus or rewrite their JSON.
+Retained splits with this provenance must reconcile to one dated-pair population:
+moving the split later cannot reduce the number of already-observed pairs.
 
 The shared date loader (`scripts/atlas_discovery_dates.py`) caches the union of
 available `records`, `records_c04only`, `records_unindexed`, and `records_updates`
@@ -441,9 +443,10 @@ reuse. Additions, deletions and replacements invalidate the cache; legacy caches
 are rebuilt once. A changing source inventory or malformed dated record fails
 instead of falling back to stale dates. Missing/null years remain undated;
 present years must be positive integers. Cache replacement is atomic, and an
-unwritable cache does not prevent a valid scan. The metadata fingerprint is a
-local freshness check, not a hash of article contents or a portable corpus
-identity. It also does not identify the relation graph or entity corrections.
+unwritable cache does not prevent a valid scan. Zero-byte shards fail validation;
+a valid gzip member containing no records remains readable. The metadata
+fingerprint is a local freshness check, not a hash of article contents or a
+portable corpus identity. It also does not identify the relation graph or entity corrections.
 
 Every ranking, including random, uses the same candidate pool. These comparisons
 measure ordering within that pool, not whether two-hop candidate generation

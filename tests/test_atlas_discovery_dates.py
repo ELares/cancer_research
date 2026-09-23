@@ -217,6 +217,42 @@ def test_corrupt_or_truncated_shard_preserves_previous_cache(populated, content)
     assert cache_path(root).read_bytes() == before
 
 
+@pytest.mark.parametrize("cache_state", ["absent", "previous", "matches_empty_source"])
+def test_zero_byte_shard_is_rejected_even_when_other_stream_has_dates(tmp_path, cache_state):
+    source = shard(tmp_path, rows=[{"pmid": "old", "year": 2000}])
+    shard(tmp_path, "records_updates", rows=[{"pmid": "recent", "year": 2025}])
+    assert dates.pmid_years(tmp_path) == {"old": 2000, "recent": 2025}
+    cache = cache_path(tmp_path)
+    source.write_bytes(b"")
+    if cache_state == "absent":
+        cache.unlink()
+    elif cache_state == "matches_empty_source":
+        # Earlier readers could cache a zero-byte gzip shard as an empty stream.
+        payload = pickle.loads(cache.read_bytes())
+        info = source.stat()
+        entry = next(item for item in payload["inventory"]
+                     if item["path"] == "records/a.jsonl.gz")
+        entry.update(size=info.st_size, dev=info.st_dev, ino=info.st_ino,
+                     mtime_ns=info.st_mtime_ns, ctime_ns=info.st_ctime_ns)
+        payload["years"] = {"recent": 2025}
+        cache.write_bytes(pickle.dumps(payload))
+    before = cache.read_bytes() if cache.exists() else None
+    with pytest.raises(ValueError, match="empty, not a valid gzip file: records/a.jsonl.gz"):
+        dates.load_pmid_years(tmp_path)
+    assert (cache.read_bytes() if cache.exists() else None) == before
+
+
+def test_valid_empty_gzip_member_is_allowed_and_cached(tmp_path, monkeypatch):
+    empty = shard(tmp_path, rows=[])
+    assert empty.stat().st_size > 0
+    shard(tmp_path, "records_updates", rows=[{"pmid": "recent", "year": 2025}])
+    first = dates.load_pmid_years(tmp_path)
+    assert first[0] == {"recent": 2025}
+    assert first[1]["shards_per_stream"]["records"] == 1
+    monkeypatch.setattr(dates, "_scan_inventory", fail)
+    assert dates.load_pmid_years(tmp_path) == first
+
+
 def test_non_directory_stream_and_non_regular_shard_are_not_absent(tmp_path):
     stream = tmp_path / "records"
     stream.write_text("not a directory")

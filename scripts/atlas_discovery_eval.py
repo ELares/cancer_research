@@ -305,6 +305,13 @@ def _assemble_date_support(raw, splits):
             raise ValueError("pre-split pair count contradicts date_support")
         if bool(split["pairs_after"]) != (data["pair_first_year_max"] >= year):
             raise ValueError("post-split pair count contradicts date_support")
+    # Every split partitions the same pair population: advancing the year can
+    # only add pre-split pairs. Sort a view without changing retained order.
+    by_year = sorted(splits, key=lambda split: split["split_year"])
+    if any(earlier["pairs_before"] > later["pairs_before"]
+           for earlier, later in zip(by_year, by_year[1:])):
+        raise ValueError("date_support pre-split pair counts must be "
+                         "nondecreasing by split year")
     inventory = raw.get("source_inventory")
     if not isinstance(inventory, dict):
         raise ValueError("date_support source_inventory must be an object")

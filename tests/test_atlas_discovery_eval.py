@@ -585,6 +585,48 @@ def test_all_splits_must_reconcile_with_the_same_dated_pair_population():
         evaluation.assemble(source)
 
 
+@pytest.mark.parametrize("year,before", [(2021, 50), (2015, 125)])
+def test_decreasing_pre_split_pair_counts_preserve_reports(
+        outputs, monkeypatch, year, before):
+    source = raw(robustness=[split(year=year)])
+    source["robustness"][0].update(pairs_before=before, pairs_after=150 - before)
+    source["date_support"] = date_support()
+    source["date_support"]["dated_pmids"] = 4
+    with pytest.raises(ValueError, match="nondecreasing"):
+        evaluation.assemble(source)
+    outputs[1].write_text(json.dumps(source))
+    previous = tuple(path.read_bytes() for path in outputs)
+    forbid_readers(monkeypatch)
+    assert evaluation.main(["--render-only"]) != 0
+    assert_preserved(outputs, previous)
+
+
+@pytest.mark.parametrize("before_counts", [(100, 100, 100), (50, 100, 125)])
+def test_monotonic_pair_counts_preserve_scrambled_split_order(before_counts):
+    source = raw(robustness=[split(year=2021), split(year=2015)])
+    by_year = dict(zip((2015, 2018, 2021), before_counts))
+    for item in [source["headline"], *source["robustness"]]:
+        before = by_year[item["split_year"]]
+        item.update(pairs_before=before, pairs_after=150 - before)
+    source["date_support"] = date_support()
+    source["date_support"]["dated_pmids"] = 4
+    original = copy.deepcopy(source)
+    result = evaluation.assemble(source)
+    assert source == original
+    assert result["date_support"] == source["date_support"]
+    assert [(item["split_year"], item["pairs_before"])
+            for item in [result["headline"], *result["robustness"]]] == [
+                (2018, by_year[2018]), (2021, by_year[2021]), (2015, by_year[2015])]
+
+
+def test_legacy_summaries_without_date_support_keep_split_validation_contract():
+    source = raw(robustness=[split(year=2021)])
+    source["robustness"][0].update(pairs_before=50, pairs_after=100)
+    result = evaluation.assemble(source)
+    assert "date_support" not in result
+    assert result["robustness"][0]["pairs_before"] == 50
+
+
 def test_record_span_may_extend_beyond_pair_dates_and_zero_future_pairs_are_valid():
     rows = [seed("zero", 0, 0)]
     rows[0].update(dict.fromkeys(METHODS, 0))

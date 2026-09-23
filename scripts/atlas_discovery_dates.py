@@ -36,6 +36,8 @@ FINGERPRINT_KIND = "filesystem-metadata-v1"
 def _metadata(relative_path: str, info) -> dict:
     if not stat.S_ISREG(info.st_mode):
         raise ValueError(f"date source is not a regular file: {relative_path}")
+    if info.st_size == 0:
+        raise ValueError(f"date source is empty, not a valid gzip file: {relative_path}")
     return {"path": relative_path, "size": info.st_size,
             "dev": info.st_dev, "ino": info.st_ino,
             "mtime_ns": info.st_mtime_ns, "ctime_ns": info.st_ctime_ns}
