@@ -141,6 +141,13 @@ not require another simulation mechanism or a larger unmeasured corpus.
    Both honor the external census root and render retained summaries offline
    without changing historical JSON. Neither silently merges new observations
    into the published baseline.
+   The discovery evaluator and four consumers now invalidate their shared date
+   cache when its source shard inventory changes, preserving earliest-year
+   merging across the four available streams. Fresh evaluator output records
+   date ranges, counts and a local metadata fingerprint; these do not establish
+   a complete observation cutoff or content identity. Historical discovery
+   snapshots remain unchanged, and offline rendering does not backfill missing
+   provenance. The ranking and seed-bootstrap designs are unchanged.
    Population manifests require valid counts and a consistent C04 total. The
    manuscript comparison rejects recall evidence whose subject population or
    descriptor counts differ from its own. Aggregate agreement remains a
