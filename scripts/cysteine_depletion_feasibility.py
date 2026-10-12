@@ -259,10 +259,14 @@ def read_structural_facts() -> dict:
     def declares(src: str, name: str) -> bool:
         return re.search(rf"^\s*pub\s+{re.escape(name)}\s*:", src, re.M) is not None
 
-    # The resynthesis sites: every line that adds to a glutathione pool.
+    # The resynthesis STATEMENTS, not lines. A line-based scan broke the moment
+    # `cargo fmt` reflowed these across four lines: `gsh +=` landed on the first
+    # and `xc_cystine_factor` on the fourth, so the gated count read 0 and this
+    # page was about to publish that NRF2 CAN rescue a complete cystine block --
+    # a false structural claim produced by formatting, not by a code change.
+    # Statements end at the first `;`, which is what the claim is actually about.
     resynth = [
-        ln.strip() for ln in biochem_src.splitlines()
-        if re.search(r"\bgsh\s*\+=", ln)
+        m.group(0) for m in re.finditer(r"\bgsh\s*\+=.*?;", biochem_src, re.S)
     ]
     gated = [ln for ln in resynth if "xc_cystine_factor" in ln]
     nrf2_scaled = [ln for ln in resynth if "nrf2" in ln]
@@ -585,7 +589,9 @@ def render(d: dict) -> str:
         "the constant, while any specific figure is not. Measuring the Km in a pancreatic line "
         "is the cheap next step and would need no new model code.",
         "",
-        "## What is NOT expressible, and it is wiring rather than data",
+        ("## The spatial escape, now expressible in the library"
+         if st["escape_can_vary_per_cell"]
+         else "## What is NOT expressible, and it is wiring rather than data"),
         "",
         f"- `transsulfuration_floor` is a `Params` field: {st['floor_is_params_field']}",
         f"- it has a per-cell `Cell` counterpart: {st['floor_is_cell_field']}",
@@ -607,9 +613,23 @@ def render(d: dict) -> str:
         "independently added H2S to inhibit the transsulfuration bypass -- which is the one "
         "escape this parameter structure leaves open. Read that as a CORRESPONDENCE, not a "
         "prediction: both papers were in hand before the structure was consulted, and nothing "
-        "here was forecast in advance. The engine cannot state it today, "
-        "because the hypoxia field is per-cell and the escape is global. Moving the floor to "
-        "`Cell` is a wiring change carrying a byte-identity obligation, not a missing dataset.",
+        "here was forecast in advance."
+        + (
+            " **The library can now express it** (#916): `Cell::transsulfuration_floor` "
+            "overrides the global field per cell, so the escape can be made largest "
+            "exactly where the trigger is. What is still missing is a SPATIAL CONSUMER, "
+            "and the blocker is not this axis -- `erastin_xc_inhib` is reachable in no "
+            "simulation binary at all, and sim-tme-3d applies no parameter overrides, so "
+            "a per-cell floor there would multiply a cystine factor that no erastin "
+            "dose has moved off its no-op value (#918). This paragraph was written "
+            "when the floor was global-only; it is "
+            "derived from the engine rather than asserted, which is why it changed when "
+            "the engine did."
+            if st["escape_can_vary_per_cell"]
+            else " The engine cannot state it today, because the hypoxia field is "
+            "per-cell and the escape is global. Moving the floor to `Cell` is a wiring "
+            "change carrying a byte-identity obligation, not a missing dataset."
+        ),
         "",
         "## Verdict",
         "",
@@ -618,7 +638,11 @@ def render(d: dict) -> str:
         f"- the concentration-to-fraction map has a **named, failable target** "
         f"(Km {d['km_uM']} uM, PMID {c['xct_cystine_km']['source_pmid']}; reference "
         f"{d['reference_uM']:.1f} uM by formulation)",
-        "- a hypoxia-graded escape is **not expressible**: a per-cell floor is missing",
+        ("- a hypoxia-graded escape is **expressible in the library** (#916) but has no "
+         "spatial consumer, and the blocker is that `erastin_xc_inhib` is reachable in no "
+         "simulation binary (#918)"
+         if st["escape_can_vary_per_cell"]
+         else "- a hypoxia-graded escape is **not expressible**: a per-cell floor is missing"),
         "- the depletion-buys-less headline is **in-vitro only**: the gap exists because "
         "medium sits above the Km, and below the Km the map is nearly linear, so the "
         "in-vitro fit and the in-vivo therapy sit on opposite sides of half-saturation",

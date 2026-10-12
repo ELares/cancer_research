@@ -366,7 +366,10 @@
    "code_modules": [
     "immune"
    ],
-   "prose_only_modules": []
+   "prose_only_modules": [
+    "cell",
+    "oxygen"
+   ]
   },
   {
    "mechanism": "mrna-vaccine",
@@ -627,7 +630,10 @@
    "code_modules": [
     "immune"
    ],
-   "prose_only_modules": [],
+   "prose_only_modules": [
+    "cell",
+    "oxygen"
+   ],
    "engine_tier": "modifier"
   },
   {

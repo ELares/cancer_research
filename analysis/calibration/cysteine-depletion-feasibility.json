@@ -309,8 +309,8 @@
   },
   "saturation_at_reference": 0.5365152263021224,
   "structure": {
-    "escape_can_vary_per_cell": false,
-    "floor_is_cell_field": false,
+    "escape_can_vary_per_cell": true,
+    "floor_is_cell_field": true,
     "floor_is_params_field": true,
     "gsh_resynthesis_sites": 2,
     "inhib_is_params_field": true,

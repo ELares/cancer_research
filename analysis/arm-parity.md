@@ -6,7 +6,7 @@ The aggregate code-size comparison is reported in `analysis/modality-module-dept
 
 | arm | engine lines | pub fns | rust tests | calibration | book words | figures | predictions | spatial |
 |---|--:|--:|--:|---|--:|--:|--:|---|
-| Ferroptosis induction | 3,817 | 182 | 268 | -- | 5,387 | 7 | 7 | by default |
+| Ferroptosis induction | 3,817 | 182 | 276 | -- | 5,387 | 7 | 7 | by default |
 | Sonodynamic therapy | 63 | 8 | 10 | PARTLY REFUTED | 1,144 | 7 | 4 | by default |
 | Photodynamic therapy | 249 | 9 | 59 | DIRECTIONAL | 1,144 | 4 | 2 | by default |
 | Ionizing radiation | 263 | 23 | 33 | ADMISSIBLE | 2,598 | 3 | 2 | on demand |

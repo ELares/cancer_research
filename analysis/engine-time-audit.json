@@ -63,7 +63,7 @@
     {
      "context": "/// the ~48-72h SCD1/MUFA enrichment is already complete). An acute/naive",
      "form": "magnitude",
-     "line": 738,
+     "line": 748,
      "value": "72h"
     }
    ],
@@ -75,25 +75,25 @@
     {
      "context": "/// FSP1 re-expression half-time (days). Slowest \u2014 epigenetic.",
      "form": "bare-unit",
-     "line": 296,
+     "line": 321,
      "value": "(days)"
     },
     {
      "context": "/// GPX4 re-expression half-time (days). Transcriptional.",
      "form": "bare-unit",
-     "line": 298,
+     "line": 323,
      "value": "(days)"
     },
     {
      "context": "/// NRF2 re-activation half-time (days).",
      "form": "bare-unit",
-     "line": 300,
+     "line": 325,
      "value": "(days)"
     },
     {
      "context": "/// GSH resynthesis half-time (days). Fastest \u2014 metabolic.",
      "form": "bare-unit",
-     "line": 302,
+     "line": 327,
      "value": "(days)"
     }
    ],
@@ -193,7 +193,7 @@
     {
      "context": "///   redistribution over ~24\u201348 h; setting `t_distribution_h \u2248 36`",
      "form": "magnitude",
-     "line": 499,
+     "line": 514,
      "value": "48 h"
     }
    ],
