@@ -6,3 +6,4 @@ pmid,found_in_pools,note
 34287957,xct_kinetics,the measured cystine-uptake Km this map is anchored on
 41422256,cystine_import_ferro|transsulf_ferro,"hypoxia activates transsulfuration, conferring resistance under cystine limitation"
 31819185,cystine_import_ferro|transsulf_ferro,erastin resistance via NRF2/CBS reverse transsulfuration
+5054467,cystine_uptake_any|cystine_uptake_kinetic,"the OTHER kinetic cystine-uptake paper (1972), cultured fibroblasts in cystinuria and Hartnup disease -- not a tumour, so the cancer-cell-line kinetic literature is one paper"

@@ -366,7 +366,7 @@ def test_this_generator_hand_writes_no_quantity_into_its_prose():
     # Not a style allowlist -- each is a reference that cannot "go stale" the way
     # a count can, because it denotes one fixed document.
     identifiers = {"39696900", "41704298", "27869804", "32241947",
-                   "34287957", "41422256", "31819185", "35287706", "502"}
+                   "34287957", "41422256", "31819185", "35287706", "5054467", "502"}
     # Two non-numeric shapes the detector reads as counts and which are not:
     # "a tension" (the article, not a quantity) and the salt name "2HCl".
     non_quantities = {"tension", "2HCl"}
@@ -401,3 +401,46 @@ def test_the_detector_import_actually_found_something_to_triage():
     assert len(hits) >= 5, (
         f"the detector returned only {len(hits)} hits on a page citing eight "
         "PMIDs; it has probably stopped scanning this file")
+
+
+def test_the_single_cell_line_anchor_is_shown_to_be_the_whole_literature():
+    """"One paper" is a measurement here, not a confession of a shallow search.
+
+    Of the records naming cystine uptake only two report kinetic constants, and
+    one of those is a 1972 non-tumour study -- so in cancer cell lines there is
+    exactly one. Recomputed from the committed pools, because this is what turns
+    "measure it in a PDAC line" from tidying-up into a novel experiment.
+    """
+    pool = {r["key"]: r["pool"] for r in _data()["pool_rows"]}
+    assert pool["cystine_uptake_kinetic"] == 2, (
+        "the scarcity claim rests on this count; if it moved, the prose must too")
+    # The claim is only interesting if the denominator is large.
+    assert pool["cystine_uptake_any"] > 100
+    assert pool["cystine_uptake_kinetic"] < pool["cystine_uptake_any"] / 50
+    # And that no pancreatic kinetic measurement exists is the load-bearing half.
+    assert pool["cystine_uptake_pancreatic"] > 0, (
+        "a zero here would mean the query is broken, not that none exist")
+    doc = DOC.read_text()
+    assert str(pool["cystine_uptake_any"]) in doc
+    assert "5054467" in doc, "the non-tumour kinetic paper must be named, not elided"
+
+
+def test_the_map_is_stated_to_set_only_the_inhibition_not_the_floor():
+    """The map equals the engine's supply factor exactly only at a zero floor.
+
+    `xc_cystine_factor() = 1 - erastin_xc_inhib * (1 - transsulfuration_floor)`,
+    so a reader who sets both from this page's figures would double-count the
+    escape. Recomputed here so the arithmetic behind the warning is checked, not
+    just its presence.
+    """
+    def factor(inhib, floor):
+        return 1.0 - inhib * (1.0 - floor)
+
+    inhib = inhibition_from_depletion(0.5, 207.7, 179.4)
+    # At a zero floor the map's remaining supply IS the engine's factor.
+    assert abs(factor(inhib, 0.0) - (1.0 - inhib)) < 1e-12
+    # With a floor the engine retains MORE supply, so the page must warn.
+    assert factor(inhib, 0.3) > 1.0 - inhib
+    doc = DOC.read_text()
+    assert "erastin_xc_inhib` alone" in doc
+    assert "count the floor twice" in doc

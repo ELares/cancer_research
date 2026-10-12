@@ -232,6 +232,14 @@
         "cystine_import_ferro",
         "transsulf_ferro"
       ]
+    },
+    {
+      "note": "the OTHER kinetic cystine-uptake paper (1972), cultured fibroblasts in cystinuria and Hartnup disease -- not a tumour, so the cancer-cell-line kinetic literature is one paper",
+      "pmid": "5054467",
+      "pools": [
+        "cystine_uptake_any",
+        "cystine_uptake_kinetic"
+      ]
     }
   ],
   "marginal_crossover_depletion": 0.5949557885515777,
@@ -270,6 +278,21 @@
       "key": "xct_kinetics",
       "pool": 7,
       "query": "(xct OR \"system xc\" OR slc7a11) AND (km OR \"michaelis\")"
+    },
+    {
+      "key": "cystine_uptake_any",
+      "pool": 228,
+      "query": "\"cystine uptake\""
+    },
+    {
+      "key": "cystine_uptake_kinetic",
+      "pool": 2,
+      "query": "\"cystine uptake\" AND (km OR \"michaelis\" OR vmax OR saturab*)"
+    },
+    {
+      "key": "cystine_uptake_pancreatic",
+      "pool": 7,
+      "query": "\"cystine uptake\" AND pancrea*"
     }
   ],
   "reference_uM": 207.667731629393,

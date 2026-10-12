@@ -468,10 +468,30 @@ def render(d: dict) -> str:
         f"Medium therefore sits at **{pct(d['saturation_at_reference'])}** of saturation -- just "
         "past the knee. Nothing in the map is chosen, so it can fail.",
         "",
+        f"**One cell line is not a shortcut, it is the literature.** Of "
+        f"{pool['cystine_uptake_any']} records naming cystine uptake, only "
+        f"{pool['cystine_uptake_kinetic']} report kinetic constants, and one of those two "
+        "studies cultured fibroblasts in cystinuria and Hartnup disease (PMID 5054467, dated "
+        "in the landmark table rather than here) -- not a tumour. So in cancer cell lines "
+        "there is exactly ONE kinetic analysis across "
+        f"{d['index_records']:,} records, which is what PMID "
+        f"{c['xct_cystine_km']['source_pmid']} says of itself: very few reports exist. "
+        f"{pool['cystine_uptake_pancreatic']} records pair cystine uptake with pancreas and "
+        "NONE of them is kinetic (they measure expression, drug response or isotope tracing). "
+        "That makes measuring this Km in a PDAC line a genuinely novel experiment rather than "
+        "a tidying-up exercise, and it is the single cheapest thing that would tighten this "
+        "page.",
+        "",
         "What the map assumes, stated because these are where it would break before the "
         "arithmetic does (no count in this sentence: a spelled one goes stale the moment "
         "another assumption is added):",
         "",
+        "0. **The map sets `erastin_xc_inhib` alone.** `xc_cystine_factor()` is "
+        "`1 - erastin_xc_inhib * (1 - transsulfuration_floor)`, so the figures below equal "
+        "the engine's supply factor exactly only at a zero floor; a non-zero floor adds "
+        "supply back on top, which is correct because the floor is a SEPARATE source "
+        "(methionine, not import) and not part of the transporter curve. Set the two "
+        "independently and do not count the floor twice.",
         "1. **Glutathione resynthesis is proportional to cystine uptake.** This is the "
         "engine's own assumption, not one added here -- #502 made the NRF2-driven "
         "resynthesis term *be* the cystine supply -- but it is the step that lets a "
