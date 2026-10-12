@@ -87,8 +87,8 @@ use ferroptosis_core::oxygen::{
     radial_o2_field, OER_REFERENCE_PO2_MMHG,
 };
 use ferroptosis_core::params::{
-    Params, PersisterConfig, PhConfig, RadiationConfig, SpatialImmuneConfig, SpatialParams,
-    StromalConfig,
+    apply_param_overrides, param_overrides_from_env, Params, PersisterConfig, PhConfig,
+    RadiationConfig, SpatialImmuneConfig, SpatialParams, StromalConfig,
 };
 use ferroptosis_core::persister;
 use ferroptosis_core::ph::{ion_trap_factor_from_ph, iron_multiplier_from_ph, radial_ph_field};
@@ -913,6 +913,18 @@ struct Overrides {
     /// so the Fenton substrate rises in hypoxic zones even as the O2-dependent SDT
     /// yield (#336) falls. `0.0` (default) ⇒ factor 1.0 ⇒ byte-identical.
     hypoxia_iron_sensitivity: f64,
+    /// Biochem rate-constant overrides read from `FERRO_PARAM_OVERRIDES` (#918,
+    /// the #331 hook one binary over).
+    ///
+    /// CARRIED rather than read here, deliberately. `run_one_condition_full` is
+    /// called once per condition and directly by the A/B tests, so reading the
+    /// environment inside it would log 24 times on a production run and would
+    /// let a stray variable perturb a test that never asked for one. `main`
+    /// reads and validates once; everything else receives the parsed pairs.
+    ///
+    /// Empty (the default, and what every test constructs) ⇒ `apply_param_overrides`
+    /// is a no-op ⇒ byte-identical.
+    param_overrides: Vec<(String, f64)>,
     /// Oxygen-dependent SDT/PDT exo-ROS yield (#336): the "Type II fraction" of
     /// the exogenous ROS that scales with local O2. `0.0` (default) ⇒ fully
     /// O2-independent (the historical optimistic upper bound) ⇒ the exo-ROS
@@ -977,12 +989,34 @@ struct Overrides {
 /// off). The matrix, dose-sweep, and every test use this 3-arg form, so they
 /// stay byte-identical. `run_snapshot`/tests call [`run_one_condition_full`]
 /// directly with a populated [`Overrides`] to opt a layer in.
+/// Biochem overrides parsed from the environment ONCE, by `main` (#918).
+///
+/// A `OnceLock` rather than a per-call read: the property worth having is
+/// read-once-validate-once, so an unknown parameter name exits non-zero before
+/// any condition runs instead of 24 conditions in. Tests call
+/// [`run_one_condition_full`] directly with their own [`Overrides`] and never
+/// set this, so it is empty under test and the default matrix is byte-identical
+/// whenever the variable is unset.
+static ENV_PARAM_OVERRIDES: std::sync::OnceLock<Vec<(String, f64)>> = std::sync::OnceLock::new();
+
+fn env_param_overrides() -> Vec<(String, f64)> {
+    ENV_PARAM_OVERRIDES.get().cloned().unwrap_or_default()
+}
+
 fn run_one_condition_with_config(
     condition: &Condition,
     run_cfg: RunConfig,
     snapshot: Option<&mut snapshot::SnapshotBuffers>,
 ) -> ConditionResult {
-    run_one_condition_full(condition, run_cfg, snapshot, Overrides::default())
+    run_one_condition_full(
+        condition,
+        run_cfg,
+        snapshot,
+        Overrides {
+            param_overrides: env_param_overrides(),
+            ..Default::default()
+        },
+    )
 }
 
 /// Combine two per-cell supply fields by **element-wise max** (#272 slab +
@@ -1203,6 +1237,16 @@ fn run_one_condition_impl(
     } else {
         Params::default()
     };
+    // #918: generic biochem overrides, applied FIRST so an explicit layer field
+    // below still wins -- those express a modelled mechanism, while this is a
+    // rate-constant perturbation for sensitivity and calibration work. Empty
+    // (the matrix path) ⇒ no-op ⇒ byte-identical. Validated in `main`, so an
+    // unknown name has already exited non-zero and cannot be silently dropped
+    // here.
+    if !overrides.param_overrides.is_empty() {
+        apply_param_overrides(&mut params, overrides.param_overrides.clone())
+            .expect("param overrides were validated in main");
+    }
     // #365: NCOA4-ferritinophagy labile-iron release ramp. `0.0` (matrix) ⇒
     // `ferritinophagy_iron_factor` is exactly 1.0 for every step ⇒ byte-identical;
     // `ferritinophagy_tau` keeps its default. Consumed inside `sim_cell_step`.
@@ -6761,6 +6805,41 @@ fn validate_immune_measurement_args(args: &[String], parameter_override_present:
 }
 
 fn main() {
+    // #918: read and VALIDATE the biochem overrides once, before any condition
+    // runs. The #502 System Xc-/erastin arm lives in the core engine and was
+    // reachable from no simulation binary at all -- `erastin_xc_inhib` appeared
+    // in zero of the thirteen -- because this is the one spatial binary that
+    // applied no overrides, so everything the 3D suite said about hypoxia,
+    // vasculature and immune coupling was said with the cystine arm switched
+    // off and no way to switch it on. Same hook #331 gave sim-tme and
+    // sim-combo-mech.
+    //
+    // Exit non-zero on a bad name rather than dropping it: a typo'd parameter
+    // silently ignored would report a sweep that never varied anything.
+    // Unset or empty ⇒ no overrides ⇒ the default matrix is byte-identical.
+    match param_overrides_from_env() {
+        Ok(overrides) => {
+            if !overrides.is_empty() {
+                eprintln!(
+                    "Applying {} biochem override(s) from FERRO_PARAM_OVERRIDES",
+                    overrides.len()
+                );
+                // Validate every name here, against a throwaway Params, so the
+                // failure is immediate and not 24 conditions deep.
+                let mut probe = Params::default();
+                if let Err(name) = apply_param_overrides(&mut probe, overrides.clone()) {
+                    eprintln!("error: FERRO_PARAM_OVERRIDES contains unknown parameter '{name}'");
+                    std::process::exit(2);
+                }
+            }
+            let _ = ENV_PARAM_OVERRIDES.set(overrides);
+        }
+        Err(e) => {
+            eprintln!("error: {e}");
+            std::process::exit(2);
+        }
+    }
+
     // Guard against silent drift between this binary's metadata const and
     // the library's runtime value: if a future PR tunes
     // `SpatialImmuneConfig::for_3d().damp_diffusion_fraction` without also
@@ -6943,6 +7022,107 @@ fn main() {
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn the_env_override_store_is_empty_under_test() {
+        // The whole reason it is a OnceLock set by `main`: a test must not be
+        // able to pick up a stray FERRO_PARAM_OVERRIDES from the shell. If this
+        // ever fails, every A/B in this file is running against an unknown
+        // parameter set.
+        assert!(super::env_param_overrides().is_empty());
+        assert!(super::Overrides::default().param_overrides.is_empty());
+
+        // STRUCTURAL, because behaviour cannot distinguish it here: with the
+        // variable unset, a per-call `param_overrides_from_env()` and an unset
+        // OnceLock both return empty, so a mutation swapping one for the other
+        // survives every behavioural assertion. Setting the variable inside a
+        // test is not the answer -- these run in parallel and would race.
+        //
+        // The property being protected is that a test CANNOT be perturbed by a
+        // stray FERRO_PARAM_OVERRIDES in the shell, which is a statement about
+        // where the read happens, so it is checked where it happens.
+        let src = include_str!("main.rs");
+        let i = src
+            .find("fn env_param_overrides() -> Vec<(String, f64)> {")
+            .expect("env_param_overrides is gone");
+        let body = &src[i..src[i..].find("\n}").expect("no body end") + i];
+        assert!(
+            body.contains("ENV_PARAM_OVERRIDES.get()"),
+            "env_param_overrides no longer reads the OnceLock"
+        );
+        assert!(
+            !body.contains("param_overrides_from_env"),
+            "env_param_overrides reads the environment per call, so a stray \
+             FERRO_PARAM_OVERRIDES would silently perturb every test in this file"
+        );
+    }
+
+    #[test]
+    fn a_param_override_reaches_the_condition_and_an_empty_list_is_inert() {
+        // #918. Two claims: an empty list is BIT-identical to the historical
+        // path (the byte-identity guarantee the production matrix rests on),
+        // and a populated one actually reaches `Params` -- which is what makes
+        // the #502 System Xc- arm spatially reachable at all.
+        let cfg = super::RunConfig {
+            grid_dim: 20,
+            n_steps: 90,
+        };
+        let cond = super::generate_conditions()
+            .into_iter()
+            .find(|c| c.name == "baseline_RSL3")
+            .expect("baseline_RSL3 is in the default matrix");
+
+        let run = |ov: Vec<(String, f64)>| {
+            super::run_one_condition_full(
+                &cond,
+                cfg,
+                None,
+                super::Overrides {
+                    param_overrides: ov,
+                    ..Default::default()
+                },
+            )
+        };
+
+        let baseline = run(Vec::new());
+        let also_baseline = run(Vec::new());
+        assert_eq!(
+            baseline.overall_kill_rate.to_bits(),
+            also_baseline.overall_kill_rate.to_bits(),
+            "an empty override list must be deterministic"
+        );
+
+        // A complete cystine block must move the kill rate. If it does not, the
+        // override is being parsed and then dropped -- the failure mode a typo'd
+        // name would otherwise hide.
+        let blocked = run(vec![("erastin_xc_inhib".to_string(), 1.0)]);
+        assert_ne!(
+            blocked.overall_kill_rate.to_bits(),
+            baseline.overall_kill_rate.to_bits(),
+            "erastin_xc_inhib=1.0 did not change the condition, so the override \
+             never reached Params and the #502 arm is still unreachable"
+        );
+    }
+
+    #[test]
+    fn an_explicit_layer_field_still_wins_over_a_generic_override() {
+        // Ordering matters and is easy to get backwards. The generic overrides
+        // are applied FIRST so a per-layer field below still wins: those express
+        // a modelled mechanism, while the generic hook is a rate-constant
+        // perturbation for sensitivity work.
+        let src = include_str!("main.rs");
+        let i = src
+            .find("if !overrides.param_overrides.is_empty()")
+            .expect("the generic override application site is gone");
+        let j = src
+            .find("params.ferritinophagy_release = ferritinophagy_release")
+            .expect("the first per-layer write is gone");
+        assert!(
+            i < j,
+            "generic overrides are applied AFTER a per-layer field, so an \
+             explicit layer setting would be silently overwritten"
+        );
+    }
+
     #[test]
     fn immune_measurements_preserve_results_snapshots_and_thread_determinism() {
         let cfg = super::RunConfig {
