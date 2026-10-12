@@ -811,15 +811,32 @@ def run(years, sources, limit_new=None, verbose=True) -> dict:
                     # re-reads a page rather than skipping one. Nothing is
                     # written and nothing is indexed in between.
                     d = _search_with_retry(src, year, cursor, verbose=verbose)
-                    hits = d.get("resultList", {}).get("result", [])
+                    # `page`, not `hits`: the COLUMN named `hits` holds the
+                    # answer's SIZE and this holds the records. One word for
+                    # both is what made #910 hard to rule out -- the retirement
+                    # test `not hits` reads this list while the UPDATE two lines
+                    # down writes the count, and they are unrelated quantities.
+                    page = d.get("resultList", {}).get("result", [])
                     nxt = d.get("nextCursorMark")
-                    # Recorded unconditionally, not only when unset: `hits` is
-                    # the size of THIS question's answer, and a slice re-walked
-                    # under a wider clause has a larger one. Keeping the old
-                    # value would make seen/hits read as complete while the
-                    # slice was only complete for a question nobody asks.
-                    st.execute("UPDATE slice SET hits=? WHERE src=? AND year=?",
-                               (d.get("hitCount", 0), src, year))
+                    # Recorded on every page rather than only when unset: the
+                    # count is the size of THIS question's answer, and a slice
+                    # re-walked under a wider clause has a larger one. Keeping a
+                    # stale value would make seen/hits read as complete while
+                    # the slice was only complete for a question nobody asks.
+                    #
+                    # But ABSENT is not ZERO (#910). A response that parses as
+                    # JSON without a `hitCount` -- a degraded or error document
+                    # -- used to write 0, and a retired slice carrying hits=0
+                    # satisfies `seen >= hits` trivially, so the ledger loses
+                    # the only check it has on whether the walk was complete.
+                    # Measured when found: MED 2022 and MED 1990 were both
+                    # done=1 with hits=0. None of the three cases blocked
+                    # retirement (that is decided by cursor exhaustion), so this
+                    # is the ledger's readability, not the crawl's correctness.
+                    reported = d.get("hitCount")
+                    if reported is not None:
+                        st.execute("UPDATE slice SET hits=? WHERE src=? AND year=?",
+                                   (reported, src, year))
                     stopped_early = False
                     examined = 0
 
@@ -828,7 +845,7 @@ def run(years, sources, limit_new=None, verbose=True) -> dict:
                     # this stays single-threaded and in order.
                     candidates = []
                     page_keys = set()
-                    for rec in hits:
+                    for rec in page:
                         seen += 1
                         examined += 1
                         pmid = norm_pmid(rec.get("pmid"))
@@ -991,7 +1008,7 @@ def run(years, sources, limit_new=None, verbose=True) -> dict:
                     kept = ft = 0
                     if limit_new and totals["new"] >= limit_new:
                         return _finish(shards, st, ident, totals)
-                    if not nxt or nxt == cursor or not hits:
+                    if not nxt or nxt == cursor or not page:
                         break
                     cursor = nxt
                     time.sleep(SLEEP)
