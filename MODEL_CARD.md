@@ -43,7 +43,7 @@ experiment.
 the count.** The ferroptosis and physical-ROS work carries the anchored legs
 and the legacy quantitative results in Chapters 5, 7 and 8. The committed
 [`modality-module-depth` analysis](analysis/modality-module-depth.md) counts the
-modality modules together at 1,562 production lines, against an engine 2.4 to 3.0
+modality modules together at 1,562 production lines, against an engine 2.5 to 3.0
 times larger depending on how shared machinery is assigned. That is an aggregate
 code-size comparison, not a calibration or quality score for an individual arm.
 Chapter 6 separately reports the newer arms' comparisons and limitations; their
