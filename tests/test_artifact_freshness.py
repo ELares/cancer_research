@@ -173,6 +173,24 @@ EXEMPT: dict = {
         "which hands render() a synthetic result dict and so needs neither "
         "the index nor a committed artifact."
     ),
+    "trial_publication_gap": (
+        "Its input is a 600-trial sample queried LIVE against Europe PMC -- "
+        "about six minutes of requests -- over trial shards that live on "
+        "external storage and are absent from CI. Regenerating here would "
+        "either hammer a public API on every run or find no trials, so a diff "
+        "against a committed artifact compares a real measurement to nothing. "
+        "With no trials it now REFUSES, raising NoTrialsError and naming the "
+        "share: an earlier version of this very sentence said it would render "
+        "'an empty page', and what it actually did was raise a TypeError out of "
+        "the middle of render() -- a behaviour nobody had checked, pinned now "
+        "by test_an_absent_trial_share_is_refused_not_rendered. Its output IS "
+        "committed, unlike the crawl report, because the sample is SEEDED, and "
+        "`--render-only` rebuilds the page from the stored rows so fixing a "
+        "sentence costs no requests. Order-independence is not gated from here "
+        "-- exemption removes it from LIVE, which is what the order gate below "
+        "iterates -- and is pinned instead by test_trial_publication_gap.py::"
+        "test_the_page_order_is_established_by_the_renderer, over synthetic "
+        "rows."),
     "mechanism_keyword_precision": (
         "Reads the same 20 GB gitignored retrieval index, for the same "
         "reason: the candidate keyword pools are counted over it. Exemption "
@@ -237,7 +255,7 @@ LIVE = [g[0] for g in GENERATORS
 # Pinned EXACTLY, not as a floor. A floor with slack lets a generator drop out
 # of the gate silently: at `>= 25` against 26, deleting the marker from one
 # script left the suite green with two parametrised cases quietly gone.
-EXPECTED_GENERATORS = 94
+EXPECTED_GENERATORS = 95
 
 
 def test_the_generator_list_is_discovered_not_listed():
