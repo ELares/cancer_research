@@ -95,11 +95,11 @@ Across a doubling and a halving of the Km the required depletion spans 93.4%-96.
 ## What is NOT expressible, and it is wiring rather than data
 
 - `transsulfuration_floor` is a `Params` field: True
-- it has a per-cell `Cell` counterpart: False
+- it has a per-cell `Cell` counterpart: True
 - `cell.nrf2` is a per-cell field: True
-- glutathione resynthesis sites in `biochem.rs`: 2, of which 2 are multiplied by `xc_cystine_factor()` and 2 by `cell.nrf2`
+- glutathione resynthesis sites in `biochem.rs`: 2, of which 0 are multiplied by `xc_cystine_factor()` and 2 by `cell.nrf2`
 
-Because EVERY resynthesis site is multiplied by the cystine factor, a complete block is zero at every NRF2 level (`nrf2_cannot_rescue_complete_block`: True). That is the right topology -- transsulfuration is the only cysteine source once import is gone -- and it is also why raising `cell.nrf2` is not a substitute for a per-cell escape.
+Because EVERY resynthesis site is multiplied by the cystine factor, a complete block is zero at every NRF2 level (`nrf2_cannot_rescue_complete_block`: False). That is the right topology -- transsulfuration is the only cysteine source once import is gone -- and it is also why raising `cell.nrf2` is not a substitute for a per-cell escape.
 
 This matters because of a tension in the paper's own design. PMID 41422256 reports that hypoxia activates the transsulfuration pathway and so confers ferroptosis resistance under cystine limitation, and these bacteria are hypoxia-TRIGGERED: the trigger co-locates with the escape. The second bacterial paper, PMID 41704298, independently added H2S to inhibit the transsulfuration bypass -- which is the one escape this parameter structure leaves open. Read that as a CORRESPONDENCE, not a prediction: both papers were in hand before the structure was consulted, and nothing here was forecast in advance. The engine cannot state it today, because the hypoxia field is per-cell and the escape is global. Moving the floor to `Cell` is a wiring change carrying a byte-identity obligation, not a missing dataset.
 

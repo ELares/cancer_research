@@ -105,6 +105,7 @@ fn ferro_cell_to_cell(fc: &FerroCell) -> Cell {
         // #363: per-cell MUFA rate is a spatial/phenotype layer, not in the C ABI
         // (mirrors mufa_cap); the FFI maps it to None ⇒ global scd_mufa_rate.
         mufa_rate: None,
+        transsulfuration_floor: None,
     }
 }
 

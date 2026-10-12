@@ -210,6 +210,7 @@ pub(super) mod immune_controlled {
             nrf2: 0.0,
             mufa_cap: None,
             mufa_rate: None,
+            transsulfuration_floor: None,
         };
         let state =
             CellState::from_cell_with_ros(&cell, Treatment::Control, &Params::default(), 0.0);
