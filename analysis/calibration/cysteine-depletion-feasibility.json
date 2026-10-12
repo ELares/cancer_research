@@ -1,0 +1,287 @@
+{
+  "constants": {
+    "cystine_2hcl_molar_mass": {
+      "constant": "cystine_2hcl_molar_mass",
+      "sd": "",
+      "source_doi": "",
+      "source_note": "L-cystine dihydrochloride, the salt the formulation sheets specify",
+      "source_pmid": "",
+      "unit": "g_per_mol",
+      "value": "313.0"
+    },
+    "plasma_free_cysteine_baseline": {
+      "constant": "plasma_free_cysteine_baseline",
+      "sd": "",
+      "source_doi": "",
+      "source_note": "Free plasma cysteine, same study. Also not free cystine",
+      "source_pmid": "",
+      "unit": "uM",
+      "value": "8.2"
+    },
+    "plasma_total_cystine_baseline": {
+      "constant": "plasma_total_cystine_baseline",
+      "sd": "",
+      "source_doi": "",
+      "source_note": "Total plasma cyst(e)ine in healthy volunteers (PMC1968397). TOTAL: protein-bound + CSSC + free Cys. NOT free cystine, so NOT usable as the in-vivo reference",
+      "source_pmid": "",
+      "unit": "uM",
+      "value": "276.0"
+    },
+    "rpmi1640_cystine_2hcl_mass": {
+      "constant": "rpmi1640_cystine_2hcl_mass",
+      "sd": "",
+      "source_doi": "",
+      "source_note": "RPMI-1640 formulation, L-cystine dihydrochloride (Thermo Fisher 11875; Sigma R5382/R7130 datasheets list 0.0652 g/L)",
+      "source_pmid": "",
+      "unit": "mg_per_L",
+      "value": "65.0"
+    },
+    "sulfasalazine_ic50": {
+      "constant": "sulfasalazine_ic50",
+      "sd": "5.6",
+      "source_doi": "10.1002/bdd.2298",
+      "source_note": "xCT inhibitor IC50 in the same assay; an independent scale check on the Km, not an input",
+      "source_pmid": "34287957",
+      "unit": "uM",
+      "value": "24.7"
+    },
+    "xct_cystine_km": {
+      "constant": "xct_cystine_km",
+      "sd": "26.7",
+      "source_doi": "10.1002/bdd.2298",
+      "source_note": "Michaelis constant for cystine uptake, A549 human lung cancer cells, 5 min linear-uptake window",
+      "source_pmid": "34287957",
+      "unit": "uM",
+      "value": "179.4"
+    },
+    "xct_cystine_vmax": {
+      "constant": "xct_cystine_vmax",
+      "sd": "2.3",
+      "source_doi": "10.1002/bdd.2298",
+      "source_note": "Vmax for the same fit; recorded for provenance, not used in the dimensionless map",
+      "source_pmid": "34287957",
+      "unit": "nmol_per_min_per_mg",
+      "value": "30.4"
+    }
+  },
+  "depletion_rows": [
+    {
+      "depletion": 0.25,
+      "inhibition": 0.1338203583909584,
+      "marginal_return": 0.6181998403790606,
+      "residual_uM": 155.75079872204475
+    },
+    {
+      "depletion": 0.5,
+      "inhibition": 0.3166994163709418,
+      "marginal_return": 0.8656035841649864,
+      "residual_uM": 103.8338658146965
+    },
+    {
+      "depletion": 0.75,
+      "inhibition": 0.5816694796566955,
+      "marginal_return": 1.2977605124938913,
+      "residual_uM": 51.91693290734825
+    },
+    {
+      "depletion": 0.9,
+      "inhibition": 0.8066273810017844,
+      "marginal_return": 1.7331072135554058,
+      "residual_uM": 20.766773162939295
+    },
+    {
+      "depletion": 0.95,
+      "inhibition": 0.8980238105659386,
+      "marginal_return": 1.9279378152119955,
+      "residual_uM": 10.383386581469658
+    },
+    {
+      "depletion": 0.99,
+      "inhibition": 0.978671213438916,
+      "marginal_return": 2.108471659082387,
+      "residual_uM": 2.0766773162939316
+    }
+  ],
+  "final_marginal_return": 2.157568180765847,
+  "index_records": 7727217,
+  "initial_marginal_return": 0.4634847736978775,
+  "inverse_rows": [
+    {
+      "depletion_required": 0.41833052034330453,
+      "residual_uM": 120.7939813983553,
+      "supply_cut": 0.25
+    },
+    {
+      "depletion_required": 0.6833005836290583,
+      "residual_uM": 65.76824940610611,
+      "supply_cut": 0.5
+    },
+    {
+      "depletion_required": 0.8661796416090416,
+      "residual_uM": 27.790170272882737,
+      "supply_cut": 0.75
+    },
+    {
+      "depletion_required": 0.9510238791754542,
+      "residual_uM": 10.17075991564051,
+      "supply_cut": 0.9
+    }
+  ],
+  "km_sd_uM": 26.7,
+  "km_sensitivity": [
+    {
+      "depletion_for_90pct_cut": 0.9550354625942306,
+      "initial_marginal_return": 0.42373383240938656,
+      "km_uM": 152.70000000000002,
+      "label": "km_low",
+      "saturation_at_reference": 0.5762661675906134
+    },
+    {
+      "depletion_for_90pct_cut": 0.9510238791754542,
+      "initial_marginal_return": 0.4634847736978775,
+      "km_uM": 179.4,
+      "label": "km_point",
+      "saturation_at_reference": 0.5365152263021224
+    },
+    {
+      "depletion_for_90pct_cut": 0.9475573798078682,
+      "initial_marginal_return": 0.498105541455324,
+      "km_uM": 206.1,
+      "label": "km_high",
+      "saturation_at_reference": 0.501894458544676
+    },
+    {
+      "depletion_for_90pct_cut": 0.9675706112887968,
+      "initial_marginal_return": 0.3016467170412168,
+      "km_uM": 89.7,
+      "label": "km_half",
+      "saturation_at_reference": 0.6983532829587832
+    },
+    {
+      "depletion_for_90pct_cut": 0.9342497031692393,
+      "initial_marginal_return": 0.6333988327418835,
+      "km_uM": 358.8,
+      "label": "km_double",
+      "saturation_at_reference": 0.36660116725811653
+    }
+  ],
+  "km_uM": 179.4,
+  "landmarks": [
+    {
+      "note": "the target paper: hypoxia-triggered cyst(e)inase from engineered bacteria, PDAC",
+      "pmid": "39696900",
+      "pools": [
+        "bacteria_cysteine_ferro",
+        "cysteinase_any"
+      ]
+    },
+    {
+      "note": "a second bacterial cysteine-depletion paper; adds H2S to block transsulfuration",
+      "pmid": "41704298",
+      "pools": [
+        "bacteria_cysteine_ferro",
+        "cysteine_depletion_ferro",
+        "transsulf_ferro"
+      ]
+    },
+    {
+      "note": "Cramer 2017 Nat Med: the cyst(e)inase pharmacology, mice and non-human primates",
+      "pmid": "27869804",
+      "pools": [
+        "cysteinase_any"
+      ]
+    },
+    {
+      "note": "Badgley 2020 Science: same mechanism, same tumour type, by Slc7a11 deletion AND cyst(e)inase",
+      "pmid": "32241947",
+      "pools": [
+        "cysteinase_any",
+        "cysteine_depletion_ferro",
+        "cystine_import_ferro",
+        "transsulf_ferro"
+      ]
+    },
+    {
+      "note": "the measured cystine-uptake Km this map is anchored on",
+      "pmid": "34287957",
+      "pools": [
+        "xct_kinetics"
+      ]
+    },
+    {
+      "note": "hypoxia activates transsulfuration, conferring resistance under cystine limitation",
+      "pmid": "41422256",
+      "pools": [
+        "cystine_import_ferro",
+        "transsulf_ferro"
+      ]
+    },
+    {
+      "note": "erastin resistance via NRF2/CBS reverse transsulfuration",
+      "pmid": "31819185",
+      "pools": [
+        "cystine_import_ferro",
+        "transsulf_ferro"
+      ]
+    }
+  ],
+  "marginal_crossover_depletion": 0.5949557885515777,
+  "pool_rows": [
+    {
+      "key": "phrase_pair_ferro_engbact",
+      "pool": 1,
+      "query": "ferroptosis AND \"engineered bacteria\""
+    },
+    {
+      "key": "cysteinase_any",
+      "pool": 20,
+      "query": "\"cyst(e)inase\" OR cysteinase"
+    },
+    {
+      "key": "cysteine_depletion_ferro",
+      "pool": 21,
+      "query": "\"cysteine depletion\" AND ferroptosis"
+    },
+    {
+      "key": "cystine_import_ferro",
+      "pool": 3404,
+      "query": "(cystine OR slc7a11 OR \"system xc\") AND ferroptosis"
+    },
+    {
+      "key": "bacteria_cysteine_ferro",
+      "pool": 6,
+      "query": "bacteri* AND cysteine AND ferroptosis"
+    },
+    {
+      "key": "transsulf_ferro",
+      "pool": 62,
+      "query": "(transsulfuration OR \"cystathionine\") AND ferroptosis"
+    },
+    {
+      "key": "xct_kinetics",
+      "pool": 7,
+      "query": "(xct OR \"system xc\" OR slc7a11) AND (km OR \"michaelis\")"
+    }
+  ],
+  "reference_uM": 207.667731629393,
+  "regime": {
+    "depletion_for_90pct_cut_low": 0.9039511725024092,
+    "inhibition_at_half_depletion_low": 0.4888283378746594,
+    "inhibition_at_half_depletion_reference": 0.3166994163709418,
+    "low_reference_is_free_cystine": false,
+    "low_reference_uM": 8.2,
+    "saturation_at_low_reference": 0.04371002132196162
+  },
+  "saturation_at_reference": 0.5365152263021224,
+  "structure": {
+    "escape_can_vary_per_cell": false,
+    "floor_is_cell_field": false,
+    "floor_is_params_field": true,
+    "gsh_resynthesis_sites": 2,
+    "inhib_is_params_field": true,
+    "nrf2_cannot_rescue_complete_block": true,
+    "nrf2_is_cell_field": true,
+    "resynthesis_sites_gated_by_cystine": 2,
+    "resynthesis_sites_scaled_by_nrf2": 2
+  }
+}

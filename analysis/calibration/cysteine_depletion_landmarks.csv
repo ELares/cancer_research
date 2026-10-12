@@ -1,0 +1,8 @@
+pmid,found_in_pools,note
+39696900,bacteria_cysteine_ferro|cysteinase_any,"the target paper: hypoxia-triggered cyst(e)inase from engineered bacteria, PDAC"
+41704298,bacteria_cysteine_ferro|cysteine_depletion_ferro|transsulf_ferro,a second bacterial cysteine-depletion paper; adds H2S to block transsulfuration
+27869804,cysteinase_any,"Cramer 2017 Nat Med: the cyst(e)inase pharmacology, mice and non-human primates"
+32241947,cysteinase_any|cysteine_depletion_ferro|cystine_import_ferro|transsulf_ferro,"Badgley 2020 Science: same mechanism, same tumour type, by Slc7a11 deletion AND cyst(e)inase"
+34287957,xct_kinetics,the measured cystine-uptake Km this map is anchored on
+41422256,cystine_import_ferro|transsulf_ferro,"hypoxia activates transsulfuration, conferring resistance under cystine limitation"
+31819185,cystine_import_ferro|transsulf_ferro,erastin resistance via NRF2/CBS reverse transsulfuration

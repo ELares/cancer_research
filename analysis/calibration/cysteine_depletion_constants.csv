@@ -1,0 +1,8 @@
+constant,value,unit,sd,source_pmid,source_doi,source_note
+xct_cystine_km,179.4,uM,26.7,34287957,10.1002/bdd.2298,"Michaelis constant for cystine uptake, A549 human lung cancer cells, 5 min linear-uptake window"
+xct_cystine_vmax,30.4,nmol_per_min_per_mg,2.3,34287957,10.1002/bdd.2298,"Vmax for the same fit; recorded for provenance, not used in the dimensionless map"
+sulfasalazine_ic50,24.7,uM,5.6,34287957,10.1002/bdd.2298,"xCT inhibitor IC50 in the same assay; an independent scale check on the Km, not an input"
+rpmi1640_cystine_2hcl_mass,65.0,mg_per_L,,,,"RPMI-1640 formulation, L-cystine dihydrochloride (Thermo Fisher 11875; Sigma R5382/R7130 datasheets list 0.0652 g/L)"
+cystine_2hcl_molar_mass,313.0,g_per_mol,,,,"L-cystine dihydrochloride, the salt the formulation sheets specify"
+plasma_total_cystine_baseline,276.0,uM,,,,"Total plasma cyst(e)ine in healthy volunteers (PMC1968397). TOTAL: protein-bound + CSSC + free Cys. NOT free cystine, so NOT usable as the in-vivo reference"
+plasma_free_cysteine_baseline,8.2,uM,,,,"Free plasma cysteine, same study. Also not free cystine"
