@@ -1,0 +1,11 @@
+key,query,pool,measured_against_index_records
+phrase_pair_ferro_engbact,ferroptosis AND "engineered bacteria",1,7727217
+cysteinase_any,"""cyst(e)inase"" OR cysteinase",20,7727217
+cysteine_depletion_ferro,"""cysteine depletion"" AND ferroptosis",21,7727217
+cystine_import_ferro,(cystine OR slc7a11 OR "system xc") AND ferroptosis,3404,7727217
+bacteria_cysteine_ferro,bacteri* AND cysteine AND ferroptosis,6,7727217
+transsulf_ferro,(transsulfuration OR "cystathionine") AND ferroptosis,62,7727217
+xct_kinetics,(xct OR "system xc" OR slc7a11) AND (km OR "michaelis"),7,7727217
+cystine_uptake_any,"""cystine uptake""",228,7727217
+cystine_uptake_kinetic,"""cystine uptake"" AND (km OR ""michaelis"" OR vmax OR saturab*)",2,7727217
+cystine_uptake_pancreatic,"""cystine uptake"" AND pancrea*",7,7727217
