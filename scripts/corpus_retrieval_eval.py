@@ -32,6 +32,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import statistics
 import sys
 from pathlib import Path
 
@@ -47,6 +48,30 @@ OUT_MD = REPO / "analysis" / "corpus-retrieval-precision.md"
 
 DEPTH = 50   # how far down to look for a gold paper before calling it missed
 AT_K = 10    # the recall@K a human actually reads
+
+
+def gold_in_index(c, pmids: list[str]) -> set[str]:
+    """Which gold PMIDs the index actually holds.
+
+    WITHOUT THIS THE REPORT CANNOT TELL TWO DIFFERENT FAILURES APART, and the
+    first version could not. An index built over the wrong corpus scores 0.000
+    on BOTH arms -- which is exactly what happened when only the expansion
+    crawl was indexed, because `corpus_expand_fetch.py` skips anything
+    `is_held()` already knows, so the crawl is the census's complement and held
+    none of the gold. The page rendered that as "Arm B does not beat arm A",
+    a verdict about RANKING, from an index that simply did not contain the
+    answers. A retrieval score is only meaningful over a corpus that holds the
+    target, so the corpus claim has to be measured here and not assumed from
+    the out-of-band check recorded in the gold file's provenance.
+
+    One scan, not one per PMID: `pmid` is UNINDEXED in FTS5, so `WHERE pmid=?`
+    is a full table scan and ten of them would be ten passes over 7.7M rows.
+    """
+    if not pmids:
+        return set()
+    qs = ",".join("?" * len(pmids))
+    rows = c.execute(f"SELECT pmid FROM doc WHERE pmid IN ({qs})", pmids)
+    return {r[0] for r in rows}
 
 
 def rank_of(rows: list[dict], pmid: str) -> int | None:
@@ -85,10 +110,15 @@ def assemble(db: Path = DB) -> dict:
     if total == 0:
         raise SystemExit("index is empty -- run corpus_retrieval_index.py first")
 
+    all_gold = [g for q in spec["queries"] for g in q["gold"]]
+    present = gold_in_index(c, all_gold)
+    missing = [g for g in all_gold if g not in present]
+
     per_query = []
     for q in spec["queries"]:
         row = {"id": q["id"], "question": q["question"], "concepts": q["concepts"],
-               "note": q.get("note", ""), "gold": q["gold"]}
+               "note": q.get("note", ""), "gold": q["gold"],
+               "gold_absent_from_index": [g for g in q["gold"] if g not in present]}
         for arm in ("a", "b"):
             row[arm] = run_arm(c, q, arm)
         per_query.append(row)
@@ -101,11 +131,19 @@ def assemble(db: Path = DB) -> dict:
             "mrr": sum(r[arm]["rr"] for r in per_query) / nq,
             "recall_at_k": sum(r[arm]["recall_at_k"] for r in per_query) / nq,
             "gold_found": sum(r[arm]["found"] for r in per_query),
-            "median_pool": sorted(r[arm]["pool"] for r in per_query)[nq // 2],
+            # statistics.median, not `sorted(...)[nq // 2]`, which is the
+            # upper-middle value for an even count and so would publish a
+            # number labelled "median" that is not one as soon as the gold
+            # file gains a sixth question.
+            "median_pool": int(statistics.median(r[arm]["pool"] for r in per_query)),
         }
     return {
         "docs_indexed": total,
         "queries": nq,
+        # Measured, not assumed. A non-empty `gold_missing_from_index` means
+        # the scores below are not a retrieval result at all.
+        "gold_in_index": len(present),
+        "gold_missing_from_index": missing,
         "gold_total": sum(len(r["gold"]) for r in per_query),
         "depth": DEPTH,
         "at_k": AT_K,
@@ -125,6 +163,27 @@ def render(d: dict) -> str:
     w(f"Measured over **{d['docs_indexed']:,} indexed titles and abstracts**, "
       f"{d['queries']} mechanism questions, {d['gold_total']} known-relevant papers.")
     w("")
+    missing = d.get("gold_missing_from_index", [])
+    if missing:
+        # A retrieval score over a corpus that does not hold the target is not
+        # a retrieval score. Say so FIRST, before any number, because the
+        # numbers below are then measuring the wrong thing entirely.
+        w(f"> **This is not a retrieval result.** {len(missing)} of "
+          f"{d['gold_total']} gold papers are absent from the index "
+          f"({', '.join('`' + m + '`' for m in missing[:8])}"
+          f"{', ...' if len(missing) > 8 else ''}), so the scores below "
+          f"measure a corpus gap and not a ranking. Both arms score zero on a "
+          f"question whose answer was never indexed, which is indistinguishable "
+          f"in the table from a ranking failure. Fix the index before reading "
+          f"further: this is the signature of indexing the expansion crawl "
+          f"without the census, because the crawl is the census's complement "
+          f"by construction.")
+        w("")
+    else:
+        w(f"All {d['gold_in_index']} of {d['gold_total']} gold papers are "
+          f"present in the index, checked by PMID at measurement time, so a "
+          f"miss below is a ranking failure rather than a corpus gap.")
+        w("")
     w("## The result")
     w("")
     w("| | arm A: bag of words | arm B: phrase + title weight |")
@@ -144,9 +203,11 @@ def render(d: dict) -> str:
 
     if ranking_win and not coverage_loss:
         w(f"Arm B wins on both axes: better ranking and no loss of reach. The "
-          f"corpus held these papers the whole time -- every gold item was "
-          f"verified present in `corpus/atlas/identity.sqlite` before the "
-          f"measurement ran.")
+          f"corpus held these papers the whole time -- {d['gold_in_index']} of "
+          f"{d['gold_total']} gold PMIDs were found in the index by the "
+          f"membership check above. An earlier version of this sentence "
+          f"credited a manual check against `identity.sqlite` that this script "
+          f"never performed; the claim is now the one it measures.")
     elif ranking_win and coverage_loss:
         w(f"**A trade, not a win, and the direction matters more than the "
           f"averages.** Arm B ranks better (MRR {b['mrr']:.3f} against "

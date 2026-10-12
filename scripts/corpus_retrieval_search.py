@@ -29,7 +29,10 @@ NEITHER ARM RANKS BY CITATIONS, deliberately. Citation rank is what produced
 the mortality tables: it sorts by fame, and fame is the thing a discovery
 query is trying to see past. Europe PMC records in this corpus carry no
 citation count anyway, so a popularity arm could only be run over the 18,938
-OpenAlex records -- too small a slice to compare against 2.5 million.
+records that carry one -- 0.2% of the index, too thin a slice to compare
+against the rest. The index size is deliberately not quoted here: it is
+reported by the generated artifacts, and a figure hand-written into a
+docstring goes stale the next time the corpus grows.
 """
 from __future__ import annotations
 

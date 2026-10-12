@@ -1,6 +1,8 @@
 {
   "docs_indexed": 7727217,
   "queries": 5,
+  "gold_in_index": 10,
+  "gold_missing_from_index": [],
   "gold_total": 10,
   "depth": 50,
   "at_k": 10,
@@ -34,6 +36,7 @@
         "35301496",
         "39423284"
       ],
+      "gold_absent_from_index": [],
       "a": {
         "arm": "a",
         "match": "{title abstract}: (\"engineered\" OR \"bacteria\" OR \"that\" OR \"tag\" OR \"tumors\" OR \"for\" OR \"immune\" OR \"recognition\")",
@@ -106,6 +109,7 @@
       "gold": [
         "35332124"
       ],
+      "gold_absent_from_index": [],
       "a": {
         "arm": "a",
         "match": "{title abstract}: (\"ultrasound\" OR \"controlled\" OR \"bacteria\" OR \"for\" OR \"cancer\" OR \"immunotherapy\")",
@@ -170,6 +174,7 @@
       "gold": [
         "30803049"
       ],
+      "gold_absent_from_index": [],
       "a": {
         "arm": "a",
         "match": "{title abstract}: (\"bacteria\" OR \"generating\" OR \"iron\" OR \"catalyzed\" OR \"fenton\" OR \"reaction\" OR \"in\" OR \"tumors\")",
@@ -235,6 +240,7 @@
         "33779497",
         "36890785"
       ],
+      "gold_absent_from_index": [],
       "a": {
         "arm": "a",
         "match": "{title abstract}: (\"gut\" OR \"microbiome\" OR \"metabolite\" OR \"regulating\" OR \"GPX4\" OR \"and\" OR \"ferroptosis\")",
@@ -301,6 +307,7 @@
       "gold": [
         "35265210"
       ],
+      "gold_absent_from_index": [],
       "a": {
         "arm": "a",
         "match": "{title abstract}: (\"ferroptosis\" OR \"in\" OR \"macrophages\" OR \"defending\" OR \"against\" OR \"intracellular\" OR \"bacteria\")",

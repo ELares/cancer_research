@@ -2,6 +2,8 @@
 
 Measured over **7,727,217 indexed titles and abstracts**, 5 mechanism questions, 10 known-relevant papers.
 
+All 10 of 10 gold papers are present in the index, checked by PMID at measurement time, so a miss below is a ranking failure rather than a corpus gap.
+
 ## The result
 
 | | arm A: bag of words | arm B: phrase + title weight |

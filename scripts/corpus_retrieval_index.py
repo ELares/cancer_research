@@ -297,19 +297,29 @@ def index_shard(c: sqlite3.Connection, path: Path, seen: set[str],
                     bad += 1
                     continue
                 key = doc_key(rec)
-                if key is not None:
-                    # Covers both the already-indexed case and a duplicate
-                    # within this same batch: the key is added to `seen` the
-                    # moment it is accepted, before the batch is flushed.
-                    if key in seen:
-                        continue
-                    seen.add(key)
+                # Covers both the already-indexed case and a duplicate within
+                # this same batch, because an accepted key joins `seen`
+                # immediately rather than at flush time.
+                if key is not None and key in seen:
+                    continue
                 row = to_row(rec)
                 if row is None:
                     continue
-                batch.append(row)
+                # CLAIMED ONLY ONCE THE ROW IS ACCEPTED. The first version
+                # added the key the moment it was read, one line ABOVE this
+                # rejection, so a record with neither title nor abstract --
+                # an ID-only stub, which the crawl emits -- burned the key for
+                # the real paper. The stub was dropped, the key stayed in
+                # `seen`, and the same paper arriving later WITH text was
+                # skipped as a duplicate. It also could not heal: the stub's
+                # key never reached the `seen` TABLE, so a resumed run would
+                # accept the record, but the shard is marked scanned and never
+                # re-read. Order matters because `seen` means "indexed", and
+                # a dropped record was not indexed.
                 if key is not None:
+                    seen.add(key)
                     keys.append((key,))
+                batch.append(row)
                 if len(batch) >= BATCH:
                     _flush(c, batch, keys)
                     added += len(batch)

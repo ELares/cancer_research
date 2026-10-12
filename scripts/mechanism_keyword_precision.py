@@ -51,7 +51,7 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO / "scripts"))
 from corpus_retrieval_index import DB, connect  # noqa: E402
-from corpus_retrieval_search import count, phrase_query, search  # noqa: E402
+from corpus_retrieval_search import count, phrase_query  # noqa: E402
 
 OUT_MD = REPO / "analysis" / "mechanism-keyword-precision.md"
 OUT_JSON = REPO / "analysis" / "mechanism-keyword-precision.json"
@@ -82,9 +82,12 @@ CANDIDATES = [
     # the infection and gut-health literatures own. In an UNRESTRICTED corpus
     # that would be right. This corpus is MeSH tree C04 plus an adjacent
     # extension -- cancer papers only -- so that literature was never in it,
-    # and both scored ABOVE two genuine candidates (59% and 46% against
-    # `magnetotactic bacteria` at 36%). The subject restriction had already
-    # done the discriminating, so the control had nothing left to pull in.
+    # and the subject restriction had already done the discriminating, leaving
+    # the control nothing to pull in. The scores that first showed this are NOT
+    # quoted here: they were measured over a smaller index and over the
+    # rank-ordered head that `inspect_pool` now refuses, so any figure written
+    # into this comment would contradict the artifact. The live numbers are in
+    # the table, which is generated.
     #
     # The control a cancer-restricted corpus needs is a microbe that is
     # PROMINENT in cancer and is not a therapy. `helicobacter pylori` is the
@@ -123,6 +126,39 @@ THERAPY_RE = re.compile(
     r"immunotherap\w*|antitumou?r)\b", re.I)
 
 
+def inspect_pool(c, match: str, depth: int, rng: random.Random) -> list[dict]:
+    """A UNIFORM sample of the pool, deliberately not the rank-ordered head.
+
+    THIS IS THE CIRCULARITY THE FIRST VERSION SHIPPED. It inspected
+    `search(c, m, limit=DEPTH)`, which defaults to W_TITLE_HEAVY, so bm25
+    selected the documents whose match fell in the TITLE -- and then
+    `aboutness` measured whether the TITLE carried the concept. Because a
+    candidate phrase CONTAINS its own concept word (the "bacteria" in
+    "engineered bacteria" is itself a CONCEPT_RE alternative), the ranking was
+    partly computing the number the measure reports.
+
+    Measured over this index, rank-ordered top 200 against a uniform sample of
+    the same pool: `helicobacter pylori` 43% against 24%, `probiotic` 27%
+    against 12%, `engineered bacteria` 63% against 52%. The inflation scales
+    with pool size, and the controls have the LARGEST pools, so the bias
+    pushed `best_control` up and the verdict toward refusing -- the direction
+    that made the refusal look earned. CONCEPT_RE was deliberately kept
+    separate from the candidate phrase to avoid exactly this, and the ranking
+    reintroduced it through the back door.
+
+    Rows are sorted before sampling because the unsorted order is a function of
+    how the index was built, which would make the draw depend on shard scan
+    order rather than on the seed.
+    """
+    rows = [{"pmid": p or "", "title": t or "", "year": y or ""}
+            for p, t, y in c.execute(
+                "SELECT pmid, title, year FROM doc WHERE doc MATCH ?", (match,))]
+    rows.sort(key=lambda r: (r["pmid"], r["title"]))
+    if len(rows) <= depth:
+        return rows
+    return rng.sample(rows, depth)
+
+
 def aboutness(rows: list[dict]) -> dict:
     """Share of matches whose TITLE names both a microbial agent and cancer.
 
@@ -143,18 +179,51 @@ def aboutness(rows: list[dict]) -> dict:
             "both_in_title": both / n}
 
 
+def _separation(real: list[dict], ctrl: list[dict]) -> dict:
+    """Standard error of the worst-real minus best-control gap.
+
+    Normal approximation to the difference of two binomial proportions, which
+    is the right order of magnitude here and is named rather than hidden: the
+    shares come from samples of at most DEPTH records, so a seven-point gap
+    between a 27% estimate over 168 and a 20% estimate over 200 is under two
+    standard errors and is NOT a clean separation, however the `>` reads.
+    """
+    if not real or not ctrl:
+        return {"separation_margin": 0.0, "separation_se": 0.0,
+                "separation_exceeds_noise": False}
+    lo = min(real, key=lambda r: r["both_in_title"])
+    hi = max(ctrl, key=lambda r: r["both_in_title"])
+    margin = lo["both_in_title"] - hi["both_in_title"]
+    var = 0.0
+    for r in (lo, hi):
+        n = max(r["inspected"], 1)
+        pr = r["both_in_title"]
+        var += pr * (1.0 - pr) / n
+    se = var ** 0.5
+    return {"separation_margin": margin,
+            "separation_se": se,
+            # Two standard errors, stated before the result as the bar.
+            "separation_exceeds_noise": bool(se > 0 and margin > 2.0 * se),
+            "separation_worst_real": lo["phrase"],
+            "separation_worst_real_n": lo["inspected"],
+            "separation_best_control": hi["phrase"],
+            "separation_best_control_n": hi["inspected"]}
+
+
 def assemble(db: Path = DB) -> dict:
     c = connect(db)
     total = c.execute("SELECT COUNT(*) FROM doc").fetchone()[0]
     if total == 0:
         raise SystemExit("index is empty -- run corpus_retrieval_index.py first")
 
-    rng = random.Random(SEED)
     rows_out, sample = [], []
     for cand in CANDIDATES:
         m = phrase_query([cand["phrase"]])
         pool = count(c, m)
-        hits = search(c, m, limit=DEPTH)
+        # Seeded PER CANDIDATE from the phrase, so one candidate's draw does
+        # not depend on how many candidates precede it in the list.
+        rng = random.Random(f"{SEED}:{cand['phrase']}")
+        hits = inspect_pool(c, m, DEPTH, rng)
         a = aboutness(hits)
         verdict = ("control" if cand["control"]
                    else ("admit" if a["both_in_title"] >= ABOUTNESS_FLOOR else "refuse"))
@@ -166,11 +235,10 @@ def assemble(db: Path = DB) -> dict:
             "verdict": verdict,
             "example_titles": [(r["title"] or "")[:90] for r in hits[:3]],
         })
-        # Deterministic judging sample. Sorted before shuffling, because the
-        # retrieval order is a function of how the index was built and an
-        # unsorted shuffle would make the draw depend on that rather than the
-        # seed.
-        pick = sorted(hits, key=lambda r: (r["pmid"] or "", r["title"] or ""))
+        # The judging sample comes out of the SAME uniform draw. Taking it from
+        # a rank-ordered head would hand a human reader the most title-like
+        # matches and call the resulting precision the keyword's.
+        pick = list(hits)
         rng.shuffle(pick)
         for r in pick[:SAMPLE_PER_CANDIDATE]:
             sample.append({"phrase": cand["phrase"], "pmid": r["pmid"],
@@ -184,6 +252,10 @@ def assemble(db: Path = DB) -> dict:
         "docs_indexed": total,
         "seed": SEED,
         "depth": DEPTH,
+        # Named in the data so a reader does not have to infer it from the
+        # code, and so a future change away from uniform sampling shows up in
+        # the diff of the artifact rather than only in the diff of the script.
+        "sampling": "uniform random draw from the whole pool, seeded per phrase",
         "aboutness_floor": ABOUTNESS_FLOOR,
         "candidates": rows_out,
         "sample": sample,
@@ -195,6 +267,14 @@ def assemble(db: Path = DB) -> dict:
             > max((r["both_in_title"] for r in ctrl), default=1.0)),
         "worst_real": min((r["both_in_title"] for r in real), default=0.0),
         "best_control": max((r["both_in_title"] for r in ctrl), default=0.0),
+        # IS THE SEPARATION BIGGER THAN THE NOISE? `control_separates` is a
+        # bare `>`, which calls a 1-record gap a win. Both shares are binomial
+        # estimates from samples of at most DEPTH, so the gap has a standard
+        # error and a strict inequality on its own overclaims. Reported so the
+        # page cannot announce discrimination it cannot support -- the same
+        # discipline `config.py` uses when it records 13.3% precision with its
+        # 95% CI and n rather than alone.
+        **_separation(real, ctrl),
     }
 
 
@@ -204,14 +284,41 @@ def render(d: dict) -> str:
     w("# Measuring a mechanism keyword before adding it")
     w("")
     w(f"Over **{d['docs_indexed']:,} indexed titles and abstracts**, "
-      f"top {d['depth']} matches inspected per candidate.")
+      f"up to {d['depth']} records per candidate drawn uniformly from its "
+      f"pool. NOT the top {d['depth']} by rank: ranking by title weight and "
+      f"then scoring whether the title carries the concept is circular, and "
+      f"the first version of this page did exactly that.")
     w("")
     w("## Does the measure discriminate?")
     w("")
-    if d["control_separates"]:
+    if d["control_separates"] and d.get("separation_exceeds_noise"):
         w(f"**Yes.** Every real candidate scores above every control "
-          f"({d['worst_real']:.0%} against {d['best_control']:.0%}), so the "
-          f"column below is reading something.")
+          f"({d['worst_real']:.0%} against {d['best_control']:.0%}), and the "
+          f"{d['separation_margin']:.0%} gap is more than twice its standard "
+          f"error ({d['separation_se']:.1%}), so the column below is reading "
+          f"something.")
+    elif d["control_separates"]:
+        # The bar was set before the result: a strict `>` on two sampled shares
+        # calls a one-record gap a win. This branch exists because the
+        # measurement landed in it -- removing the ranking circularity moved
+        # the verdict from "no" to a "yes" the sample sizes do not support.
+        w(f"**Not decidably.** Every real candidate does score above every "
+          f"control ({d['worst_real']:.0%} against {d['best_control']:.0%}), "
+          f"so the ordering is right, but the gap is "
+          f"{d['separation_margin']:.0%} against a standard error of "
+          f"{d['separation_se']:.1%} -- under two SE, so it is not separable "
+          f"from sampling noise.")
+        w("")
+        w(f"Both ends are binomial estimates over small samples: "
+          f"`{d['separation_worst_real']}` at {d['worst_real']:.0%} over "
+          f"{d['separation_worst_real_n']} records against "
+          f"`{d['separation_best_control']}` at {d['best_control']:.0%} over "
+          f"{d['separation_best_control_n']}. Reading the `>` alone would "
+          f"announce a calibrated measure on a narrow gap between two noisy "
+          f"numbers, which is how a measure gets trusted for the wrong reason. "
+          f"Treat the verdicts below as ordered but not validated, and note "
+          f"that the candidate establishing the lower bound is itself REFUSED "
+          f"by the {d['aboutness_floor']:.0%} floor.")
     else:
         w(f"**No.** The worst real candidate ({d['worst_real']:.0%}) does not "
           f"beat the best control ({d['best_control']:.0%}), so this measure "
@@ -244,18 +351,30 @@ def render(d: dict) -> str:
               f"Reporting only the {n_real - len(beaten)} that clear it would "
               f"be choosing the flattering half of the same table.")
             w("")
-        w("Two distinct reasons, and the second is the one that cannot be "
-          "tuned away. First, this corpus is MeSH tree C04 plus an adjacent "
-          "extension, so it holds cancer papers only: an organism word cannot "
-          "drag in the infection literature, because that literature was never "
-          "admitted -- which is why `salmonella typhimurium` and `probiotic` "
-          "are not controls here at all. Second, and decisively, a microbe "
-          "that CAUSES cancer produces titles naming both a microbe and a "
-          "cancer just as reliably as one that treats it. *Helicobacter "
-          "pylori* and gastric carcinoma is the clearest case in medicine. "
-          "Title co-occurrence cannot separate cause from cure, and this "
-          "mechanism is a therapy class, so the measure is answering a "
-          "different question from the one asked.")
+        # The two reasons name the controls they are about by READING which
+        # control binds and which are merely retained, rather than hard-writing
+        # phrases. An earlier version wrote "`salmonella typhimurium` and
+        # `probiotic` are not controls here at all" three lines below a comment
+        # boasting that the explanation was derived -- while the table beside it
+        # labelled both *(control)* and both counted toward `best_control`. The
+        # page contradicted itself about its own method.
+        slack = [r["phrase"] for r in d["candidates"]
+                 if r["control"] and binding
+                 and r["both_in_title"] < binding["both_in_title"]]
+        w(f"Two distinct reasons, and the second is the one that cannot be "
+          f"tuned away. First, this corpus is MeSH tree C04 plus an adjacent "
+          f"extension, so it holds cancer papers only: an organism word cannot "
+          f"drag in the infection literature, because that literature was "
+          f"never admitted. That is why "
+          + (", ".join(f"`{x}`" for x in slack) or "the organism-word controls")
+          + f" do not bind here -- they are retained in the table as a record "
+          f"of a control choice that did not work, not because they "
+          f"discriminate. Second, and decisively, a microbe that CAUSES cancer "
+          f"produces titles naming both a microbe and a cancer just as reliably "
+          f"as one that treats it. *Helicobacter pylori* and gastric carcinoma "
+          f"is the clearest case in medicine. Title co-occurrence cannot "
+          f"separate cause from cure, and this mechanism is a therapy class, so "
+          f"the measure is answering a different question from the one asked.")
         w("")
         w("The consequence is acted on rather than noted: **no keyword was "
           "added to the taxonomy on this evidence.** The sample below exists "
@@ -263,13 +382,18 @@ def render(d: dict) -> str:
     w("")
     w("## Candidates")
     w("")
-    w("| phrase | pool | microbe in title | + cancer in title | verdict |")
-    w("|---|--:|--:|--:|---|")
+    w("| phrase | pool | inspected | microbe in title | + cancer in title | verdict |")
+    w("|---|--:|--:|--:|--:|---|")
     for r in d["candidates"]:
         tag = " *(control)*" if r["control"] else ""
-        w(f"| `{r['phrase']}`{tag} | {r['pool']:,} | "
+        w(f"| `{r['phrase']}`{tag} | {r['pool']:,} | {r['inspected']:,} | "
           f"{r['microbe_in_title']:.0%} | {r['both_in_title']:.0%} | "
           f"{r['verdict']} |")
+    w("")
+    w(f"Inspected records are a {d['sampling']}, capped at {d['depth']}. A "
+      f"share over a small pool is a coarse number: where `inspected` is well "
+      f"below {d['depth']} the pool itself was that small, and one record "
+      f"moves the percentage by whole points.")
     w("")
     w(f"Admitted at the {d['aboutness_floor']:.0%} floor: "
       + (", ".join(f"`{p}`" for p in d["admitted"]) or "none"))
@@ -277,6 +401,13 @@ def render(d: dict) -> str:
     w(f"Refused: " + (", ".join(f"`{p}`" for p in d["refused"]) or "none"))
     w("")
     w("## What this does not establish")
+    w("")
+    w("**The taxonomy is unchanged by this page either way.** A phrase marked "
+      "`admit` has cleared a proxy at a stated floor, which is a reason to "
+      "read the sample, not a decision to tag articles with it. Admission is a "
+      "separate change with its own audit, because the keyword this instrument "
+      "exists to prevent -- `membrane potential`, 13.3% precision over 182 "
+      "articles -- would have cleared a floor like this one too.")
     w("")
     w("Title aboutness is a PROXY for topical precision, not a measurement of "
       "it. A paper can be about a mechanism its title does not name, and a "

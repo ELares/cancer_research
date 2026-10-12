@@ -280,7 +280,7 @@ def test_fts_syntax_in_a_question_does_not_crash_the_search(tmp_path):
 def test_the_evaluation_report_order_is_established_by_the_renderer():
     """The compensating guard for `corpus_retrieval_eval`'s freshness exemption.
 
-    That generator reads a ~5 GB gitignored index built from shards on external
+    That generator reads a 20 GB gitignored index built from shards on external
     storage, so `test_artifact_freshness.py` cannot regenerate it and exempts
     it -- and exemption removes it from that file's LIVE list, which is what
     its order gate iterates. So the property that gate would have checked is
@@ -311,6 +311,7 @@ def test_the_evaluation_report_order_is_established_by_the_renderer():
         return {
             "docs_indexed": 100, "queries": len(qs), "gold_total": len(qs),
             "depth": 50, "at_k": 10,
+            "gold_in_index": len(qs), "gold_missing_from_index": [],
             "aggregate": {
                 "a": {"mrr": 0.33, "recall_at_k": 1.0, "gold_found": 1, "median_pool": 10},
                 "b": {"mrr": 1.0, "recall_at_k": 1.0, "gold_found": 1, "median_pool": 2},
@@ -341,6 +342,7 @@ def test_the_evaluation_states_its_verdict_from_the_numbers():
     def spec(a_mrr, b_mrr):
         return {
             "docs_indexed": 100, "queries": 1, "gold_total": 1, "depth": 50, "at_k": 10,
+            "gold_in_index": 1, "gold_missing_from_index": [],
             "aggregate": {
                 "a": {"mrr": a_mrr, "recall_at_k": 0.5, "gold_found": 1, "median_pool": 10},
                 "b": {"mrr": b_mrr, "recall_at_k": 0.5, "gold_found": 1, "median_pool": 2},
@@ -409,6 +411,7 @@ def test_the_keyword_report_order_is_established_by_the_renderer():
     def spec(order):
         return {
             "docs_indexed": 100, "seed": 1, "depth": 10, "aboutness_floor": 0.3,
+            "sampling": "uniform random draw from the whole pool",
             "candidates": [
                 {"phrase": p, "control": False, "pool": 5, "inspected": 5,
                  "microbe_in_title": 0.8, "both_in_title": 0.6,
@@ -417,6 +420,10 @@ def test_the_keyword_report_order_is_established_by_the_renderer():
             ],
             "sample": [], "admitted": list(order), "refused": [],
             "control_separates": True, "worst_real": 0.6, "best_control": 0.1,
+            "separation_margin": 0.5, "separation_se": 0.03,
+            "separation_exceeds_noise": True,
+            "separation_worst_real": "alpha", "separation_worst_real_n": 200,
+            "separation_best_control": "ctrl", "separation_best_control_n": 200,
         }
 
     first = mk.render(spec(["alpha", "beta"]))
@@ -440,10 +447,16 @@ def test_the_keyword_report_refuses_to_endorse_a_measure_that_does_not_separate(
     def spec(separates):
         return {
             "docs_indexed": 100, "seed": 1, "depth": 10, "aboutness_floor": 0.3,
+            "sampling": "uniform random draw from the whole pool",
             "candidates": [], "sample": [], "admitted": ["x"], "refused": [],
             "control_separates": separates,
             "worst_real": 0.1 if not separates else 0.6,
             "best_control": 0.5 if not separates else 0.1,
+            "separation_margin": -0.4 if not separates else 0.5,
+            "separation_se": 0.03,
+            "separation_exceeds_noise": bool(separates),
+            "separation_worst_real": "r", "separation_worst_real_n": 200,
+            "separation_best_control": "c", "separation_best_control_n": 200,
         }
 
     good = mk.render(spec(True))
@@ -523,7 +536,7 @@ def test_the_verdict_cannot_claim_a_win_while_coverage_falls():
     def spec(a_mrr, b_mrr, a_found, b_found):
         return {
             "docs_indexed": 100, "queries": 1, "gold_total": 5, "depth": 50,
-            "at_k": 10,
+            "at_k": 10, "gold_in_index": 5, "gold_missing_from_index": [],
             "aggregate": {
                 "a": {"mrr": a_mrr, "recall_at_k": 0.5, "gold_found": a_found,
                       "median_pool": 1000},
@@ -592,3 +605,258 @@ def test_the_concept_pattern_still_rejects_something():
                  "Ferroptosis and lipid peroxidation"):
         assert not mk.CONCEPT_RE.search(text), (
             f"CONCEPT_RE matched {text!r}, which names no microbe")
+
+
+def test_the_keyword_measure_does_not_inspect_a_title_ranked_head(tmp_path):
+    """The circularity that inflated every row of the first keyword table.
+
+    `aboutness` asks what share of matches name the concept in the TITLE. The
+    first version handed it `search(c, m, limit=DEPTH)`, whose default weights
+    are W_TITLE_HEAVY, so bm25 had already selected the documents matching in
+    the title -- and a candidate phrase contains its own concept word, so the
+    ranking was partly producing the number. Measured on the real index the
+    inflation reached 43% against 24% for `helicobacter pylori`, and it scaled
+    with pool size, so it hit the CONTROLS hardest and pushed the verdict
+    toward refusing.
+
+    The fixture separates the two populations: twenty records carry the phrase
+    in the title, twenty carry it only in the abstract. A title-weighted head
+    of ten is therefore all title-matches and scores 100%; a uniform draw must
+    reach the abstract-only half and score lower.
+    """
+    import random
+
+    import mechanism_keyword_precision as mk
+
+    c = _db(tmp_path)
+    rows = []
+    for i in range(20):
+        rows.append(("Engineered bacteria attack the tumor %d" % i,
+                     "An unrelated abstract body.", "", f"T{i:03}"))
+    for i in range(20):
+        rows.append(("A study of delivery vectors %d" % i,
+                     "Here we use engineered bacteria against a tumor.", "",
+                     f"A{i:03}"))
+    for title, abstract, mesh, pmid in rows:
+        c.execute(
+            "INSERT INTO doc (title, abstract, mesh, pmid, pmcid, doi, journal,"
+            " year, has_text, cited_by) VALUES (?,?,?,?,'','','','',0,-1)",
+            (title, abstract, mesh, pmid))
+    c.commit()
+
+    m = rs.phrase_query(["engineered bacteria"])
+    assert rs.count(c, m) == 40, "fixture must put every record in the pool"
+
+    ranked = rs.search(c, m, rs.W_TITLE_HEAVY, limit=10)
+    assert all(r["pmid"].startswith("T") for r in ranked), (
+        "fixture is not exercising the defect: the title-weighted head should "
+        "be entirely title-matches")
+    assert mk.aboutness(ranked)["both_in_title"] == 1.0
+
+    drawn = mk.inspect_pool(c, m, 10, random.Random("fixed"))
+    assert len(drawn) == 10
+    assert any(r["pmid"].startswith("A") for r in drawn), (
+        "a uniform draw over a 20/20 pool reached no abstract-only record, so "
+        "it is still sampling the ranked head")
+    assert mk.aboutness(drawn)["both_in_title"] < 1.0, (
+        "the uniform draw scores the same as the title-ranked head, which is "
+        "the circularity this test exists to prevent")
+    c.close()
+
+
+def test_the_keyword_sample_is_drawn_from_the_same_uniform_set(tmp_path):
+    """The judging sample must not be the most title-like matches either.
+
+    A human reading a sample to decide precision is deciding it for the
+    KEYWORD, over its pool. Handing them the bm25 head would hand them the
+    easiest records and call the result the keyword's precision -- the same
+    defect as the measure, one step further downstream where it is harder to
+    see.
+    """
+    import random
+
+    import mechanism_keyword_precision as mk
+
+    c = _db(tmp_path)
+    for i in range(30):
+        where = ("Engineered bacteria in tumor %d" % i, "Body text.") if i < 15 \
+            else ("Vector study %d" % i, "We use engineered bacteria in tumor work.")
+        c.execute(
+            "INSERT INTO doc (title, abstract, mesh, pmid, pmcid, doi, journal,"
+            " year, has_text, cited_by) VALUES (?,?,'',?,'','','','',0,-1)",
+            (where[0], where[1], f"P{i:03}"))
+    c.commit()
+    m = rs.phrase_query(["engineered bacteria"])
+    drawn = mk.inspect_pool(c, m, 12, random.Random("fixed"))
+    titled = sum(1 for r in drawn if r["title"].lower().startswith("engineered"))
+    assert 0 < titled < 12, (
+        f"a uniform draw of 12 from a 15/15 pool gave {titled} title-matches; "
+        "an all-or-nothing split means the draw is following the ranking")
+    c.close()
+
+
+def test_the_evaluation_refuses_to_call_a_corpus_gap_a_ranking_result():
+    """0.000 on both arms is what the WRONG CORPUS looks like.
+
+    This already happened: indexing the expansion crawl alone put none of the
+    gold in the index, both arms scored zero, and the page rendered a verdict
+    about RANKING. The crawl skips anything `is_held()` knows, so it is the
+    census's complement and cannot hold a paper the census had. The report has
+    to distinguish "ranked badly" from "never indexed", and it can only do that
+    if membership is measured rather than taken from the gold file's prose.
+    """
+    import corpus_retrieval_eval as ev
+
+    def spec(missing):
+        return {
+            "docs_indexed": 7_727_217, "queries": 1, "gold_total": 2,
+            "depth": 50, "at_k": 10,
+            "gold_in_index": 2 - len(missing),
+            "gold_missing_from_index": missing,
+            "aggregate": {
+                "a": {"mrr": 0.0, "recall_at_k": 0.0, "gold_found": 0, "median_pool": 9},
+                "b": {"mrr": 0.0, "recall_at_k": 0.0, "gold_found": 0, "median_pool": 9}},
+            "per_query": [{
+                "id": "q", "question": "q?", "concepts": ["x"], "note": "",
+                "gold": ["111", "222"], "gold_absent_from_index": missing,
+                "a": {"pool": 9, "found": 0, "gold_total": 2, "ranks": {}, "top3": []},
+                "b": {"pool": 9, "found": 0, "gold_total": 2, "ranks": {}, "top3": []}}],
+            "provenance": "prov.", "known_bias": "bias."}
+
+    red = ev.render(spec(["111", "222"]))
+    assert "not a retrieval result" in red.lower(), (
+        "an index holding none of the gold rendered as an ordinary result")
+    assert red.index("not a retrieval result") < red.index("| MRR |"), (
+        "the warning must come BEFORE the score table, or it is a footnote on "
+        "a number the reader has already believed")
+    assert "complement" in red, (
+        "the page should name the known cause, which is the crawl being the "
+        "census's complement by construction")
+
+    ok = ev.render(spec([]))
+    assert "not a retrieval result" not in ok.lower(), (
+        "a complete index must not carry the corpus-gap warning")
+    assert "present in the index" in ok
+
+
+def test_the_keyword_report_will_not_call_a_gap_inside_the_noise_a_separation():
+    """`control_separates` is a bare `>` and would call a one-record gap a win.
+
+    This matters because it actually happened in the other direction: removing
+    the title-ranking circularity moved the verdict from "does not
+    discriminate" to a `>` that holds by seven points between a 27% estimate
+    over 168 records and a 20% estimate over 200. A page that announces a
+    calibrated measure on that is how an instrument gets trusted for the wrong
+    reason, so the headline has to read the margin against its own standard
+    error and not just the inequality.
+    """
+    import mechanism_keyword_precision as mk
+
+    def spec(worst, best, n, exceeds):
+        return {
+            "docs_indexed": 100, "seed": 1, "depth": 200, "aboutness_floor": 0.3,
+            "sampling": "uniform random draw from the whole pool",
+            "candidates": [], "sample": [], "admitted": [], "refused": [],
+            "control_separates": True,
+            "worst_real": worst, "best_control": best,
+            "separation_margin": worst - best,
+            "separation_se": 0.04,
+            "separation_exceeds_noise": exceeds,
+            "separation_worst_real": "real", "separation_worst_real_n": n,
+            "separation_best_control": "ctrl", "separation_best_control_n": n,
+        }
+
+    thin = mk.render(spec(0.27, 0.20, 200, False))
+    assert "Not decidably" in thin, (
+        "a gap inside its own standard error was announced as discrimination")
+    assert "**Yes.**" not in thin
+
+    wide = mk.render(spec(0.90, 0.10, 200, True))
+    assert "**Yes.**" in wide, (
+        "a gap of 80 points over n=200 must still be reportable as a "
+        "separation, or this guard just suppresses every positive result")
+    assert "Not decidably" not in wide
+
+
+def test_the_separation_standard_error_falls_as_the_sample_grows():
+    """A noise bound that ignores n is decoration.
+
+    The whole point of computing an SE is that the same observed gap means
+    different things over 20 records and over 2,000. If `_separation` returned
+    a constant, the guard above would pass while measuring nothing.
+    """
+    import mechanism_keyword_precision as mk
+
+    def rows(n):
+        real = [{"phrase": "r", "both_in_title": 0.30, "inspected": n}]
+        ctrl = [{"phrase": "c", "both_in_title": 0.20, "inspected": n}]
+        return mk._separation(real, ctrl)
+
+    small, large = rows(20), rows(2000)
+    assert small["separation_margin"] == pytest.approx(large["separation_margin"]), \
+        "the fixture must hold the observed gap fixed and vary only n"
+    assert small["separation_se"] > large["separation_se"], (
+        "the standard error did not fall as the sample grew, so it is not a "
+        "function of n")
+    assert not small["separation_exceeds_noise"], (
+        "a 10-point gap over 20 records is well inside the noise")
+    assert large["separation_exceeds_noise"], (
+        "the same 10-point gap over 2,000 records is real and must be "
+        "reportable, or the bound rejects everything")
+
+
+def test_a_textless_stub_does_not_burn_the_key_for_the_real_paper(tmp_path):
+    """A record that is DROPPED must not be recorded as indexed.
+
+    `seen` means "this paper is in the index". The first version added the key
+    the moment it read it -- one line above the check that drops a record with
+    neither title nor abstract -- so an ID-only stub claimed the key, was
+    discarded, and the same paper arriving later WITH text was skipped as a
+    duplicate. It could not heal either: the stub's key never reached the
+    `seen` table, so a resumed run would accept the record, but the shard is
+    marked scanned and never read again.
+
+    Measured on the real corpus: 21 of 17,584 sampled census records carry an
+    identity key and no indexable text (0.12% of that slice), so the stubs
+    that claim a key exist. This fixture makes the loss they enable explicit.
+    """
+    stub = {"pmid": "40000001"}                      # keyed, no title, no abstract
+    real = {"pmid": "40000001",
+            "title": "Engineered bacteria for pancreatic cancer",
+            "abstract": "The paper that answers the question."}
+    _shard(tmp_path / "a-stub.jsonl.gz", [stub])
+    _shard(tmp_path / "b-real.jsonl.gz", [real])
+
+    c = _db(tmp_path)
+    seen: set[str] = set()
+    # Scan order matters: the stub is read first, exactly as sorted shard
+    # order would deliver it.
+    ri.index_shard(c, tmp_path / "a-stub.jsonl.gz", seen, verbose=False)
+    ri.index_shard(c, tmp_path / "b-real.jsonl.gz", seen, verbose=False)
+
+    titles = [r[0] for r in c.execute("SELECT title FROM doc")]
+    assert titles == ["Engineered bacteria for pancreatic cancer"], (
+        f"the real paper was lost behind a textless stub sharing its PMID: "
+        f"indexed titles were {titles}")
+    assert c.execute("SELECT COUNT(*) FROM seen").fetchone()[0] == 1, (
+        "the key should be claimed exactly once, by the record that was "
+        "actually indexed")
+    c.close()
+
+
+def test_the_stub_itself_is_still_not_indexed(tmp_path):
+    """The complement, so the fix above cannot be 'index everything'.
+
+    Relaxing the dedup claim must not relax the text requirement: a record
+    with no title and no abstract has nothing for FTS5 to match and indexing
+    it could only add noise to every pool.
+    """
+    _shard(tmp_path / "only-stubs.jsonl.gz",
+           [{"pmid": "40000002"}, {"pmid": "40000003", "title": "", "abstract": ""}])
+    c = _db(tmp_path)
+    added, bad = ri.index_shard(c, tmp_path / "only-stubs.jsonl.gz", set(), verbose=False)
+    assert added == 0, "a textless record was indexed"
+    assert bad == 0, "a textless record is not a PARSE failure and must not be counted as one"
+    assert c.execute("SELECT COUNT(*) FROM seen").fetchone()[0] == 0, (
+        "a record that was never indexed must not claim a dedup key")
+    c.close()

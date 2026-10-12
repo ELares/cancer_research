@@ -2,6 +2,7 @@
   "docs_indexed": 7727217,
   "seed": 20261011,
   "depth": 200,
+  "sampling": "uniform random draw from the whole pool, seeded per phrase",
   "aboutness_floor": 0.3,
   "candidates": [
     {
@@ -9,13 +10,13 @@
       "control": false,
       "pool": 473,
       "inspected": 200,
-      "microbe_in_title": 0.975,
-      "both_in_title": 0.63,
+      "microbe_in_title": 0.825,
+      "both_in_title": 0.54,
       "verdict": "admit",
       "example_titles": [
-        "Engineered bacteria assist CAR-cell immunotherapy.",
-        "The emerging landscape of engineered bacteria cancer therapies.",
-        "Can engineered bacteria help control cancer?"
+        "Metabolic Reprogramming by Engineered Probiotics Potentiates Tumor Chemodynamic Immunother",
+        "Construction and expression of recombinant uricase\u2011expressing genetically engineered bacte",
+        "Trojan Nanobacteria System for Photothermal Programmable Destruction of Deep Tumor Tissues"
       ]
     },
     {
@@ -24,12 +25,12 @@
       "pool": 201,
       "inspected": 200,
       "microbe_in_title": 0.825,
-      "both_in_title": 0.615,
+      "both_in_title": 0.61,
       "verdict": "admit",
       "example_titles": [
-        "Bacterial therapy: a promising strategy for cancer immunotherapy.",
-        "Engineering advanced bacterial therapy for tumor and inflammatory diseases.",
-        "Bacterial therapies at the interface of synthetic biology and nanomedicine."
+        "Microbial Therapeutics in Oncology: A Comprehensive Review of Bacterial Role in Cancer Tre",
+        "Design of combination therapy for engineered bacterial therapeutics in non-small cell lung",
+        "The preclinical discovery of bacterial therapy for the treatment of metastatic cancer with"
       ]
     },
     {
@@ -41,9 +42,9 @@
       "both_in_title": 0.6666666666666666,
       "verdict": "admit",
       "example_titles": [
-        "Exploring Bacteria-Based Cancer Immunotherapy: Comment on \"Discovery of Intratumoral Oncol",
         "Discovery of Intratumoral Oncolytic Bacteria Toward Targeted Anticancer Theranostics (Adv.",
-        "Reply to \"Exploring Bacteria-Based Cancer Immunotherapy\"-Comment on \"Discovery of Intratum"
+        "Combining anaerobic bacterial oncolysis with vaccination that blocks interleukin-10 signal",
+        "Brief Communication; A Heterologous Oncolytic Bacteria-Virus Prime-Boost Approach for Anti"
       ]
     },
     {
@@ -55,9 +56,9 @@
       "both_in_title": 0.9166666666666666,
       "verdict": "admit",
       "example_titles": [
-        "Tracking down tumor-targeting bacteria.",
-        "Quantitative bioluminescence imaging of tumor-targeting bacteria in living animals.",
-        "Setting \"cold\" tumors on fire: Cancer therapy with live tumor-targeting bacteria."
+        "Enhanced therapeutic effect by combination of tumor-targeting Salmonella and endostatin in",
+        "Tumor-targeting Salmonella typhimurium improves cyclophosphamide chemotherapy at maximum t",
+        "Oral delivery of tumor-targeting Salmonella for cancer therapy in murine tumor models."
       ]
     },
     {
@@ -69,9 +70,9 @@
       "both_in_title": 0.9642857142857143,
       "verdict": "admit",
       "example_titles": [
-        "Optimizing Salmonella enterica serovar Typhimurium for bacteria-mediated tumor therapy.",
-        "Research progress on ultrasound in bacteria-mediated tumor treatment.",
-        "Bacteria-Mediated Tumor Therapy via Photothermally-Programmed Cytolysin A Expression."
+        "Containment of tumor-colonizing bacteria by host neutrophils.",
+        "Avitalized bacteria mediate tumor growth control via activation of innate immunity.",
+        "Induction of CD4(+) and CD8(+) anti-tumor effector T cell responses by bacteria mediated t"
       ]
     },
     {
@@ -79,13 +80,13 @@
       "control": false,
       "pool": 384,
       "inspected": 200,
-      "microbe_in_title": 0.935,
-      "both_in_title": 0.59,
+      "microbe_in_title": 0.83,
+      "both_in_title": 0.535,
       "verdict": "admit",
       "example_titles": [
-        "Correction: Triptolide modulates tumour-colonisation and anti-tumour effect of attenuated ",
-        "Corrigendum to \"Attenuated Salmonella carrying siRNA-CD24 improved the effect of oxaliplat",
-        "Re: enhanced therapeutic effect of cisplatin on the prostate cancer in tumor-bearing mice "
+        "Dietary pectin attenuates Salmonella typhimurium-induced colitis by modulating the TLR2-NF",
+        "Targeted cancer immunotherapy with genetically engineered oncolytic Salmonella typhimurium",
+        "Alive attenuated Salmonella as a cargo shuttle for smart carrying of gold nanoparticles to"
       ]
     },
     {
@@ -97,9 +98,9 @@
       "both_in_title": 0.5818181818181818,
       "verdict": "admit",
       "example_titles": [
-        "Intratumoral Clostridium novyi as a potential treatment for solid necrotic brain tumors.",
-        "Isolation of Clostridium novyi (Cl. oedematiens) from liver lesions in a dog with pancreat",
-        "Clostridium novyi exhibits antitumor effect in mice transplanted with H22 hepatocarcinoma "
+        "Combination bacteriolytic therapy for the treatment of experimental tumors.",
+        "Overcoming the hypoxic barrier to radiation therapy with anaerobic bacteria.",
+        "Bacteriolytic therapy can generate a potent immune response against experimental tumors."
       ]
     },
     {
@@ -107,13 +108,13 @@
       "control": false,
       "pool": 227,
       "inspected": 200,
-      "microbe_in_title": 0.735,
-      "both_in_title": 0.365,
+      "microbe_in_title": 0.71,
+      "both_in_title": 0.36,
       "verdict": "admit",
       "example_titles": [
-        "Anti-tumor immunotherapy using engineered bacterial outer membrane vesicles fused to lysos",
-        "Bioengineered bacterial outer membrane vesicles: what is their potential in cancer therapy",
-        "Correction: Bacterial outer membrane vesicle-cancer cell hybrid membrane-coated nanopartic"
+        "Recent advances in bacterial outer membrane vesicles: Effects on the immune system, mechan",
+        "A STING-adjuvanted outer membrane vesicle nanoparticle vaccine vs. Klebsiella pneumoniae e",
+        "Salmonella-mediated blood\u2012brain barrier penetration, tumor homing and tumor microenvironme"
       ]
     },
     {
@@ -125,9 +126,9 @@
       "both_in_title": 0.26785714285714285,
       "verdict": "refuse",
       "example_titles": [
-        "Magnetotactic bacteria for cancer therapy.",
-        "An Investigation of the Sensing Capabilities of Magnetotactic Bacteria.",
-        "Magnetotactic bacteria: nanodrivers of the future."
+        "Magnetotactic bacteria for cancer therapy",
+        "Towards MRI-controlled ferromagnetic and MC-1 magnetotactic bacterial carriers for targete",
+        "Magnetic separation of melanoma-specific cytotoxic T lymphocytes from a vaccinated melanom"
       ]
     },
     {
@@ -139,9 +140,9 @@
       "both_in_title": 0.8,
       "verdict": "admit",
       "example_titles": [
-        "Programmable bacteria as cancer therapy.",
-        "Programmable-bacteria-macrophage backpacks for enhanced solid tumor therapy via mechanobio",
-        "Programmable bacteria synergize with PD-1 blockade to overcome cancer cell-intrinsic immun"
+        "Subversion of host genome integrity by bacterial pathogens.",
+        "Bacteria-Mediated Tumor Therapy Utilizing Photothermally-Controlled TNF-\u03b1 Expression via O",
+        "Programmable bacteria induce durable tumor regression and systemic antitumor immunity."
       ]
     },
     {
@@ -149,13 +150,13 @@
       "control": true,
       "pool": 18961,
       "inspected": 200,
-      "microbe_in_title": 1.0,
-      "both_in_title": 0.43,
+      "microbe_in_title": 0.67,
+      "both_in_title": 0.195,
       "verdict": "control",
       "example_titles": [
-        "[Gastrointestinal Diseases in the Era without Helicobacter pylori infection. Topics: III. ",
-        "The Role of Inflammatory Cytokines in the Pathogenesis of and Protection Against Helicobac",
-        "NIH Consensus Conference. Helicobacter pylori in peptic ulcer disease. NIH Consensus Devel"
+        "Antibacterial and anti-atrophic effects of a highly soluble, acid stable UDCA formula in H",
+        "A nested case-control study of the association of Helicobacter pylori infection with gastr",
+        "Rubropunctatin-silver composite nanoliposomes for eradicating Helicobacter pylori in vitro"
       ]
     },
     {
@@ -163,13 +164,13 @@
       "control": true,
       "pool": 11816,
       "inspected": 200,
-      "microbe_in_title": 1.0,
-      "both_in_title": 0.105,
+      "microbe_in_title": 0.8,
+      "both_in_title": 0.14,
       "verdict": "control",
       "example_titles": [
-        "Tropheryma whipplei Endocarditis Diagnosed by Tissue 16S rRNA Gene Sequencing: A Case Repo",
-        "The Brief Case: Bartonella quintana aortic and mitral valve endocarditis identified throug",
-        "Whole 16S rRNA sequencing of the oral microbiome predicts postoperative pancreatic fistula"
+        "Microbiome changes involves in mercaptopurine mediated anti-inflammatory response in acute",
+        "Gut Microbiota Signatures in Gestational Anemia.",
+        "DNA nanotechnology for nucleic acid analysis: sensing of nucleic acids with DNA junction-p"
       ]
     },
     {
@@ -177,13 +178,13 @@
       "control": true,
       "pool": 3283,
       "inspected": 200,
-      "microbe_in_title": 1.0,
-      "both_in_title": 0.115,
+      "microbe_in_title": 0.52,
+      "both_in_title": 0.085,
       "verdict": "control",
       "example_titles": [
-        "SELFER MUTANTS OF SALMONELLA TYPHIMURIUM.",
-        "Mutator Factor in Salmonella Typhimurium.",
-        "Proline Mutants of Salmonella Typhimurium."
+        "Comprehensive efficacy of nano-formulated mixed probiotics on broiler chickens' performanc",
+        "The in vivo lipolytic effect of Salmonella typhimurium endotoxin.",
+        "Some basic properties of biological tissues for potential biomedical applications of milli"
       ]
     },
     {
@@ -191,113 +192,141 @@
       "control": true,
       "pool": 16034,
       "inspected": 200,
-      "microbe_in_title": 1.0,
-      "both_in_title": 0.27,
+      "microbe_in_title": 0.775,
+      "both_in_title": 0.07,
       "verdict": "control",
       "example_titles": [
-        "Moving from probiotics to precision probiotics.",
-        "Probiotics lead to a new frontier in tumor fighting: tumor vaccines based on probiotics.",
-        "A Probiotic Friend."
+        "Epigenetic modulation of the gut-muscle axis in pompe disease: Microbiota fingerprints to ",
+        "Efficacy of Probiotics as Prophylaxis for Urinary Tract Infections in Premenopausal Women:",
+        "Leaky Gut As a Danger Signal for Autoimmune Diseases."
       ]
     }
   ],
   "sample": [
     {
       "phrase": "engineered bacteria",
-      "pmid": "38623680",
+      "pmid": "38995045",
       "year": "2024",
-      "title": "Engineered Bacteria Detect Tumor DNA: Evaluation and Prospect.",
+      "title": "H-NS involved in positive regulation of glycerol dehydratase gene expression in Klebsiella pneumoniae 2e.",
       "verdict": ""
     },
     {
       "phrase": "engineered bacteria",
-      "pmid": "41685512",
-      "year": "2026",
-      "title": "Correction: Metabolically engineered bacteria as light-controlled living therapeutics for anti-angiogenesis tumor therapy.",
+      "pmid": "40154768",
+      "year": "2025",
+      "title": "Self-luminous nanoengineered bacteria with the sustained release of interleukin 2 as an in situ vaccine for enhanced cancer immunotherapy.",
       "verdict": ""
     },
     {
       "phrase": "engineered bacteria",
-      "pmid": "34616044",
+      "pmid": "41394872",
+      "year": "2025",
+      "title": "Respiratory microbiome-host interaction on lung carcinogenesis, immunity, and immunotherapy.",
+      "verdict": ""
+    },
+    {
+      "phrase": "engineered bacteria",
+      "pmid": "34733783",
       "year": "2021",
-      "title": "Metabolic modulation of tumours with engineered bacteria for immunotherapy.",
+      "title": "Gut Microbiota-Derived Metabolites in Colorectal Cancer: The Bad and the Challenges.",
       "verdict": ""
     },
     {
       "phrase": "engineered bacteria",
-      "pmid": "38886343",
-      "year": "2024",
-      "title": "Hyperbaric oxygen enhances tumor penetration and accumulation of engineered bacteria for synergistic photothermal immunotherapy.",
-      "verdict": ""
-    },
-    {
-      "phrase": "engineered bacteria",
-      "pmid": "42039279",
-      "year": "2026",
-      "title": "Engineered bacteria reprogram tumor microenvironment via cell senescence and neutrophil extracellular traps degradation.",
-      "verdict": ""
-    },
-    {
-      "phrase": "engineered bacteria",
-      "pmid": "41436657",
-      "year": "2026",
-      "title": "Publisher Correction: Surface expression of antitoxin on engineered bacteria neutralizes genotoxic colibactin in the gut.",
-      "verdict": ""
-    },
-    {
-      "phrase": "engineered bacteria",
-      "pmid": "39165407",
-      "year": "2024",
-      "title": "Engineering Bacteria and Their Derivatives for Cancer Immunotherapy.",
-      "verdict": ""
-    },
-    {
-      "phrase": "engineered bacteria",
-      "pmid": "39801378",
+      "pmid": "40228606",
       "year": "2025",
-      "title": "Engineered Bacteria for Disease Diagnosis and Treatment Using Synthetic Biology.",
+      "title": "Designing live bacterial therapeutics for cancer.",
       "verdict": ""
     },
     {
       "phrase": "engineered bacteria",
-      "pmid": "39696900",
-      "year": "2025",
-      "title": "Engineered Bacteria Manipulate Cysteine Metabolism to Boost Ferroptosis-Based Pancreatic Ductal Adenocarcinoma Therapy.",
-      "verdict": ""
-    },
-    {
-      "phrase": "engineered bacteria",
-      "pmid": "39554157",
-      "year": "2024",
-      "title": "Tumor-specific antibodies elicited by engineered bacteria promote bladder cancer immunotherapy.",
-      "verdict": ""
-    },
-    {
-      "phrase": "bacterial therapy",
-      "pmid": "38346140",
-      "year": "2024",
-      "title": "Tumor-targeting bacteria as immune stimulants - the future of cancer immunotherapy?",
-      "verdict": ""
-    },
-    {
-      "phrase": "bacterial therapy",
-      "pmid": "38809459",
-      "year": "2024",
-      "title": "PD-1/PD-L1 inhibitors for early and middle stage microsatellite high-instability and stable colorectal cancer: a review.",
-      "verdict": ""
-    },
-    {
-      "phrase": "bacterial therapy",
-      "pmid": "31771178",
+      "pmid": "30674978",
       "year": "2019",
-      "title": "Bacteriotherapy in Breast Cancer.",
+      "title": "Administration of N-Acyl-Phosphatidylethanolamine Expressing Bacteria to Low Density Lipoprotein Receptor -/- Mice Improves Indices of Cardiometabolic Disease.",
+      "verdict": ""
+    },
+    {
+      "phrase": "engineered bacteria",
+      "pmid": "42701446",
+      "year": "2026",
+      "title": "Engineered bacteria reverses tumor cuproptosis resistance via cancer-associated fibroblast reprogramming for enhanced immunotherapy.",
+      "verdict": ""
+    },
+    {
+      "phrase": "engineered bacteria",
+      "pmid": "39346533",
+      "year": "2024",
+      "title": "Enhancing photothermal therapy of tumors with image-guided thermal control of gene-expressing bacteria.",
+      "verdict": ""
+    },
+    {
+      "phrase": "engineered bacteria",
+      "pmid": "40914466",
+      "year": "2025",
+      "title": "Microbiome unlocks cancer immunotherapeutic potential: State of the art and future.",
+      "verdict": ""
+    },
+    {
+      "phrase": "engineered bacteria",
+      "pmid": "39185788",
+      "year": "2024",
+      "title": "NIR-II-Responsive Hybrid System Achieves Cascade-Augmented Antitumor Immunity via Genetic Engineering of Both Bacteria and Tumor Cells.",
       "verdict": ""
     },
     {
       "phrase": "bacterial therapy",
-      "pmid": "26221421",
-      "year": "2015",
-      "title": "Genome sequence of Clostridium sporogenes DSM 795(T), an amino acid-degrading, nontoxic surrogate of neurotoxin-producing Clostridium botulinum.",
+      "pmid": "22342917",
+      "year": "2012",
+      "title": "Combining bacterial-immunotherapy with therapeutic antibodies: a novel therapeutic concept.",
+      "verdict": ""
+    },
+    {
+      "phrase": "bacterial therapy",
+      "pmid": "40873322",
+      "year": "2025",
+      "title": "[Laser-assisted spatiotemporal control of Noxa expression in engineering bacteria for treating tumors].",
+      "verdict": ""
+    },
+    {
+      "phrase": "bacterial therapy",
+      "pmid": "41322140",
+      "year": "2025",
+      "title": "Engineered nano-bacteria hybrids for precision cancer immunotherapy.",
+      "verdict": ""
+    },
+    {
+      "phrase": "bacterial therapy",
+      "pmid": "35429576",
+      "year": "2022",
+      "title": "Advances in Salmonella Typhimurium-based drug delivery system for cancer therapy.",
+      "verdict": ""
+    },
+    {
+      "phrase": "bacterial therapy",
+      "pmid": "37908720",
+      "year": "2023",
+      "title": "Engineered oncolytic bacteria HCS1 exerts high immune stimulation and safety profiles for cancer therapy.",
+      "verdict": ""
+    },
+    {
+      "phrase": "bacterial therapy",
+      "pmid": "41633995",
+      "year": "2026",
+      "title": "Engineered bacterial therapy suppresses Enterohemorrhagic Escherichia coli through metabolic competition and virulence silencing.",
+      "verdict": ""
+    },
+    {
+      "phrase": "bacterial therapy",
+      "pmid": "38612706",
+      "year": "2024",
+      "title": "A Review of the Use of Native and Engineered Probiotics for Colorectal Cancer Therapy.",
+      "verdict": ""
+    },
+    {
+      "phrase": "bacterial therapy",
+      "pmid": "42339179",
+      "year": "2026",
+      "title": "Synthetic biology of oncolytic bacteria: Comparative microbial chassis and precise killing strategies.",
       "verdict": ""
     },
     {
@@ -309,44 +338,23 @@
     },
     {
       "phrase": "bacterial therapy",
-      "pmid": "38225455",
+      "pmid": "39594765",
       "year": "2024",
-      "title": "Bacteria colonization in tumor microenvironment creates a favorable niche for immunogenic chemotherapy.",
-      "verdict": ""
-    },
-    {
-      "phrase": "bacterial therapy",
-      "pmid": "42293399",
-      "year": "2026",
-      "title": "A deformable Bacillus subtilis with gut homing for tumor treatment via bacterial metabolism-facilitated synergistic approach for starvation, chemotherapy, and immunotherapy.",
-      "verdict": ""
-    },
-    {
-      "phrase": "bacterial therapy",
-      "pmid": "41121752",
-      "year": "2025",
-      "title": "Current status and future perspectives of multi-modal bacteria-based cancer therapies.",
-      "verdict": ""
-    },
-    {
-      "phrase": "bacterial therapy",
-      "pmid": "22752915",
-      "year": "2012",
-      "title": "Effect of Salmonella treatment on an implanted tumor (CT26) in a mouse model.",
-      "verdict": ""
-    },
-    {
-      "phrase": "bacterial therapy",
-      "pmid": "26813339",
-      "year": "2016",
-      "title": "The goblet cell-derived mediator RELM-\u03b2 drives spontaneous colitis in Muc2-deficient mice by promoting commensal microbial dysbiosis.",
+      "title": "Harnessing Bacterial Agents to Modulate the Tumor Microenvironment and Enhance Cancer Immunotherapy.",
       "verdict": ""
     },
     {
       "phrase": "oncolytic bacteria",
-      "pmid": "31226708",
-      "year": "2019",
-      "title": "Oncolytic bacteria: past, present and future.",
+      "pmid": "38064380",
+      "year": "2023",
+      "title": "Systemic Administration with Bacteria-Inspired Nanosystems for Targeted Oncolytic Therapy and Antitumor Immunomodulation.",
+      "verdict": ""
+    },
+    {
+      "phrase": "oncolytic bacteria",
+      "pmid": "38910461",
+      "year": "2024",
+      "title": "Targeting gut and intratumoral microbiota: a novel strategy to improve therapy resistance in cancer with a focus on urologic tumors.",
       "verdict": ""
     },
     {
@@ -358,9 +366,16 @@
     },
     {
       "phrase": "oncolytic bacteria",
-      "pmid": "35917371",
-      "year": "2022",
-      "title": "Acid-Directed Electrostatic Self-Assembly Generates Charge-Reversible Bacteria for Enhanced Tumor Targeting and Low Tissue Trapping.",
+      "pmid": "38510114",
+      "year": "2024",
+      "title": "Oncolytic bacteria VNP20009 expressing IFN\u03b2 inhibits melanoma progression by remodeling the tumor microenvironment.",
+      "verdict": ""
+    },
+    {
+      "phrase": "oncolytic bacteria",
+      "pmid": "34835785",
+      "year": "2021",
+      "title": "The Evolution and Future of Targeted Cancer Therapy: From Nanoparticles, Oncolytic Viruses, and Oncolytic Bacteria to the Treatment of Solid Tumors.",
       "verdict": ""
     },
     {
@@ -372,72 +387,93 @@
     },
     {
       "phrase": "oncolytic bacteria",
+      "pmid": "40111053",
+      "year": "2025",
+      "title": "BCG therapy in bladder cancer and its tumor microenvironment interactions.",
+      "verdict": ""
+    },
+    {
+      "phrase": "oncolytic bacteria",
+      "pmid": "40657740",
+      "year": "2025",
+      "title": "Reply to \"Exploring Bacteria-Based Cancer Immunotherapy\"-Comment on \"Discovery of Intratumoral Oncolytic Bacteria Toward Targeted Anticancer Theranostics\".",
+      "verdict": ""
+    },
+    {
+      "phrase": "oncolytic bacteria",
+      "pmid": "40519767",
+      "year": "2025",
+      "title": "Oncolytic bacteria: A revolutionary approach to cancer therapy.",
+      "verdict": ""
+    },
+    {
+      "phrase": "oncolytic bacteria",
       "pmid": "26367244",
       "year": "2016",
       "title": "Combining anaerobic bacterial oncolysis with vaccination that blocks interleukin-10 signaling may achieve better outcomes for late stage cancer management.",
       "verdict": ""
     },
     {
-      "phrase": "oncolytic bacteria",
-      "pmid": "31528208",
-      "year": "2019",
-      "title": "Oncolytic Bacteria and their potential role in bacterium-mediated tumour therapy: a conceptual analysis.",
-      "verdict": ""
-    },
-    {
-      "phrase": "oncolytic bacteria",
-      "pmid": "38369519",
-      "year": "2024",
-      "title": "The oncolytic bacteria-mediated delivery system of CCDC25 nucleic acid drug inhibits neutrophil extracellular traps induced tumor metastasis.",
-      "verdict": ""
-    },
-    {
-      "phrase": "oncolytic bacteria",
-      "pmid": "39036084",
-      "year": "2024",
-      "title": "Nanomaterial-assisted oncolytic bacteria in solid tumor diagnosis and therapeutics.",
-      "verdict": ""
-    },
-    {
-      "phrase": "oncolytic bacteria",
-      "pmid": "41128615",
-      "year": "2025",
-      "title": "Engineering oncolytic bacteria as precision cancer therapeutics: design principles, therapeutic strategies, and translational perspectives.",
-      "verdict": ""
-    },
-    {
-      "phrase": "oncolytic bacteria",
-      "pmid": "29293165",
-      "year": "2018",
-      "title": "Brief Communication; A Heterologous Oncolytic Bacteria-Virus Prime-Boost Approach for Anticancer Vaccination in Mice.",
-      "verdict": ""
-    },
-    {
       "phrase": "tumor targeting bacteria",
-      "pmid": "31093970",
+      "pmid": "32582070",
       "year": "2020",
-      "title": "Detection of tumors with fluoromarker-releasing bacteria.",
+      "title": "Investigating the Physical Effects in Bacterial Therapies for Avascular Tumors.",
       "verdict": ""
     },
     {
       "phrase": "tumor targeting bacteria",
-      "pmid": "25737274",
-      "year": "2015",
-      "title": "Genetically modified bacteria as a tool to detect microscopic solid tumor masses with triggered release of a recombinant biomarker.",
-      "verdict": ""
-    },
-    {
-      "phrase": "tumor targeting bacteria",
-      "pmid": "19565900",
-      "year": "2009",
-      "title": "Development of bacterial vectors for tumor-targeted gene therapy.",
-      "verdict": ""
-    },
-    {
-      "phrase": "tumor targeting bacteria",
-      "pmid": "30051422",
+      "pmid": "29277768",
       "year": "2018",
-      "title": "Construction of Bacteria-Based Cargo Carriers for Targeted Cancer Therapy.",
+      "title": "Tumor-targeting Salmonella typhimurium A1-R Inhibits Osteosarcoma Angiogenesis in the In Vivo Gelfoam\u00ae Assay Visualized by Color-coded Imaging.",
+      "verdict": ""
+    },
+    {
+      "phrase": "tumor targeting bacteria",
+      "pmid": "32308761",
+      "year": "2020",
+      "title": "Imaging of tumor colonization by Escherichia coli using 18F-FDS PET.",
+      "verdict": ""
+    },
+    {
+      "phrase": "tumor targeting bacteria",
+      "pmid": "39322639",
+      "year": "2024",
+      "title": "Enhanced anti-cancer efficacy of arginine deaminase expressed by tumor-seeking Salmonella Gallinarum.",
+      "verdict": ""
+    },
+    {
+      "phrase": "tumor targeting bacteria",
+      "pmid": "29568324",
+      "year": "2018",
+      "title": "The role of bacteria in cancer therapy - enemies in the past, but allies at present.",
+      "verdict": ""
+    },
+    {
+      "phrase": "tumor targeting bacteria",
+      "pmid": "20028866",
+      "year": "2010",
+      "title": "Genetically engineered Salmonella typhimurium as an imageable therapeutic probe for cancer.",
+      "verdict": ""
+    },
+    {
+      "phrase": "tumor targeting bacteria",
+      "pmid": "34313267",
+      "year": "2021",
+      "title": "Bacteria-mediated cancer therapies: opportunities and challenges.",
+      "verdict": ""
+    },
+    {
+      "phrase": "tumor targeting bacteria",
+      "pmid": "39494618",
+      "year": "2024",
+      "title": "Bacteria-Mediated Tumor-Targeting Delivery of Multienzyme-Mimicking Covalent Organic Frameworks Promoting Pyroptosis for Combinatorial Sono-Catalytic Immunotherapy.",
+      "verdict": ""
+    },
+    {
+      "phrase": "tumor targeting bacteria",
+      "pmid": "30661346",
+      "year": "2018",
+      "title": "Co-Expression of a Chimeric Protease Inhibitor Secreted by a Tumor-Targeted Salmonella Protects Therapeutic Proteins from Proteolytic Degradation.",
       "verdict": ""
     },
     {
@@ -448,73 +484,59 @@
       "verdict": ""
     },
     {
-      "phrase": "tumor targeting bacteria",
-      "pmid": "24438185",
-      "year": "2014",
-      "title": "Rhodobacter sphaeroides, a novel tumor-targeting bacteria that emits natural near-infrared fluorescence.",
+      "phrase": "bacteria mediated tumor",
+      "pmid": "32822716",
+      "year": "2020",
+      "title": "Obligate and facultative anaerobic bacteria in targeted cancer therapy: Current strategies and clinical applications.",
       "verdict": ""
     },
     {
-      "phrase": "tumor targeting bacteria",
-      "pmid": "38510114",
+      "phrase": "bacteria mediated tumor",
+      "pmid": "29308303",
+      "year": "",
+      "title": "Engineered Salmonella enterica serovar Typhimurium overcomes limitations of anti-bacterial immunity in bacteria-mediated tumor therapy.",
+      "verdict": ""
+    },
+    {
+      "phrase": "bacteria mediated tumor",
+      "pmid": "25868911",
+      "year": "2015",
+      "title": "Induction of CD4(+) and CD8(+) anti-tumor effector T cell responses by bacteria mediated tumor therapy.",
+      "verdict": ""
+    },
+    {
+      "phrase": "bacteria mediated tumor",
+      "pmid": "38301928",
       "year": "2024",
-      "title": "Oncolytic bacteria VNP20009 expressing IFN\u03b2 inhibits melanoma progression by remodeling the tumor microenvironment.",
+      "title": "Neutrophil hitchhiking nanoparticles enhance bacteria-mediated cancer therapy via NETosis reprogramming.",
       "verdict": ""
     },
     {
-      "phrase": "tumor targeting bacteria",
-      "pmid": "39182109",
+      "phrase": "bacteria mediated tumor",
+      "pmid": "39001842",
       "year": "2024",
-      "title": "Bacterial derivatives mediated drug delivery in cancer therapy: a new generation strategy.",
-      "verdict": ""
-    },
-    {
-      "phrase": "tumor targeting bacteria",
-      "pmid": "18388945",
-      "year": "2008",
-      "title": "Quantitative bioluminescence imaging of tumor-targeting bacteria in living animals.",
-      "verdict": ""
-    },
-    {
-      "phrase": "tumor targeting bacteria",
-      "pmid": "30953192",
-      "year": "2019",
-      "title": "Tumor-targeting Salmonella typhimurium A1-R overcomes nab-paclitaxel resistance in a cervical cancer PDOX mouse model.",
+      "title": "Poly(Photosensitizer-Prodrug) Unimolecular Micelles for Chemo-Photodynamic Synergistic Therapy of Antitumor and Antibacteria.",
       "verdict": ""
     },
     {
       "phrase": "bacteria mediated tumor",
-      "pmid": "29568370",
-      "year": "2018",
-      "title": "Gram-negative bacteria facilitate tumor progression through TLR4/IL-33 pathway in patients with non-small-cell lung cancer.",
-      "verdict": ""
-    },
-    {
-      "phrase": "bacteria mediated tumor",
-      "pmid": "40664636",
-      "year": "2025",
-      "title": "Living therapeutics of nonpathogenic bacteria as biosynthesis factory and active carriers for enhancing tumor-targeted therapy.",
-      "verdict": ""
-    },
-    {
-      "phrase": "bacteria mediated tumor",
-      "pmid": "38640931",
+      "pmid": "39346533",
       "year": "2024",
-      "title": "Ultrasound-visible engineered bacteria for tumor chemo-immunotherapy.",
+      "title": "Enhancing photothermal therapy of tumors with image-guided thermal control of gene-expressing bacteria.",
       "verdict": ""
     },
     {
       "phrase": "bacteria mediated tumor",
-      "pmid": "36134371",
-      "year": "2022",
-      "title": "Bacteria-mediated tumor immunotherapy via photothermally-programmed PD1 expression.",
+      "pmid": "26939530",
+      "year": "2016",
+      "title": "Optimizing Salmonella enterica serovar Typhimurium for bacteria-mediated tumor therapy.",
       "verdict": ""
     },
     {
       "phrase": "bacteria mediated tumor",
-      "pmid": "40243567",
-      "year": "2025",
-      "title": "Research progress on ultrasound in bacteria-mediated tumor treatment.",
+      "pmid": "34472212",
+      "year": "2021",
+      "title": "Bacteria-Mediated Tumor Therapy via Photothermally-Programmed Cytolysin A Expression.",
       "verdict": ""
     },
     {
@@ -526,100 +548,79 @@
     },
     {
       "phrase": "bacteria mediated tumor",
-      "pmid": "27051423",
-      "year": "2016",
-      "title": "Bacteria in Cancer Therapy: Renaissance of an Old Concept.",
-      "verdict": ""
-    },
-    {
-      "phrase": "bacteria mediated tumor",
       "pmid": "42467272",
       "year": "2026",
       "title": "Bacteria mediated tumor therapy recent advances challenges and future perspectives.",
       "verdict": ""
     },
     {
-      "phrase": "bacteria mediated tumor",
-      "pmid": "39494618",
-      "year": "2024",
-      "title": "Bacteria-Mediated Tumor-Targeting Delivery of Multienzyme-Mimicking Covalent Organic Frameworks Promoting Pyroptosis for Combinatorial Sono-Catalytic Immunotherapy.",
-      "verdict": ""
-    },
-    {
-      "phrase": "bacteria mediated tumor",
-      "pmid": "28445131",
-      "year": "2017",
-      "title": "Therapeutic benefit of Salmonella attributed to LPS and TNF-\u03b1 is exhaustible and dictated by tumor susceptibility.",
+      "phrase": "attenuated salmonella",
+      "pmid": "27371094",
+      "year": "2016",
+      "title": "Enhanced therapeutic effect of an antiangiogenesis peptide on lung cancer in vivo combined with salmonella VNP20009 carrying a Sox2 shRNA construct.",
       "verdict": ""
     },
     {
       "phrase": "attenuated salmonella",
-      "pmid": "29120368",
-      "year": "2017",
-      "title": "Lactobacillus bulgaricus, Lactobacillus rhamnosus and Lactobacillus paracasei Attenuate Salmonella Enteritidis, Salmonella Heidelberg and Salmonella Typhimurium Colonization and Virulence Gene Expression In Vitro.",
+      "pmid": "17448724",
+      "year": "2007",
+      "title": "Tumor-specific colonization, tissue distribution, and gene induction by probiotic Escherichia coli Nissle 1917 in live mice.",
       "verdict": ""
     },
     {
       "phrase": "attenuated salmonella",
-      "pmid": "12531363",
-      "year": "2003",
-      "title": "Towards new immunotherapies: targeting recombinant cytokines to the immune system using live attenuated Salmonella.",
-      "verdict": ""
-    },
-    {
-      "phrase": "attenuated salmonella",
-      "pmid": "40333284",
-      "year": "2025",
-      "title": "Salmonella -Based Vaccine: A Promising Strategy for Type 1 Diabetes.",
-      "verdict": ""
-    },
-    {
-      "phrase": "attenuated salmonella",
-      "pmid": "29316037",
-      "year": "2018",
-      "title": "Development of a recombinant murine tumour model using hepatoma cells expressing hepatitis C virus nonstructural antigens.",
-      "verdict": ""
-    },
-    {
-      "phrase": "attenuated salmonella",
-      "pmid": "23335069",
-      "year": "2013",
-      "title": "Attenuated Salmonella typhimurium carrying the hepatocyte growth factor and keratinocyte growth factor genes repairs gastrointestinal mucosal damage caused by chemotherapy.",
-      "verdict": ""
-    },
-    {
-      "phrase": "attenuated salmonella",
-      "pmid": "41909653",
-      "year": "2026",
-      "title": "Protective immunity against Chagas disease induced by a superantigen-based chimeric DNA vaccine delivered by attenuated Salmonella .",
-      "verdict": ""
-    },
-    {
-      "phrase": "attenuated salmonella",
-      "pmid": "34635698",
+      "pmid": "33923441",
       "year": "2021",
-      "title": "Attenuated Salmonella carrying plasmid co-expressing HPV16 L1 and siRNA-E6 for cervical cancer therapy.",
+      "title": "Protective Effects of Cinnamaldehyde on the Inflammatory Response, Oxidative Stress, and Apoptosis in Liver of Salmonella typhimurium -Challenged Mice.",
       "verdict": ""
     },
     {
       "phrase": "attenuated salmonella",
-      "pmid": "23193368",
+      "pmid": "32150574",
+      "year": "2020",
+      "title": "Beneficial effect of immunobiotic strains on attenuation of Salmonella induced inflammatory response in human intestinal epithelial cells.",
+      "verdict": ""
+    },
+    {
+      "phrase": "attenuated salmonella",
+      "pmid": "26376999",
+      "year": "2016",
+      "title": "An orally administered DNA vaccine targeting vascular endothelial growth factor receptor-3 inhibits lung carcinoma growth.",
+      "verdict": ""
+    },
+    {
+      "phrase": "attenuated salmonella",
+      "pmid": "17786443",
+      "year": "2008",
+      "title": "A Legumain-based minigene vaccine targets the tumor stroma and suppresses breast cancer growth and angiogenesis.",
+      "verdict": ""
+    },
+    {
+      "phrase": "attenuated salmonella",
+      "pmid": "34295341",
+      "year": "2021",
+      "title": "PD-1-siRNA Delivered by Attenuated Salmonella Enhances the Antitumor Effect of Chloroquine in Colon Cancer.",
+      "verdict": ""
+    },
+    {
+      "phrase": "attenuated salmonella",
+      "pmid": "22580637",
       "year": "2012",
-      "title": "Inhibitory effects of the attenuated Salmonella typhimurium containing the IL-2 gene on hepatic tumors in mice.",
+      "title": "Plasmid-based Survivin shRNA and GRIM-19 carried by attenuated Salmonella suppresses tumor cell growth.",
       "verdict": ""
     },
     {
       "phrase": "attenuated salmonella",
-      "pmid": "41584350",
-      "year": "2026",
-      "title": "Attenuated Salmonella secreting interleukin-21 activates T-cells and induces anti-tumor effects.",
-      "verdict": ""
-    },
-    {
-      "phrase": "attenuated salmonella",
-      "pmid": "25872647",
+      "pmid": "25667465",
       "year": "2015",
-      "title": "Recombinant Salmonella-based CEACAM6 and 4-1BBL vaccine enhances T-cell immunity and inhibits the development of colorectal cancer in rats: In vivo effects of vaccine containing 4-1BBL and CEACAM6.",
+      "title": "Attenuated Salmonella enterica Typhimurium reduces tumor burden in an autochthonous breast cancer model.",
+      "verdict": ""
+    },
+    {
+      "phrase": "attenuated salmonella",
+      "pmid": "32554977",
+      "year": "2020",
+      "title": "A Phase I, Dose Escalation, Single Dose Trial of Oral Attenuated Salmonella typhimurium Containing Human IL-2 in Patients With Metastatic Gastrointestinal Cancers.",
       "verdict": ""
     },
     {
@@ -631,20 +632,6 @@
     },
     {
       "phrase": "clostridium novyi",
-      "pmid": "33854487",
-      "year": "2021",
-      "title": "Methods and Techniques to Facilitate the Development of Clostridium novyi NT as an Effective, Therapeutic Oncolytic Bacteria.",
-      "verdict": ""
-    },
-    {
-      "phrase": "clostridium novyi",
-      "pmid": "29578142",
-      "year": "2018",
-      "title": "Learning from Clostridium novyi-NT: How to defeat cancer.",
-      "verdict": ""
-    },
-    {
-      "phrase": "clostridium novyi",
       "pmid": "41676219",
       "year": "2026",
       "title": "Metabolic Gadolinium Labeling of Clostridium novyi -Nontoxic for Magnetic Resonance Imaging Visualization of Spores and Germinated Bacteria.",
@@ -652,9 +639,44 @@
     },
     {
       "phrase": "clostridium novyi",
-      "pmid": "11724950",
-      "year": "2001",
-      "title": "Combination bacteriolytic therapy for the treatment of experimental tumors.",
+      "pmid": "37069721",
+      "year": "2023",
+      "title": "Therapeutic Potential of Clostridium novyi-NT in Cancer: Current Knowledge and Future Perspectives.",
+      "verdict": ""
+    },
+    {
+      "phrase": "clostridium novyi",
+      "pmid": "25549324",
+      "year": "2014",
+      "title": "MRI-monitored intra-tumoral injection of iron-oxide labeled Clostridium novyi-NT anaerobes in pancreatic carcinoma mouse model.",
+      "verdict": ""
+    },
+    {
+      "phrase": "clostridium novyi",
+      "pmid": "36709236",
+      "year": "2023",
+      "title": "A design of experiments screen reveals that Clostridium novyi-NT spore germinant sensing is stereoflexible for valine and its analogs.",
+      "verdict": ""
+    },
+    {
+      "phrase": "clostridium novyi",
+      "pmid": "22204296",
+      "year": "2012",
+      "title": "Evaluation of Clostridium novyi-NT spores in dogs with naturally occurring tumors.",
+      "verdict": ""
+    },
+    {
+      "phrase": "clostridium novyi",
+      "pmid": "33854487",
+      "year": "2021",
+      "title": "Methods and Techniques to Facilitate the Development of Clostridium novyi NT as an Effective, Therapeutic Oncolytic Bacteria.",
+      "verdict": ""
+    },
+    {
+      "phrase": "clostridium novyi",
+      "pmid": "40141809",
+      "year": "2025",
+      "title": "Anti-Cancer Strategies Using Anaerobic Spore-Forming Bacteria Clostridium: Advances and Synergistic Approaches.",
       "verdict": ""
     },
     {
@@ -666,184 +688,149 @@
     },
     {
       "phrase": "clostridium novyi",
-      "pmid": "20653063",
-      "year": "2010",
-      "title": "Bacteriolytic therapy of experimental pancreatic carcinoma.",
-      "verdict": ""
-    },
-    {
-      "phrase": "clostridium novyi",
-      "pmid": "37963142",
+      "pmid": "38022809",
       "year": "2023",
-      "title": "An intravenous pancreatic cancer therapeutic: Characterization of CRISPR/Cas9n-modified Clostridium novyi-Non Toxic.",
-      "verdict": ""
-    },
-    {
-      "phrase": "clostridium novyi",
-      "pmid": "17124324",
-      "year": "2006",
-      "title": "A bacterial protein enhances the release and efficacy of liposomal cancer drugs.",
-      "verdict": ""
-    },
-    {
-      "phrase": "clostridium novyi",
-      "pmid": "36709236",
-      "year": "2023",
-      "title": "A design of experiments screen reveals that Clostridium novyi-NT spore germinant sensing is stereoflexible for valine and its analogs.",
+      "title": "Anti-tumor Effects of Cisplatin Synergist in Combined Treatment with Clostridium novyi-NT Spores Against Hypoxic Microenvironments in a Mouse Model of Cervical Cancer Caused by TC-1 Cell Line.",
       "verdict": ""
     },
     {
       "phrase": "bacterial outer membrane vesicle",
-      "pmid": "30559181",
-      "year": "2018",
-      "title": "Technologies to address antimicrobial resistance.",
+      "pmid": "38166929",
+      "year": "2024",
+      "title": "Enhancing immune responses of ESC-based TAA cancer vaccines with a novel OMV delivery system.",
       "verdict": ""
     },
     {
       "phrase": "bacterial outer membrane vesicle",
-      "pmid": "40969433",
-      "year": "2025",
-      "title": "The role and mechanism of bacterial outer membrane vesicles in the development of periodontitis.",
-      "verdict": ""
-    },
-    {
-      "phrase": "bacterial outer membrane vesicle",
-      "pmid": "28765539",
+      "pmid": "29186191",
       "year": "2017",
-      "title": "Bacterial membrane vesicles transport their DNA cargo into host cells.",
+      "title": "Lipopolysaccharide structure impacts the entry kinetics of bacterial outer membrane vesicles into host cells.",
       "verdict": ""
     },
     {
       "phrase": "bacterial outer membrane vesicle",
-      "pmid": "32493405",
-      "year": "2020",
-      "title": "Exploiting bacterial outer membrane vesicles as a cross-protective vaccine candidate against avian pathogenic Escherichia coli (APEC).",
-      "verdict": ""
-    },
-    {
-      "phrase": "bacterial outer membrane vesicle",
-      "pmid": "40421643",
+      "pmid": "40287972",
       "year": "2025",
-      "title": "Development of a Recombinant Outer Membrane Vesicles (OMVs)-Based Vaccine Against Helicobacter pylori Infection in Mice.",
+      "title": "Engineered Bacterial Outer Membrane Vesicles Hitchhiking on Neutrophils for Antibody Drug Delivery to Enhance Postoperative Immune Checkpoint Therapy.",
       "verdict": ""
     },
     {
       "phrase": "bacterial outer membrane vesicle",
-      "pmid": "33232124",
-      "year": "2020",
-      "title": "Bacterial Outer Membrane Vesicles Presenting Programmed Death 1 for Improved Cancer Immunotherapy via Immune Activation and Checkpoint Inhibition.",
-      "verdict": ""
-    },
-    {
-      "phrase": "bacterial outer membrane vesicle",
-      "pmid": "38169585",
+      "pmid": "38663578",
       "year": "2024",
-      "title": "Engineered bacterial outer membrane vesicles: a versatile bacteria-based weapon against gastrointestinal tumors.",
+      "title": "Multifaceted therapeutic applications of biomimetic nanovaccines.",
       "verdict": ""
     },
     {
       "phrase": "bacterial outer membrane vesicle",
-      "pmid": "37414322",
-      "year": "2023",
-      "title": "Targeted miR-34a delivery with PD1 displayed bacterial outer membrane vesicles-coated zeolitic imidazolate framework nanoparticles for enhanced tumor therapy.",
+      "pmid": "40035513",
+      "year": "2025",
+      "title": "Engineered Bacterial Outer Membrane Vesicles-Based Doxorubicin and CD47-siRNA Co-Delivery Nanoplatform Overcomes Immune Resistance to Potentiate the Immunotherapy of Glioblastoma.",
       "verdict": ""
     },
     {
       "phrase": "bacterial outer membrane vesicle",
-      "pmid": "41676151",
-      "year": "2026",
-      "title": "Outer membrane vesicles as a versatile nanoplatform for advanced vaccine development and immunotherapy.",
+      "pmid": "28979120",
+      "year": "2017",
+      "title": "Engineered outer membrane vesicle is potent to elicit HPV16E7-specific cellular immunity in a mouse model of TC-1 graft tumor.",
       "verdict": ""
     },
     {
       "phrase": "bacterial outer membrane vesicle",
-      "pmid": "41386377",
-      "year": "2026",
-      "title": "Escherichia coli Nissle 1917 outer membrane vesicles encapsulating oncolytic virus remodel tumor-associated macrophages and kill prostate cancer cells.",
+      "pmid": "38517203",
+      "year": "2024",
+      "title": "Intranasal delivery of Salmonella OMVs decorated with Chlamydia trachomatis antigens induces specific local and systemic immune responses.",
       "verdict": ""
     },
     {
-      "phrase": "magnetotactic bacteria",
-      "pmid": "31297108",
-      "year": "2019",
-      "title": "Novel Protein Mg2046 Regulates Magnetosome Synthesis in Magnetospirillum gryphiswaldense MSR-1 by Modulating a Proper Redox Status.",
-      "verdict": ""
-    },
-    {
-      "phrase": "magnetotactic bacteria",
-      "pmid": "19163210",
-      "year": "2008",
-      "title": "Interventional procedure based on nanorobots propelled and steered by flagellated magnetotactic bacteria for direct targeting of tumors in the human body.",
-      "verdict": ""
-    },
-    {
-      "phrase": "magnetotactic bacteria",
-      "pmid": "33644977",
+      "phrase": "bacterial outer membrane vesicle",
+      "pmid": "34353494",
       "year": "2021",
-      "title": "Novel nanomaterial-organism hybrids with biomedical potential.",
+      "title": "Bioengineered bacterial vesicles for optoacoustics-guided phototherapy.",
+      "verdict": ""
+    },
+    {
+      "phrase": "bacterial outer membrane vesicle",
+      "pmid": "41887936",
+      "year": "2026",
+      "title": "Salivary Microvesicle Methylome and Microbiome Profiles in Periodontitis: An Exploratory Study.",
+      "verdict": ""
+    },
+    {
+      "phrase": "bacterial outer membrane vesicle",
+      "pmid": "41163807",
+      "year": "2025",
+      "title": "Immunomodulatory Nanozymes Eradicate Intracellular Infections and Rescue Immunoparalysis for Treating Multidrug-Resistant Bacterial Sepsis.",
       "verdict": ""
     },
     {
       "phrase": "magnetotactic bacteria",
-      "pmid": "34681092",
+      "pmid": "42232030",
+      "year": "2026",
+      "title": "Modular Biosurface Engineering of Magnetotactic Bacteria for Multimodal Synergistic Cancer Therapy.",
+      "verdict": ""
+    },
+    {
+      "phrase": "magnetotactic bacteria",
+      "pmid": "33923565",
       "year": "2021",
-      "title": "Functionalization of Biotinylated Polyethylene Glycol on Live Magnetotactic Bacteria Carriers for Improved Stealth Properties.",
+      "title": "Induction of Axonal Outgrowth in Mouse Hippocampal Neurons via Bacterial Magnetosomes.",
       "verdict": ""
     },
     {
       "phrase": "magnetotactic bacteria",
-      "pmid": "21732678",
+      "pmid": "37934249",
+      "year": "2024",
+      "title": "Biosynthesis of magnetosome-nanobody complex in Magnetospirillum gryphiswaldense MSR-1 and a magnetosome-nanobody-based enzyme-linked immunosorbent assay for the detection of tetrabromobisphenol A in water.",
+      "verdict": ""
+    },
+    {
+      "phrase": "magnetotactic bacteria",
+      "pmid": "28125741",
+      "year": "2017",
+      "title": "Formation of Core-Shell Nanoparticles Composed of Magnetite and Samarium Oxide in Magnetospirillum magneticum Strain RSS-1.",
+      "verdict": ""
+    },
+    {
+      "phrase": "magnetotactic bacteria",
+      "pmid": "22448162",
       "year": "2011",
-      "title": "Chains of magnetosomes extracted from AMB-1 magnetotactic bacteria for application in alternative magnetic field cancer therapy.",
+      "title": "Bacterial Magnetosome: A Novel Biogenetic Magnetic Targeted Drug Carrier with Potential Multifunctions.",
       "verdict": ""
     },
     {
       "phrase": "magnetotactic bacteria",
-      "pmid": "34067162",
-      "year": "2021",
-      "title": "Biocompatibility of Bacterial Magnetosomes as MRI Contrast Agent: A Long-Term In Vivo Follow-Up Study.",
-      "verdict": ""
-    },
-    {
-      "phrase": "magnetotactic bacteria",
-      "pmid": "35516490",
-      "year": "2020",
-      "title": "Metabolic characterisation of Magnetospirillum gryphiswaldense MSR-1 using LC-MS-based metabolite profiling.",
-      "verdict": ""
-    },
-    {
-      "phrase": "magnetotactic bacteria",
-      "pmid": "36563339",
+      "pmid": "37715090",
       "year": "2023",
-      "title": "Tuning the Magnetic Response of Magnetospirillum magneticum by Changing the Culture Medium: A Straightforward Approach to Improve Their Hyperthermia Efficiency.",
+      "title": "Use of Magnetotactic Bacteria as an MRI Contrast Agent for In Vivo Tracking of Adoptively Transferred Immune Cells.",
       "verdict": ""
     },
     {
       "phrase": "magnetotactic bacteria",
-      "pmid": "38939727",
+      "pmid": "39091301",
       "year": "2024",
-      "title": "Advances in bacteria-based drug delivery systems for anti-tumor therapy.",
+      "title": "Single-cell magnetotaxis in mucus-mimicking polymeric solutions.",
       "verdict": ""
     },
     {
       "phrase": "magnetotactic bacteria",
-      "pmid": "40710446",
-      "year": "2025",
-      "title": "The Biomedical Limitations of Magnetic Nanoparticles and a Biocompatible Alternative in the Form of Magnetotactic Bacteria.",
-      "verdict": ""
-    },
-    {
-      "phrase": "programmable bacteria",
-      "pmid": "27534801",
+      "pmid": "27512138",
       "year": "2016",
-      "title": "Subversion of host genome integrity by bacterial pathogens.",
+      "title": "Controlled cobalt doping in the spinel structure of magnetosome magnetite: new evidences from element- and site-specific X-ray magnetic circular dichroism analyses.",
       "verdict": ""
     },
     {
-      "phrase": "programmable bacteria",
-      "pmid": "31270504",
+      "phrase": "magnetotactic bacteria",
+      "pmid": "40321550",
+      "year": "2025",
+      "title": "Exploring the Complex Interplay of Anisotropies in Magnetosomes of Magnetotactic Bacteria.",
+      "verdict": ""
+    },
+    {
+      "phrase": "magnetotactic bacteria",
+      "pmid": "31253765",
       "year": "2019",
-      "title": "Programmable bacteria induce durable tumor regression and systemic antitumor immunity.",
+      "title": "Artificial coiled coil biomineralisation protein for the synthesis of magnetic nanoparticles.",
       "verdict": ""
     },
     {
@@ -855,30 +842,9 @@
     },
     {
       "phrase": "programmable bacteria",
-      "pmid": "29558152",
-      "year": "2018",
-      "title": "Bacteria-Mediated Tumor Therapy Utilizing Photothermally-Controlled TNF-\u03b1 Expression via Oral Administration.",
-      "verdict": ""
-    },
-    {
-      "phrase": "programmable bacteria",
-      "pmid": "39423284",
-      "year": "2024",
-      "title": "Programmable bacteria synergize with PD-1 blockade to overcome cancer cell-intrinsic immune resistance mechanisms.",
-      "verdict": ""
-    },
-    {
-      "phrase": "programmable bacteria",
       "pmid": "42145056",
       "year": "2026",
       "title": "Synthetic Inducible Bacteria Normalize the Microenvironment of Refractory Tumors, Potentiating Checkpoint Inhibitor Responses.",
-      "verdict": ""
-    },
-    {
-      "phrase": "programmable bacteria",
-      "pmid": "39058336",
-      "year": "2024",
-      "title": "Programmable Bacteria with Dynamic Virulence Modulation System for Precision Antitumor Immunity.",
       "verdict": ""
     },
     {
@@ -890,9 +856,30 @@
     },
     {
       "phrase": "programmable bacteria",
+      "pmid": "39058336",
+      "year": "2024",
+      "title": "Programmable Bacteria with Dynamic Virulence Modulation System for Precision Antitumor Immunity.",
+      "verdict": ""
+    },
+    {
+      "phrase": "programmable bacteria",
+      "pmid": "29558152",
+      "year": "2018",
+      "title": "Bacteria-Mediated Tumor Therapy Utilizing Photothermally-Controlled TNF-\u03b1 Expression via Oral Administration.",
+      "verdict": ""
+    },
+    {
+      "phrase": "programmable bacteria",
       "pmid": "42468534",
       "year": "2026",
       "title": "Programmable-bacteria-macrophage backpacks for enhanced solid tumor therapy via mechanobiological interplay.",
+      "verdict": ""
+    },
+    {
+      "phrase": "programmable bacteria",
+      "pmid": "31270504",
+      "year": "2019",
+      "title": "Programmable bacteria induce durable tumor regression and systemic antitumor immunity.",
       "verdict": ""
     },
     {
@@ -903,283 +890,297 @@
       "verdict": ""
     },
     {
-      "phrase": "helicobacter pylori",
-      "pmid": "11547479",
-      "year": "2001",
-      "title": "[Helicobacter pylori and gastric cancer].",
+      "phrase": "programmable bacteria",
+      "pmid": "39423284",
+      "year": "2024",
+      "title": "Programmable bacteria synergize with PD-1 blockade to overcome cancer cell-intrinsic immune resistance mechanisms.",
+      "verdict": ""
+    },
+    {
+      "phrase": "programmable bacteria",
+      "pmid": "27534801",
+      "year": "2016",
+      "title": "Subversion of host genome integrity by bacterial pathogens.",
       "verdict": ""
     },
     {
       "phrase": "helicobacter pylori",
-      "pmid": "40503378",
-      "year": "2023",
-      "title": "[Is Probiotic Supplementation Useful for Helicobacter pylori Eradication?]",
+      "pmid": "15596047",
+      "year": "2004",
+      "title": "hOGG1 Ser326Cys polymorphism, interaction with environmental exposures, and gastric cancer risk in Japanese populations.",
       "verdict": ""
     },
     {
       "phrase": "helicobacter pylori",
-      "pmid": "10742137",
-      "year": "2000",
-      "title": "Linking Helicobacter pylori to gastric cancer.",
+      "pmid": "15361085",
+      "year": "2004",
+      "title": "Molecular epidemiology and outcome of Helicobacter pylori infection in Thailand: a cultural cross roads.",
       "verdict": ""
     },
     {
       "phrase": "helicobacter pylori",
-      "pmid": "41577583",
-      "year": "2026",
-      "title": "Helicobacter pylori infection with metabolic-associated fatty liver disease and Colorectal Neoplasms.",
+      "pmid": "27335631",
+      "year": "2016",
+      "title": "Genotyping of the Helicobacter pylori cagA Gene Isolated From Gastric Biopsies in Shiraz, Southern Iran: A PCR-RFLP and Sequence Analysis Approach.",
       "verdict": ""
     },
     {
       "phrase": "helicobacter pylori",
-      "pmid": "34553455",
-      "year": "2021",
-      "title": "Importance of testing for Helicobacter pylori in patients with immune thrombocytopenia.",
+      "pmid": "8536814",
+      "year": "1995",
+      "title": "Prognosis of gastric carcinoid tumours.",
       "verdict": ""
     },
     {
       "phrase": "helicobacter pylori",
-      "pmid": "38136703",
-      "year": "2023",
-      "title": "Antibiotic Resistance and Therapy for Helicobacter pylori Infection.",
+      "pmid": "38657111",
+      "year": "2024",
+      "title": "The Role of Helicobacter Pylori Infection in the Development of Gastric Cancer - Review of the Literature.",
       "verdict": ""
     },
     {
       "phrase": "helicobacter pylori",
-      "pmid": "38130304",
-      "year": "2023",
-      "title": "Interplay of homologous-recombination genes and Helicobacter pylori in gastric cancer susceptibility.",
+      "pmid": "15069615",
+      "year": "2004",
+      "title": "Helicobacter pylori CagA protein variation associated with gastric cancer in Asia.",
       "verdict": ""
     },
     {
       "phrase": "helicobacter pylori",
-      "pmid": "36406651",
-      "year": "2022",
-      "title": "Helicobacter pylori : Have potential benefits been overlooked?",
+      "pmid": "38816886",
+      "year": "2024",
+      "title": "An eco-friendly liquid chromatographic analysis of the triple therapy protocol of amoxicillin, metronidazole and vonoprazan for H. Pylori eradication: application to combined dosage forms and simulated gastric fluid.",
       "verdict": ""
     },
     {
       "phrase": "helicobacter pylori",
-      "pmid": "12621826",
-      "year": "2000",
-      "title": "[Helicobacter pylori and the stomach].",
+      "pmid": "17122515",
+      "year": "2006",
+      "title": "Sporadic duodenal bulb gastrin-cell tumors: association with Helicobacter pylori gastritis and long-term use of proton pump inhibitors.",
       "verdict": ""
     },
     {
       "phrase": "helicobacter pylori",
-      "pmid": "20979779",
-      "year": "2010",
-      "title": "[Ten-years of Helicobacter pylori and gastric cancer].",
-      "verdict": ""
-    },
-    {
-      "phrase": "16s rrna",
-      "pmid": "42473456",
-      "year": "2026",
-      "title": "Molecular phylogeny of 16S rRNA sequences from Ugba (Pentaclethra macrophylla) seeds.",
-      "verdict": ""
-    },
-    {
-      "phrase": "16s rrna",
-      "pmid": "29755427",
-      "year": "2018",
-      "title": "16S rRNA Gene Sequencing for Deciphering the Colorectal Cancer Gut Microbiome: Current Protocols and Workflows.",
-      "verdict": ""
-    },
-    {
-      "phrase": "16s rrna",
-      "pmid": "34151726",
-      "year": "2021",
-      "title": "A 16S rRNA gene sequencing based study of oral microbiota in migraine patients in China.",
-      "verdict": ""
-    },
-    {
-      "phrase": "16s rrna",
-      "pmid": "40099562",
-      "year": "2025",
-      "title": "Short-read next-generation sequencing of 16s rRNA gene amplicons for characterizing amplicon sequence variants (ASVs) and determination of gene copy numbers using ion Torrent platform.",
-      "verdict": ""
-    },
-    {
-      "phrase": "16s rrna",
-      "pmid": "42353428",
-      "year": "2026",
-      "title": "Transcriptome and 16S rRNA Amplicon Sequencing Analysis of Nutrition Metabolism in Silver Pomfret at Varying Flow Rates.",
-      "verdict": ""
-    },
-    {
-      "phrase": "16s rrna",
-      "pmid": "40466616",
-      "year": "2025",
-      "title": "Study on the mechanism of niclosamide ethanolamine salt-hydroxypropyl-\u03b2-cyclodextrin in the treatment of colon cancer based on metabolomics and 16S rRNA technology.",
-      "verdict": ""
-    },
-    {
-      "phrase": "16s rrna",
-      "pmid": "37848699",
-      "year": "2023",
-      "title": "Microbiome variations among age classes and diets of captive Asian elephants (Elephas maximus) in Thailand using full-length 16S rRNA nanopore sequencing.",
-      "verdict": ""
-    },
-    {
-      "phrase": "16s rrna",
-      "pmid": "41904888",
-      "year": "2026",
-      "title": "Oral Microbiota and Cardiovascular Diseases: A Study Integrating Genome-Wide Association and 16S rRNA Sequence Analyses.",
-      "verdict": ""
-    },
-    {
-      "phrase": "16s rrna",
-      "pmid": "39992270",
-      "year": "2025",
-      "title": "Advances in 16S rRNA-Based Microbial Biomarkers for Gastric Cancer Diagnosis and Prognosis.",
-      "verdict": ""
-    },
-    {
-      "phrase": "16s rrna",
-      "pmid": "40351010",
-      "year": "2025",
-      "title": "PCR targeting 16S rRNA, cfb , and hylB for group B Streptococcus detection in women with 35 to 37 weeks of pregnancy.",
-      "verdict": ""
-    },
-    {
-      "phrase": "salmonella typhimurium",
-      "pmid": "6155205",
-      "year": "1980",
-      "title": "Binding of the dye intermediates Michler's ketone and methane base to rat liver nucleic acids and lack of mutagenicity in Salmonella typhimurium.",
-      "verdict": ""
-    },
-    {
-      "phrase": "salmonella typhimurium",
-      "pmid": "1090579",
-      "year": "1975",
-      "title": "Genetic modification of substrate specificity of hypoxanthine phosphoribosyltransferase in Salmonella typhimurium.",
-      "verdict": ""
-    },
-    {
-      "phrase": "salmonella typhimurium",
-      "pmid": "342090",
-      "year": "1978",
-      "title": "Mutagenicity of some congeners of benzidine in the Salmonella typhimurium assay system.",
-      "verdict": ""
-    },
-    {
-      "phrase": "salmonella typhimurium",
-      "pmid": "41865519",
-      "year": "2026",
-      "title": "Conformation-sensitive nanobody immunoassay enables differentiation of live and heat-inactivated Salmonella Typhimurium for food safety monitoring.",
-      "verdict": ""
-    },
-    {
-      "phrase": "salmonella typhimurium",
-      "pmid": "4913926",
-      "year": "1970",
-      "title": "[Salmonella typhimurium as a cause of latent infection in the course of reticulolyphosarcoma in a 4-year-old boy].",
-      "verdict": ""
-    },
-    {
-      "phrase": "salmonella typhimurium",
-      "pmid": "343109",
-      "year": "1978",
-      "title": "Quantitative forward mutation assay in Salmonella typhimurium using 8-azaguanine resistance as a genetic marker.",
-      "verdict": ""
-    },
-    {
-      "phrase": "salmonella typhimurium",
-      "pmid": "7044521",
-      "year": "1982",
-      "title": "Mutagenicity of N-nitroso bile acid conjugates in Salmonella typhimurium and diploid human lymphoblasts.",
-      "verdict": ""
-    },
-    {
-      "phrase": "salmonella typhimurium",
-      "pmid": "32517327",
-      "year": "2020",
-      "title": "Thymol and Carvacrol Downregulate the Expression of Salmonella typhimurium Virulence Genes during an In Vitro Infection on Caco-2 Cells.",
-      "verdict": ""
-    },
-    {
-      "phrase": "salmonella typhimurium",
-      "pmid": "39786350",
-      "year": "2025",
-      "title": "Microbe Profile: Salmonella Typhimurium: the master of the art of adaptation.",
-      "verdict": ""
-    },
-    {
-      "phrase": "salmonella typhimurium",
-      "pmid": "6355068",
-      "year": "1983",
-      "title": "Anaerobic cultures of Salmonella typhimurium do not exhibit inducible proteolytic function of the recA gene and recBC function.",
-      "verdict": ""
-    },
-    {
-      "phrase": "probiotic",
-      "pmid": "37544356",
-      "year": "2023",
-      "title": "Probiotic-related Clostridium butyricum bacteremia: a case report and literature review.",
-      "verdict": ""
-    },
-    {
-      "phrase": "probiotic",
-      "pmid": "",
-      "year": "2025",
-      "title": "Probiotics decrease C-reactive protein level in depression depending on basal chronic low-grade inflammation status or antidepressant use \u2013 secondary results of the Pro-demet randomized clinical trail",
-      "verdict": ""
-    },
-    {
-      "phrase": "probiotic",
-      "pmid": "31245418",
+      "pmid": "30768986",
       "year": "2019",
-      "title": "Going with the gut: probiotics as a novel therapy for hepatocellular carcinoma.",
+      "title": "The Role of the Microbiome in Immunologic Development and its Implication For Pancreatic Cancer Immunotherapy.",
       "verdict": ""
     },
     {
-      "phrase": "probiotic",
-      "pmid": "33317240",
-      "year": "2021",
-      "title": "Probiotics for treatment of nonalcoholic fatty liver disease: It is worth a try.",
+      "phrase": "helicobacter pylori",
+      "pmid": "39742338",
+      "year": "2024",
+      "title": "Helicobacter pylori resistance in Hainan Province, China: investigating phenotypes and genotypes through whole-genome sequencing.",
       "verdict": ""
     },
     {
-      "phrase": "probiotic",
-      "pmid": "40561427",
+      "phrase": "16s rrna",
+      "pmid": "31550285",
+      "year": "2019",
+      "title": "Optimizing bacterial DNA extraction in urine.",
+      "verdict": ""
+    },
+    {
+      "phrase": "16s rrna",
+      "pmid": "40248428",
       "year": "2025",
-      "title": "Preface: Probiotics and Implications in Oncogenesis.",
+      "title": "Puerarin affects adipose lipolysis and ameliorates obesity by gut microbiota.",
+      "verdict": ""
+    },
+    {
+      "phrase": "16s rrna",
+      "pmid": "30046045",
+      "year": "2018",
+      "title": "Metagenomics of pigmented and cholesterol gallstones: the putative role of bacteria.",
+      "verdict": ""
+    },
+    {
+      "phrase": "16s rrna",
+      "pmid": "34295318",
+      "year": "2021",
+      "title": "Dysbiosis of Gut Microbiota in Patients With Acute Myocardial Infarction.",
+      "verdict": ""
+    },
+    {
+      "phrase": "16s rrna",
+      "pmid": "38835371",
+      "year": "2024",
+      "title": "Detection and comparison of tumor cell-associated microbiota from different compartments of colorectal cancer.",
+      "verdict": ""
+    },
+    {
+      "phrase": "16s rrna",
+      "pmid": "38931219",
+      "year": "2024",
+      "title": "Analysis of Alterations in Intestinal Flora in Chinese Elderly with Cardiovascular Disease and Its Association with Trimethylamine.",
+      "verdict": ""
+    },
+    {
+      "phrase": "16s rrna",
+      "pmid": "40787457",
+      "year": "2025",
+      "title": "From gut to joint: the protective impact of Eubacterium rectale on rheumatoid arthritis.",
+      "verdict": ""
+    },
+    {
+      "phrase": "16s rrna",
+      "pmid": "33471054",
+      "year": "2021",
+      "title": "Long-term diet quality is associated with gut microbiome diversity and composition among urban Chinese adults.",
+      "verdict": ""
+    },
+    {
+      "phrase": "16s rrna",
+      "pmid": "39583744",
+      "year": "2024",
+      "title": "Sex specific gut-microbiota signatures of resilient and comorbid gut-brain phenotypes induced by early life stress.",
+      "verdict": ""
+    },
+    {
+      "phrase": "16s rrna",
+      "pmid": "39268956",
+      "year": "2024",
+      "title": "Pheno- and Genotypic Epidemiological Characterization of Vancomycin-Resistant Enterococcus faecium Isolates from Intensive Care Unit Patients in Central T\u00fcrkiye.",
+      "verdict": ""
+    },
+    {
+      "phrase": "salmonella typhimurium",
+      "pmid": "3024823",
+      "year": "1987",
+      "title": "Metabolic epidemiology of colon cancer: effect of dietary fiber on fecal mutagens and bile acids in healthy subjects.",
+      "verdict": ""
+    },
+    {
+      "phrase": "salmonella typhimurium",
+      "pmid": "16557932",
+      "year": "1971",
+      "title": "Effect of Purified Rabbit Anti-Salmonella typhimurium Antibodies on the Fate of Intravenously Injected Bacteria.",
+      "verdict": ""
+    },
+    {
+      "phrase": "salmonella typhimurium",
+      "pmid": "3531162",
+      "year": "1986",
+      "title": "Export of glutathione by some widely used Salmonella typhimurium and Escherichia coli strains.",
+      "verdict": ""
+    },
+    {
+      "phrase": "salmonella typhimurium",
+      "pmid": "20046228",
+      "year": "2009",
+      "title": "Light-Induced Toxic Effects of Tamoxifen: A Chemotherapeutic and Chemopreventive Agent.",
+      "verdict": ""
+    },
+    {
+      "phrase": "salmonella typhimurium",
+      "pmid": "2698059",
+      "year": "1989",
+      "title": "The in vivo lipolytic effect of Salmonella typhimurium endotoxin.",
+      "verdict": ""
+    },
+    {
+      "phrase": "salmonella typhimurium",
+      "pmid": "10851445",
+      "year": "1997",
+      "title": "Patterns of hepatic and splenic colonization by an attenuated strain of Salmonella typhimurium containing the gene for human interleukin-2: a novel anti-tumor agent.",
+      "verdict": ""
+    },
+    {
+      "phrase": "salmonella typhimurium",
+      "pmid": "6349789",
+      "year": "1983",
+      "title": "Non-mutagenicity of 3-dimethylamino-psi-saccharin to Salmonella typhimurium.",
+      "verdict": ""
+    },
+    {
+      "phrase": "salmonella typhimurium",
+      "pmid": "40393644",
+      "year": "2026",
+      "title": "Multi-omics analysis of glycolytic reprogramming and ROS dynamics in host-specific responses to Salmonella Typhi infection in mice.",
+      "verdict": ""
+    },
+    {
+      "phrase": "salmonella typhimurium",
+      "pmid": "7001887",
+      "year": "1980",
+      "title": "Characterization of a mutagenic bacterial product in human feces.",
+      "verdict": ""
+    },
+    {
+      "phrase": "salmonella typhimurium",
+      "pmid": "38751988",
+      "year": "2024",
+      "title": "Antibacterial effect of curcumin on Salmonella Typhimurium: In vitro and food model studies.",
       "verdict": ""
     },
     {
       "phrase": "probiotic",
-      "pmid": "36838493",
+      "pmid": "42250072",
+      "year": "2026",
+      "title": "Carboxymethylated \u03b2-glucan from Pichia kudriavzevii M16: structural characterization and multifunctional bioactivity.",
+      "verdict": ""
+    },
+    {
+      "phrase": "probiotic",
+      "pmid": "38717445",
+      "year": "2024",
+      "title": "Metabolome-associated psychological comorbidities improvement in irritable bowel syndrome patients receiving a probiotic.",
+      "verdict": ""
+    },
+    {
+      "phrase": "probiotic",
+      "pmid": "27356369",
+      "year": "2014",
+      "title": "[Intestinal microbiota].",
+      "verdict": ""
+    },
+    {
+      "phrase": "probiotic",
+      "pmid": "37778980",
       "year": "2023",
-      "title": "Probiotics and Their Antimicrobial Effect.",
+      "title": "Bifidobacterium animalis subsp. lactis LKM512 Alleviates Inflammatory Bowel Disease in Larval Zebrafish by Reshaping Microbiota.",
       "verdict": ""
     },
     {
       "phrase": "probiotic",
-      "pmid": "32574290",
+      "pmid": "41001122",
+      "year": "2025",
+      "title": "\"Trust your gut\": exploring the connection between gut microbiome dysbiosis and the advancement of Metabolic Associated Steatosis Liver Disease (MASLD)/Metabolic Associated Steatohepatitis (MASH): a systematic review of animal and human studies.",
+      "verdict": ""
+    },
+    {
+      "phrase": "probiotic",
+      "pmid": "41599859",
+      "year": "2026",
+      "title": "The Use of Nutritional Interventions to Enhance Genomic Stability in Mice and Delay Aging.",
+      "verdict": ""
+    },
+    {
+      "phrase": "probiotic",
+      "pmid": "32771989",
       "year": "2020",
-      "title": "Using Probiotics to Flatten the Curve of Coronavirus Disease COVID-2019 Pandemic.",
+      "title": "Role of probiotics in patients with colorectal cancer: a systematic review protocol of randomised controlled trial studies.",
       "verdict": ""
     },
     {
       "phrase": "probiotic",
-      "pmid": "",
-      "year": "2016",
-      "title": "Appraisal of the anti-cancer potential of probiotic Pediococcus pentosaceus GS4 against colon cancer: in vitro and in vivo approaches",
+      "pmid": "39489267",
+      "year": "2024",
+      "title": "Assessment of using heart of date palm as a new source of protein and carbohydrate on the quality of low-fat bio fermented camel milk and its potential anticancer properties.",
       "verdict": ""
     },
     {
       "phrase": "probiotic",
-      "pmid": "27554813",
-      "year": "2016",
-      "title": "Probiotic supplementation has little effect on peripheral blood regulatory T cells.",
+      "pmid": "36844712",
+      "year": "2023",
+      "title": "Preparing the Bowel (Microbiome) for Surgery: Surgical Bioresilience.",
       "verdict": ""
     },
     {
       "phrase": "probiotic",
-      "pmid": "32832510",
-      "year": "2020",
-      "title": "Probiotics and synbiotics targeting the intestinal microbiome attenuate non-alcoholic fatty liver disease.",
+      "pmid": "31500368",
+      "year": "2019",
+      "title": "Worm-Based Alternate Assessment of Probiotic Intervention against Gut Barrier Infection.",
       "verdict": ""
     }
   ],
@@ -1197,7 +1198,14 @@
   "refused": [
     "magnetotactic bacteria"
   ],
-  "control_separates": false,
+  "control_separates": true,
   "worst_real": 0.26785714285714285,
-  "best_control": 0.43
+  "best_control": 0.195,
+  "separation_margin": 0.07285714285714284,
+  "separation_se": 0.044183646368469796,
+  "separation_exceeds_noise": false,
+  "separation_worst_real": "magnetotactic bacteria",
+  "separation_worst_real_n": 168,
+  "separation_best_control": "helicobacter pylori",
+  "separation_best_control_n": 200
 }
