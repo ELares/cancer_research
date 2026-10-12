@@ -349,3 +349,21 @@ def test_the_ceiling_is_cross_checked_against_the_committed_calibration():
     # Non-vacuity: it must not be EXACTLY complete either, or the page would be
     # rounding a real asymptote to 100%.
     assert x["inhibition_at_committed_top_dose"] < 1.0
+
+
+def test_the_depletion_map_is_the_same_function_object_as_the_feasibility_page():
+    """ONE implementation, not two that agree today.
+
+    This page composes on top of #909's map. When it carried its own copy the
+    two agreed across 99 depletions -- which is precisely what makes a duplicate
+    comfortable to leave in place until it silently stops agreeing. Asserting
+    identity rather than equality means a restatement fails even while it is
+    still correct.
+    """
+    import cysteine_depletion_dose_equivalence as here
+    import cysteine_depletion_feasibility as there
+
+    assert here.inhibition_from_depletion is there.inhibition_from_depletion, (
+        "the depletion map has been restated locally; import it instead, or the "
+        "two copies will drift")
+    assert here.saturation is there.saturation

@@ -81,6 +81,17 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from config import PROJECT_ROOT  # noqa: E402
 
+# IMPORTED, not restated. The depletion->supply map belongs to #909 and this
+# page composes on top of it; a second copy beside the real one is how the two
+# drift apart, which is the precedent `atlas_landscape.PHARMACOLOGICAL` was
+# hoisted to module level for. They agreed across 99 depletions when this page
+# carried its own copy -- agreement today is exactly what makes a duplicate
+# comfortable to leave in place.
+from cysteine_depletion_feasibility import (  # noqa: E402
+    inhibition_from_depletion,
+    saturation,
+)
+
 CAL = PROJECT_ROOT / "analysis" / "calibration"
 CONST_SRC = CAL / "cysteine_depletion_constants.csv"
 ERASTIN_SRC = CAL / "erastin-calibration.json"
@@ -155,18 +166,6 @@ def load_inputs() -> dict:
                             if k in ("lp_propagation", "lp_rate")},
         "viability_constraint": float(constraint),
     }
-
-
-def saturation(s: float, km: float) -> float:
-    return 0.0 if s <= 0 else s / (km + s)
-
-
-def inhibition_from_depletion(d: float, s0: float, km: float) -> float:
-    """The supply fraction a depletion fraction is worth (the #909 map)."""
-    ref = saturation(s0, km)
-    if ref <= 0:
-        raise MissingInputError("reference concentration gives zero uptake")
-    return 1.0 - saturation(s0 * (1.0 - d), km) / ref
 
 
 def erastin_dose_for_inhibition(i: float, k: float, h: float):
