@@ -1070,16 +1070,31 @@ def run(years, sources, limit_new=None, verbose=True) -> dict:
                     tally = st.execute(
                         "SELECT seen, hits FROM slice WHERE src=? AND year=?",
                         (src, year)).fetchone()
-                    short = (tally and tally[1] and tally[1] > 0
-                             and tally[0] < tally[1])
+                    walked, total = (tally or (0, -1))
+                    short = total > 0 and walked < total
+                    # AND the case the fix above creates. `hits` defaults to -1
+                    # and an absent hitCount now leaves it alone, so a slice
+                    # whose responses NEVER carried one retires with total = -1
+                    # and walked > 0 -- no recorded total to compare against.
+                    # `short` is False there, so without this it would be
+                    # exactly as silent as the thing being fixed. The two
+                    # damaged slices carry hits=0 rather than -1, which is
+                    # itself the proof an UPDATE ran with a zero: the schema
+                    # default was never overwritten on a healthy path.
+                    no_total = total <= 0 and walked > 0
                     st.execute("UPDATE slice SET done=1, deferred=0 "
                                "WHERE src=? AND year=?", (src, year))
                     if short:
                         print(f"  {src:4} {year}  RETIRED SHORT: walked "
-                              f"{tally[0]:,} of {tally[1]:,} -- the page walk "
+                              f"{walked:,} of {total:,} -- the page walk "
                               f"ended before the recorded total, so this slice "
                               f"is INCOMPLETE and marked done (#913)",
                               flush=True)
+                    elif no_total:
+                        print(f"  {src:4} {year}  RETIRED WITH NO TOTAL: walked "
+                              f"{walked:,} and no response ever reported a "
+                              f"hitCount, so completeness is UNKNOWN rather "
+                              f"than verified (#913)", flush=True)
                     if verbose and slice_abandoned:
                         print(f"  {src:4} {year}  done, but {slice_abandoned:,} "
                               f"records stored WITHOUT full text after a second "
@@ -1122,6 +1137,36 @@ def _finish(shards, st, ident, totals):
     return totals
 
 
+def incomplete_slices(c) -> list:
+    """Slices marked done that the ledger cannot certify as complete (#913).
+
+    TWO detectors, because the historical cases are invisible to the general
+    one:
+
+      1. `seen < hits` -- the general case, and it only became expressible when
+         #910 stopped an absent hitCount from zeroing the total. Retrospectively
+         it finds one slice repo-wide (PPR 2022, short by 25 of 23,365), which
+         is the right order of noise for a check anyone will actually read.
+
+      2. `hits <= 0` with `seen > 0` -- the slices the zeroing BLINDED, which
+         detector 1 cannot see because it needs `hits > 0`. The schema default
+         is -1 and a healthy walk always records a real total, so this cannot
+         arise on a sound path. Bounded: 3 slices match today (MED 1990, MED
+         2015, MED 2022) and the clause can be dropped once they are recovered.
+
+    Deliberately NOT `seen % PAGE == 0`. That is how the two damaged slices were
+    FOUND -- exactly 2 of 122 walked slices landed on a page boundary and they
+    were precisely the two carrying hits=0 and done=1 -- but it is unsafe as a
+    standing rule: a slice whose true total happens to be a round multiple of
+    the page size would be reopened forever.
+    """
+    return list(c.execute(
+        "SELECT src, year, seen, hits FROM slice "
+        "WHERE done=1 AND ((hits > 0 AND seen < hits) "
+        "               OR (hits <= 0 AND seen > 0)) "
+        "ORDER BY src, year"))
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--from-year", type=int, default=1900)
@@ -1130,7 +1175,41 @@ def main() -> int:
                     help="stop after this many new records (a dry run)")
     ap.add_argument("--sources", default=None, help="comma list, e.g. PPR,PAT")
     ap.add_argument("--status", action="store_true")
+    ap.add_argument("--incomplete", action="store_true",
+                    help="report slices marked done that the ledger cannot "
+                         "certify as complete (#913); read-only")
+    ap.add_argument("--reopen-incomplete", action="store_true",
+                    help="reopen those slices (done=0, cursor='*') so the next "
+                         "pass re-walks them; writes to the ledger")
     a = ap.parse_args()
+    if a.incomplete or a.reopen_incomplete:
+        c = state()
+        rows = incomplete_slices(c)
+        if not rows:
+            print("no slice is marked done without being certifiable complete")
+            c.close()
+            return 0
+        print(f"  {'src':5} {'year':>5} {'walked':>10} {'total':>10}  why")
+        for src, year, seen, hits in rows:
+            why = ("walked short of the recorded total" if hits > 0
+                   else "no total was ever recorded, so completeness is UNKNOWN")
+            total = f"{hits:,}" if hits > 0 else "-"
+            print(f"  {src:5} {year:>5} {seen:>10,} {total:>10}  {why}")
+        if not a.reopen_incomplete:
+            print(f"\n{len(rows)} slice(s). Re-run with --reopen-incomplete to "
+                  f"reopen them for the next pass.")
+            c.close()
+            return 0
+        # WRITES. Separate flag rather than a prompt: this is run from a script
+        # as often as by hand, and a slice reopened by accident costs a full
+        # re-walk of a source-year.
+        for src, year, _seen, _hits in rows:
+            c.execute("UPDATE slice SET done=0, cursor='*' WHERE src=? AND year=?",
+                      (src, year))
+        c.commit()
+        print(f"\nreopened {len(rows)} slice(s); the next pass will re-walk them")
+        c.close()
+        return 0
     if a.status:
         c = state()
         rows = c.execute("SELECT src, SUM(seen), SUM(kept), SUM(fulltext), SUM(done), COUNT(*) "

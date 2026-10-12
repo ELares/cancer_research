@@ -1607,7 +1607,14 @@ def test_a_complete_walk_raises_no_short_alarm(tmp_path, monkeypatch, capsys):
     """
     totals, row, stored = _drive(tmp_path, monkeypatch, pages=[_page(["A", "B"], None)])
     assert row["done"] == 1 and row["seen"] == row["hits"] == 2
-    assert "RETIRED SHORT" not in capsys.readouterr().out
+    out = capsys.readouterr().out
+    assert "RETIRED SHORT" not in out
+    # BOTH alarms, because they sit in an if/elif: an always-true `no_total`
+    # never fires while `short` is true, so a test that only exercises the
+    # short branch cannot see it. That mutation survived the first sweep.
+    assert "RETIRED WITH NO TOTAL" not in out, (
+        "a complete walk with a known total reported its completeness as "
+        "unknown")
 
 
 def test_a_rewalked_slice_does_not_trip_the_short_alarm(tmp_path, monkeypatch, capsys):
@@ -1651,8 +1658,163 @@ def test_the_short_check_reads_the_column_not_the_per_run_local(tmp_path):
     src = Path(fx.__file__).read_text()
     assert 'SELECT seen, hits FROM slice WHERE src=? AND year=?' in src, (
         "the short check no longer reads the accumulated column")
-    i = src.index("RETIRED SHORT")
-    window = src[i - 900:i]
-    assert "tally = st.execute(" in window, (
-        "the alarm is not fed by the ledger read, so it may be using the "
-        "per-run local and calling every resumed slice short")
+    # The DATA-FLOW CHAIN, not a character window. This was `src[i-900:i]`,
+    # which broke the moment a comment was added above it -- a fixed offset
+    # fails on unrelated prose and passes on a real defect that happens to fit.
+    assert "walked, total = (tally or (0, -1))" in src, (
+        "the alarm no longer unpacks the ledger read")
+    assert "short = total > 0 and walked < total" in src, (
+        "the short test is not computed from the ledger read, so it may be "
+        "using the per-run local and calling every resumed slice short")
+    assert src.index("tally = st.execute(") < src.index("RETIRED SHORT"), (
+        "the ledger is read after the alarm, which cannot work")
+
+# ---------------------------------------------------------------------------
+# #913: finding and reopening slices the ledger cannot certify as complete.
+# ---------------------------------------------------------------------------
+
+def _ledger(tmp_path, monkeypatch, rows):
+    """A ledger seeded with (src, year, seen, hits, done) rows and nothing else."""
+    monkeypatch.setattr(fx, "STATE_DB", tmp_path / "state.sqlite")
+    c = fx.state()
+    for src, year, seen, hits, done in rows:
+        c.execute("INSERT INTO slice(src,year,cursor,seen,kept,hits,done,query_id) "
+                  "VALUES (?,?,'*',?,0,?,?,'q')", (src, year, seen, hits, done))
+    c.commit()
+    return c
+
+
+def test_a_slice_that_walked_short_of_its_total_is_found(tmp_path, monkeypatch):
+    c = _ledger(tmp_path, monkeypatch, [("PPR", 2022, 23340, 23365, 1)])
+    assert [(r[0], r[1]) for r in fx.incomplete_slices(c)] == [("PPR", 2022)]
+    c.close()
+
+
+def test_a_slice_with_no_recorded_total_is_found(tmp_path, monkeypatch):
+    """The historical shape detector 1 cannot see, because it needs hits > 0."""
+    c = _ledger(tmp_path, monkeypatch,
+                [("MED", 2022, 138000, 0, 1), ("MED", 1990, 10000, -1, 1)])
+    found = [(r[0], r[1]) for r in fx.incomplete_slices(c)]
+    assert set(found) == {("MED", 2022), ("MED", 1990)}, (
+        "both the zeroed and the never-recorded totals must be found; the "
+        "zeroing is exactly what hid ~402,000 records")
+    c.close()
+
+
+def test_a_complete_slice_is_not_found(tmp_path, monkeypatch):
+    """Non-vacuity. A detector that flags everything would pass the tests above."""
+    c = _ledger(tmp_path, monkeypatch,
+                [("MED", 1989, 64206, 64194, 1), ("MED", 1973, 24323, 24323, 1)])
+    assert fx.incomplete_slices(c) == [], (
+        "a healthy slice (seen >= hits) was flagged; note 1989 has seen > hits, "
+        "which is normal for a re-walked slice and must not read as damage")
+    c.close()
+
+
+def test_an_open_slice_is_not_found(tmp_path, monkeypatch):
+    """`done=0` is already going to be re-walked; flagging it is noise."""
+    c = _ledger(tmp_path, monkeypatch, [("MED", 2015, 101993, 0, 0)])
+    assert fx.incomplete_slices(c) == []
+    c.close()
+
+
+def test_a_round_walk_total_is_not_treated_as_evidence(tmp_path, monkeypatch):
+    """The page-boundary fingerprint must NOT be a detector.
+
+    It is how the two damaged slices were found, but a slice whose true total
+    happens to be an exact multiple of PAGE would be reopened forever.
+    """
+    c = _ledger(tmp_path, monkeypatch, [("MED", 2000, 10000, 10000, 1)])
+    assert fx.incomplete_slices(c) == [], (
+        "a complete slice was flagged for the shape of its number, which would "
+        "reopen it on every pass")
+    c.close()
+
+
+def test_reopening_clears_done_and_rewinds_only_the_flagged_slices(
+        tmp_path, monkeypatch, capsys):
+    rows = [("MED", 2022, 138000, 0, 1),          # flagged
+            ("MED", 1989, 64206, 64194, 1)]       # healthy, must be untouched
+    c = _ledger(tmp_path, monkeypatch, rows)
+    c.execute("UPDATE slice SET cursor='somewhere' WHERE src='MED'")
+    c.commit()
+    c.close()
+    monkeypatch.setattr(sys, "argv", ["corpus_expand_fetch.py", "--reopen-incomplete"])
+    assert fx.main() == 0
+    c = fx.state()
+    got = dict((f"{s}{y}", (cur, done)) for s, y, cur, done in
+               c.execute("SELECT src, year, cursor, done FROM slice"))
+    c.close()
+    assert got["MED2022"] == ("*", 0), "the flagged slice was not rewound"
+    assert got["MED1989"] == ("somewhere", 1), (
+        "a healthy slice was reopened; only the flagged ones may move")
+    out = capsys.readouterr().out
+    assert "reopened 1 slice" in out
+
+
+def test_the_report_alone_writes_nothing(tmp_path, monkeypatch, capsys):
+    """`--incomplete` must be read-only; the write needs its own flag."""
+    c = _ledger(tmp_path, monkeypatch, [("MED", 2022, 138000, 0, 1)])
+    c.close()
+    monkeypatch.setattr(sys, "argv", ["corpus_expand_fetch.py", "--incomplete"])
+    assert fx.main() == 0
+    c = fx.state()
+    cur, done = c.execute("SELECT cursor, done FROM slice").fetchone()
+    c.close()
+    assert done == 1 and cur == "*", "the report mutated the ledger"
+    assert "--reopen-incomplete" in capsys.readouterr().out, (
+        "the report must say how to act on it")
+
+
+def test_retiring_with_no_recorded_total_at_all_also_says_so(
+        tmp_path, monkeypatch, capsys):
+    """The gap the #910 fix CREATED, on a fresh slice.
+
+    `hits` defaults to -1 and an absent hitCount now leaves it alone, so a slice
+    whose responses never carried one retires with total = -1. `short` is False
+    there (it needs total > 0), so without a second alarm this would be exactly
+    as silent as the defect being fixed.
+    """
+    page = _page(["A", "B"], None)
+    del page["hitCount"]
+    totals, row, stored = _drive(tmp_path, monkeypatch, pages=[page])
+    assert row["done"] == 1 and row["seen"] == 2
+    assert row["hits"] == -1, (
+        f"hits is {row['hits']}, not the schema default; the fixture is not "
+        "exercising a never-recorded total")
+    out = capsys.readouterr().out
+    assert "RETIRED WITH NO TOTAL" in out, (
+        "a slice retired with no total ever reported and said nothing, which is "
+        "the same silence #910 was about")
+    assert "RETIRED SHORT" not in out, (
+        "the two alarms must be distinguishable: there is no total to be short of")
+
+
+def test_the_two_alarms_are_mutually_exclusive(tmp_path, monkeypatch, capsys):
+    """A known total that was not reached is SHORT, not unknown."""
+    page = _page(["A"], None)
+    page["hitCount"] = 900
+    totals, row, stored = _drive(tmp_path, monkeypatch, pages=[page])
+    out = capsys.readouterr().out
+    assert "RETIRED SHORT" in out
+    assert "RETIRED WITH NO TOTAL" not in out, (
+        "a slice with a recorded total of 900 reported its completeness as "
+        "unknown; the total is known and was missed")
+
+
+def test_an_empty_slice_is_not_called_unknown(tmp_path, monkeypatch, capsys):
+    """Nothing walked and no total is an EMPTY slice, not an unverifiable one.
+
+    Without the `walked > 0` clause the alarm fires on every empty source-year
+    -- and this crawl has dozens, every PPR year before 1946 among them. An
+    alarm that fires on a third of the ledger is one nobody reads, which is how
+    the thing it exists to catch gets missed.
+    """
+    empty = {"resultList": {"result": []}, "nextCursorMark": None}
+    totals, row, stored = _drive(tmp_path, monkeypatch, pages=[empty])
+    assert row["seen"] == 0 and row["hits"] == -1, (
+        f"fixture broken: seen={row['seen']} hits={row['hits']}")
+    out = capsys.readouterr().out
+    assert "RETIRED WITH NO TOTAL" not in out, (
+        "an empty slice was reported as having unknown completeness")
+    assert "RETIRED SHORT" not in out
