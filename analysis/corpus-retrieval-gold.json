@@ -1,0 +1,45 @@
+{
+  "_provenance": "Gold PMIDs were identified by field-restricted phrase search against the LIVE Europe PMC API (TITLE_ABS phrase queries, CITED desc), and each title was read to confirm the paper is genuinely about the mechanism named. They were NOT selected by running the local index, so neither arm of the evaluation chose its own answers. Membership in the corpus was verified independently against corpus/atlas/identity.sqlite: 10 of the 11 papers first identified are held; PMID 37358255 is not, and was dropped rather than counted as a retrieval failure.",
+  "_known_bias": "Because the gold was found by phrase search, every gold paper is guaranteed to contain its mechanism phrase. That favours arm B, which searches for phrases. The evaluation therefore measures whether phrasing plus field weighting can recover a paper the corpus demonstrably holds -- known-item retrieval -- and does NOT claim to measure precision over unjudged results.",
+  "_arms": {
+    "a": "every token OR'd, title and abstract weighted equally",
+    "b": "concepts as required phrases, title weighted 10x the abstract"
+  },
+  "queries": [
+    {
+      "id": "bacteria-immune-tagging",
+      "question": "engineered bacteria that tag tumors for immune recognition",
+      "concepts": ["engineered bacteria", "tumor"],
+      "gold": ["37824640", "31270504", "32483165", "35301496", "39423284"],
+      "note": "The mechanism the owner described: bacteria mark a tumour so white cells attack it."
+    },
+    {
+      "id": "ultrasound-gated-bacteria",
+      "question": "ultrasound controlled bacteria for cancer immunotherapy",
+      "concepts": ["engineered bacteria", "ultrasound"],
+      "gold": ["35332124"],
+      "note": "Intersects this repo's own sonodynamic thesis."
+    },
+    {
+      "id": "bacteria-fenton-iron",
+      "question": "bacteria generating iron catalyzed fenton reaction in tumors",
+      "concepts": ["bacteria", "Fenton"],
+      "gold": ["30803049"],
+      "note": "Fenton chemistry is iron-catalysed ROS, the ferroptosis mechanism this repo models."
+    },
+    {
+      "id": "microbiome-gpx4",
+      "question": "gut microbiome metabolite regulating GPX4 and ferroptosis",
+      "concepts": ["gut microbiota", "GPX4"],
+      "gold": ["33779497", "36890785"],
+      "note": "GPX4 is the gene the ferroptosis engine models; a microbial metabolite altering it is a causal bridge."
+    },
+    {
+      "id": "ferroptosis-macrophage-bacteria",
+      "question": "ferroptosis in macrophages defending against intracellular bacteria",
+      "concepts": ["ferroptotic", "bacteria"],
+      "gold": ["35265210"],
+      "note": "Ferroptosis as an immune effector mechanism rather than a tumour-cell death mode."
+    }
+  ]
+}

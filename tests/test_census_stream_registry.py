@@ -61,6 +61,22 @@ _PATTERN = re.compile(
 
 # module -> (streams it reads, why that set is the right one)
 REGISTRY = {
+    "corpus_retrieval_index.py": (
+        {"records", "records_unindexed"},
+        "BOTH, deliberately, and a measurement forced the decision. This "
+        "builds a full-text search index so a paper the project already holds "
+        "can be FOUND, and the first version read neither stream -- only the "
+        "expansion crawl's shards. The evaluation then scored 0.000 on both "
+        "arms because not one of ten known-relevant papers was in the index; "
+        "all ten are credited to census-mesh. The crawl stores only records "
+        "`is_held()` says are new, so it is the census's COMPLEMENT by "
+        "construction and can never contain a paper the census already had. "
+        "records_unindexed is included for the same reason the census needs "
+        "it: the MeSH-unindexed share climbs with recency, so omitting it "
+        "would make the newest literature unsearchable -- the opposite of "
+        "what a discovery index is for. Indexing is additive and reads only "
+        "title, abstract and MeSH; nothing here writes to or reorders either "
+        "stream, and the frozen corpus is untouched."),
     "paired_partner_agreement.py": (
         set(),
         "The records key stores frozen PMID/label snapshots, not a census "
