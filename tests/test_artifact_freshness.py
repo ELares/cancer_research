@@ -162,6 +162,25 @@ EXEMPT: dict = {
         "test_preprint_access_check.py pins render() against both the blocked "
         "and the reachable case, so the page cannot silently keep saying "
         "'blocked' after the block is lifted."),
+    "corpus_retrieval_eval": (
+        "Reads the FTS5 retrieval index, which is derived from the census "
+        "shards and the crawl's shards and is itself 20 GB and gitignored. "
+        "Regenerating here finds no index and raises, so there is nothing for "
+        "a diff to compare. Exemption removes it from LIVE, which is what the "
+        "order gate below iterates, so its order-independence is pinned "
+        "instead by test_corpus_retrieval.py::"
+        "test_the_evaluation_report_order_is_established_by_the_renderer, "
+        "which hands render() a synthetic result dict and so needs neither "
+        "the index nor a committed artifact."
+    ),
+    "mechanism_keyword_precision": (
+        "Reads the same 20 GB gitignored retrieval index, for the same "
+        "reason: the candidate keyword pools are counted over it. Exemption "
+        "removes it from LIVE, so its order-independence is pinned instead by "
+        "test_corpus_retrieval.py::"
+        "test_the_keyword_report_order_is_established_by_the_renderer, which "
+        "builds a synthetic candidate list and needs no index."
+    ),
     "fulltext_ceiling": (
         "Every number is a live hitCount from Europe PMC, which grows daily, so "
         "the artifact is a dated reading rather than a function of committed "
@@ -218,7 +237,7 @@ LIVE = [g[0] for g in GENERATORS
 # Pinned EXACTLY, not as a floor. A floor with slack lets a generator drop out
 # of the gate silently: at `>= 25` against 26, deleting the marker from one
 # script left the suite green with two parametrised cases quietly gone.
-EXPECTED_GENERATORS = 92
+EXPECTED_GENERATORS = 94
 
 
 def test_the_generator_list_is_discovered_not_listed():

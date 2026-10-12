@@ -62,6 +62,15 @@ corpus/atlas/records_updates/
 corpus/atlas/identity.sqlite*
 corpus/atlas/expand_state.sqlite*
 
+# The retrieval index is 20 GB of titles, abstracts and MeSH descriptors
+# derived entirely from data this project already holds, and it is REBUILDABLE
+# from `scripts/corpus_retrieval_index.py` -- measured at 37 minutes for
+# 7,727,217 records over 3,317 shards, most of it waiting on the network share
+# the shards live on. It carries no information its sources do not, and
+# committing it would put a 20 GB binary in a repository whose whole point is
+# that its artifacts are small and checkable.
+corpus/atlas/retrieval.sqlite*
+
 # The expansion crawl's live progress report. Regenerated on demand from the
 # stored shards and stamped with the moment it was taken, so its hash changes
 # every time it is refreshed -- committing it would make MANIFEST.sha256 stale

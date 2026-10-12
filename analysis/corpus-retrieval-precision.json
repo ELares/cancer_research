@@ -1,0 +1,367 @@
+{
+  "docs_indexed": 7727217,
+  "queries": 5,
+  "gold_in_index": 10,
+  "gold_missing_from_index": [],
+  "gold_total": 10,
+  "depth": 50,
+  "at_k": 10,
+  "aggregate": {
+    "a": {
+      "mrr": 0.35111989459815546,
+      "recall_at_k": 0.5,
+      "gold_found": 5,
+      "median_pool": 6638629
+    },
+    "b": {
+      "mrr": 0.4833333333333333,
+      "recall_at_k": 0.7,
+      "gold_found": 4,
+      "median_pool": 71
+    }
+  },
+  "per_query": [
+    {
+      "id": "bacteria-immune-tagging",
+      "question": "engineered bacteria that tag tumors for immune recognition",
+      "concepts": [
+        "engineered bacteria",
+        "tumor"
+      ],
+      "note": "The mechanism the owner described: bacteria mark a tumour so white cells attack it.",
+      "gold": [
+        "37824640",
+        "31270504",
+        "32483165",
+        "35301496",
+        "39423284"
+      ],
+      "gold_absent_from_index": [],
+      "a": {
+        "arm": "a",
+        "match": "{title abstract}: (\"engineered\" OR \"bacteria\" OR \"that\" OR \"tag\" OR \"tumors\" OR \"for\" OR \"immune\" OR \"recognition\")",
+        "pool": 6196053,
+        "ranks": {
+          "37824640": null,
+          "31270504": 23,
+          "32483165": null,
+          "35301496": null,
+          "39423284": null
+        },
+        "found": 1,
+        "gold_total": 5,
+        "recall_at_k": 0.0,
+        "rr": 0.043478260869565216,
+        "top3": [
+          {
+            "pmid": "40157514",
+            "title": "Metabolic reprogramming of tumor microenviroment by engineered bacteri"
+          },
+          {
+            "pmid": "42439475",
+            "title": "Artificial Host-Guest Recognition Directs Glycometabolically Engineere"
+          },
+          {
+            "pmid": "33425777",
+            "title": "Human Short Peptidoglycan Recognition Protein PGLYRP1/Tag-7/PGRP-S Inh"
+          }
+        ]
+      },
+      "b": {
+        "arm": "b",
+        "match": "{title abstract}: (\"engineered bacteria\" AND \"tumor\")",
+        "pool": 289,
+        "ranks": {
+          "37824640": null,
+          "31270504": null,
+          "32483165": null,
+          "35301496": null,
+          "39423284": null
+        },
+        "found": 0,
+        "gold_total": 5,
+        "recall_at_k": 0.0,
+        "rr": 0.0,
+        "top3": [
+          {
+            "pmid": "38623680",
+            "title": "Engineered Bacteria Detect Tumor DNA: Evaluation and Prospect."
+          },
+          {
+            "pmid": "37429881",
+            "title": "Author Correction: Modular-designed engineered bacteria for precision "
+          },
+          {
+            "pmid": "38688906",
+            "title": "Author Correction: Spatiotemporal control of engineered bacteria to ex"
+          }
+        ]
+      }
+    },
+    {
+      "id": "ultrasound-gated-bacteria",
+      "question": "ultrasound controlled bacteria for cancer immunotherapy",
+      "concepts": [
+        "engineered bacteria",
+        "ultrasound"
+      ],
+      "note": "Intersects this repo's own sonodynamic thesis.",
+      "gold": [
+        "35332124"
+      ],
+      "gold_absent_from_index": [],
+      "a": {
+        "arm": "a",
+        "match": "{title abstract}: (\"ultrasound\" OR \"controlled\" OR \"bacteria\" OR \"for\" OR \"cancer\" OR \"immunotherapy\")",
+        "pool": 5877824,
+        "ranks": {
+          "35332124": 6
+        },
+        "found": 1,
+        "gold_total": 1,
+        "recall_at_k": 1.0,
+        "rr": 0.16666666666666666,
+        "top3": [
+          {
+            "pmid": "35918309",
+            "title": "Spatiotemporal control of engineered bacteria to express interferon-\u03b3 "
+          },
+          {
+            "pmid": "40688674",
+            "title": "Sonogenetics regulation of intelligent engineered bacteria to reverse "
+          },
+          {
+            "pmid": "38688906",
+            "title": "Author Correction: Spatiotemporal control of engineered bacteria to ex"
+          }
+        ]
+      },
+      "b": {
+        "arm": "b",
+        "match": "{title abstract}: (\"engineered bacteria\" AND \"ultrasound\")",
+        "pool": 29,
+        "ranks": {
+          "35332124": 6
+        },
+        "found": 1,
+        "gold_total": 1,
+        "recall_at_k": 1.0,
+        "rr": 0.16666666666666666,
+        "top3": [
+          {
+            "pmid": "38688906",
+            "title": "Author Correction: Spatiotemporal control of engineered bacteria to ex"
+          },
+          {
+            "pmid": "40104641",
+            "title": "Ultrasound-responsive engineered bacteria mediated specific controlled"
+          },
+          {
+            "pmid": "38640931",
+            "title": "Ultrasound-visible engineered bacteria for tumor chemo-immunotherapy."
+          }
+        ]
+      }
+    },
+    {
+      "id": "bacteria-fenton-iron",
+      "question": "bacteria generating iron catalyzed fenton reaction in tumors",
+      "concepts": [
+        "bacteria",
+        "Fenton"
+      ],
+      "note": "Fenton chemistry is iron-catalysed ROS, the ferroptosis mechanism this repo models.",
+      "gold": [
+        "30803049"
+      ],
+      "gold_absent_from_index": [],
+      "a": {
+        "arm": "a",
+        "match": "{title abstract}: (\"bacteria\" OR \"generating\" OR \"iron\" OR \"catalyzed\" OR \"fenton\" OR \"reaction\" OR \"in\" OR \"tumors\")",
+        "pool": 6771944,
+        "ranks": {
+          "30803049": 22
+        },
+        "found": 1,
+        "gold_total": 1,
+        "recall_at_k": 0.0,
+        "rr": 0.045454545454545456,
+        "top3": [
+          {
+            "pmid": "35027953",
+            "title": "Iron-doxorubicin prodrug loaded liposome nanogenerator programs multim"
+          },
+          {
+            "pmid": "34547257",
+            "title": "Photothermal nanozyme-ignited Fenton reaction-independent ferroptosis "
+          },
+          {
+            "pmid": "27855492",
+            "title": "Sodium ascorbate kills Candida albicans in vitro via iron-catalyzed Fe"
+          }
+        ]
+      },
+      "b": {
+        "arm": "b",
+        "match": "{title abstract}: (\"bacteria\" AND \"Fenton\")",
+        "pool": 72,
+        "ranks": {
+          "30803049": 4
+        },
+        "found": 1,
+        "gold_total": 1,
+        "recall_at_k": 1.0,
+        "rr": 0.25,
+        "top3": [
+          {
+            "pmid": "38098651",
+            "title": "Long-term continuous degradation of carbon nanotubes by a bacteria-dri"
+          },
+          {
+            "pmid": "34147772",
+            "title": "Identifying driving factors of humic acid formation during rice straw "
+          },
+          {
+            "pmid": "38138725",
+            "title": "A Synergistic Antibacterial Study of Copper-Doped Polydopamine on Ti3C"
+          }
+        ]
+      }
+    },
+    {
+      "id": "microbiome-gpx4",
+      "question": "gut microbiome metabolite regulating GPX4 and ferroptosis",
+      "concepts": [
+        "gut microbiota",
+        "GPX4"
+      ],
+      "note": "GPX4 is the gene the ferroptosis engine models; a microbial metabolite altering it is a causal bridge.",
+      "gold": [
+        "33779497",
+        "36890785"
+      ],
+      "gold_absent_from_index": [],
+      "a": {
+        "arm": "a",
+        "match": "{title abstract}: (\"gut\" OR \"microbiome\" OR \"metabolite\" OR \"regulating\" OR \"GPX4\" OR \"and\" OR \"ferroptosis\")",
+        "pool": 6638629,
+        "ranks": {
+          "33779497": 2,
+          "36890785": null
+        },
+        "found": 1,
+        "gold_total": 2,
+        "recall_at_k": 0.5,
+        "rr": 0.5,
+        "top3": [
+          {
+            "pmid": "37752615",
+            "title": "The gut metabolite 3-hydroxyphenylacetic acid rejuvenates spermatogeni"
+          },
+          {
+            "pmid": "33779497",
+            "title": "The gut microbiota metabolite capsiate promotes Gpx4 expression by act"
+          },
+          {
+            "pmid": "42180552",
+            "title": "Interactions between the gut microbiome and ferroptosis in degenerativ"
+          }
+        ]
+      },
+      "b": {
+        "arm": "b",
+        "match": "{title abstract}: (\"gut microbiota\" AND \"GPX4\")",
+        "pool": 71,
+        "ranks": {
+          "33779497": 1,
+          "36890785": null
+        },
+        "found": 1,
+        "gold_total": 2,
+        "recall_at_k": 0.5,
+        "rr": 1.0,
+        "top3": [
+          {
+            "pmid": "33779497",
+            "title": "The gut microbiota metabolite capsiate promotes Gpx4 expression by act"
+          },
+          {
+            "pmid": "40876612",
+            "title": "Ginsenoside Rb3 modulates gut microbiota to alleviate cerebral inflamm"
+          },
+          {
+            "pmid": "40856206",
+            "title": "Dietary hispidulin ameliorated chemically-induced colitis by inhibitin"
+          }
+        ]
+      }
+    },
+    {
+      "id": "ferroptosis-macrophage-bacteria",
+      "question": "ferroptosis in macrophages defending against intracellular bacteria",
+      "concepts": [
+        "ferroptotic",
+        "bacteria"
+      ],
+      "note": "Ferroptosis as an immune effector mechanism rather than a tumour-cell death mode.",
+      "gold": [
+        "35265210"
+      ],
+      "gold_absent_from_index": [],
+      "a": {
+        "arm": "a",
+        "match": "{title abstract}: (\"ferroptosis\" OR \"in\" OR \"macrophages\" OR \"defending\" OR \"against\" OR \"intracellular\" OR \"bacteria\")",
+        "pool": 6654762,
+        "ranks": {
+          "35265210": 1
+        },
+        "found": 1,
+        "gold_total": 1,
+        "recall_at_k": 1.0,
+        "rr": 1.0,
+        "top3": [
+          {
+            "pmid": "35265210",
+            "title": "Ferroptotic stress promotes macrophages against intracellular bacteria"
+          },
+          {
+            "pmid": "25289573",
+            "title": "Are inflammatory phagocytes responsible for resistance to facultative "
+          },
+          {
+            "pmid": "36211962",
+            "title": "Heme oxygenase-1 modulates ferroptosis by fine-tuning levels of intrac"
+          }
+        ]
+      },
+      "b": {
+        "arm": "b",
+        "match": "{title abstract}: (\"ferroptotic\" AND \"bacteria\")",
+        "pool": 16,
+        "ranks": {
+          "35265210": 1
+        },
+        "found": 1,
+        "gold_total": 1,
+        "recall_at_k": 1.0,
+        "rr": 1.0,
+        "top3": [
+          {
+            "pmid": "35265210",
+            "title": "Ferroptotic stress promotes macrophages against intracellular bacteria"
+          },
+          {
+            "pmid": "38059412",
+            "title": "Endogenous chemicals guard health through inhibiting ferroptotic cell "
+          },
+          {
+            "pmid": "42039264",
+            "title": "Targeted intestinal barrier repair via probiotic-derived engineered ou"
+          }
+        ]
+      }
+    }
+  ],
+  "provenance": "Gold PMIDs were identified by field-restricted phrase search against the LIVE Europe PMC API (TITLE_ABS phrase queries, CITED desc), and each title was read to confirm the paper is genuinely about the mechanism named. They were NOT selected by running the local index, so neither arm of the evaluation chose its own answers. Membership in the corpus was verified independently against corpus/atlas/identity.sqlite: 10 of the 11 papers first identified are held; PMID 37358255 is not, and was dropped rather than counted as a retrieval failure.",
+  "known_bias": "Because the gold was found by phrase search, every gold paper is guaranteed to contain its mechanism phrase. That favours arm B, which searches for phrases. The evaluation therefore measures whether phrasing plus field weighting can recover a paper the corpus demonstrably holds -- known-item retrieval -- and does NOT claim to measure precision over unjudged results."
+}
