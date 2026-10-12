@@ -31,6 +31,13 @@
       "untreated_glycolytic": 0.0
     }
   },
+  "ceiling_cross_check": {
+    "absolute_disagreement": 0.00725000000000009,
+    "committed_top_dose_increment": 0.4215,
+    "inhibition_at_committed_top_dose": 0.9999360040957379,
+    "my_complete_block_increment": 0.4287500000000001,
+    "top_dose_uM": 30.0
+  },
   "equivalence_rows": [
     {
       "depletion": 0.25,
@@ -103,6 +110,8 @@
   ],
   "full_floor_factor_is_exactly_one": true,
   "inputs": {
+    "committed_baseline_death": 0.0865,
+    "committed_top_dose_increment": 0.4215,
     "erastin_cascade": {
       "lp_propagation": 1.0,
       "lp_rate": 0.4

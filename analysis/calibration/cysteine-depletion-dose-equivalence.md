@@ -21,6 +21,8 @@ The enzyme's whole operating range lands in **4.40-11.35 uM** erastin, a **2.6x*
 
 The enzyme cannot cut supply below zero, so **through this mechanism it cannot exceed a saturating erastin dose**. That is the engine's topology rather than a measurement -- both routes enter through the same supply factor -- and it is the useful kind of negative. The advantage PMID 39696900 claims, "efficacy, persistence, and precision", has to come from targeting and persistence, because mechanistic depth is already spent by a drug that exists.
 
+**And it is not only an argument.** At the top of the committed dose grid (30 uM) the Hill map already sits at 99.994% inhibition -- written to three decimals because `pct` rounds it to a flat 100% and it is not 100% -- so the committed saturating-erastin increment IS a complete-block increment measured independently of this page. It is 0.4215; a complete cystine block here gives 0.4288, agreeing to 0.0073 absolute. That does double duty: the ceiling is confirmed, and this page is confirmed to drive the engine the same way `calibrate_erastin.py` did -- a harness disagreeing with the committed numbers would be measuring something else and every figure above would be suspect.
+
 ## The transsulfuration escape is an exact no-op switch
 
 `xc_cystine_factor()` is `1 - erastin_xc_inhib * (1 - transsulfuration_floor)`, so the supply actually removed is `inhib * (1 - floor)` and the fraction delivered is `1 - floor` -- independent of the inhibition entirely.

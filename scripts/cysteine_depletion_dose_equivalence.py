@@ -143,6 +143,12 @@ def load_inputs() -> dict:
         "k_erastin_uM": float(fit["k_erastin"]),
         "hill": float(fit["hill"]),
         "erastin_fit_rmse": er.get("fit_rmse"),
+        # The committed saturating-erastin effect, so the structural ceiling can
+        # be CHECKED rather than only argued. At the top of the committed grid
+        # the Hill map is already at ~99.99% inhibition, so that increment IS a
+        # complete-block increment measured independently of this page.
+        "committed_baseline_death": er.get("control_baseline_death_at_fitted_cascade"),
+        "committed_top_dose_increment": er.get("erastin_increment_top_dose"),
         "erastin_fit_phenotype": er.get("phenotype"),
         "erastin_dose_grid_uM": er.get("dose_grid_um"),
         "erastin_cascade": {k: v for k, v in fit.items()
@@ -246,12 +252,34 @@ def assemble(raw: dict) -> dict:
     doses = [r["erastin_equiv_uM"] for r in rows if r["erastin_equiv_uM"]]
     escape = [{"floor": f, "delivered_fraction": escape_delivery(f),
                "factor_at_full_block": cystine_factor(1.0, f)} for f in FLOORS]
+    # Cross-check the ceiling against the committed calibration. Two things it
+    # buys: the ceiling claim stops being pure topology, and it confirms this
+    # page drives the engine the same way `calibrate_erastin.py` did -- a
+    # harness that disagreed with the committed numbers would be measuring
+    # something else and every figure above would be suspect.
+    cross = None
+    cascades = raw.get("cascades") or {}
+    fitted = cascades.get("in_vitro_fitted")
+    if fitted and inp.get("committed_top_dose_increment") is not None:
+        mine = fitted["complete_block_death"] - fitted["untreated_glycolytic"]
+        theirs = float(inp["committed_top_dose_increment"])
+        top = inp["erastin_dose_grid_uM"][-1]
+        cross = {
+            "my_complete_block_increment": mine,
+            "committed_top_dose_increment": theirs,
+            "absolute_disagreement": abs(mine - theirs),
+            "inhibition_at_committed_top_dose":
+                top ** inp["hill"] / (top ** inp["hill"] + inp["k_erastin_uM"] ** inp["hill"]),
+            "top_dose_uM": top,
+        }
+
     out = {k2: raw[k2] for k2 in ("inputs", "cascades") if k2 in raw}
     out.update({
         "equivalence_rows": rows,
         "erastin_window_uM": [min(doses), max(doses)] if doses else None,
         "erastin_window_ratio": (max(doses) / min(doses)) if doses else None,
         "escape_rows": escape,
+        "ceiling_cross_check": cross,
         "full_floor_factor_is_exactly_one":
             all(cystine_factor(i, 1.0) == 1.0
                 for i in (0.0, 0.25, 0.5, 0.75, 0.9, 1.0)),
@@ -261,6 +289,28 @@ def assemble(raw: dict) -> dict:
 
 def pct(x):
     return f"{100 * x:.1f}%"
+
+
+def _ceiling_cross_check_prose(d: dict) -> str:
+    """The ceiling, checked against the committed calibration rather than argued."""
+    x = d.get("ceiling_cross_check")
+    if not x:
+        return ("The ceiling is not cross-checked here yet; run `--measure` with the "
+                "compiled extension available.")
+    return (
+        f"**And it is not only an argument.** At the top of the committed dose grid "
+        f"({x['top_dose_uM']:.0f} uM) the Hill map already sits at "
+        f"{100 * x['inhibition_at_committed_top_dose']:.3f}% inhibition -- written to "
+        f"three decimals because `pct` rounds it to a flat 100% and it is not 100% -- "
+        f"so the committed "
+        f"saturating-erastin increment IS a complete-block increment measured "
+        f"independently of this page. It is {x['committed_top_dose_increment']:.4f}; a "
+        f"complete cystine block here gives {x['my_complete_block_increment']:.4f}, "
+        f"agreeing to {x['absolute_disagreement']:.4f} absolute. That does double duty: "
+        f"the ceiling is confirmed, and this page is confirmed to drive the engine the "
+        f"same way `calibrate_erastin.py` did -- a harness disagreeing with the committed "
+        f"numbers would be measuring something else and every figure above would be "
+        f"suspect.")
 
 
 def render(d: dict) -> str:
@@ -308,6 +358,8 @@ def render(d: dict) -> str:
         "useful kind of negative. The advantage PMID 39696900 claims, \"efficacy, "
         "persistence, and precision\", has to come from targeting and persistence, because "
         "mechanistic depth is already spent by a drug that exists.",
+        "",
+        _ceiling_cross_check_prose(d),
         "",
         "## The transsulfuration escape is an exact no-op switch",
         "",

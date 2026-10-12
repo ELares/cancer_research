@@ -321,3 +321,31 @@ def test_an_undeclared_cascade_is_refused_rather_than_ordered_arbitrarily():
     stored["cascades"]["mystery"] = stored["cascades"]["in_vivo_default"]
     with pytest.raises(MissingInputError):
         m.render(m.assemble(stored))
+
+
+def test_the_ceiling_is_cross_checked_against_the_committed_calibration():
+    """The ceiling stops being pure topology, and the harness is validated.
+
+    Two claims in one: a complete cystine block must reproduce the committed
+    saturating-erastin increment, which confirms the ceiling AND confirms this
+    page drives the engine the way `calibrate_erastin.py` did. A harness that
+    disagreed would be measuring something else and every figure on the page
+    would be suspect.
+    """
+    x = _data().get("ceiling_cross_check")
+    if not x:
+        pytest.skip("cascade measurements not committed")
+    # Recomputed from the committed calibration, not read back.
+    er = json.loads((CAL / "erastin-calibration.json").read_text())
+    assert x["committed_top_dose_increment"] == er["erastin_increment_top_dose"]
+    assert x["absolute_disagreement"] < 0.02, (
+        f"a complete block differs from the committed saturating-erastin "
+        f"increment by {x['absolute_disagreement']:.4f}; the harness is not "
+        "reproducing the committed calibration")
+    # And the premise: the committed top dose really is a near-complete block.
+    assert x["inhibition_at_committed_top_dose"] > 0.99, (
+        "the committed top dose is not a near-complete block, so its increment "
+        "cannot stand in for one")
+    # Non-vacuity: it must not be EXACTLY complete either, or the page would be
+    # rounding a real asymptote to 100%.
+    assert x["inhibition_at_committed_top_dose"] < 1.0
