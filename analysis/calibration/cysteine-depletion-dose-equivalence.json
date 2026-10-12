@@ -1,0 +1,126 @@
+{
+  "cascades": {
+    "in_vitro_fitted": {
+      "admissible": false,
+      "complete_block_at_full_floor_death": 0.089,
+      "complete_block_death": 0.51775,
+      "full_floor_is_exact_noop": true,
+      "n_cells": 4000,
+      "seed": 11,
+      "untreated_controls": {
+        "Glycolytic": 0.089,
+        "OXPHOS": 0.99625,
+        "Persister": 0.99975,
+        "PersisterNrf2": 0.887
+      },
+      "untreated_glycolytic": 0.089
+    },
+    "in_vivo_default": {
+      "admissible": true,
+      "complete_block_at_full_floor_death": 0.0,
+      "complete_block_death": 0.0,
+      "full_floor_is_exact_noop": true,
+      "n_cells": 4000,
+      "seed": 11,
+      "untreated_controls": {
+        "Glycolytic": 0.0,
+        "OXPHOS": 0.0005,
+        "Persister": 0.01075,
+        "PersisterNrf2": 0.0
+      },
+      "untreated_glycolytic": 0.0
+    }
+  },
+  "equivalence_rows": [
+    {
+      "depletion": 0.25,
+      "erastin_equiv_uM": 0.987440443791371,
+      "inhibition": 0.1338203583909584,
+      "residual_uM": 155.75079872204475
+    },
+    {
+      "depletion": 0.5,
+      "erastin_equiv_uM": 1.18585371998445,
+      "inhibition": 0.3166994163709418,
+      "residual_uM": 103.8338658146965
+    },
+    {
+      "depletion": 0.75,
+      "erastin_equiv_uM": 1.4241355557622615,
+      "inhibition": 0.5816694796566955,
+      "residual_uM": 51.91693290734825
+    },
+    {
+      "depletion": 0.9,
+      "erastin_equiv_uM": 1.7102970180950146,
+      "inhibition": 0.8066273810017844,
+      "residual_uM": 20.766773162939295
+    },
+    {
+      "depletion": 0.95,
+      "erastin_equiv_uM": 1.9371208714811519,
+      "inhibition": 0.8980238105659386,
+      "residual_uM": 10.383386581469658
+    },
+    {
+      "depletion": 0.99,
+      "erastin_equiv_uM": 2.550568466479735,
+      "inhibition": 0.978671213438916,
+      "residual_uM": 2.0766773162939316
+    }
+  ],
+  "erastin_window_ratio": 2.5830099248179326,
+  "erastin_window_uM": [
+    0.987440443791371,
+    2.550568466479735
+  ],
+  "escape_rows": [
+    {
+      "delivered_fraction": 1.0,
+      "factor_at_full_block": 0.0,
+      "floor": 0.0
+    },
+    {
+      "delivered_fraction": 0.75,
+      "factor_at_full_block": 0.25,
+      "floor": 0.25
+    },
+    {
+      "delivered_fraction": 0.5,
+      "factor_at_full_block": 0.5,
+      "floor": 0.5
+    },
+    {
+      "delivered_fraction": 0.25,
+      "factor_at_full_block": 0.75,
+      "floor": 0.75
+    },
+    {
+      "delivered_fraction": 0.0,
+      "factor_at_full_block": 1.0,
+      "floor": 1.0
+    }
+  ],
+  "full_floor_factor_is_exactly_one": true,
+  "inputs": {
+    "erastin_cascade": {
+      "lp_propagation": 1.0,
+      "lp_rate": 0.4
+    },
+    "erastin_dose_grid_uM": [
+      0.1,
+      0.3,
+      1.0,
+      3.0,
+      10.0,
+      30.0
+    ],
+    "erastin_fit_phenotype": "Glycolytic",
+    "erastin_fit_rmse": 0.0697,
+    "hill": 6.0,
+    "k_erastin_uM": 6.0,
+    "km_uM": 179.4,
+    "reference_uM": 207.667731629393,
+    "viability_constraint": 0.02
+  }
+}
