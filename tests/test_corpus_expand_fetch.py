@@ -14,6 +14,8 @@ import sys
 import urllib.parse
 from pathlib import Path
 
+import pytest
+
 REPO = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO / "scripts"))
 import corpus_expand_fetch as fx  # noqa: E402
@@ -1210,3 +1212,145 @@ def test_a_reopened_slice_records_the_new_questions_total(tmp_path, monkeypatch)
     assert row["hits"] == 999, (
         f"hits is {row['hits']}, still the old question's total; a wider "
         "query has a larger answer")
+
+
+# --- A server that says "come back tomorrow" ------------------------------
+#
+# OpenAlex's free tier is 1,000 requests a day. When it is spent it answers
+# 429 with `Retry-After: 60875` -- seventeen hours, until the budget resets at
+# midnight UTC -- and the clamped `_retry_after` turned that into 60 seconds,
+# retried four times, gave up, and let the supervisor restart and do it again.
+# Politely, on a schedule, forever, against a service that had answered the
+# question precisely.
+
+def _hdr(value):
+    """An HTTPError carrying one Retry-After header."""
+    import urllib.error
+
+    class H(dict):
+        def get(self, k, d=None):
+            return value if k == "Retry-After" else d
+
+    return urllib.error.HTTPError("u", 429, "budget", H(), None)
+
+
+def test_a_long_retry_after_is_read_from_the_raw_header():
+    """`_retry_after` CLAMPS to 60s, which is right for a short wait and
+    exactly wrong for a budget reset: it turns seventeen hours into a minute."""
+    e = _hdr("60875")
+    assert fx._retry_after(e) == fx.RETRY_AFTER_CAP == 60.0
+    assert fx._long_retry_after(e) == 60875.0, (
+        "the long wait is being clamped, so the crawler will knock again in a "
+        "minute on a door that told it when it opens")
+
+
+def test_a_short_retry_after_is_not_treated_as_a_scheduled_return():
+    """The two paths must not merge: a 5s wait is a retry, and sleeping through
+    it as a 'scheduled return' would log every blip as an outage."""
+    for raw in ("5", "30", "120"):
+        assert fx._long_retry_after(_hdr(raw)) is None, raw
+
+
+def test_a_long_wait_is_bounded():
+    """A server could say 'come back in a year'. Honouring that literally is
+    indistinguishable from hanging."""
+    assert fx._long_retry_after(_hdr("99999999")) == fx.LONG_WAIT_CAP <= 86_400.0
+
+
+def test_a_nan_retry_after_is_not_a_wait():
+    """`float("nan")` PARSES, and every comparison against it is False, so an
+    unguarded NaN falls through as a valid wait and `time.sleep(nan)` raises."""
+    assert fx._long_retry_after(_hdr("nan")) is None
+
+
+def test_the_long_wait_does_not_consume_the_retry_budget(monkeypatch):
+    """BEHAVIOURAL, because the first version of this guard was a text scan.
+
+    It asserted that the source contained the word `continue` and called that
+    proof the retry budget survived a scheduled return. But `_get` looped with
+    `for attempt in range(tries)`, where `continue` ADVANCES the iterator and
+    therefore spends an attempt -- the exact opposite of the claim, invisible
+    to a grep, because a text scan cannot see loop semantics.
+
+    So this measures the budget instead. With `tries=2`: one scheduled return,
+    then one genuine transient failure, then success. That needs both retries
+    to survive the wait. Under the old `for` loop the wait consumed the first
+    attempt, the 503 consumed the second, and the call raised.
+    """
+    seq = [("long", "3600"), ("transient", None), ("ok", None)]
+    calls = {"n": 0}
+    slept = []
+    monkeypatch.setattr(fx.time, "sleep", lambda s: slept.append(s))
+
+    def fake(url, *a, **k):
+        import urllib.error
+        kind, val = seq[calls["n"]]
+        calls["n"] += 1
+        if kind == "long":
+            raise _hdr(val)
+        if kind == "transient":
+            raise urllib.error.URLError("reset")
+
+        class R:
+            status = 200
+
+            def read(self):
+                return b"{}"
+
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *x):
+                return False
+
+        return R()
+
+    monkeypatch.setattr(fx.urllib.request, "urlopen", fake)
+    assert fx._get("https://www.ebi.ac.uk/x", tries=2, timeout=1) == b"{}", (
+        "the scheduled return spent a retry, so a transient failure after a "
+        "budget reset had no attempt left")
+    assert 3600.0 in slept, f"waited {slept} instead of the hour asked for"
+    assert calls["n"] == 3, (
+        f"made {calls['n']} requests; the wait should pause rather than "
+        "replace an attempt")
+
+
+def test_a_server_that_always_asks_for_tomorrow_still_gives_up(monkeypatch):
+    """The complement, so the fix above is not 'wait forever'.
+
+    Not spending a retry on a scheduled return means a server that answers
+    every request with a long wait would hold one worker indefinitely, so the
+    scheduled returns have their own bound.
+    """
+    slept = []
+    monkeypatch.setattr(fx.time, "sleep", lambda s: slept.append(s))
+
+    def always_long(url, *a, **k):
+        raise _hdr("60875")
+
+    monkeypatch.setattr(fx.urllib.request, "urlopen", always_long)
+    with pytest.raises(fx.TransientFetchError):
+        fx._get("https://www.ebi.ac.uk/x", tries=3, timeout=1)
+    long_sleeps = [s for s in slept if s > fx.LONG_WAIT_THRESHOLD]
+    assert len(long_sleeps) == fx.MAX_SCHEDULED_RETURNS, (
+        f"slept long {len(long_sleeps)} times against a bound of "
+        f"{fx.MAX_SCHEDULED_RETURNS}; an unbounded scheduled return is a hang")
+
+
+def test_the_backoff_schedule_survived_the_loop_rewrite(monkeypatch):
+    """`attempt` moved from a `for` index to an explicit counter incremented
+    BEFORE the backoff, so `2.0 ** (attempt + 1)` had to become `2.0 **
+    attempt` to keep the measured 2+4+8 schedule. An off-by-one here doubles
+    or halves every wait in the crawl, silently."""
+    slept = []
+    monkeypatch.setattr(fx.time, "sleep", lambda s: slept.append(s))
+
+    def always_down(url, *a, **k):
+        import urllib.error
+        raise urllib.error.URLError("down")
+
+    monkeypatch.setattr(fx.urllib.request, "urlopen", always_down)
+    with pytest.raises(fx.TransientFetchError):
+        fx._get("https://www.ebi.ac.uk/x", tries=4, timeout=1)
+    assert slept == [2.0, 4.0, 8.0], (
+        f"backoff was {slept}, not the measured 2+4+8 = 14s schedule")

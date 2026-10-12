@@ -165,6 +165,24 @@ FETCH_WORKERS = max(1, int(os.getenv("FERRO_EXPAND_WORKERS", "8")))
 # 300-second wait on one article is worse than deferring it.
 RETRY_AFTER_FLOOR = 1.0
 RETRY_AFTER_CAP = 60.0
+# A server may legitimately say "come back tomorrow". OpenAlex's free tier is
+# 1,000 requests a day and, when it is spent, answers 429 with
+# `Retry-After: 60875` -- seventeen hours, until the budget resets at midnight
+# UTC. Capping that at 60s and retrying four times is not politeness with a
+# backoff; it is knocking on a door that has told you when it opens. A wait
+# this long is honoured in full, up to a day, because the alternative is
+# hammering a service that answered the question clearly.
+LONG_WAIT_CAP = 86_400.0
+# What counts as "not a retry any more" -- past this the wait is a scheduled
+# return, and it is logged as one so a sleeping crawler is not read as hung.
+LONG_WAIT_THRESHOLD = 120.0
+# How many scheduled returns one fetch may keep before it gives up. A
+# scheduled return does NOT spend a retry -- the server named a time and we
+# kept it, which is not a failed attempt -- so without a separate bound a
+# server that always answers with a long wait would hold one worker forever.
+# Two is enough to cross one budget reset and notice if the next answer is the
+# same, and bounds the worst case at two days rather than unbounded.
+MAX_SCHEDULED_RETURNS = 2
 
 
 # How long to keep trying one search page before giving up on the whole run.
@@ -363,7 +381,17 @@ def _get(url: str, tries: int = 4, timeout: int = 120,
     outage.
     """
     last = None
-    for attempt in range(tries):
+    # A WHILE LOOP, NOT `for attempt in range(tries)`, and the difference is
+    # the whole point of the scheduled-return path below. Under a `for` loop
+    # `continue` advances the iterator, so honouring a seventeen-hour wait
+    # would SPEND one of `tries` -- the opposite of the intent, and the first
+    # version of this change shipped that, guarded only by a test that grepped
+    # the source for the word `continue`. A text scan cannot see loop
+    # semantics. `attempt` is incremented explicitly below, after a real
+    # failure, and a scheduled return skips it.
+    attempt = 0
+    scheduled = 0
+    while attempt < tries:
         try:
             req = urllib.request.Request(url, headers={"User-Agent": UA})
             with urllib.request.urlopen(req, timeout=timeout) as r:
@@ -379,10 +407,23 @@ def _get(url: str, tries: int = 4, timeout: int = 120,
                 return None
             last = e
             wait = _retry_after(e)
+            long_wait = _long_retry_after(e)
+            if long_wait is not None and scheduled < MAX_SCHEDULED_RETURNS:
+                scheduled += 1
+                print(f"  server asked for {long_wait / 3600:.1f}h "
+                      f"({int(long_wait)}s); waiting rather than retrying "
+                      f"[{scheduled}/{MAX_SCHEDULED_RETURNS}]: {url[:70]}",
+                      flush=True)
+                time.sleep(long_wait)
+                # `attempt` deliberately NOT incremented: the server named a
+                # time and we kept it, so the retry budget is still intact for
+                # the transient failures it exists for.
+                continue
         except Exception as e:  # noqa: BLE001 - network, DNS, timeouts, resets
             last = e
             wait = None
-        if attempt + 1 < tries:
+        attempt += 1
+        if attempt < tries:
             # MEASURED against what it replaced, because the first version of
             # this comment claimed exponential beat the old linear schedule and
             # the arithmetic said otherwise: 2**attempt gives 1+2+4 = 7.0s over
@@ -390,8 +431,41 @@ def _get(url: str, tries: int = 4, timeout: int = 120,
             # 1.5+3+4.5 = 9.0s. Every individual wait was shorter too. Starting
             # at 2 makes it 2+4+8 = 14.0s, which is actually more room.
             time.sleep(wait if wait is not None
-                       else min(BACKOFF_CAP, 2.0 ** (attempt + 1)))
+                       else min(BACKOFF_CAP, 2.0 ** attempt))
     raise TransientFetchError(f"giving up after {tries}: {url[:110]} :: {last}")
+
+
+def _long_retry_after(e) -> float | None:
+    """A server-supplied wait too long to be a retry: honour it as scheduled.
+
+    Read from the RAW header rather than from `_retry_after`, which clamps to
+    RETRY_AFTER_CAP -- clamping is right for a short wait and exactly wrong
+    here, because it turns "come back in seventeen hours" into "come back in a
+    minute" and then does so four times.
+    """
+    h = getattr(e, "headers", None)
+    if h is None:
+        return None
+    try:
+        v = h.get("Retry-After")
+    except Exception:  # noqa: BLE001
+        return None
+    if v is None:
+        return None
+    if isinstance(v, bytes):
+        v = v.decode("ascii", "replace")
+    try:
+        secs = float(v)
+    except (TypeError, ValueError):
+        secs = _http_date_delay(v)
+        if secs is None:
+            return None
+    # `secs != secs` is the NaN test: float("nan") parses, and every
+    # comparison against it is False, so an unguarded NaN would fall through
+    # as a valid wait and `time.sleep(nan)` raises.
+    if secs != secs or secs <= LONG_WAIT_THRESHOLD:
+        return None
+    return min(LONG_WAIT_CAP, secs)
 
 
 def _retry_after(e) -> float | None:
