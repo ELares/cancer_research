@@ -4,14 +4,29 @@ The importance and resample/move archives identify their numerical inputs with
 SHA-256 hashes. They predate the controlled immune study and must retain those
 original identities when current source files change.
 
-The two `.source` files here were recovered from the tracked Git object
-`cd8374d3a6dafacdc9ed2bb5d612a0efc1943d98`, at the paths in `manifest.json`.
-Every recovered byte sequence was checked against the hash already present in
-the historical resample archives; the immune source hash also appears in all
-three importance archives. This is retrospective source preservation, not a
-claim that this directory existed at the original experiment freeze. Existing
-raw archives and generated reports are unchanged. No simulation was rerun and
-no new numerical outcomes were substituted.
+The `.source` files here were recovered from tracked Git objects, at the paths
+and commits recorded in `manifest.json`. Every recovered byte sequence was
+checked against the hash already present in the historical archives. This is
+retrospective source preservation, not a claim that this directory existed at
+the original experiment freeze. Existing raw archives and generated reports
+are unchanged. No simulation was rerun and no new numerical outcomes were
+substituted.
+
+The first two came from `cd8374d3a6dafacdc9ed2bb5d612a0efc1943d98`; the immune
+source hash also appears in all three importance archives.
+
+`simulations/Cargo.lock` was added when the October dependency batch bumped
+rand, serde, clap and pyo3. Seven archives -- three importance and three
+resample, plus the offline rebuild check -- identify the lock among their
+numerical inputs, so changing it made their declared input unresolvable and
+`test_archive_source_hashes_cover_all_frozen_numerical_inputs` failed with
+`no registered historical source`. The bytes were recovered from
+`4f9f76c48269f134a011190412c4d7d8fce06c19`, the commit that last set them,
+rather than from a branch tip that keeps moving. This is the gate working as
+designed: a dependency bump is a change to a declared input of a frozen
+result, and the result's provenance has to survive it. Nothing about the
+archived numbers changed -- what changed is that their inputs are now
+preserved where the resolver can still verify them.
 
 `scripts/archived_numerical_sources.py` first checks the current file against
 the requested hash. If it differs, the resolver requires an exact registered
