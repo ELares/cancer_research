@@ -143,7 +143,7 @@ than leaving you to count files.**
 
 | | ferroptosis / physical-ROS | other therapy | method & tooling |
 |---|--:|--:|--:|
-| committed analyses | 24 | **1** | 128 |
+| committed analyses | 24 | **1** | 130 |
 | preregistered predictions | **10 of 29** | 0 | — |
 | engine modules mentioning it anywhere | **36 of 40** | — | — |
 | engine modules mentioning it in code | **21 of 40** | — | — |
