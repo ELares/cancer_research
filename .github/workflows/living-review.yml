@@ -61,7 +61,7 @@ jobs:
             --max "${{ github.event.inputs.max || '200' }}"
 
       - name: Upload incremental index + delta changelog
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@v6
         with:
           name: living-review-${{ steps.window.outputs.since }}
           path: |
