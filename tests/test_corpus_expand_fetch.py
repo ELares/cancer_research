@@ -1354,3 +1354,124 @@ def test_the_backoff_schedule_survived_the_loop_rewrite(monkeypatch):
         fx._get("https://www.ebi.ac.uk/x", tries=4, timeout=1)
     assert slept == [2.0, 4.0, 8.0], (
         f"backoff was {slept}, not the measured 2+4+8 = 14s schedule")
+
+
+# --- A permanently broken full text must not make a slice unretirable -----
+#
+# MEASURED on the live corpus, not hypothesised. PMC 2023 went 88 deferred ->
+# 7 -> 7 across two passes while `seen` went 10,611 -> 21,155 against 10,551
+# hits: the slice re-walked itself in full to retry records that cannot
+# succeed. The first deferral in both passes was PMC10206698 ("E-Poster
+# abstracts"), which Europe PMC advertises as isOpenAccess=Y inEPMC=Y and
+# whose fullTextXML returns HTTP 500 on three consecutive direct requests.
+# Deferring forever costs 2.9M search requests per pass on the MED slices.
+
+def _rerun(tmp_path, monkeypatch, pages, fail_ids):
+    """A SECOND run over the same state, which is what `retry_pass` keys on."""
+    import corpus_identity_index as _ix
+    monkeypatch.setattr(fx, "STATE_DB", tmp_path / "state.sqlite")
+    monkeypatch.setattr(fx, "OUT_ROOT", tmp_path / "out")
+    monkeypatch.setattr(_ix, "DB", tmp_path / "id.sqlite")
+    monkeypatch.setattr(fx, "SLEEP", 0)
+    monkeypatch.setattr(fx.time, "sleep", lambda *_: None)
+    seq = list(pages)
+    monkeypatch.setattr(fx, "search",
+                        lambda s, y, c: seq.pop(0) if seq else {"resultList": {"result": []}})
+
+    def ft(rec):
+        if rec.get("id") in fail_ids:
+            raise fx.TransientFetchError(f"500 on {rec['id']}")
+        return f"TEXT-{rec['id']}"
+
+    monkeypatch.setattr(fx, "fetch_fulltext", ft)
+    totals = fx.run([2026], [("MED", True)], verbose=False)
+    import sqlite3 as _s3
+    c = _s3.connect(tmp_path / "state.sqlite")
+    row = c.execute("SELECT seen, kept, deferred, done, hits FROM slice").fetchone()
+    c.close()
+    return totals, dict(zip(("seen", "kept", "deferred", "done", "hits"), row))
+
+
+def test_a_second_failure_retires_the_slice_instead_of_deferring_forever(tmp_path, monkeypatch):
+    """First pass defers; second pass stores the record without full text.
+
+    Optimistic is right ONCE -- most full-text failures are transient. Being
+    optimistic on every pass is what made a slice holding one permanently
+    broken document impossible to retire.
+    """
+    page = _page(["a", "b", "c"], None)
+    totals, row, stored = _drive(tmp_path, monkeypatch, [page], fail_ids={"b"})
+    assert row["deferred"] == 1, "the first pass must defer, not give up"
+    assert row["done"] == 0, "a slice with a deferral must not retire on pass one"
+
+    totals2, row2 = _rerun(tmp_path, monkeypatch, [_page(["a", "b", "c"], None)], {"b"})
+    assert row2["done"] == 1, (
+        f"the slice still will not retire after a second failure "
+        f"(deferred={row2['deferred']}); this is the non-terminating loop")
+    assert row2["deferred"] == 0, "a retired slice must not keep a deferral count"
+    assert totals2["no_fulltext"] == 1, (
+        f"the record given up on is not reported: no_fulltext="
+        f"{totals2.get('no_fulltext')}")
+
+
+def test_the_record_survives_even_though_its_full_text_does_not(tmp_path, monkeypatch):
+    """Retiring the slice must not drop the record.
+
+    Only the full text is unavailable. The title, abstract and MeSH are in the
+    search result already, and those are what the retrieval index matches on,
+    so discarding the record would lose a paper to recover a byte count.
+    """
+    _drive(tmp_path, monkeypatch, [_page(["a", "b", "c"], None)], fail_ids={"b"})
+    _rerun(tmp_path, monkeypatch, [_page(["a", "b", "c"], None)], {"b"})
+
+    import glob as _g
+    import gzip as _gz
+    import json as _j
+    ids = []
+    for f in sorted(_g.glob(str(tmp_path / "out" / "**" / "*.jsonl.gz"), recursive=True)):
+        try:
+            with _gz.open(f, "rt") as fh:
+                for ln in fh:
+                    ids.append(_j.loads(ln)["epmc_id"])
+        except EOFError:
+            pass
+    assert "b" in ids, (
+        f"the record whose full text failed twice was dropped entirely: {ids}")
+
+
+def test_an_outage_during_a_retry_pass_raises_instead_of_retiring_the_slice(tmp_path, monkeypatch):
+    """The dangerous case, and the reason this is not just 'accept failures'.
+
+    If a retry pass treats every failure as a permanently broken document,
+    then an outage DURING that pass retires the whole slice as abstract-only
+    and there is no third chance -- the loss is permanent and silent. A long
+    run of consecutive failures is an outage, not a set of broken documents.
+    """
+    # Pass one must defer MANY records without tripping its OWN abort, so the
+    # failures alternate with successes and no consecutive run reaches the
+    # threshold. Pass two then sees only the deferred records -- the stored
+    # ones are held and skipped -- so they fail back to back and the retry
+    # guard fires.
+    n = 2 * fx.MAX_CONSECUTIVE_DEFERRALS + 20
+    ids = [f"r{i}" for i in range(n)]
+    doomed = {i for i in ids if int(i[1:]) % 2 == 0}
+    assert len(doomed) > fx.MAX_CONSECUTIVE_DEFERRALS, "fixture too small to trip the guard"
+    _drive(tmp_path, monkeypatch, [_page(ids, None)], fail_ids=doomed)
+
+    import sqlite3 as _s3
+    c = _s3.connect(tmp_path / "state.sqlite")
+    d1, done1 = c.execute("SELECT deferred, done FROM slice").fetchone()
+    c.close()
+    assert done1 == 0 and d1 == len(doomed), (
+        f"pass one did not set up the retry state: deferred={d1} done={done1}")
+
+    with pytest.raises(RuntimeError, match="RETRY pass"):
+        _rerun(tmp_path, monkeypatch, [_page(ids, None)], doomed)
+
+    import sqlite3 as _s3
+    c = _s3.connect(tmp_path / "state.sqlite")
+    done = c.execute("SELECT done FROM slice").fetchone()[0]
+    c.close()
+    assert done == 0, (
+        "the slice was retired during an outage, so its full texts are gone "
+        "for good")

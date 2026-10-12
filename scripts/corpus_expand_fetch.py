@@ -754,19 +754,45 @@ def run(years, sources, limit_new=None, verbose=True) -> dict:
     reopen_stale_slices(st, verbose=verbose)
     OUT_ROOT.mkdir(parents=True, exist_ok=True)
     shards = Shards(OUT_ROOT, "expanded")
-    totals = {"seen": 0, "new": 0, "fulltext": 0, "slices": 0, "deferred": 0}
+    totals = {"seen": 0, "new": 0, "fulltext": 0, "slices": 0, "deferred": 0,
+              # Records stored WITHOUT full text because a retry also failed.
+              # Reported so "the slice completed" never hides how much text
+              # was given up on.
+              "no_fulltext": 0}
     try:
         for src, oa_possible in sources:
             for year in years:
-                row = st.execute("SELECT cursor, done FROM slice WHERE src=? AND year=?",
-                                 (src, year)).fetchone()
+                row = st.execute(
+                    "SELECT cursor, done, deferred FROM slice WHERE src=? AND year=?",
+                    (src, year)).fetchone()
                 if row and row[1]:
                     continue
                 cursor = row[0] if row else "*"
+                # IS THIS A RETRY OF A SLICE THAT ALREADY DEFERRED? If so, a
+                # full text that fails AGAIN is treated as unavailable rather
+                # than deferred a second time, because deferring it again is
+                # what made this non-terminating.
+                #
+                # MEASURED, not assumed. PMC 2023 went 88 deferred -> 7 -> 7
+                # across two passes while `seen` went 10,611 -> 21,155 against
+                # 10,551 hits: it re-walked the whole slice to retry records
+                # that cannot succeed. The first one in both passes was
+                # PMC10206698 ("E-Poster abstracts"), which EPMC advertises as
+                # isOpenAccess=Y inEPMC=Y and whose fullTextXML returns HTTP
+                # 500 on three consecutive direct requests. A permanently
+                # broken document is not bad luck, and a slice that waits for
+                # it never retires -- for the MED slices that is 2.9M search
+                # requests per pass, forever.
+                retry_pass = bool(row and row[2])
                 st.execute("INSERT OR IGNORE INTO slice(src,year,query_id) "
                            "VALUES (?,?,?)", (src, year, query_fingerprint()))
                 seen = kept = ft = 0
                 slice_deferred = 0
+                slice_abandoned = consecutive_abandoned = 0
+                # Page-local bookkeeping: `slice_abandoned` accumulates across
+                # the whole slice, so the run total adds only the delta rather
+                # than the running count once per page.
+                reported_abandoned = 0
                 while True:
                     # A SEARCH FAILURE MUST NOT END A CRAWL MEASURED IN WEEKS.
                     #
@@ -841,7 +867,7 @@ def run(years, sources, limit_new=None, verbose=True) -> dict:
                         text = None
                         if id(rec) in texts:
                             got = texts[id(rec)]
-                            if isinstance(got, TransientFetchError):
+                            if isinstance(got, TransientFetchError) and not retry_pass:
                                 # SKIP THE RECORD, AND RECORD THAT WE DID.
                                 # An earlier version said "skipping leaves it
                                 # NEW, so a later pass fetches it properly".
@@ -852,6 +878,12 @@ def run(years, sources, limit_new=None, verbose=True) -> dict:
                                 # deferral is persisted on the slice now, the
                                 # slice is not retired, and its cursor is
                                 # rewound so the next run re-walks it.
+                                #
+                                # FIRST PASS ONLY. Optimistic is right once:
+                                # most of these are transient. Deferring the
+                                # same record on every subsequent pass is what
+                                # made a slice with one permanently broken
+                                # document unretirable.
                                 deferred += 1
                                 slice_deferred += 1
                                 consecutive_deferred += 1
@@ -867,8 +899,41 @@ def run(years, sources, limit_new=None, verbose=True) -> dict:
                                 # what certifies a slice as fully walked.
                                 examined -= 1
                                 continue
-                            text = got
-                            consecutive_deferred = 0
+                            if isinstance(got, TransientFetchError):
+                                # RETRY PASS, AND IT FAILED AGAIN. Store the
+                                # record with its title, abstract and MeSH and
+                                # without full text, counted as examined, so
+                                # the slice can retire. The record is NOT lost
+                                # -- only its full text is, and that full text
+                                # has now failed four in-run retries twice,
+                                # across separate runs.
+                                #
+                                # GUARDED AGAINST A DOWN SERVICE, because
+                                # otherwise an outage during a retry pass would
+                                # quietly retire a whole slice as abstract-only
+                                # and there would be no second chance. A long
+                                # run of consecutive failures here is an
+                                # outage, not a set of broken documents, and it
+                                # raises exactly as the first pass does.
+                                slice_abandoned += 1
+                                consecutive_abandoned += 1
+                                consecutive_deferred = 0
+                                if _should_abort(consecutive_abandoned):
+                                    raise RuntimeError(
+                                        f"{consecutive_abandoned} consecutive "
+                                        f"full-text failures on a RETRY pass; "
+                                        f"the service looks down rather than "
+                                        f"holding broken documents, and "
+                                        f"retiring this slice without text "
+                                        f"would be permanent: {got}") from got
+                                if verbose and slice_abandoned % 25 == 1:
+                                    print(f"  ~ no full text after a second run "
+                                          f"({slice_abandoned}); storing the "
+                                          f"record without it: {got}", flush=True)
+                            else:
+                                text = got
+                                consecutive_deferred = 0
+                                consecutive_abandoned = 0
                         out = {
                             "source": src, "epmc_id": rec.get("id"),
                             "pmid": pmid, "pmcid": pmcid, "doi": doi,
@@ -921,6 +986,8 @@ def run(years, sources, limit_new=None, verbose=True) -> dict:
                     totals["new"] += kept
                     totals["fulltext"] += ft
                     totals["deferred"] = deferred
+                    totals["no_fulltext"] += slice_abandoned - reported_abandoned
+                    reported_abandoned = slice_abandoned
                     kept = ft = 0
                     if limit_new and totals["new"] >= limit_new:
                         return _finish(shards, st, ident, totals)
@@ -938,8 +1005,12 @@ def run(years, sources, limit_new=None, verbose=True) -> dict:
                         print(f"  {src:4} {year}  NOT done: {slice_deferred:,} "
                               f"deferred, will re-walk", flush=True)
                 else:
-                    st.execute("UPDATE slice SET done=1 WHERE src=? AND year=?",
-                               (src, year))
+                    st.execute("UPDATE slice SET done=1, deferred=0 "
+                               "WHERE src=? AND year=?", (src, year))
+                    if verbose and slice_abandoned:
+                        print(f"  {src:4} {year}  done, but {slice_abandoned:,} "
+                              f"records stored WITHOUT full text after a second "
+                              f"failed attempt", flush=True)
                 st.commit()
                 totals["slices"] += 1
                 if verbose and seen:
