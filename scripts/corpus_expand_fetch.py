@@ -811,15 +811,53 @@ def run(years, sources, limit_new=None, verbose=True) -> dict:
                     # re-reads a page rather than skipping one. Nothing is
                     # written and nothing is indexed in between.
                     d = _search_with_retry(src, year, cursor, verbose=verbose)
-                    hits = d.get("resultList", {}).get("result", [])
+                    # `page`, not `hits`: the COLUMN named `hits` holds the
+                    # answer's SIZE and this holds the records. One word for
+                    # both is what made #910 hard to rule out -- the retirement
+                    # test `not hits` reads this list while the UPDATE two lines
+                    # down writes the count, and they are unrelated quantities.
+                    page = d.get("resultList", {}).get("result", [])
                     nxt = d.get("nextCursorMark")
-                    # Recorded unconditionally, not only when unset: `hits` is
-                    # the size of THIS question's answer, and a slice re-walked
-                    # under a wider clause has a larger one. Keeping the old
-                    # value would make seen/hits read as complete while the
-                    # slice was only complete for a question nobody asks.
-                    st.execute("UPDATE slice SET hits=? WHERE src=? AND year=?",
-                               (d.get("hitCount", 0), src, year))
+                    # Recorded on every page rather than only when unset: the
+                    # count is the size of THIS question's answer, and a slice
+                    # re-walked under a wider clause has a larger one. Keeping a
+                    # stale value would make seen/hits read as complete while
+                    # the slice was only complete for a question nobody asks.
+                    #
+                    # But ABSENT is not ZERO (#910). A response that parses as
+                    # JSON without a `hitCount` -- a degraded or error document
+                    # -- used to write 0, and a retired slice carrying hits=0
+                    # satisfies `seen >= hits` trivially, so the ledger loses
+                    # the only check it has on whether the walk was complete.
+                    #
+                    # AN EARLIER VERSION OF THIS COMMENT CALLED THAT "the
+                    # ledger's readability, not the crawl's correctness". That
+                    # was too generous and is retracted. `seen` is an exact
+                    # multiple of PAGE for exactly 2 of 122 walked slices, and
+                    # they are precisely the two that carried hits=0 AND
+                    # done=1 -- so both walks stopped ON A PAGE BOUNDARY, i.e.
+                    # on an empty or degraded page rather than at the end of
+                    # the data, and were then retired. Against their healthy
+                    # neighbours (every other slice has seen ~= hits) MED 2022
+                    # holds 138,000 where 2021 and 2023 bracket ~486,000, and
+                    # MED 1990 holds 10,000 where 1989 has 64,194: together
+                    # roughly 402,000 records missing from slices the ledger
+                    # reports as complete.
+                    #
+                    # The zeroing does not CAUSE that -- the `not page` break
+                    # does, and it is legitimate for a genuinely empty page --
+                    # but the zeroing is what HID it. Keeping the count honest
+                    # turns a silent early retirement into a visible
+                    # `seen < hits` on a done slice, which is the detection
+                    # signal this ledger did not have. Refusing to retire on
+                    # that signal is the prevention and is NOT done here: an
+                    # unconditional rewind-on-short is the same shape as the
+                    # non-terminating deferral loop fixed in #907, so it needs
+                    # the same "optimistic once" bounding. Tracked in #910.
+                    reported = d.get("hitCount")
+                    if reported is not None:
+                        st.execute("UPDATE slice SET hits=? WHERE src=? AND year=?",
+                                   (reported, src, year))
                     stopped_early = False
                     examined = 0
 
@@ -828,7 +866,7 @@ def run(years, sources, limit_new=None, verbose=True) -> dict:
                     # this stays single-threaded and in order.
                     candidates = []
                     page_keys = set()
-                    for rec in hits:
+                    for rec in page:
                         seen += 1
                         examined += 1
                         pmid = norm_pmid(rec.get("pmid"))
@@ -991,7 +1029,7 @@ def run(years, sources, limit_new=None, verbose=True) -> dict:
                     kept = ft = 0
                     if limit_new and totals["new"] >= limit_new:
                         return _finish(shards, st, ident, totals)
-                    if not nxt or nxt == cursor or not hits:
+                    if not nxt or nxt == cursor or not page:
                         break
                     cursor = nxt
                     time.sleep(SLEEP)
@@ -1005,8 +1043,43 @@ def run(years, sources, limit_new=None, verbose=True) -> dict:
                         print(f"  {src:4} {year}  NOT done: {slice_deferred:,} "
                               f"deferred, will re-walk", flush=True)
                 else:
+                    # #913: an empty result list is read as end-of-data by the
+                    # break above, and a degraded response that parses with an
+                    # empty `resultList` is indistinguishable from a genuinely
+                    # exhausted cursor. Two slices retired that way before
+                    # anyone noticed -- MED 2022 at 138,000 where its
+                    # neighbours bracket ~486,000, and MED 1990 at 10,000
+                    # against 1989's 64,194, about 402,000 records absent from
+                    # slices the ledger called complete. The fingerprint was
+                    # that `seen` landed on an exact multiple of PAGE for
+                    # exactly those two of 122 walked slices.
+                    #
+                    # Now that an absent hitCount no longer zeroes the count,
+                    # `seen < hits` IS the incompleteness signal, so SAY SO.
+                    # Read back from the ledger rather than using the local
+                    # `seen`, which counts only THIS run while the column
+                    # accumulates across re-walks -- that also makes the
+                    # comparison conservative, since a re-walked slice has an
+                    # inflated count and cannot false-positive.
+                    #
+                    # Deliberately NOT a rewind. An unconditional
+                    # rewind-on-short is the same shape as the non-terminating
+                    # deferral loop fixed in #907, which burned ~2.9M search
+                    # requests per pass on a permanently broken record. The
+                    # explicit recovery pass is #913.
+                    tally = st.execute(
+                        "SELECT seen, hits FROM slice WHERE src=? AND year=?",
+                        (src, year)).fetchone()
+                    short = (tally and tally[1] and tally[1] > 0
+                             and tally[0] < tally[1])
                     st.execute("UPDATE slice SET done=1, deferred=0 "
                                "WHERE src=? AND year=?", (src, year))
+                    if short:
+                        print(f"  {src:4} {year}  RETIRED SHORT: walked "
+                              f"{tally[0]:,} of {tally[1]:,} -- the page walk "
+                              f"ended before the recorded total, so this slice "
+                              f"is INCOMPLETE and marked done (#913)",
+                              flush=True)
                     if verbose and slice_abandoned:
                         print(f"  {src:4} {year}  done, but {slice_abandoned:,} "
                               f"records stored WITHOUT full text after a second "

@@ -418,8 +418,19 @@ def test_a_partly_examined_page_does_not_advance_the_cursor():
     assert "stopped_early = True" in body, "the early exit is not recorded"
     assert "cursor if stopped_early else" in body, (
         "the cursor advances even when the page was abandoned part-way")
-    assert "len(hits)" not in body.split("UPDATE slice SET cursor")[1], (
-        "the whole page is still credited as seen after a partial pass")
+    seg = body.split("UPDATE slice SET cursor")[1]
+    # POSITIVE and rename-proof. This was spelled `"len(hits)" not in seg`,
+    # which #910's rename of that local to `page` silently made
+    # UNFALSIFIABLE: the string could no longer appear under any mutation, so
+    # the guard passed for the wrong reason while protecting nothing. Assert
+    # what must be TRUE -- the seen credit is the per-record counter -- plus
+    # the absence of ANY length in the segment, which survives renaming the
+    # page variable again.
+    assert "examined," in seg, (
+        "the seen credit is no longer `examined`, the per-record counter")
+    assert "len(" not in seg, (
+        "a length is credited to seen, so the whole page counts even after a "
+        "partial pass; it must be `examined`")
 
 
 def test_the_run_closes_its_shard_on_the_way_out():
@@ -1475,3 +1486,173 @@ def test_an_outage_during_a_retry_pass_raises_instead_of_retiring_the_slice(tmp_
     assert done == 0, (
         "the slice was retired during an outage, so its full texts are gone "
         "for good")
+
+
+# ---------------------------------------------------------------------------
+# #910: an absent hitCount must not be read as a hitCount of zero.
+#
+# `hits` was written as `d.get("hitCount", 0)` on every page, so a response
+# that parsed as JSON without the key wrote 0. That does not retire a slice
+# early -- retirement is cursor exhaustion -- but a retired slice carrying
+# hits=0 satisfies `seen >= hits` trivially, so the ledger loses the only
+# check it has on whether the walk was complete. Measured on the live ledger
+# when found: MED 2022 (seen 138,000) and MED 1990 (seen 10,000) were both
+# done=1 with hits=0.
+# ---------------------------------------------------------------------------
+
+def _seed_slice(tmp_path, monkeypatch, hits):
+    """A slice already carrying a known total, mid-walk on the CURRENT question."""
+    monkeypatch.setattr(fx, "STATE_DB", tmp_path / "state.sqlite")
+    st = fx.state()
+    st.execute("INSERT INTO slice(src,year,cursor,seen,kept,hits,done,query_id) "
+               "VALUES ('MED',2026,'*',0,0,?,0,?)",
+               (hits, fx.query_fingerprint()))
+    st.commit()
+    st.close()
+
+
+def test_a_response_without_a_hitcount_leaves_the_recorded_total_alone(
+        tmp_path, monkeypatch):
+    """ABSENT is not ZERO. The prior total survives a degraded response."""
+    _seed_slice(tmp_path, monkeypatch, hits=777)
+    page = _page(["A", "B"], None)
+    del page["hitCount"]
+    totals, row, stored = _drive(tmp_path, monkeypatch, pages=[page])
+    assert stored == ["A", "B"], "the page was still walked"
+    assert row["hits"] == 777, (
+        f"hits is {row['hits']}: a response carrying no hitCount overwrote the "
+        "recorded total, so a retired slice can read as complete against zero")
+
+
+def test_a_genuine_hitcount_of_zero_is_still_recorded(tmp_path, monkeypatch):
+    """The fix must distinguish absent from zero, not merely refuse to write 0.
+
+    Skipping every zero would be the easy over-correction: an empty slice
+    really does have a total of zero and must be able to say so, otherwise the
+    stale value persists and reads as a slice that was never finished.
+    """
+    _seed_slice(tmp_path, monkeypatch, hits=777)
+    empty = {"resultList": {"result": []}, "nextCursorMark": None, "hitCount": 0}
+    totals, row, stored = _drive(tmp_path, monkeypatch, pages=[empty])
+    assert stored == [], "nothing to store"
+    assert row["hits"] == 0, (
+        f"hits is {row['hits']}: an explicit hitCount of 0 must be recorded, or "
+        "a genuinely empty slice keeps a total it no longer has")
+
+
+def test_the_update_is_conditional_on_the_key_being_present(tmp_path):
+    """Spelled against the source, because the two cases above share a path.
+
+    A `d.get("hitCount", 0)` restores the defect while both behavioural tests
+    could still pass if the fixtures happened to carry the key.
+    """
+    src = Path(fx.__file__).read_text()
+    assert 'd.get("hitCount", 0)' not in src, (
+        "an absent hitCount defaults to 0 again (#910)")
+    assert 'reported = d.get("hitCount")' in src
+    assert "if reported is not None:" in src, (
+        "the UPDATE is unconditional again, so absent reads as zero")
+
+
+def test_the_page_list_and_the_hits_column_no_longer_share_a_name(tmp_path):
+    """One word for two quantities is what made #910 hard to rule out.
+
+    The local held the RECORDS and the column holds the SIZE, and the
+    retirement test reads the list two lines from an UPDATE that writes the
+    count. Pinned so the confusing spelling cannot come back.
+    """
+    src = Path(fx.__file__).read_text()
+    i = src.index("stopped_early = False")
+    head = src[src.index("_search_with_retry(src, year, cursor", 0):i]
+    assert 'page = d.get("resultList", {}).get("result", [])' in head
+    assert 'hits = d.get("resultList"' not in src, (
+        "the page list is called `hits` again, which is also the column name")
+
+
+# ---------------------------------------------------------------------------
+# #913 step 1 (folded in here): a walk that retires short of its recorded
+# total must SAY SO. Two slices retired that way before anyone noticed --
+# MED 2022 at 138,000 where its neighbours bracket ~486,000, and MED 1990 at
+# 10,000 against 1989's 64,194, about 402,000 records absent from slices the
+# ledger called complete. Deliberately a report and not a rewind: an
+# unconditional rewind-on-short is the same shape as the non-terminating
+# deferral loop fixed in #907.
+# ---------------------------------------------------------------------------
+
+def test_a_walk_that_retires_short_of_the_recorded_total_says_so(
+        tmp_path, monkeypatch, capsys):
+    """The alarm the ledger never had, and it must fire even when quiet.
+
+    `_drive` runs with `verbose=False`; this print is deliberately NOT gated on
+    it, because an incomplete slice marked complete is not progress chatter.
+    """
+    page = _page(["A", "B"], None)
+    page["hitCount"] = 5000
+    totals, row, stored = _drive(tmp_path, monkeypatch, pages=[page])
+    assert row["done"] == 1, "the slice still retires; this is a report, not a rewind"
+    assert row["seen"] == 2 and row["hits"] == 5000
+    out = capsys.readouterr().out
+    assert "RETIRED SHORT" in out, (
+        "a slice that walked 2 of 5,000 retired silently, which is exactly how "
+        "~402,000 records went missing without anyone noticing")
+    assert "2 of 5,000" in out, "the alarm must name both numbers"
+
+
+def test_a_complete_walk_raises_no_short_alarm(tmp_path, monkeypatch, capsys):
+    """Non-vacuity: the alarm must be able to stay quiet.
+
+    `_page` sets hitCount to the page length, so this walk is complete. An
+    alarm that fires on every slice would be worthless and would pass the test
+    above.
+    """
+    totals, row, stored = _drive(tmp_path, monkeypatch, pages=[_page(["A", "B"], None)])
+    assert row["done"] == 1 and row["seen"] == row["hits"] == 2
+    assert "RETIRED SHORT" not in capsys.readouterr().out
+
+
+def test_a_rewalked_slice_does_not_trip_the_short_alarm(tmp_path, monkeypatch, capsys):
+    """`seen` accumulates across runs while `hits` is one question's total.
+
+    A slice re-walked under the deferral path has an INFLATED count, so
+    comparing the two could only ever false-positive in the safe direction --
+    but that has to be true rather than assumed, because the obvious
+    implementation compares the per-run local instead of the column.
+    """
+    # The fixture has to put the LOCAL and the COLUMN on opposite sides of the
+    # total, or it cannot tell the two implementations apart. A first version
+    # seeded hits=2 and drove `_page(["A"])`, which sets hitCount to the page
+    # length -- so hits was overwritten to 1 and NEITHER the correct code nor
+    # the per-run-local mutant fired. It passed while testing nothing.
+    #
+    # Here: the column accumulates to 101 while this run walks 1 record against
+    # a recorded total of 50. The column says complete, the local says short.
+    _seed_slice(tmp_path, monkeypatch, hits=50)
+    st = fx.state()
+    st.execute("UPDATE slice SET seen=100 WHERE src='MED' AND year=2026")
+    st.commit()
+    st.close()
+    page = _page(["A"], None)
+    page["hitCount"] = 50
+    totals, row, stored = _drive(tmp_path, monkeypatch, pages=[page])
+    assert row["seen"] == 101 and row["hits"] == 50, (
+        f"fixture broken: seen={row['seen']} hits={row['hits']}; the column must "
+        "exceed the total while this run's own count falls short of it")
+    assert "RETIRED SHORT" not in capsys.readouterr().out, (
+        "a resumed slice was called short, so the check is reading the per-run "
+        "local instead of the accumulated column")
+
+
+def test_the_short_check_reads_the_column_not_the_per_run_local(tmp_path):
+    """Spelled against the source: the local `seen` counts only THIS run.
+
+    Using it would call every resumed slice short. The check must read the
+    accumulated column back from the ledger.
+    """
+    src = Path(fx.__file__).read_text()
+    assert 'SELECT seen, hits FROM slice WHERE src=? AND year=?' in src, (
+        "the short check no longer reads the accumulated column")
+    i = src.index("RETIRED SHORT")
+    window = src[i - 900:i]
+    assert "tally = st.execute(" in window, (
+        "the alarm is not fed by the ledger read, so it may be using the "
+        "per-run local and calling every resumed slice short")
