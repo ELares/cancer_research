@@ -125,6 +125,12 @@ DEPLETIONS = [0.25, 0.5, 0.75, 0.9, 0.95, 0.99]
 # Supply cuts the inverse table reports, i.e. the `erastin_xc_inhib` values a
 # consumer would actually set.
 SUPPLY_CUTS = [0.25, 0.5, 0.75, 0.9]
+# The cut the Km-sensitivity table and the regime comparison are both quoted at.
+# Named rather than repeated, so the column header interpolates it instead of
+# spelling "90%" beside a derived value.
+SENSITIVITY_CUT = 0.9
+# The depletion fraction the regime contrast is quoted at.
+REGIME_DEPLETION = 0.5
 
 
 class MissingInputError(RuntimeError):
@@ -347,7 +353,7 @@ def assemble(raw: dict) -> dict:
         "km_uM": k,
         "saturation_at_reference": saturation(s0, k),
         "initial_marginal_return": marginal_return(0.0, s0, k),
-        "depletion_for_90pct_cut": depletion_for_inhibition(0.9, s0, k),
+        "depletion_for_cut": depletion_for_inhibition(SENSITIVITY_CUT, s0, k),
     } for label, k in [("km_low", km - km_sd), ("km_point", km), ("km_high", km + km_sd),
                        ("km_half", km / 2), ("km_double", km * 2)]]
 
@@ -359,13 +365,20 @@ def assemble(raw: dict) -> dict:
     # committed free-CYSTEINE figure, which is NOT free cystine, so this is an
     # ILLUSTRATION of the regime effect and not a claim about the in-vivo map.
     low_ref = float(consts["plasma_free_cysteine_baseline"]["value"])
+    # The two comparison points are STORED so the prose interpolates them instead
+    # of naming "50%" and "90%" beside derived values -- the shape
+    # `tests/test_no_handwritten_figures_in_generators.py` exists to stop.
+    d_cmp, cut_cmp = REGIME_DEPLETION, SENSITIVITY_CUT
     regime = {
+        "depletion_compared": d_cmp,
+        "supply_cut_compared": cut_cmp,
+        "depletion_for_cut_reference": depletion_for_inhibition(cut_cmp, s0, km),
         "low_reference_uM": low_ref,
         "low_reference_is_free_cystine": False,
         "saturation_at_low_reference": saturation(low_ref, km),
-        "inhibition_at_half_depletion_low": inhibition_from_depletion(0.5, low_ref, km),
-        "inhibition_at_half_depletion_reference": inhibition_from_depletion(0.5, s0, km),
-        "depletion_for_90pct_cut_low": depletion_for_inhibition(0.9, low_ref, km),
+        "inhibition_at_half_depletion_low": inhibition_from_depletion(d_cmp, low_ref, km),
+        "inhibition_at_half_depletion_reference": inhibition_from_depletion(d_cmp, s0, km),
+        "depletion_for_cut_low": depletion_for_inhibition(cut_cmp, low_ref, km),
     }
 
     out = {k: raw[k] for k in RAW_KEYS}
@@ -455,8 +468,9 @@ def render(d: dict) -> str:
         f"Medium therefore sits at **{pct(d['saturation_at_reference'])}** of saturation -- just "
         "past the knee. Nothing in the map is chosen, so it can fail.",
         "",
-        "Three things the map assumes, stated because they are where it would break "
-        "before the arithmetic does:",
+        "What the map assumes, stated because these are where it would break before the "
+        "arithmetic does (no count in this sentence: a spelled one goes stale the moment "
+        "another assumption is added):",
         "",
         "1. **Glutathione resynthesis is proportional to cystine uptake.** This is the "
         "engine's own assumption, not one added here -- #502 made the NRF2-driven "
@@ -468,9 +482,10 @@ def render(d: dict) -> str:
         "mitigates sorafenib-induced ferroptosis), and the map is blind to it. A cell line "
         "using it would be depleted on paper and supplied in fact.",
         "3. **An initial-rate constant is being used as a steady-state one.** The Km comes "
-        "from a 5-minute linear-uptake window; the engine applies the factor every step of "
-        "a long run. Nothing here measures whether the constant holds once the "
-        "intracellular pool has drawn down.",
+        f"from a {c['xct_assay_linear_window']['value']}-"
+        f"{c['xct_assay_linear_window']['unit']} linear-uptake window; the engine applies "
+        "the factor every step of a long run. Nothing here measures whether the constant "
+        "holds once the intracellular pool has drawn down.",
         "",
         "## Depletion buys less supply reduction than its percentage suggests",
         "",
@@ -512,11 +527,13 @@ def render(d: dict) -> str:
         f"({d['reference_uM']:.1f} against {d['km_uM']} uM), which is why the curve is flat "
         "where the first substrate is removed. Well BELOW the Km the same curve is almost "
         "linear and depletion maps nearly one-to-one. Taking the committed free-cysteine "
-        f"figure of {g['low_reference_uM']} uM as a low reference, 50% depletion is worth "
+        f"figure of {g['low_reference_uM']} uM as a low reference, "
+        f"{pct(g['depletion_compared'])} depletion is worth "
         f"**{pct(g['inhibition_at_half_depletion_low'])}** instead of "
-        f"**{pct(g['inhibition_at_half_depletion_reference'])}**, and a 90% supply cut needs "
-        f"**{pct(g['depletion_for_90pct_cut_low'])}** depletion instead of "
-        f"**{pct(next(r['depletion_required'] for r in d['inverse_rows'] if r['supply_cut'] == 0.9))}**.",
+        f"**{pct(g['inhibition_at_half_depletion_reference'])}**, and a "
+        f"{pct(g['supply_cut_compared'])} supply cut needs "
+        f"**{pct(g['depletion_for_cut_low'])}** depletion instead of "
+        f"**{pct(g['depletion_for_cut_reference'])}**.",
         "",
         "That figure is an ILLUSTRATION of the regime effect, not a claim about the in-vivo "
         "map: it is free CYSTEINE, not free cystine, and the transporter imports cystine. The "
@@ -533,14 +550,14 @@ def render(d: dict) -> str:
         "does move:",
         "",
         "| Km case | Km (uM) | saturation at reference | initial marginal return "
-        "| depletion for a 90% cut |",
+        f"| depletion for a {pct(SENSITIVITY_CUT)} cut |",
         "| --- | --: | --: | --: | --: |",
     ]
     for s in d["km_sensitivity"]:
         L.append(f"| `{s['label']}` | {s['km_uM']:.1f} | {pct(s['saturation_at_reference'])} "
-                 f"| {s['initial_marginal_return']:.2f} | {pct(s['depletion_for_90pct_cut'])} |")
-    lo = min(s["depletion_for_90pct_cut"] for s in d["km_sensitivity"])
-    hi = max(s["depletion_for_90pct_cut"] for s in d["km_sensitivity"])
+                 f"| {s['initial_marginal_return']:.2f} | {pct(s['depletion_for_cut'])} |")
+    lo = min(s["depletion_for_cut"] for s in d["km_sensitivity"])
+    hi = max(s["depletion_for_cut"] for s in d["km_sensitivity"])
     L += [
         "",
         f"Across a doubling and a halving of the Km the required depletion spans "

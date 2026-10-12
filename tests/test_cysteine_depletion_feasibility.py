@@ -338,3 +338,66 @@ def test_the_headline_is_marked_in_vitro_only_because_the_gap_is_regime_specific
     doc = DOC.read_text()
     assert "in-vitro only" in doc
     assert "not free cystine" in doc.lower() or "NOT free cystine" in doc
+
+
+def test_this_generator_hand_writes_no_quantity_into_its_prose():
+    """Run the repo's hand-written-figure detector against this generator.
+
+    `tests/test_no_handwritten_figures_in_generators.py` is ENFORCED on five
+    files by its own design and says so, so it passing says nothing about this
+    one. Enrolling this file there would mean loosening its `IDENT_TOKEN` to
+    swallow bare eight-digit numbers, which would blind it for the five files it
+    does protect -- tightening or widening a scan breaks the other side. So the
+    detector is run here instead, and every surviving hit must be an IDENTIFIER
+    this page genuinely cites rather than a quantity.
+
+    EXACT, not a floor: an unrecognised hit fails, so a newly hand-written
+    figure cannot hide behind the known false positives.
+    """
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location(
+        "_hwf", REPO_ROOT / "tests" / "test_no_handwritten_figures_in_generators.py")
+    hwf = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(hwf)
+    gen = REPO_ROOT / "scripts" / "cysteine_depletion_feasibility.py"
+
+    # Identifiers this page cites: the PMIDs it names and the issue it builds on.
+    # Not a style allowlist -- each is a reference that cannot "go stale" the way
+    # a count can, because it denotes one fixed document.
+    identifiers = {"39696900", "41704298", "27869804", "32241947",
+                   "34287957", "41422256", "31819185", "35287706", "502"}
+    # Two non-numeric shapes the detector reads as counts and which are not:
+    # "a tension" (the article, not a quantity) and the salt name "2HCl".
+    non_quantities = {"tension", "2HCl"}
+
+    unexplained = []
+    for _lineno, _why, frag, _txt in hwf.offending(gen):
+        token = frag.split()[0].rstrip(",.;:")
+        if token in identifiers or token in non_quantities:
+            continue
+        if any(w in non_quantities for w in frag.split()):
+            continue
+        unexplained.append(frag)
+    assert not unexplained, (
+        "these look like hand-written quantities in the generator's prose, so "
+        f"the sentence can outlive the measurement: {unexplained}")
+
+
+def test_the_detector_import_actually_found_something_to_triage():
+    """A triage over an empty list would pass for the wrong reason.
+
+    If the detector stopped returning hits -- a broken import, a changed API --
+    the test above would go green while checking nothing. This pins that it is
+    still reading this file and still finding the identifier mentions.
+    """
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location(
+        "_hwf2", REPO_ROOT / "tests" / "test_no_handwritten_figures_in_generators.py")
+    hwf = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(hwf)
+    hits = hwf.offending(REPO_ROOT / "scripts" / "cysteine_depletion_feasibility.py")
+    assert len(hits) >= 5, (
+        f"the detector returned only {len(hits)} hits on a page citing eight "
+        "PMIDs; it has probably stopped scanning this file")

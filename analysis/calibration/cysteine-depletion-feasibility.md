@@ -37,11 +37,11 @@ The `bacteria_cysteine_ferro` pool of 6 holds 2 bacterial papers on this mechani
 
 Medium therefore sits at **53.7%** of saturation -- just past the knee. Nothing in the map is chosen, so it can fail.
 
-Three things the map assumes, stated because they are where it would break before the arithmetic does:
+What the map assumes, stated because these are where it would break before the arithmetic does (no count in this sentence: a spelled one goes stale the moment another assumption is added):
 
 1. **Glutathione resynthesis is proportional to cystine uptake.** This is the engine's own assumption, not one added here -- #502 made the NRF2-driven resynthesis term *be* the cystine supply -- but it is the step that lets a transporter rate stand in for a supply fraction, so it is the first thing to doubt if the map disagrees with an assay.
 2. **The transporter is the rate limit.** Macropinocytosis is a parallel route to cysteine that an enzyme in the medium does not touch (PMID 35287706, where it mitigates sorafenib-induced ferroptosis), and the map is blind to it. A cell line using it would be depleted on paper and supplied in fact.
-3. **An initial-rate constant is being used as a steady-state one.** The Km comes from a 5-minute linear-uptake window; the engine applies the factor every step of a long run. Nothing here measures whether the constant holds once the intracellular pool has drawn down.
+3. **An initial-rate constant is being used as a steady-state one.** The Km comes from a 5-min linear-uptake window; the engine applies the factor every step of a long run. Nothing here measures whether the constant holds once the intracellular pool has drawn down.
 
 ## Depletion buys less supply reduction than its percentage suggests
 
@@ -67,7 +67,7 @@ A 90.0% supply cut needs 95.1% depletion, down to 10.2 uM. That is the quantitat
 
 ### The gap is a CULTURE phenomenon, and that qualifies the headline
 
-Everything above is measured against a medium reference ABOVE the Km (207.7 against 179.4 uM), which is why the curve is flat where the first substrate is removed. Well BELOW the Km the same curve is almost linear and depletion maps nearly one-to-one. Taking the committed free-cysteine figure of 8.2 uM as a low reference, 50% depletion is worth **48.9%** instead of **31.7%**, and a 90% supply cut needs **90.4%** depletion instead of **95.1%**.
+Everything above is measured against a medium reference ABOVE the Km (207.7 against 179.4 uM), which is why the curve is flat where the first substrate is removed. Well BELOW the Km the same curve is almost linear and depletion maps nearly one-to-one. Taking the committed free-cysteine figure of 8.2 uM as a low reference, 50.0% depletion is worth **48.9%** instead of **31.7%**, and a 90.0% supply cut needs **90.4%** depletion instead of **95.1%**.
 
 That figure is an ILLUSTRATION of the regime effect, not a claim about the in-vivo map: it is free CYSTEINE, not free cystine, and the transporter imports cystine. The point that survives is structural -- the in-vitro regime the engine's erastin fit lives in and the in-vivo regime an enzyme therapy acts in sit on OPPOSITE sides of the transporter's half-saturation point, so a fraction fitted in culture does not carry across unexamined. Establishing the free-cystine concentration in tumour interstitium is what would close this, and nothing here does.
 
@@ -75,7 +75,7 @@ That figure is an ILLUSTRATION of the regime effect, not a claim about the in-vi
 
 One cell line (A549, lung) in one paper, against a pancreatic target, so the scale is the weak half of the anchor. The SHAPE survives; the depletion a given cut requires does move:
 
-| Km case | Km (uM) | saturation at reference | initial marginal return | depletion for a 90% cut |
+| Km case | Km (uM) | saturation at reference | initial marginal return | depletion for a 90.0% cut |
 | --- | --: | --: | --: | --: |
 | `km_low` | 152.7 | 57.6% | 0.42 | 95.5% |
 | `km_point` | 179.4 | 53.7% | 0.46 | 95.1% |

@@ -45,6 +45,15 @@
       "unit": "uM",
       "value": "24.7"
     },
+    "xct_assay_linear_window": {
+      "constant": "xct_assay_linear_window",
+      "sd": "",
+      "source_doi": "10.1002/bdd.2298",
+      "source_note": "The window over which cystine uptake was linear in that assay; the Km is therefore an INITIAL-RATE constant, which is a scope limit on using it per simulation step",
+      "source_pmid": "34287957",
+      "unit": "min",
+      "value": "5"
+    },
     "xct_cystine_km": {
       "constant": "xct_cystine_km",
       "sd": "26.7",
@@ -130,35 +139,35 @@
   "km_sd_uM": 26.7,
   "km_sensitivity": [
     {
-      "depletion_for_90pct_cut": 0.9550354625942306,
+      "depletion_for_cut": 0.9550354625942306,
       "initial_marginal_return": 0.42373383240938656,
       "km_uM": 152.70000000000002,
       "label": "km_low",
       "saturation_at_reference": 0.5762661675906134
     },
     {
-      "depletion_for_90pct_cut": 0.9510238791754542,
+      "depletion_for_cut": 0.9510238791754542,
       "initial_marginal_return": 0.4634847736978775,
       "km_uM": 179.4,
       "label": "km_point",
       "saturation_at_reference": 0.5365152263021224
     },
     {
-      "depletion_for_90pct_cut": 0.9475573798078682,
+      "depletion_for_cut": 0.9475573798078682,
       "initial_marginal_return": 0.498105541455324,
       "km_uM": 206.1,
       "label": "km_high",
       "saturation_at_reference": 0.501894458544676
     },
     {
-      "depletion_for_90pct_cut": 0.9675706112887968,
+      "depletion_for_cut": 0.9675706112887968,
       "initial_marginal_return": 0.3016467170412168,
       "km_uM": 89.7,
       "label": "km_half",
       "saturation_at_reference": 0.6983532829587832
     },
     {
-      "depletion_for_90pct_cut": 0.9342497031692393,
+      "depletion_for_cut": 0.9342497031692393,
       "initial_marginal_return": 0.6333988327418835,
       "km_uM": 358.8,
       "label": "km_double",
@@ -265,12 +274,15 @@
   ],
   "reference_uM": 207.667731629393,
   "regime": {
-    "depletion_for_90pct_cut_low": 0.9039511725024092,
+    "depletion_compared": 0.5,
+    "depletion_for_cut_low": 0.9039511725024092,
+    "depletion_for_cut_reference": 0.9510238791754542,
     "inhibition_at_half_depletion_low": 0.4888283378746594,
     "inhibition_at_half_depletion_reference": 0.3166994163709418,
     "low_reference_is_free_cystine": false,
     "low_reference_uM": 8.2,
-    "saturation_at_low_reference": 0.04371002132196162
+    "saturation_at_low_reference": 0.04371002132196162,
+    "supply_cut_compared": 0.9
   },
   "saturation_at_reference": 0.5365152263021224,
   "structure": {
