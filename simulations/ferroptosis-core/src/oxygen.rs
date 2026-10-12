@@ -198,6 +198,39 @@ pub fn hypoxia_iron_factor(o2_supply: f64, sensitivity: f64) -> f64 {
     1.0 + sens * (1.0 - s)
 }
 
+/// Hypoxia-raised transsulfuration floor (#916).
+///
+/// The reverse transsulfuration pathway (methionine → homocysteine →
+/// cystathionine → cysteine, via CBS/CTH) is the only cysteine source left once
+/// System Xc⁻ import is gone, and it is ACTIVATED by hypoxia: quiescent
+/// endothelial cells survive cystine starvation by switching to it, with NRF2
+/// support, and chronic severe hypoxia confers the same resistance on
+/// proliferating cells (Cell Death Dis. 2025, PMID 41422256). The same NRF2/CBS
+/// axis is how ovarian cells acquire erastin resistance (Br. J. Cancer 2020,
+/// PMID 31819185).
+///
+/// This matters spatially rather than on average. `Params::xc_cystine_factor`
+/// discounts a cystine block by `1 - floor` UNIFORMLY, so a global floor applies
+/// the escape evenly — while the biology puts it largest exactly in the hypoxic
+/// core. That is the regime a hypoxia-TRIGGERED delivery meets: the engineered
+/// bacteria of PMID 39696900 secrete cyst(e)inase under tumour hypoxia, so the
+/// trigger condition co-locates with the escape, and a second bacterial paper
+/// (PMID 41704298) independently generates H₂S to inhibit the bypass.
+///
+/// Returns a per-cell floor in `[0, 1]` for `Cell::transsulfuration_floor`:
+/// `sensitivity · (1 - o2_supply)`, so a fully oxygenated cell gets `0` (no
+/// escape, identical to the un-wired default) and an anoxic one gets
+/// `sensitivity`. Same `1 - o2_supply` hypoxia deficit the #377 stress-niche
+/// persister entry uses, so the two read the same field the same way.
+///
+/// The DIRECTION is the result; `sensitivity` is an uncalibrated placeholder,
+/// because nothing measures how much cysteine the bypass supplies at a given pO₂.
+pub fn hypoxia_transsulfuration_floor(o2_supply: f64, sensitivity: f64) -> f64 {
+    let sens = sensitivity.max(0.0);
+    let s = o2_supply.clamp(0.0, 1.0);
+    (sens * (1.0 - s)).clamp(0.0, 1.0)
+}
+
 /// O2-dependent Fenton H₂O₂-substrate factor (#383).
 ///
 /// The Fenton reaction (Fe²⁺ + H₂O₂ → Fe³⁺ + OH· + OH⁻) consumes H₂O₂, whose
@@ -516,6 +549,45 @@ mod tests {
         // Clamped, never panics.
         assert_eq!(por_o2_factor(2.0, 1.0), 1.0);
         assert_eq!(por_o2_factor(-1.0, 1.0), 0.0);
+    }
+
+    #[test]
+    fn hypoxia_transsulfuration_floor_is_zero_at_full_o2_and_rises_into_the_core() {
+        // #916. Full supply ⇒ EXACTLY zero, so a wired-but-oxygenated cell is
+        // bit-identical to the un-wired default; that is the byte-identity edge.
+        assert_eq!(hypoxia_transsulfuration_floor(1.0, 0.8), 0.0);
+        // Anoxia ⇒ the full sensitivity.
+        assert!((hypoxia_transsulfuration_floor(0.0, 0.8) - 0.8).abs() < 1e-12);
+        // Monotone in the hypoxia deficit: the escape must grow as O2 falls,
+        // which is the whole direction (PMID 41422256).
+        let mut prev = -1.0;
+        for o2 in [1.0, 0.75, 0.5, 0.25, 0.0] {
+            let f = hypoxia_transsulfuration_floor(o2, 0.6);
+            assert!(f > prev, "floor must rise as O2 falls: {f} after {prev}");
+            prev = f;
+        }
+    }
+
+    #[test]
+    fn a_zero_sensitivity_floor_is_exactly_zero_everywhere() {
+        // The off switch. Not approximately zero: `Some(0.0)` must behave as the
+        // global-zero path bit-for-bit, or wiring the consumer would move the
+        // production matrix.
+        for o2 in [0.0, 0.25, 0.5, 0.75, 1.0] {
+            assert_eq!(
+                hypoxia_transsulfuration_floor(o2, 0.0).to_bits(),
+                0.0f64.to_bits()
+            );
+        }
+    }
+
+    #[test]
+    fn the_hypoxia_floor_is_bounded_into_the_unit_interval() {
+        // A sensitivity above 1 would otherwise produce a floor above 1, which
+        // `xc_cystine_factor` would clamp anyway -- but clamping here keeps the
+        // value stored on the cell meaningful rather than relying on the reader.
+        assert_eq!(hypoxia_transsulfuration_floor(0.0, 5.0), 1.0);
+        assert_eq!(hypoxia_transsulfuration_floor(0.0, -1.0), 0.0);
     }
 
     #[test]

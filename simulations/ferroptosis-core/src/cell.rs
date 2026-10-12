@@ -64,6 +64,26 @@ pub struct Cell {
     /// the cap controls the steady state it saturates toward.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub mufa_rate: Option<f64>,
+    /// Per-cell minimal GPX4-independent cysteine backup (#916), overriding the
+    /// global [`crate::params::Params::transsulfuration_floor`].
+    ///
+    /// The global floor discounts a cystine block UNIFORMLY --
+    /// `xc_cystine_factor` delivers only `1 - floor` of the nominal cut, at
+    /// every cell -- and that is the one thing the biology says it should not
+    /// do. Hypoxia ACTIVATES the transsulfuration pathway and so confers
+    /// ferroptosis resistance under cystine limitation (Cell Death Dis. 2025,
+    /// PMID 41422256), so the discount should be LARGEST in the hypoxic core.
+    /// That matters for the hypoxia-TRIGGERED delivery of PMID 39696900, where
+    /// the trigger condition co-locates with the escape: a second bacterial
+    /// paper (PMID 41704298) independently generates H2S to inhibit the bypass,
+    /// which is the one escape this parameter structure leaves open.
+    ///
+    /// `None` (the default) falls back to the global value at every call site,
+    /// so every existing path is byte-identical. Independent of the global
+    /// field rather than added to it: a per-cell floor REPLACES the global one
+    /// for that cell, because two floors would have no defensible composition.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub transsulfuration_floor: Option<f64>,
 }
 
 /// Treatment modalities.
@@ -241,6 +261,7 @@ pub fn gen_cell(pheno: Phenotype, rng: &mut StdRng) -> Cell {
             nrf2: norm(rng, 1.0, 0.12).max(0.4),
             mufa_cap: None,
             mufa_rate: None,
+            transsulfuration_floor: None,
         },
         Phenotype::OXPHOS => Cell {
             iron: norm(rng, 2.8, 0.6).max(0.8),
@@ -252,6 +273,7 @@ pub fn gen_cell(pheno: Phenotype, rng: &mut StdRng) -> Cell {
             nrf2: norm(rng, 1.2, 0.15).max(0.5),
             mufa_cap: None,
             mufa_rate: None,
+            transsulfuration_floor: None,
         },
         Phenotype::Persister => Cell {
             iron: norm(rng, 1.5, 0.3).max(0.5),
@@ -263,6 +285,7 @@ pub fn gen_cell(pheno: Phenotype, rng: &mut StdRng) -> Cell {
             nrf2: norm(rng, 0.7, 0.15).max(0.2),
             mufa_cap: None,
             mufa_rate: None,
+            transsulfuration_floor: None,
         },
         Phenotype::PersisterNrf2 => Cell {
             iron: norm(rng, 2.8, 0.6).max(0.8),
@@ -274,6 +297,7 @@ pub fn gen_cell(pheno: Phenotype, rng: &mut StdRng) -> Cell {
             nrf2: norm(rng, 3.0, 0.4).max(1.5),
             mufa_cap: None,
             mufa_rate: None,
+            transsulfuration_floor: None,
         },
         Phenotype::Stromal => Cell {
             iron: norm(rng, 0.3, 0.08).max(0.1),
@@ -285,6 +309,7 @@ pub fn gen_cell(pheno: Phenotype, rng: &mut StdRng) -> Cell {
             nrf2: norm(rng, 1.0, 0.12).max(0.4),
             mufa_cap: None,
             mufa_rate: None,
+            transsulfuration_floor: None,
         },
     }
 }
@@ -342,6 +367,7 @@ pub fn gen_recovered_persister(days: f64, rates: &RecoveryRates, rng: &mut StdRn
         nrf2: norm(rng, nrf2_mean, 0.15).max(0.2),
         mufa_cap: None,
         mufa_rate: None,
+        transsulfuration_floor: None,
     }
 }
 

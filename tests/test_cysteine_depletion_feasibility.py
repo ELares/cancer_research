@@ -129,12 +129,16 @@ def test_relative_supply_is_one_at_the_reference():
 def test_the_structural_claims_are_read_from_rust_not_from_the_json():
     """Re-parse the engine. This is the guard that can fail when the engine moves."""
     facts = read_structural_facts()
-    # The claim the page leans on: the escape is global, so a hypoxia-graded
-    # escape is not expressible. If someone adds a per-cell floor, this fails and
-    # the page must be rewritten -- which is the point.
+    # This asserted `floor_is_cell_field is False` and `escape_can_vary_per_cell
+    # is False`, and #916 added the per-cell floor, so it fired -- which is what
+    # it was for: the page's "not expressible" section was obsolete and had to be
+    # rewritten. It now pins the AGREEMENT between the page and the source plus
+    # the invariants that must hold either way, rather than one side of a fact
+    # that was always going to move. The page itself branches on
+    # `escape_can_vary_per_cell`, so it reads correctly in both states.
     assert facts["floor_is_params_field"] is True
-    assert facts["floor_is_cell_field"] is False
-    assert facts["escape_can_vary_per_cell"] is False
+    assert facts["escape_can_vary_per_cell"] is facts["floor_is_cell_field"], (
+        "the two must be the same question; a per-cell floor IS the per-cell escape")
     assert facts["nrf2_is_cell_field"] is True
     # Every glutathione resynthesis site must be gated by the cystine factor, or
     # NRF2 could rescue a complete block and the topology argument collapses.
@@ -152,16 +156,30 @@ def test_the_cystine_factor_formula_still_has_the_shape_the_map_assumes():
     must not be possible to change it and leave this green.
     """
     src = (CORE / "params.rs").read_text()
-    m = re.search(r"pub fn xc_cystine_factor\(&self\)[^{]*\{(.*?)\n    \}", src, re.S)
-    assert m, "xc_cystine_factor not found in params.rs"
+    # `xc_cystine_factor_for`, because #916 made the no-argument form delegate to
+    # it: anchoring on the old name found a one-line body and reported both
+    # clamps missing. The arithmetic lives wherever the clamps are, so the guard
+    # follows the arithmetic rather than the name it used to have.
+    m = re.search(r"pub fn xc_cystine_factor_for\(&self[^{]*\{(.*?)\n    \}", src, re.S)
+    assert m, "xc_cystine_factor_for not found in params.rs"
     body = m.group(1)
     # PER FIELD, not a substring search over the whole body. A single
     # `"clamp(0.0, 1.0)" in body` check passed a mutation that unclamped one of
     # the two operands, because the other still carried a clamp -- the
     # fix-one-site-claim-all-sites shape.
-    for field in ("erastin_xc_inhib", "transsulfuration_floor"):
-        assert re.search(rf"self\.{field}\s*\.clamp\(0\.0,\s*1\.0\)", body), (
-            f"{field} must be clamped into [0,1] for the concentration map to hold")
+    assert re.search(r"self\.erastin_xc_inhib\s*\.clamp\(0\.0,\s*1\.0\)", body), (
+        "erastin_xc_inhib must be clamped into [0,1] for the concentration map to hold")
+    # The floor reaches the clamp through the per-cell fallback now, so pin the
+    # fallback AND the clamp rather than one literal expression.
+    assert "unwrap_or(self.transsulfuration_floor)" in body, (
+        "the per-cell floor no longer falls back to the global field")
+    assert re.search(r"\.clamp\(0\.0,\s*1\.0\)", body.split("unwrap_or")[1]), (
+        "the resolved floor is not clamped into [0,1]")
+    # And the no-argument form must still exist and delegate, or every existing
+    # caller silently changed meaning.
+    assert re.search(r"pub fn xc_cystine_factor\(&self\)[^{]*\{\s*"
+                     r"self\.xc_cystine_factor_for\(None\)", src), (
+        "xc_cystine_factor no longer delegates to the per-cell form")
 
 
 def test_the_page_reports_both_pool_numbers_so_neither_stands_alone():

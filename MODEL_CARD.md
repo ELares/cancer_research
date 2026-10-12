@@ -21,7 +21,7 @@ predictor. Breadth of coverage is not evidence of depth.**
 | Field | Value |
 |---|---|
 | Name | `ferroptosis-core` (embeddable engine) + `sim-tme-3d` (3D capstone binary) and 12 sibling binaries. The crate name is historical: it began as a ferroptosis engine and now also carries radiation, ablation, oncolytic-spread, ADC and adoptive-cell layers. |
-| Version | ferroptosis-core 0.69.0 (see `simulations/ferroptosis-core/Cargo.toml` for the authoritative current value) |
+| Version | ferroptosis-core 0.70.0 (see `simulations/ferroptosis-core/Cargo.toml` for the authoritative current value) |
 | Author | Ezequiel Lares |
 | License | MIT |
 | Language | Rust (core + binaries), Python bindings (PyO3), C FFI (PhysiCell-style ABI) |
@@ -43,7 +43,7 @@ experiment.
 the count.** The ferroptosis and physical-ROS work carries the anchored legs
 and the legacy quantitative results in Chapters 5, 7 and 8. The committed
 [`modality-module-depth` analysis](analysis/modality-module-depth.md) counts the
-modality modules together at 1,562 production lines, against an engine 2.4 to 3.0
+modality modules together at 1,562 production lines, against an engine 2.5 to 3.0
 times larger depending on how shared machinery is assigned. That is an aggregate
 code-size comparison, not a calibration or quality score for an individual arm.
 Chapter 6 separately reports the newer arms' comparisons and limitations; their

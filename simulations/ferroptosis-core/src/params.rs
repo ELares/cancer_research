@@ -395,8 +395,23 @@ impl Params {
     /// transsulfuration floor, starving cystine and so depleting GSH.
     #[must_use]
     pub fn xc_cystine_factor(&self) -> f64 {
+        self.xc_cystine_factor_for(None)
+    }
+
+    /// As [`Params::xc_cystine_factor`], but honouring a per-cell transsulfuration
+    /// floor (#916).
+    ///
+    /// `None` uses the global field, so this is exactly the old function and every
+    /// existing path is byte-identical; `Some(f)` REPLACES the global floor for that
+    /// cell rather than adding to it, because two floors have no defensible
+    /// composition. The point is that the global floor discounts a block UNIFORMLY
+    /// while hypoxia raises the bypass locally (PMID 41422256), so a hypoxia-
+    /// triggered therapy meets its largest escape exactly where it is most active.
+    pub fn xc_cystine_factor_for(&self, cell_floor: Option<f64>) -> f64 {
         let inhib = self.erastin_xc_inhib.clamp(0.0, 1.0);
-        let floor = self.transsulfuration_floor.clamp(0.0, 1.0);
+        let floor = cell_floor
+            .unwrap_or(self.transsulfuration_floor)
+            .clamp(0.0, 1.0);
         (1.0 - inhib * (1.0 - floor)).clamp(0.0, 1.0)
     }
 
@@ -1379,6 +1394,64 @@ mod tests {
         // Out-of-range inputs are clamped, never producing a negative factor.
         p.erastin_xc_inhib = 2.0;
         assert_eq!(p.xc_cystine_factor(), 0.0);
+    }
+
+    #[test]
+    fn a_per_cell_floor_of_none_is_bit_identical_to_the_global_one() {
+        // #916: the whole byte-identity guarantee. `None` must not merely be
+        // close to the global path -- it must be the SAME bits, at every
+        // combination, or every committed matrix SHA is at risk.
+        for inhib in [0.0, 0.25, 0.5, 0.75, 1.0, 2.0, -1.0] {
+            for floor in [0.0, 0.3, 0.5, 1.0] {
+                let mut p = Params::default();
+                p.erastin_xc_inhib = inhib;
+                p.transsulfuration_floor = floor;
+                assert_eq!(
+                    p.xc_cystine_factor_for(None).to_bits(),
+                    p.xc_cystine_factor().to_bits(),
+                    "None diverged from the global path at inhib={inhib} floor={floor}"
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn a_per_cell_floor_replaces_the_global_one_rather_than_adding_to_it() {
+        // Two floors have no defensible composition, so `Some` REPLACES.
+        let mut p = Params::default();
+        p.erastin_xc_inhib = 1.0;
+        p.transsulfuration_floor = 0.3;
+        assert!((p.xc_cystine_factor() - 0.3).abs() < 1e-12);
+        // The per-cell value stands alone: 0.6, not 0.9 and not 0.3.
+        assert!((p.xc_cystine_factor_for(Some(0.6)) - 0.6).abs() < 1e-12);
+        // And it can go DOWN as well as up -- a hypoxic cell raises the floor,
+        // but an H2S-inhibited one lowers it below the global value.
+        assert!((p.xc_cystine_factor_for(Some(0.0)) - 0.0).abs() < 1e-12);
+    }
+
+    #[test]
+    fn a_full_per_cell_floor_is_an_exact_no_op_at_every_inhibition() {
+        // The identity #915 published: `1 - inhib*(1-floor)` is EXACTLY 1 at
+        // floor 1, for every inhibition. Asserted on bits, because "a fully
+        // competent bypass makes the arm a precise no-op" is the claim and
+        // approximate equality would not support the word "precise".
+        let mut p = Params::default();
+        for inhib in [0.0, 0.137, 0.25, 0.5, 0.75, 0.898, 1.0] {
+            p.erastin_xc_inhib = inhib;
+            assert_eq!(
+                p.xc_cystine_factor_for(Some(1.0)).to_bits(),
+                1.0f64.to_bits(),
+                "a full per-cell floor was not an exact no-op at inhib={inhib}"
+            );
+        }
+    }
+
+    #[test]
+    fn an_out_of_range_per_cell_floor_is_clamped() {
+        let mut p = Params::default();
+        p.erastin_xc_inhib = 1.0;
+        assert_eq!(p.xc_cystine_factor_for(Some(2.0)), 1.0);
+        assert_eq!(p.xc_cystine_factor_for(Some(-1.0)), 0.0);
     }
 
     #[test]

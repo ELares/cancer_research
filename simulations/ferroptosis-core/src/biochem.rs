@@ -421,9 +421,14 @@ pub fn sim_cell_step(
 
     // === NRF2-DRIVEN GSH RESYNTHESIS (System Xc-/SLC7A11 cystine import, #502) ===
     // NRF2 upregulates SLC7A11, so this resynthesis IS the cystine-import supply.
-    // `xc_cystine_factor()` is 1.0 by default (no erastin) => byte-identical.
+    // `xc_cystine_factor_for` is 1.0 by default (no erastin) => byte-identical,
+    // and `cell.transsulfuration_floor` of `None` (#916) falls back to the
+    // global field, so the per-cell path is bit-identical to the old one.
     let deficit_fraction = ((params.gsh_max - state.gsh) / params.gsh_max).max(0.0);
-    state.gsh += cell.nrf2 * params.nrf2_gsh_rate * deficit_fraction * params.xc_cystine_factor();
+    state.gsh += cell.nrf2
+        * params.nrf2_gsh_rate
+        * deficit_fraction
+        * params.xc_cystine_factor_for(cell.transsulfuration_floor);
 
     // === LIPID PEROXIDATION ===
     let unscav = (total_ros - scavenged).max(0.0);
@@ -600,9 +605,14 @@ pub fn sim_cell(
 
         // === NRF2-DRIVEN GSH RESYNTHESIS (System Xc-/SLC7A11 cystine import, #502) ===
         // NRF2 upregulates SLC7A11, so this resynthesis IS the cystine-import supply.
-        // `xc_cystine_factor()` is 1.0 by default (no erastin) => byte-identical.
+        // `xc_cystine_factor_for` is 1.0 by default (no erastin) => byte-identical,
+        // and `cell.transsulfuration_floor` of `None` (#916) falls back to the
+        // global field, so the per-cell path is bit-identical to the old one.
         let deficit_fraction = ((params.gsh_max - gsh) / params.gsh_max).max(0.0);
-        gsh += cell.nrf2 * params.nrf2_gsh_rate * deficit_fraction * params.xc_cystine_factor();
+        gsh += cell.nrf2
+            * params.nrf2_gsh_rate
+            * deficit_fraction
+            * params.xc_cystine_factor_for(cell.transsulfuration_floor);
 
         // === LIPID PEROXIDATION ===
         let unscav = (total_ros - scavenged).max(0.0);
@@ -1346,6 +1356,62 @@ mod tests {
             with_transsulf > full_block && with_transsulf < baseline,
             "transsulfuration floor restores PART of the resynthesis: \
              with_transsulf={with_transsulf}, full_block={full_block}, baseline={baseline}"
+        );
+    }
+
+    #[test]
+    fn the_per_cell_transsulfuration_floor_reaches_the_resynthesis() {
+        // #916. The params tests prove the FACTOR honours a per-cell floor; only
+        // this proves `biochem` READS `cell.transsulfuration_floor`. Reverting
+        // either call site to `params.xc_cystine_factor()` leaves every params
+        // test green and this one red, which is the whole point of it.
+        let mut init_rng = StdRng::seed_from_u64(7);
+        let base = crate::cell::gen_cell(crate::cell::Phenotype::Glycolytic, &mut init_rng);
+
+        let step_gsh = |cell_floor: Option<f64>, global_floor: f64| -> f64 {
+            let mut params = Params::default();
+            params.erastin_xc_inhib = 1.0; // a complete block, so the floor is all
+            params.transsulfuration_floor = global_floor;
+            let mut cell = base.clone();
+            cell.transsulfuration_floor = cell_floor;
+            let mut rng = StdRng::seed_from_u64(7);
+            let mut state =
+                CellState::from_cell(&cell, crate::cell::Treatment::Control, &params, &mut rng);
+            state.gsh = 2.0;
+            state.lp = 0.0;
+            let mut step_rng = StdRng::seed_from_u64(0);
+            sim_cell_step(&mut state, &cell, &params, 0, 0.0, &mut step_rng);
+            state.gsh
+        };
+
+        // `None` must be BIT-identical to the global path: the byte-identity
+        // guarantee, asserted where it actually matters rather than on the
+        // factor alone.
+        assert_eq!(
+            step_gsh(None, 0.5).to_bits(),
+            step_gsh(Some(0.5), 0.5).to_bits(),
+            "a per-cell floor equal to the global one changed the result"
+        );
+
+        // A per-cell floor must move the resynthesis even when the global is 0 --
+        // this is the assertion a dropped `cell.transsulfuration_floor` fails.
+        let global_zero = step_gsh(None, 0.0);
+        let cell_rescued = step_gsh(Some(0.8), 0.0);
+        assert!(
+            cell_rescued > global_zero,
+            "a per-cell floor of 0.8 did not raise resynthesis above the \
+             global-zero path ({cell_rescued} vs {global_zero}); the call sites \
+             are not reading cell.transsulfuration_floor"
+        );
+
+        // And it must REPLACE rather than add: a per-cell 0.0 under a global 0.8
+        // has to fall back DOWN to the unrescued value.
+        let cell_suppressed = step_gsh(Some(0.0), 0.8);
+        assert_eq!(
+            cell_suppressed.to_bits(),
+            global_zero.to_bits(),
+            "a per-cell floor of 0 under a global 0.8 did not suppress the \
+             rescue; the two floors are being combined rather than overridden"
         );
     }
 

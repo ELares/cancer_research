@@ -20,7 +20,7 @@ The engine expresses **10 treatments** (`RSL3` — ferroptosis; `SDT`, `PDT` —
 | sonodynamic | 2,513 | 114 | 4.5% | 5.28× | **treatment** | `ablation`, `adc`, `dose_schedule`, `grid`, `immune`, `immune_spatial`, `io`, `oxygen`, `persister`, `radiation`, `sonodynamic` |
 | hifu | 1,352 | 96 | 7.1% | 1.16× | **treatment** | `cell`, `oxygen` |
 | phagocytosis-checkpoint | 918 | 13 | 1.4% | 4.06× | modifier | — |
-| microbiome | 380 | 12 | 3.2% | — | modifier | — |
+| microbiome | 380 | 12 | 3.2% | — | modifier | `cell`, `oxygen` |
 | mrna-vaccine | 301 | 2 | 0.7% | — | modifier | — |
 
 **Every one of the 16 mechanisms now has some engine representation.** That was not true when this document was written — it opened at thirteen absent, carrying 90,019 census articles — and the column that mattered then is now empty.

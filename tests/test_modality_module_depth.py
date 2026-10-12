@@ -351,3 +351,33 @@ def test_the_shared_reach_is_measured_not_asserted(d):
         assert m["reach"] >= 1, (
             f"{m['module']} is in the SHARED bucket and nothing calls it, so "
             "it is not machinery several arms reach through")
+
+
+def test_the_abstract_quotes_the_same_interval_as_the_chapter(d):
+    """The abstract carries this measurement too, and NOTHING guarded it.
+
+    Chapter 6, MODEL_CARD.md and README.md were each pinned to the live
+    artifact; the abstract was not, so when an 8-line engine change moved the
+    interval 2.4->2.5 the abstract alone kept the old figure. It was found by
+    grepping every variant of the old numbers across the repo, which is the
+    recovery, not the guard.
+
+    Anchored on the abstract's own sentence rather than scanning the manuscript,
+    for the reason `_chapter_paragraph` documents: 265 of the integers 0-299
+    already appear somewhere in `v1.md`, so a bare substring search cannot fail.
+    """
+    text = (REPO / "article" / "drafts" / "v1.md").read_text(encoding="utf-8")
+    hits = [ln for ln in text.split("\n")
+            if "modality-module-depth.md" in ln and "times larger" in ln]
+    assert len(hits) == 1, (
+        f"expected exactly one abstract sentence quoting the interval as "
+        f"'times larger', found {len(hits)}")
+    sentence = hits[0]
+    expected = f"{d['line_ratio_narrow']} to {d['line_ratio_wide']} times larger"
+    assert expected in sentence, (
+        f"the abstract does not quote the live interval; expected {expected!r}. "
+        f"Sentence: {sentence[:200]}")
+    # And the DIRECTION, since the abstract states it the opposite way round
+    # from the chapter: there the arms are smaller, here the engine is larger.
+    assert "ferroptosis engine" in sentence and "times larger" in sentence, (
+        "the abstract must attribute the LARGER side to the ferroptosis engine")
