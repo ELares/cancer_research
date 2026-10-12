@@ -1567,3 +1567,92 @@ def test_the_page_list_and_the_hits_column_no_longer_share_a_name(tmp_path):
     assert 'page = d.get("resultList", {}).get("result", [])' in head
     assert 'hits = d.get("resultList"' not in src, (
         "the page list is called `hits` again, which is also the column name")
+
+
+# ---------------------------------------------------------------------------
+# #913 step 1 (folded in here): a walk that retires short of its recorded
+# total must SAY SO. Two slices retired that way before anyone noticed --
+# MED 2022 at 138,000 where its neighbours bracket ~486,000, and MED 1990 at
+# 10,000 against 1989's 64,194, about 402,000 records absent from slices the
+# ledger called complete. Deliberately a report and not a rewind: an
+# unconditional rewind-on-short is the same shape as the non-terminating
+# deferral loop fixed in #907.
+# ---------------------------------------------------------------------------
+
+def test_a_walk_that_retires_short_of_the_recorded_total_says_so(
+        tmp_path, monkeypatch, capsys):
+    """The alarm the ledger never had, and it must fire even when quiet.
+
+    `_drive` runs with `verbose=False`; this print is deliberately NOT gated on
+    it, because an incomplete slice marked complete is not progress chatter.
+    """
+    page = _page(["A", "B"], None)
+    page["hitCount"] = 5000
+    totals, row, stored = _drive(tmp_path, monkeypatch, pages=[page])
+    assert row["done"] == 1, "the slice still retires; this is a report, not a rewind"
+    assert row["seen"] == 2 and row["hits"] == 5000
+    out = capsys.readouterr().out
+    assert "RETIRED SHORT" in out, (
+        "a slice that walked 2 of 5,000 retired silently, which is exactly how "
+        "~402,000 records went missing without anyone noticing")
+    assert "2 of 5,000" in out, "the alarm must name both numbers"
+
+
+def test_a_complete_walk_raises_no_short_alarm(tmp_path, monkeypatch, capsys):
+    """Non-vacuity: the alarm must be able to stay quiet.
+
+    `_page` sets hitCount to the page length, so this walk is complete. An
+    alarm that fires on every slice would be worthless and would pass the test
+    above.
+    """
+    totals, row, stored = _drive(tmp_path, monkeypatch, pages=[_page(["A", "B"], None)])
+    assert row["done"] == 1 and row["seen"] == row["hits"] == 2
+    assert "RETIRED SHORT" not in capsys.readouterr().out
+
+
+def test_a_rewalked_slice_does_not_trip_the_short_alarm(tmp_path, monkeypatch, capsys):
+    """`seen` accumulates across runs while `hits` is one question's total.
+
+    A slice re-walked under the deferral path has an INFLATED count, so
+    comparing the two could only ever false-positive in the safe direction --
+    but that has to be true rather than assumed, because the obvious
+    implementation compares the per-run local instead of the column.
+    """
+    # The fixture has to put the LOCAL and the COLUMN on opposite sides of the
+    # total, or it cannot tell the two implementations apart. A first version
+    # seeded hits=2 and drove `_page(["A"])`, which sets hitCount to the page
+    # length -- so hits was overwritten to 1 and NEITHER the correct code nor
+    # the per-run-local mutant fired. It passed while testing nothing.
+    #
+    # Here: the column accumulates to 101 while this run walks 1 record against
+    # a recorded total of 50. The column says complete, the local says short.
+    _seed_slice(tmp_path, monkeypatch, hits=50)
+    st = fx.state()
+    st.execute("UPDATE slice SET seen=100 WHERE src='MED' AND year=2026")
+    st.commit()
+    st.close()
+    page = _page(["A"], None)
+    page["hitCount"] = 50
+    totals, row, stored = _drive(tmp_path, monkeypatch, pages=[page])
+    assert row["seen"] == 101 and row["hits"] == 50, (
+        f"fixture broken: seen={row['seen']} hits={row['hits']}; the column must "
+        "exceed the total while this run's own count falls short of it")
+    assert "RETIRED SHORT" not in capsys.readouterr().out, (
+        "a resumed slice was called short, so the check is reading the per-run "
+        "local instead of the accumulated column")
+
+
+def test_the_short_check_reads_the_column_not_the_per_run_local(tmp_path):
+    """Spelled against the source: the local `seen` counts only THIS run.
+
+    Using it would call every resumed slice short. The check must read the
+    accumulated column back from the ledger.
+    """
+    src = Path(fx.__file__).read_text()
+    assert 'SELECT seen, hits FROM slice WHERE src=? AND year=?' in src, (
+        "the short check no longer reads the accumulated column")
+    i = src.index("RETIRED SHORT")
+    window = src[i - 900:i]
+    assert "tally = st.execute(" in window, (
+        "the alarm is not fed by the ledger read, so it may be using the "
+        "per-run local and calling every resumed slice short")
