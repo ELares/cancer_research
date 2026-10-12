@@ -164,7 +164,20 @@ def inhibition_from_depletion(d: float, s0: float, km: float) -> float:
 
 
 def erastin_dose_for_inhibition(i: float, k: float, h: float):
-    """Invert the committed Hill fit: `dose^h/(dose^h+k) = i`.
+    """Invert the production Hill fit: `dose^h / (dose^h + k^h) = i`.
+
+    `k` is RAISED TO THE POWER h, so `k` is the half-maximal dose and the
+    inverse is `k * (i/(1-i))^(1/h)`.
+
+    AN EARLIER VERSION INVERTED `dose^h/(dose^h + k)` -- k used raw -- giving
+    `(k*i/(1-i))^(1/h)`, which is low by a factor of `k^(1-1/h)`: 4.451 at the
+    committed k=6, h=6. It put the half-maximal dose at 1.35 uM when the
+    half-maximal dose is k=6 uM BY DEFINITION, which is the check that should
+    have been run first. The form was taken from a docstring summary instead of
+    from `calibrate_erastin.dose_to_inhib`, and the round-trip guard could not
+    catch it because it inverted this function with this function -- the
+    guard-computes-its-own-expectation shape. The guard now round-trips through
+    the PRODUCTION function.
 
     Returns None at the endpoints rather than raising: a zero block needs no
     dose and a total block needs an infinite one, and reporting either as a
@@ -172,7 +185,7 @@ def erastin_dose_for_inhibition(i: float, k: float, h: float):
     """
     if i <= 0.0 or i >= 1.0:
         return None
-    return (k * i / (1.0 - i)) ** (1.0 / h)
+    return k * (i / (1.0 - i)) ** (1.0 / h)
 
 
 def escape_delivery(floor: float) -> float:
@@ -264,7 +277,9 @@ def render(d: dict) -> str:
         f"The #909 map turns a residual cystine concentration into a supply fraction "
         f"(Km {inp['km_uM']} uM, reference {inp['reference_uM']:.1f} uM). The committed "
         f"erastin fit turns a dose into the same quantity "
-        f"(`dose^{inp['hill']:.0f}/(dose^{inp['hill']:.0f} + {inp['k_erastin_uM']:.0f})`, "
+        f"(`dose^{inp['hill']:.0f}/(dose^{inp['hill']:.0f} + "
+        f"{inp['k_erastin_uM']:.0f}^{inp['hill']:.0f})`, so "
+        f"{inp['k_erastin_uM']:.0f} uM is the half-maximal dose, "
         f"RMSE {inp['erastin_fit_rmse']}, {inp['erastin_fit_phenotype']}). Composing "
         "them is arithmetic over published constants.",
         "",

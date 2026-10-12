@@ -34,45 +34,45 @@
   "equivalence_rows": [
     {
       "depletion": 0.25,
-      "erastin_equiv_uM": 0.987440443791371,
+      "erastin_equiv_uM": 4.3951154396014145,
       "inhibition": 0.1338203583909584,
       "residual_uM": 155.75079872204475
     },
     {
       "depletion": 0.5,
-      "erastin_equiv_uM": 1.18585371998445,
+      "erastin_equiv_uM": 5.2782565536819614,
       "inhibition": 0.3166994163709418,
       "residual_uM": 103.8338658146965
     },
     {
       "depletion": 0.75,
-      "erastin_equiv_uM": 1.4241355557622615,
+      "erastin_equiv_uM": 6.338853354216596,
       "inhibition": 0.5816694796566955,
       "residual_uM": 51.91693290734825
     },
     {
       "depletion": 0.9,
-      "erastin_equiv_uM": 1.7102970180950146,
+      "erastin_equiv_uM": 7.612563246520071,
       "inhibition": 0.8066273810017844,
       "residual_uM": 20.766773162939295
     },
     {
       "depletion": 0.95,
-      "erastin_equiv_uM": 1.9371208714811519,
+      "erastin_equiv_uM": 8.622160358280595,
       "inhibition": 0.8980238105659386,
       "residual_uM": 10.383386581469658
     },
     {
       "depletion": 0.99,
-      "erastin_equiv_uM": 2.550568466479735,
+      "erastin_equiv_uM": 11.352626801210983,
       "inhibition": 0.978671213438916,
       "residual_uM": 2.0766773162939316
     }
   ],
-  "erastin_window_ratio": 2.5830099248179326,
+  "erastin_window_ratio": 2.583009924817932,
   "erastin_window_uM": [
-    0.987440443791371,
-    2.550568466479735
+    4.3951154396014145,
+    11.352626801210983
   ],
   "escape_rows": [
     {

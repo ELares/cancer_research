@@ -46,14 +46,42 @@ def _data():
     return json.loads(RAW.read_text())
 
 
-def test_the_hill_inversion_round_trips():
-    """`dose_for_inhibition` must invert the committed fit, not approximate it."""
+def test_the_hill_inversion_round_trips_through_the_PRODUCTION_map():
+    """Round-trip through `calibrate_erastin.dose_to_inhib`, not a restatement.
+
+    THE FIRST VERSION OF THIS GUARD RESTATED THE FORM INLINE as
+    `dose**h / (dose**h + k)` -- the same wrong form the inverse used -- so it
+    inverted this module's function with this module's own assumption and
+    passed while every published dose was low by `k^(1-1/h)` = 4.451x. That is
+    the guard-computes-its-own-expectation shape, and importing the production
+    function is the only version that can fail.
+    """
+    from calibrate_erastin import dose_to_inhib  # noqa: PLC0415
+
     inp = _data()["inputs"]
     k, h = inp["k_erastin_uM"], inp["hill"]
-    for i in (0.05, 0.134, 0.317, 0.582, 0.807, 0.898, 0.979):
+    for i in (0.05, 0.134, 0.317, 0.5, 0.582, 0.807, 0.898, 0.979):
         dose = erastin_dose_for_inhibition(i, k, h)
-        back = dose ** h / (dose ** h + k)
-        assert abs(back - i) < 1e-12, f"inhibition {i} did not round-trip"
+        assert abs(dose_to_inhib(dose, k, h) - i) < 1e-12, (
+            f"inhibition {i} did not round-trip through the production map")
+
+
+def test_the_committed_k_is_the_half_maximal_dose():
+    """The property that would have caught the wrong form in one line.
+
+    For `dose^h/(dose^h + k^h)`, `k` IS the half-maximal dose by construction.
+    The earlier inverse put it at 1.35 uM against a committed k of 6.
+    """
+    from calibrate_erastin import dose_to_inhib  # noqa: PLC0415
+
+    inp = _data()["inputs"]
+    k, h = inp["k_erastin_uM"], inp["hill"]
+    assert abs(dose_to_inhib(k, k, h) - 0.5) < 1e-12, (
+        "the production map does not put half-maximal inhibition at k")
+    assert abs(erastin_dose_for_inhibition(0.5, k, h) - k) < 1e-12, (
+        f"the inverse puts the half-maximal dose at "
+        f"{erastin_dose_for_inhibition(0.5, k, h):.3f} uM, not the committed "
+        f"k of {k}")
 
 
 def test_the_endpoints_are_refused_rather_than_numbered():
