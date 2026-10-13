@@ -149,6 +149,63 @@ def test_the_structural_claims_are_read_from_rust_not_from_the_json():
     assert _data()["structure"] == facts
 
 
+def test_the_spatial_consumer_claim_is_measured_not_asserted(tmp_path, monkeypatch):
+    """The sentence this page used to publish was true when written and false the
+    moment #918 landed, and nothing failed, because it was prose: "`erastin_xc_inhib`
+    is reachable in no simulation binary at all, and sim-tme-3d applies no parameter
+    overrides". Both halves are detectors now. A value-level assertion cannot tell a
+    READ from a literal that happens to be right today, so this points them at
+    doctored sources and requires the answers to MOVE.
+    """
+    import cysteine_depletion_feasibility as m
+
+    live = m.read_structural_facts()
+    assert live["arm_is_spatially_reachable"] is True
+    assert live["floor_has_spatial_consumer"] is True
+
+    # A binary doing neither must answer False for both, or the detectors are
+    # being satisfied by something other than what they name.
+    blind = tmp_path / "blind.rs"
+    blind.write_text("fn main() {\n    let mut params = Params::default();\n}\n")
+    monkeypatch.setattr(m, "TME3D_RS", blind)
+    out = m.read_structural_facts()
+    assert out["arm_is_spatially_reachable"] is False
+    assert out["floor_has_spatial_consumer"] is False
+
+    # A write that exists only inside the crate's test module is NOT a consumer.
+    # This repo has already shipped a detector whose single match was an
+    # `assert!` message in a `#[cfg(test)]` block.
+    test_only = tmp_path / "test_only.rs"
+    test_only.write_text(
+        "fn main() {}\n\n#[cfg(test)]\nmod tests {\n"
+        "    fn ab() {\n"
+        "        apply_param_overrides(&mut params, ov);\n"
+        "        gc.cell.transsulfuration_floor = Some(0.5);\n"
+        "    }\n}\n"
+    )
+    monkeypatch.setattr(m, "TME3D_RS", test_only)
+    out = m.read_structural_facts()
+    assert out["floor_has_spatial_consumer"] is False, (
+        "an A/B test setting a parameter is not a spatial consumer")
+    assert out["arm_is_spatially_reachable"] is False
+
+
+def test_the_page_states_the_reachability_it_measured():
+    """Page and source cannot drift: the two fact lines are rendered from the
+    detectors, and while the arm IS reachable the retracted sentence must be gone.
+    """
+    doc = DOC.read_text()
+    facts = read_structural_facts()
+    assert (f"the #502 arm is driveable in sim-tme-3d: "
+            f"{facts['arm_is_spatially_reachable']}") in doc
+    assert (f"something writes the per-cell floor in sim-tme-3d: "
+            f"{facts['floor_has_spatial_consumer']}") in doc
+    if facts["arm_is_spatially_reachable"]:
+        assert "reachable in no simulation binary" not in doc, (
+            "the arm is reachable; the page must not still say it is not")
+        assert "applies no parameter overrides" not in doc
+
+
 def test_the_cystine_factor_formula_still_has_the_shape_the_map_assumes():
     """The map treats `xc_cystine_factor` as a supply multiplier in [0,1].
 
@@ -380,11 +437,15 @@ def test_this_generator_hand_writes_no_quantity_into_its_prose():
     spec.loader.exec_module(hwf)
     gen = REPO_ROOT / "scripts" / "cysteine_depletion_feasibility.py"
 
-    # Identifiers this page cites: the PMIDs it names and the issue it builds on.
+    # Identifiers this page cites: the PMIDs it names and the issues it builds on.
     # Not a style allowlist -- each is a reference that cannot "go stale" the way
-    # a count can, because it denotes one fixed document.
+    # a count can, because it denotes one fixed document. The issue numbers earn
+    # the same treatment as the PMIDs for the same reason, and they need naming
+    # here because the detector reads `#916 library` as a count while `(#916)`
+    # reads as a reference -- a difference in the following word, not in kind.
     identifiers = {"39696900", "41704298", "27869804", "32241947",
-                   "34287957", "41422256", "31819185", "35287706", "5054467", "502"}
+                   "34287957", "41422256", "31819185", "35287706", "5054467",
+                   "502", "916", "918", "920"}
     # Two non-numeric shapes the detector reads as counts and which are not:
     # "a tension" (the article, not a quantity) and the salt name "2HCl".
     non_quantities = {"tension", "2HCl"}

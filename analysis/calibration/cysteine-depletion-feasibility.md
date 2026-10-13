@@ -92,22 +92,24 @@ One cell line (A549, lung) in one paper, against a pancreatic target, so the sca
 
 Across a doubling and a halving of the Km the required depletion spans 93.4%-96.8% -- so the conclusion that deep depletion is needed is robust to the constant, while any specific figure is not. Measuring the Km in a pancreatic line is the cheap next step and would need no new model code.
 
-## The spatial escape, now expressible in the library
+## The spatial escape, now wired end to end
 
 - `transsulfuration_floor` is a `Params` field: True
 - it has a per-cell `Cell` counterpart: True
 - `cell.nrf2` is a per-cell field: True
+- the #502 arm is driveable in sim-tme-3d: True
+- something writes the per-cell floor in sim-tme-3d: True
 - glutathione resynthesis sites in `biochem.rs`: 2, of which 2 are multiplied by `xc_cystine_factor()` and 2 by `cell.nrf2`
 
 Because EVERY resynthesis site is multiplied by the cystine factor, a complete block is zero at every NRF2 level (`nrf2_cannot_rescue_complete_block`: True). That is the right topology -- transsulfuration is the only cysteine source once import is gone -- and it is also why raising `cell.nrf2` is not a substitute for a per-cell escape.
 
-This matters because of a tension in the paper's own design. PMID 41422256 reports that hypoxia activates the transsulfuration pathway and so confers ferroptosis resistance under cystine limitation, and these bacteria are hypoxia-TRIGGERED: the trigger co-locates with the escape. The second bacterial paper, PMID 41704298, independently added H2S to inhibit the transsulfuration bypass -- which is the one escape this parameter structure leaves open. Read that as a CORRESPONDENCE, not a prediction: both papers were in hand before the structure was consulted, and nothing here was forecast in advance. **The library can now express it** (#916): `Cell::transsulfuration_floor` overrides the global field per cell, so the escape can be made largest exactly where the trigger is. What is still missing is a SPATIAL CONSUMER, and the blocker is not this axis -- `erastin_xc_inhib` is reachable in no simulation binary at all, and sim-tme-3d applies no parameter overrides, so a per-cell floor there would multiply a cystine factor that no erastin dose has moved off its no-op value (#918). This paragraph was written when the floor was global-only; it is derived from the engine rather than asserted, which is why it changed when the engine did.
+This matters because of a tension in the paper's own design. PMID 41422256 reports that hypoxia activates the transsulfuration pathway and so confers ferroptosis resistance under cystine limitation, and these bacteria are hypoxia-TRIGGERED: the trigger co-locates with the escape. The second bacterial paper, PMID 41704298, independently added H2S to inhibit the transsulfuration bypass -- which is the one escape this parameter structure leaves open. Read that as a CORRESPONDENCE, not a prediction: both papers were in hand before the structure was consulted, and nothing here was forecast in advance. **The engine can now be asked** (#916 library, #918 reachability, #920 consumer): sim-tme-3d writes each tumour cell's floor from its own O2 supply, and the #502 arm can be driven there, so the escape is largest exactly where the trigger is. WHAT IT MEASURED IS DELIBERATELY NOT QUOTED HERE -- it comes from a spatial run this page cannot recompute, and a figure copied in from elsewhere is a figure nothing on this page can keep honest. It lives with the consumer: sim-tme-3d's own A/B tests and the layer's row in `simulations/calibration/CALIBRATION_STATUS.md`. This paragraph has now been rewritten TWICE by the engine changing under it, which is the whole reason the facts above are re-parsed rather than asserted.
 
 ## Verdict
 
 - the supply arm is **already expressible**, with no new axis, via `erastin_xc_inhib` plus `transsulfuration_floor`
 - the concentration-to-fraction map has a **named, failable target** (Km 179.4 uM, PMID 34287957; reference 207.7 uM by formulation)
-- a hypoxia-graded escape is **expressible in the library** (#916) but has no spatial consumer, and the blocker is that `erastin_xc_inhib` is reachable in no simulation binary (#918)
+- a hypoxia-graded escape is **wired end to end** (#916 library, #918 reachability, #920 spatial consumer), so it is now a question the engine can be asked rather than a gap; what it answers is reported with the consumer, not here
 - the depletion-buys-less headline is **in-vitro only**: the gap exists because medium sits above the Km, and below the Km the map is nearly linear, so the in-vitro fit and the in-vivo therapy sit on opposite sides of half-saturation
 - the dose magnitude stays **unanchored** -- nothing here ties enzyme activity to a residual concentration in vivo, and the plasma pools in the constants table are TOTAL cyst(e)ine and free cysteine, neither of which is free cystine, so they cannot serve as the in-vivo reference
 

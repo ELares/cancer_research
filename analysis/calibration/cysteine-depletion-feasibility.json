@@ -309,7 +309,9 @@
   },
   "saturation_at_reference": 0.5365152263021224,
   "structure": {
+    "arm_is_spatially_reachable": true,
     "escape_can_vary_per_cell": true,
+    "floor_has_spatial_consumer": true,
     "floor_is_cell_field": true,
     "floor_is_params_field": true,
     "gsh_resynthesis_sites": 2,

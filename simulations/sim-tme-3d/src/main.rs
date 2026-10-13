@@ -83,8 +83,8 @@ use ferroptosis_core::immune_spatial::{
 use ferroptosis_core::nutrient::{apply_nutrient_stress_3d, NutrientConfig};
 use ferroptosis_core::oncolytic::{self, OncolyticConfig};
 use ferroptosis_core::oxygen::{
-    fenton_o2_factor, hypoxia_iron_factor, o2_dependent_exo_factor, oer_exo_factor, por_o2_factor,
-    radial_o2_field, OER_REFERENCE_PO2_MMHG,
+    fenton_o2_factor, hypoxia_iron_factor, hypoxia_transsulfuration_floor, o2_dependent_exo_factor,
+    oer_exo_factor, por_o2_factor, radial_o2_field, OER_REFERENCE_PO2_MMHG,
 };
 use ferroptosis_core::params::{
     apply_param_overrides, param_overrides_from_env, Params, PersisterConfig, PhConfig,
@@ -913,6 +913,30 @@ struct Overrides {
     /// so the Fenton substrate rises in hypoxic zones even as the O2-dependent SDT
     /// yield (#336) falls. `0.0` (default) ⇒ factor 1.0 ⇒ byte-identical.
     hypoxia_iron_sensitivity: f64,
+    /// Hypoxia-driven reverse-transsulfuration sensitivity (#916): the per-cell
+    /// cysteine backup that survives a System Xc- block.
+    ///
+    /// Each tumour cell's `Cell::transsulfuration_floor` becomes
+    /// `max(sensitivity * (1 - o2_supply), Params::transsulfuration_floor)`, so
+    /// the escape is LARGEST in the hypoxic core and falls back to whatever
+    /// constitutive floor the tumour carries at the vessel-proximal rim (nothing,
+    /// at the default of 0.0). Hypoxia activates the reverse transsulfuration
+    /// pathway and so confers
+    /// ferroptosis resistance under cystine limitation (PMID 41422256), which is
+    /// precisely the regime a hypoxia-TRIGGERED cyst(e)inase meets (PMID
+    /// 39696900) and why a second bacterial paper generates H2S to inhibit the
+    /// bypass (PMID 41704298).
+    ///
+    /// MEANINGLESS ON ITS OWN, and that is why this consumer could not be
+    /// written before #918: the floor enters only through
+    /// `Params::xc_cystine_factor_for`, which is exactly 1.0 at
+    /// `erastin_xc_inhib == 0` whatever the floor is, so the knob needs the #502
+    /// cystine arm driven too -- which is what `param_overrides` below is for.
+    ///
+    /// `0.0` (default, and what every production condition carries) => the loop
+    /// is skipped => every cell keeps `transsulfuration_floor: None` => the
+    /// global field is read exactly as before => byte-identical.
+    hypoxia_transsulfuration_sensitivity: f64,
     /// Biochem rate-constant overrides read from `FERRO_PARAM_OVERRIDES` (#918,
     /// the #331 hook one binary over).
     ///
@@ -1001,6 +1025,18 @@ static ENV_PARAM_OVERRIDES: std::sync::OnceLock<Vec<(String, f64)>> = std::sync:
 
 fn env_param_overrides() -> Vec<(String, f64)> {
     ENV_PARAM_OVERRIDES.get().cloned().unwrap_or_default()
+}
+
+/// The #920 hypoxia-graded transsulfuration floor for ONE site.
+///
+/// Factored out because it is applied TWICE -- once per tumour cell at setup
+/// and again to each cell clonal repopulation revives -- and the two must not
+/// drift. The `max` is the composition rule: `xc_cystine_factor_for` takes a
+/// per-cell floor INSTEAD of the global one, so the bare map would strip a
+/// constitutive high-CBS/CTH floor from the oxygenated rim, where the map
+/// returns ~0. Reduces to the bare map at the default global floor of 0.0.
+fn site_transsulfuration_floor(o2_supply: f64, sensitivity: f64, global_floor: f64) -> f64 {
+    hypoxia_transsulfuration_floor(o2_supply, sensitivity).max(global_floor)
 }
 
 fn run_one_condition_with_config(
@@ -1190,6 +1226,10 @@ fn run_one_condition_impl(
     // step; `hypoxia_iron_sensitivity` ⇒ `hypoxia_iron_factor` returns 1.0.
     let ferritinophagy_release = overrides.ferritinophagy_release;
     let hypoxia_iron_sensitivity = overrides.hypoxia_iron_sensitivity;
+    // Hypoxia-driven transsulfuration escape (#916). `0.0` (matrix path) => the
+    // per-cell floor is never written => `None` => the global field is read =>
+    // byte-identical.
+    let hypoxia_transsulfuration_sensitivity = overrides.hypoxia_transsulfuration_sensitivity;
     // Oxygen-dependent SDT/PDT exo-ROS (#336). `0.0` (default/matrix) ⇒ the
     // exo-ROS O2 factor is exactly 1.0 ⇒ byte-identical.
     let sdt_o2_dependence = overrides.sdt_o2_dependence;
@@ -1520,6 +1560,39 @@ fn run_one_condition_impl(
             if gc.is_tumor {
                 gc.cell.iron *=
                     hypoxia_iron_factor(o2_supply_for_exo[idx], hypoxia_iron_sensitivity);
+            }
+        }
+    }
+
+    // --- Hypoxia-driven transsulfuration escape (#916) ---
+    // The reverse transsulfuration pathway (methionine -> cystathionine ->
+    // cysteine) is the GPX4-independent cysteine backup that survives a System
+    // Xc- block, and hypoxia ACTIVATES it, conferring ferroptosis resistance
+    // under cystine limitation (PMID 41422256). The #502 arm discounts a cystine
+    // block UNIFORMLY (one global `transsulfuration_floor`), which is the one
+    // thing the biology says it should not do, so write each tumour cell's floor
+    // from its OWN O2 supply -- the same per-cell field that gates the SDT
+    // exo-ROS (#336) and the hypoxia-iron rise (#365) -- making the escape
+    // largest exactly where a hypoxia-TRIGGERED cyst(e)inase would act
+    // (PMID 39696900).
+    //
+    // The library deliberately makes a per-cell floor REPLACE the global one
+    // rather than add to it (two floors have no defensible composition there),
+    // which leaves the choice of WHAT to write to the consumer -- the only place
+    // that knows what the map means. `site_transsulfuration_floor` writes the
+    // larger of the two, so switching this layer on can only ADD protection.
+    // Written at setup, like every other per-cell geometric layer, and re-derived
+    // for clonally revived cells further down. `sensitivity == 0` (matrix path)
+    // => the loop never runs => the field stays `None` => `xc_cystine_factor_for`
+    // reads the global field => byte-identical.
+    if hypoxia_transsulfuration_sensitivity > 0.0 {
+        for (idx, gc) in grid.cells.iter_mut().enumerate() {
+            if gc.is_tumor {
+                gc.cell.transsulfuration_floor = Some(site_transsulfuration_floor(
+                    o2_supply_for_exo[idx],
+                    hypoxia_transsulfuration_sensitivity,
+                    params.transsulfuration_floor,
+                ));
             }
         }
     }
@@ -3249,6 +3322,25 @@ fn run_one_condition_impl(
                             params.scd_mufa_max,
                             pm,
                         );
+                    }
+                }
+                // #920: a revived cell is fresh, so `gen_cell` leaves its
+                // `transsulfuration_floor` at `None` and the hypoxia-graded
+                // cysteine escape silently stops applying to it -- the #302 and
+                // #363 shape exactly, and for the same reason. The floor is a
+                // GEOMETRIC setup layer keyed on a supply field that death and
+                // repopulation never change, so re-deriving it reproduces the
+                // setup value bit-for-bit. Without this, repopulating a hypoxic
+                // core hands it back cells with NO bypass, which is the opposite
+                // of the modelled biology. No-op unless the layer is on.
+                if hypoxia_transsulfuration_sensitivity > 0.0 {
+                    for &idx in &revived {
+                        grid.cells[idx].cell.transsulfuration_floor =
+                            Some(site_transsulfuration_floor(
+                                o2_supply_for_exo[idx],
+                                hypoxia_transsulfuration_sensitivity,
+                                params.transsulfuration_floor,
+                            ));
                     }
                 }
                 // #341: a revived dead site is a NEW cell grown from a living
@@ -13672,6 +13764,399 @@ mod tests {
                 spheroid: Some(SpheroidConfig::literature()),
                 ..Default::default()
             },
+        );
+    }
+
+    // ============================================================
+    // #916: the per-cell hypoxia-graded transsulfuration escape.
+    //
+    // Every test below pins the SAME condition name. `cond_seed` is
+    // `SEED + hash_condition_name(condition.name)` (line ~1350), by design, so
+    // renaming a condition moves the result -- measured here at 1,196 dead
+    // against 1,201 for a one-character rename under identical overrides. An
+    // A/B that varies the name varies the seed, which is the control the
+    // `wrong_seed` snapshot test already pins one level up.
+    // ============================================================
+
+    /// The condition every #916 A/B runs: the §7.1 headline config (grid 60,
+    /// λ=50 µm, 180 steps, RSL3) the #365 and #383 tests already use, so the
+    /// numbers here are directly comparable to theirs.
+    fn cystine_escape_condition(lambda: Option<f64>) -> Condition {
+        Condition {
+            name: "cystine_escape".to_string(),
+            treatment: Treatment::RSL3,
+            treatment_name: "RSL3".to_string(),
+            o2_lambda: lambda,
+            immune_on: false,
+            stromal_on: false,
+            ph_on: false,
+            dose_schedule: DoseSchedule::Constant,
+        }
+    }
+
+    const CYSTINE_ESCAPE_CFG: RunConfig = RunConfig {
+        grid_dim: 60,
+        n_steps: 180,
+    };
+
+    /// `erastin_xc_inhib` through the #918 hook -- the only route there is.
+    fn erastin_override(inhib: f64) -> Vec<(String, f64)> {
+        vec![("erastin_xc_inhib".to_string(), inhib)]
+    }
+
+    /// #916: THE ESCAPE IS AN EXACT NO-OP WITHOUT THE CYSTINE ARM, and that is
+    /// the property that made this consumer unwritable before #918.
+    ///
+    /// The floor enters only through `Params::xc_cystine_factor_for`, which is
+    /// `1 - erastin_xc_inhib*(1 - floor)` and therefore exactly 1.0 at
+    /// `erastin_xc_inhib == 0` FOR EVERY FLOOR. So a hypoxia-graded floor laid
+    /// over an undriven System Xc- arm multiplies nothing -- a layer without a
+    /// caller, which is what checking for the companion knob caught in #916
+    /// before the consumer shipped. Asserted with `assert_eq!` on the overall
+    /// rate AND all three zone rates, not approximately: ×1.0 is exact in IEEE
+    /// 754, so anything other than bit-equality means the floor leaked into a
+    /// path it should not reach.
+    #[test]
+    fn the_transsulfuration_escape_is_an_exact_no_op_without_the_cystine_arm() {
+        let cond = cystine_escape_condition(Some(50.0));
+        let plain = run_one_condition_with_config(&cond, CYSTINE_ESCAPE_CFG, None);
+        let floored = run_one_condition_full(
+            &cond,
+            CYSTINE_ESCAPE_CFG,
+            None,
+            Overrides {
+                hypoxia_transsulfuration_sensitivity: 1.0,
+                ..Default::default()
+            },
+        );
+        assert_eq!(
+            plain.overall_kill_rate, floored.overall_kill_rate,
+            "a hypoxia floor with erastin_xc_inhib=0 must be byte-identical: \
+             xc_cystine_factor_for is exactly 1.0 at every floor"
+        );
+        assert_eq!(plain.normoxic_kill_rate, floored.normoxic_kill_rate);
+        assert_eq!(plain.transition_kill_rate, floored.transition_kill_rate);
+        assert_eq!(plain.hypoxic_kill_rate, floored.hypoxic_kill_rate);
+        assert_eq!(plain.total_dead, floored.total_dead);
+    }
+
+    /// #916: with the #502 arm driven spatially (#918), the hypoxia-graded
+    /// escape BLUNTS the cystine block, monotonically in sensitivity.
+    ///
+    /// Measured at the §7.1 config: a 90% System Xc- block raises RSL3 kill
+    /// 0.507% → 1.459% (2.9×, the first spatial statement the #502 arm has ever
+    /// been able to make), and at full sensitivity the escape gives back 37.9%
+    /// of what the block ADDED (1.459% → 1.098%, against an untreated 0.507%),
+    /// with the half-sensitivity run in between at 1.216%.
+    /// `sensitivity = 0` reproduces the block-only run bit-for-bit.
+    ///
+    /// The magnitude is an uncalibrated placeholder -- `sensitivity` has no
+    /// data behind it and `erastin_xc_inhib` is a fraction of supply, not a dose
+    /// (`cysteine_depletion_dose_equivalence.py` converts between them) -- so the
+    /// DIRECTION and the monotonicity are the result.
+    #[test]
+    fn the_hypoxia_graded_escape_blunts_a_spatial_cystine_block() {
+        let cond = cystine_escape_condition(Some(50.0));
+        let run = |sens: f64| {
+            run_one_condition_full(
+                &cond,
+                CYSTINE_ESCAPE_CFG,
+                None,
+                Overrides {
+                    hypoxia_transsulfuration_sensitivity: sens,
+                    param_overrides: erastin_override(0.9),
+                    ..Default::default()
+                },
+            )
+        };
+        let plain = run_one_condition_with_config(&cond, CYSTINE_ESCAPE_CFG, None);
+        let block = run(0.0);
+        let half = run(0.5);
+        let full = run(1.0);
+
+        // Precondition: the block must actually do something, or there is
+        // nothing for an escape to blunt and every assertion below is vacuous.
+        assert!(
+            block.overall_kill_rate > plain.overall_kill_rate * 2.0,
+            "a 90% cystine block must materially raise RSL3 kill: plain={:.6}, block={:.6}",
+            plain.overall_kill_rate,
+            block.overall_kill_rate
+        );
+        // Knob-off identity against a run that never mentions the field.
+        let block_ref = run_one_condition_full(
+            &cond,
+            CYSTINE_ESCAPE_CFG,
+            None,
+            Overrides {
+                param_overrides: erastin_override(0.9),
+                ..Default::default()
+            },
+        );
+        assert_eq!(
+            block.overall_kill_rate, block_ref.overall_kill_rate,
+            "sensitivity=0 must be byte-identical to not setting it"
+        );
+        // Monotone in sensitivity, and the full-sensitivity escape removes a
+        // material share of the block's own contribution.
+        assert!(
+            full.overall_kill_rate < half.overall_kill_rate
+                && half.overall_kill_rate < block.overall_kill_rate,
+            "the escape must be monotone in sensitivity: block={:.6}, half={:.6}, full={:.6}",
+            block.overall_kill_rate,
+            half.overall_kill_rate,
+            full.overall_kill_rate
+        );
+        let removed = (block.overall_kill_rate - full.overall_kill_rate)
+            / (block.overall_kill_rate - plain.overall_kill_rate);
+        assert!(
+            (0.2..0.6).contains(&removed),
+            "the escape should remove a material minority of the block's own kill; got {:.3}",
+            removed
+        );
+        // Deterministic: the floor is a one-time geometric setup mutation.
+        assert_eq!(full.overall_kill_rate, run(1.0).overall_kill_rate);
+    }
+
+    /// #916: IT IS THE OXYGEN GRADIENT THAT CREATES THE ESCAPE, not the knob.
+    ///
+    /// `hypoxia_transsulfuration_floor(s, sens) = sens*(1 - s)`, and
+    /// `o2_supply_for_exo` is initialised to 1.0, so a uniformly oxygenated
+    /// tumour gets a floor of exactly 0 at every cell -- the escape is a
+    /// bit-for-bit no-op there EVEN WITH THE CYSTINE ARM FULLY DRIVEN, where
+    /// the block kills 19.72% of the tumour. That is the sharpest available
+    /// statement that this layer adds spatial structure and nothing else: it
+    /// cannot change a well-mixed answer, only a graded one.
+    #[test]
+    fn the_escape_needs_an_oxygen_gradient_not_merely_a_sensitivity() {
+        let uniform = cystine_escape_condition(None);
+        let run = |sens: f64| {
+            run_one_condition_full(
+                &uniform,
+                CYSTINE_ESCAPE_CFG,
+                None,
+                Overrides {
+                    hypoxia_transsulfuration_sensitivity: sens,
+                    param_overrides: erastin_override(0.9),
+                    ..Default::default()
+                },
+            )
+        };
+        let block = run(0.0);
+        let escaped = run(1.0);
+        // Precondition: under uniform O2 the block is doing a great deal of work,
+        // so an identity here is a real constraint rather than 0 == 0.
+        assert!(
+            block.overall_kill_rate > 0.1,
+            "precondition: the cystine block should kill substantially under \
+             uniform O2; got {:.6}",
+            block.overall_kill_rate
+        );
+        assert_eq!(
+            block.overall_kill_rate, escaped.overall_kill_rate,
+            "with no O2 gradient every floor is exactly 0, so the escape must be \
+             byte-identical even at full sensitivity"
+        );
+        assert_eq!(block.total_dead, escaped.total_dead);
+    }
+
+    /// #916: the escape reaches the DEEP hypoxic core only in a regime where
+    /// the core dies at all -- and the one this engine has is the #365 artifact.
+    ///
+    /// THE NAIVE READING OF THIS LAYER IS WRONG AND THE MEASUREMENT SAYS SO.
+    /// "Hypoxia activates the bypass, so the escape protects the hypoxic core"
+    /// predicts a fall in `hypoxic_kill_rate`; under RSL3 + a cystine block the
+    /// deep zone does not move AT ALL (0.0326% with and without the escape),
+    /// because the deep zone barely dies in the first place -- the radial O2
+    /// field scales `basal_ros` down with supply, so the core is already
+    /// protected by having no oxidant, and a cystine block cannot remove a kill
+    /// that is not there. The escape's whole measurable effect lands in the
+    /// outer 120 µm shell, which is where `zone_kill_rates_3d` puts the kill and
+    /// where the supply (and so the floor) still varies steeply.
+    ///
+    /// The deep core becomes killable once #365's hypoxia-driven iron import is
+    /// on, and THERE the escape cuts the hypoxic-zone kill by more than half
+    /// (3.09% → 1.40%). That regime is the one §7.1 flags as a MODEL ARTIFACT
+    /// (the Fenton term is O2-independent, so an anoxic core keeps its H₂O₂),
+    /// which is the honest statement this test exists to pin: the only
+    /// configuration in which a hypoxic cysteine escape changes the deep core
+    /// is one the repo already does not believe. #383's O2-coupled Fenton is the
+    /// correction, and composing all three is future work, not a claim here.
+    #[test]
+    fn the_escape_reaches_the_deep_core_only_where_the_core_dies() {
+        let cond = cystine_escape_condition(Some(50.0));
+        let plain_block = |sens: f64| {
+            run_one_condition_full(
+                &cond,
+                CYSTINE_ESCAPE_CFG,
+                None,
+                Overrides {
+                    hypoxia_transsulfuration_sensitivity: sens,
+                    param_overrides: erastin_override(0.9),
+                    ..Default::default()
+                },
+            )
+        };
+        let (no_escape, escape) = (plain_block(0.0), plain_block(1.0));
+        // The honest negative: without a deep-core oxidant source the deep zone
+        // is bit-identical, while the rim shell moves materially.
+        assert_eq!(
+            no_escape.hypoxic_kill_rate, escape.hypoxic_kill_rate,
+            "the deep zone must not move: it does not die under RSL3 + a cystine \
+             block, so there is no kill for an escape to remove"
+        );
+        assert!(
+            escape.normoxic_kill_rate < no_escape.normoxic_kill_rate,
+            "the whole effect lands in the outer shell: {:.6} -> {:.6}",
+            no_escape.normoxic_kill_rate,
+            escape.normoxic_kill_rate
+        );
+
+        // With #365 hypoxia-iron the core IS killable, and the escape protects it.
+        let iron = |sens: f64| {
+            run_one_condition_full(
+                &cond,
+                CYSTINE_ESCAPE_CFG,
+                None,
+                Overrides {
+                    ferritinophagy_release: 2.0,
+                    hypoxia_iron_sensitivity: 2.0,
+                    hypoxia_transsulfuration_sensitivity: sens,
+                    param_overrides: erastin_override(0.9),
+                    ..Default::default()
+                },
+            )
+        };
+        let (iron_block, iron_escape) = (iron(0.0), iron(1.0));
+        assert!(
+            iron_block.hypoxic_kill_rate > 0.02,
+            "precondition: the #365 iron regime must make the deep core die; got {:.6}",
+            iron_block.hypoxic_kill_rate
+        );
+        assert!(
+            iron_escape.hypoxic_kill_rate < iron_block.hypoxic_kill_rate * 0.75,
+            "there the escape must materially protect the deep core: {:.6} -> {:.6}",
+            iron_block.hypoxic_kill_rate,
+            iron_escape.hypoxic_kill_rate
+        );
+    }
+
+    /// #916: switching the hypoxia map on must never STRIP a constitutive floor.
+    ///
+    /// `xc_cystine_factor_for` takes a per-cell floor INSTEAD of the global one
+    /// (two floors have no defensible composition), so writing the bare map
+    /// would hand the oxygenated rim a floor of ~0 and leave it LESS protected
+    /// than `Params::transsulfuration_floor` says -- a hypoxia layer that
+    /// removes a high-CBS/CTH tumour's constitutive bypass from the compartment
+    /// that actually dies. The consumer writes the LARGER of the two, so the map
+    /// can only ADD protection, and at the default global floor of 0.0 it
+    /// reduces to the bare map exactly.
+    ///
+    /// This is the behavioural guard for that `.max`: dropping it makes the
+    /// first assertion fail, because the rim then loses its 0.3 floor and kills
+    /// more.
+    #[test]
+    fn a_constitutive_floor_is_never_stripped_by_the_hypoxia_map() {
+        let cond = cystine_escape_condition(Some(50.0));
+        let run = |global_floor: f64, sens: f64| {
+            run_one_condition_full(
+                &cond,
+                CYSTINE_ESCAPE_CFG,
+                None,
+                Overrides {
+                    hypoxia_transsulfuration_sensitivity: sens,
+                    param_overrides: vec![
+                        ("erastin_xc_inhib".to_string(), 0.9),
+                        ("transsulfuration_floor".to_string(), global_floor),
+                    ],
+                    ..Default::default()
+                },
+            )
+        };
+        let global_only = run(0.3, 0.0);
+        let both = run(0.3, 1.0);
+        let map_only = run(0.0, 1.0);
+        assert!(
+            both.overall_kill_rate <= global_only.overall_kill_rate,
+            "adding the hypoxia map to a constitutive floor must not raise kill: \
+             global_only={:.6}, both={:.6}",
+            global_only.overall_kill_rate,
+            both.overall_kill_rate
+        );
+        // And it must be a real composition, not the global floor alone: the
+        // deeper cells get more than 0.3, so some kill is removed.
+        assert!(
+            both.overall_kill_rate < global_only.overall_kill_rate,
+            "the map must still add protection in the hypoxic interior: \
+             global_only={:.6}, both={:.6}",
+            global_only.overall_kill_rate,
+            both.overall_kill_rate
+        );
+        // The uniform floor protects the DYING compartment more than a
+        // hypoxia-keyed one of the same nominal strength, because the kill lives
+        // at the rim where the map returns ~0. Not a matched comparison (the two
+        // floors have different spatial mass) -- the point is only that the
+        // uniform approximation the #502 arm shipped with is NOT conservative
+        // here: it over-protects the compartment that dies.
+        assert!(
+            global_only.overall_kill_rate < map_only.overall_kill_rate,
+            "a uniform 0.3 floor should discount the block more than a hypoxia map \
+             does where the kill is: uniform={:.6}, map={:.6}",
+            global_only.overall_kill_rate,
+            map_only.overall_kill_rate
+        );
+    }
+
+    /// #920: clonal repopulation must RE-DERIVE the per-cell floor, and this
+    /// guard is STRUCTURAL because the effect is not observable.
+    ///
+    /// `repopulate_dead_sites_3d` hands back a FRESH cell, so `gen_cell` leaves
+    /// `transsulfuration_floor` at `None` and a revived cell silently reverts to
+    /// the global floor -- the #302 contact and #363 MUFA defect exactly. The
+    /// re-application is correct by construction (the floor is geometric and
+    /// keyed on a supply field death never changes), but MEASURED at grid 60 /
+    /// λ=50 / 180 steps with `ClonalConfig::literature_4().with_repopulation(0.3)`
+    /// and a 90% cystine block, removing it leaves the end-of-run dead count
+    /// IDENTICAL (26 either way) -- repopulation revives faster than the block
+    /// kills, so the end-of-run census cannot see it. A behavioural assertion
+    /// there would pass whether or not the re-application existed, which is the
+    /// #919 situation: where behaviour cannot distinguish, the guard has to read
+    /// the structure. The invariant it pins is the one that matters -- EVERY
+    /// write of the per-cell floor goes through the one shared helper, so the
+    /// setup pass and the revival pass cannot drift apart.
+    #[test]
+    fn every_per_cell_floor_write_goes_through_the_shared_helper() {
+        let src = include_str!("main.rs");
+        let prod = &src[..src.find("\n#[cfg(test)]").expect("the test module exists")];
+        // Statement-level, not line-level: `cargo fmt` reflows these across
+        // several lines, and a line-based scan of this exact field is how the
+        // cysteine-depletion page once read 0 gated resynthesis sites.
+        let writes: Vec<&str> = prod
+            .split(';')
+            .filter(|st| st.contains(".transsulfuration_floor ="))
+            .collect();
+        assert!(
+            writes.len() >= 2,
+            "expected the setup pass AND the clonal-revival pass to write the \
+             per-cell floor; found {}",
+            writes.len()
+        );
+        for w in &writes {
+            assert!(
+                w.contains("site_transsulfuration_floor("),
+                "a per-cell floor is written without the shared helper, so the \
+                 two passes can drift (and the `max` composition can be lost in \
+                 one of them): {}",
+                w.trim()
+            );
+        }
+        // And one of those writes must follow the repopulation call, or revived
+        // cells keep the `None` that `gen_cell` gave them.
+        let repop = prod
+            .find("let revived = repopulate_dead_sites_3d(")
+            .expect("the clonal repopulation call is gone");
+        assert!(
+            prod[repop..].contains(".transsulfuration_floor ="),
+            "nothing re-derives the per-cell floor for revived cells"
         );
     }
 }
