@@ -31,13 +31,42 @@ pub struct ImmuneResult {
 
 /// Calculate total DAMP release from a set of dead cells.
 ///
-/// DAMP is proportional to lipid peroxidation at death. Key biological insight:
-/// - SDT/PDT kill via runaway LP cascade → LP at death is MUCH higher than threshold
-/// - RSL3 kills via slow GPX4 inhibition → LP at death is NEAR threshold
-/// Therefore SDT/PDT-killed cells release MORE DAMPs per cell.
+/// DAMP is proportional to the lipid peroxidation each cell carried, and this
+/// function is where the model's "quality of death" axis lives: an arm whose
+/// dead cells carry more LP earns more DAMP per cell at the same kill count.
+///
+/// THE DIRECTION IS SDT/PDT ABOVE RSL3 AND THE MAGNITUDE IS SMALL (#928). This
+/// comment used to read "LP at death is MUCH higher than threshold" for
+/// SDT/PDT against "NEAR threshold" for RSL3, concluding that SDT/PDT-killed
+/// cells "release MORE DAMPs per cell". Measured, the direction holds in every
+/// readable comparison and the magnitude is **1.047x to 1.148x**, against the
+/// 1.5-2x `sim-icd/README.md` told readers to expect and the 2-5x
+/// `plans/simulation-suite-v2-plan.md` registered as the expected result.
+///
+/// AND THE CONTRAST DOES NOT EXIST AT THE MOMENT THE OLD TEXT NAMED. Measured
+/// per cell over the 139,803 ferroptotic deaths the two treated arms produce in
+/// the committed 2D baseline
+/// (`analysis/immune-2d-measurements/observations.json.gz`), mean LP AT DEATH
+/// is 10.2657 under SDT and 10.2474 under RSL3 against a `death_threshold` of
+/// 10.0 -- both within 2.7% of threshold, differing by 0.18%. Death IS the
+/// threshold crossing, so no arm can be far from it there. The gap opens only
+/// in the POST-DEATH quantity the spatial consumers actually pass here
+/// (`lp_at_grace_end`: 19.1230 vs 18.2658, 4.7%), so the old text compared
+/// RSL3 at death with SDT after it.
+///
+/// Callers therefore must not read a large per-cell potency difference out of
+/// this function. The totals differ by ~900x between those two arms, and that
+/// is the KILL COUNT (139,640 against 163), which is the manuscript's own
+/// careful wording for the 104:1 immune ratio.
+///
+/// `damp_per_lp` is 1.0 and uncalibrated, so the ratio above is a property of
+/// the model and not a measurement of immunogenicity.
+///
+/// Analysis: `analysis/calibration/icd-damp-per-death.md`
 ///
 /// Ref: Krysko et al., Nat Rev Cancer 2012 (ICD markers)
 ///      Berezhnoy et al., PLoS Comput Biol 2020 (Boolean ICD model)
+///      -- both support ICD and the DIRECTION; neither supplies the magnitude.
 pub fn calculate_damp_release(dead_cell_lps: &[f64], params: &ImmuneParams) -> (f64, f64) {
     if dead_cell_lps.is_empty() {
         return (0.0, 0.0);

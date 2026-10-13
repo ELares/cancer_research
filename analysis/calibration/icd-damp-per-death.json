@@ -1,0 +1,1484 @@
+{
+  "absent_cohorts_all_have_zero_deaths": true,
+  "adc_outranks_sdt_is_hypoxic": true,
+  "adc_outranks_sdt_rows": 8,
+  "at_death_contrast_exists": false,
+  "at_death_near_threshold": {
+    "RSL3": true,
+    "SDT": true
+  },
+  "at_death_ratio": 1.0017852528933444,
+  "both_arms_near_threshold_at_death": true,
+  "death_threshold": 10.0,
+  "direction_holds_everywhere": true,
+  "every_prediction_refuted": true,
+  "icd": {
+    "rows": [
+      {
+        "avg_final_lp": 17.42403103923506,
+        "damp_per_dead_cell": 17.42403103923506,
+        "dc_activation_fraction": 0.258424641343318,
+        "death_rate": 0.01222,
+        "immune_kills_with_pd1": 4888.505233449356,
+        "mature_dcs": 189.47694703292075,
+        "n_dead": 1222,
+        "phenotype": "Persister",
+        "treatment": "Control"
+      },
+      {
+        "avg_final_lp": 17.724021359747994,
+        "damp_per_dead_cell": 17.724021359747994,
+        "dc_activation_fraction": 0.26170952350272464,
+        "death_rate": 0.42409,
+        "immune_kills_with_pd1": 57591.0,
+        "mature_dcs": 6659.303509336229,
+        "n_dead": 42409,
+        "phenotype": "Persister",
+        "treatment": "RSL3"
+      },
+      {
+        "avg_final_lp": 20.08455024700141,
+        "damp_per_dead_cell": 20.08455024700141,
+        "dc_activation_fraction": 0.2865760025029302,
+        "death_rate": 0.99997,
+        "immune_kills_with_pd1": 3.0,
+        "mature_dcs": 17194.044313371305,
+        "n_dead": 99997,
+        "phenotype": "Persister",
+        "treatment": "SDT"
+      },
+      {
+        "avg_final_lp": 20.08455024700141,
+        "damp_per_dead_cell": 20.08455024700141,
+        "dc_activation_fraction": 0.2865760025029302,
+        "death_rate": 0.99997,
+        "immune_kills_with_pd1": 3.0,
+        "mature_dcs": 17194.044313371305,
+        "n_dead": 99997,
+        "phenotype": "Persister",
+        "treatment": "PDT"
+      },
+      {
+        "avg_final_lp": 20.492332113771955,
+        "damp_per_dead_cell": 20.492332113771955,
+        "dc_activation_fraction": 0.2907029956208302,
+        "death_rate": 0.00027,
+        "immune_kills_with_pd1": 121.5022240496822,
+        "mature_dcs": 4.709388529057449,
+        "n_dead": 27,
+        "phenotype": "OXPHOS",
+        "treatment": "Control"
+      },
+      {
+        "avg_final_lp": 19.96496515263567,
+        "damp_per_dead_cell": 19.96496515263567,
+        "dc_activation_fraction": 0.2853566082550041,
+        "death_rate": 0.01161,
+        "immune_kills_with_pd1": 5128.508863409245,
+        "mature_dcs": 198.77941331043584,
+        "n_dead": 1161,
+        "phenotype": "OXPHOS",
+        "treatment": "RSL3"
+      },
+      {
+        "avg_final_lp": 21.458024545663,
+        "damp_per_dead_cell": 21.458024545663,
+        "dc_activation_fraction": 0.30028852157746017,
+        "death_rate": 0.9988,
+        "immune_kills_with_pd1": 120.0,
+        "mature_dcs": 17995.69052109403,
+        "n_dead": 99880,
+        "phenotype": "OXPHOS",
+        "treatment": "SDT"
+      },
+      {
+        "avg_final_lp": 21.458024545663,
+        "damp_per_dead_cell": 21.458024545663,
+        "dc_activation_fraction": 0.30028852157746017,
+        "death_rate": 0.9988,
+        "immune_kills_with_pd1": 120.0,
+        "mature_dcs": 17995.69052109403,
+        "n_dead": 99880,
+        "phenotype": "OXPHOS",
+        "treatment": "PDT"
+      },
+      {
+        "avg_final_lp": null,
+        "damp_per_dead_cell": null,
+        "dc_activation_fraction": 0.0,
+        "death_rate": 0.0,
+        "immune_kills_with_pd1": 0.0,
+        "mature_dcs": 0.0,
+        "n_dead": 0,
+        "phenotype": "Glycolytic",
+        "treatment": "Control"
+      },
+      {
+        "avg_final_lp": null,
+        "damp_per_dead_cell": null,
+        "dc_activation_fraction": 0.0,
+        "death_rate": 0.0,
+        "immune_kills_with_pd1": 0.0,
+        "mature_dcs": 0.0,
+        "n_dead": 0,
+        "phenotype": "Glycolytic",
+        "treatment": "RSL3"
+      },
+      {
+        "avg_final_lp": 16.096710728772546,
+        "damp_per_dead_cell": 16.096710728772546,
+        "dc_activation_fraction": 0.24353270459743906,
+        "death_rate": 0.87066,
+        "immune_kills_with_pd1": 12934.0,
+        "mature_dcs": 12722.051075088377,
+        "n_dead": 87066,
+        "phenotype": "Glycolytic",
+        "treatment": "SDT"
+      },
+      {
+        "avg_final_lp": 16.096710728772546,
+        "damp_per_dead_cell": 16.096710728772546,
+        "dc_activation_fraction": 0.24353270459743906,
+        "death_rate": 0.87066,
+        "immune_kills_with_pd1": 12934.0,
+        "mature_dcs": 12722.051075088377,
+        "n_dead": 87066,
+        "phenotype": "Glycolytic",
+        "treatment": "PDT"
+      }
+    ]
+  },
+  "icd_saturated_rows": 4,
+  "immune_kill_ranking_inverts_under_saturation": true,
+  "p5": {
+    "band": 1.5,
+    "both_legs_inside_band": true,
+    "dc_normalisations_agree": true,
+    "legs": [
+      {
+        "damp_per_death_ratio": 1.0747839719034131,
+        "dc_activation_ratio": 1.052327203542847,
+        "dc_maturation_per_death_ratio": 1.052327203542847,
+        "phenotype": "OXPHOS"
+      },
+      {
+        "damp_per_death_ratio": 1.13318246685339,
+        "dc_activation_ratio": 1.0950155678990667,
+        "dc_maturation_per_death_ratio": 1.095015567899067,
+        "phenotype": "Persister"
+      }
+    ],
+    "quote": "DAMP release and DC maturation per dead cell agree within 1.5x between dense (SDT or 3D) and sparse (RSL3) kill",
+    "worst_leg": 1.13318246685339
+  },
+  "panel": {
+    "rows": [
+      {
+        "acidic": false,
+        "damp_per_death": {
+          "AntibodyDrugConjugate": 15.749518415378743,
+          "PDT": 16.090400251012493,
+          "RSL3": null,
+          "SDT": 16.090400251012493
+        },
+        "deaths": {
+          "AntibodyDrugConjugate": 12769,
+          "PDT": 17401,
+          "RSL3": 0,
+          "SDT": 17401
+        },
+        "heterogeneous": false,
+        "hypoxic": false,
+        "phenotype": "glycolytic",
+        "stroma": false
+      },
+      {
+        "acidic": true,
+        "damp_per_death": {
+          "AntibodyDrugConjugate": null,
+          "PDT": 16.090400251012493,
+          "RSL3": null,
+          "SDT": 16.090400251012493
+        },
+        "deaths": {
+          "AntibodyDrugConjugate": 0,
+          "PDT": 17401,
+          "RSL3": 0,
+          "SDT": 17401
+        },
+        "heterogeneous": false,
+        "hypoxic": false,
+        "phenotype": "glycolytic",
+        "stroma": false
+      },
+      {
+        "acidic": false,
+        "damp_per_death": {
+          "AntibodyDrugConjugate": 15.75033627549743,
+          "PDT": 16.090663850384132,
+          "RSL3": null,
+          "SDT": 16.090663850384132
+        },
+        "deaths": {
+          "AntibodyDrugConjugate": 12745,
+          "PDT": 17392,
+          "RSL3": 0,
+          "SDT": 17392
+        },
+        "heterogeneous": false,
+        "hypoxic": false,
+        "phenotype": "glycolytic",
+        "stroma": true
+      },
+      {
+        "acidic": true,
+        "damp_per_death": {
+          "AntibodyDrugConjugate": null,
+          "PDT": 16.090663850384132,
+          "RSL3": null,
+          "SDT": 16.090663850384132
+        },
+        "deaths": {
+          "AntibodyDrugConjugate": 0,
+          "PDT": 17392,
+          "RSL3": 0,
+          "SDT": 17392
+        },
+        "heterogeneous": false,
+        "hypoxic": false,
+        "phenotype": "glycolytic",
+        "stroma": true
+      },
+      {
+        "acidic": false,
+        "damp_per_death": {
+          "AntibodyDrugConjugate": 15.749518415378743,
+          "PDT": 15.649277083021264,
+          "RSL3": null,
+          "SDT": 15.649277083021264
+        },
+        "deaths": {
+          "AntibodyDrugConjugate": 12769,
+          "PDT": 5828,
+          "RSL3": 0,
+          "SDT": 5828
+        },
+        "heterogeneous": false,
+        "hypoxic": true,
+        "phenotype": "glycolytic",
+        "stroma": false
+      },
+      {
+        "acidic": true,
+        "damp_per_death": {
+          "AntibodyDrugConjugate": null,
+          "PDT": 15.649277083021264,
+          "RSL3": null,
+          "SDT": 15.649277083021264
+        },
+        "deaths": {
+          "AntibodyDrugConjugate": 0,
+          "PDT": 5828,
+          "RSL3": 0,
+          "SDT": 5828
+        },
+        "heterogeneous": false,
+        "hypoxic": true,
+        "phenotype": "glycolytic",
+        "stroma": false
+      },
+      {
+        "acidic": false,
+        "damp_per_death": {
+          "AntibodyDrugConjugate": 15.75033627549743,
+          "PDT": 15.648979965900027,
+          "RSL3": null,
+          "SDT": 15.648979965900027
+        },
+        "deaths": {
+          "AntibodyDrugConjugate": 12745,
+          "PDT": 5808,
+          "RSL3": 0,
+          "SDT": 5808
+        },
+        "heterogeneous": false,
+        "hypoxic": true,
+        "phenotype": "glycolytic",
+        "stroma": true
+      },
+      {
+        "acidic": true,
+        "damp_per_death": {
+          "AntibodyDrugConjugate": null,
+          "PDT": 15.648979965900027,
+          "RSL3": null,
+          "SDT": 15.648979965900027
+        },
+        "deaths": {
+          "AntibodyDrugConjugate": 0,
+          "PDT": 5808,
+          "RSL3": 0,
+          "SDT": 5808
+        },
+        "heterogeneous": false,
+        "hypoxic": true,
+        "phenotype": "glycolytic",
+        "stroma": true
+      },
+      {
+        "acidic": false,
+        "damp_per_death": {
+          "AntibodyDrugConjugate": null,
+          "PDT": null,
+          "RSL3": null,
+          "SDT": 15.939921282315686
+        },
+        "deaths": {
+          "AntibodyDrugConjugate": 0,
+          "PDT": 0,
+          "RSL3": 0,
+          "SDT": 16061
+        },
+        "heterogeneous": false,
+        "hypoxic": false,
+        "phenotype": "glycolytic",
+        "stroma": false
+      },
+      {
+        "acidic": true,
+        "damp_per_death": {
+          "AntibodyDrugConjugate": null,
+          "PDT": null,
+          "RSL3": null,
+          "SDT": 15.939921282315686
+        },
+        "deaths": {
+          "AntibodyDrugConjugate": 0,
+          "PDT": 0,
+          "RSL3": 0,
+          "SDT": 16061
+        },
+        "heterogeneous": false,
+        "hypoxic": false,
+        "phenotype": "glycolytic",
+        "stroma": false
+      },
+      {
+        "acidic": false,
+        "damp_per_death": {
+          "AntibodyDrugConjugate": null,
+          "PDT": null,
+          "RSL3": null,
+          "SDT": 15.940958289628506
+        },
+        "deaths": {
+          "AntibodyDrugConjugate": 0,
+          "PDT": 0,
+          "RSL3": 0,
+          "SDT": 16041
+        },
+        "heterogeneous": false,
+        "hypoxic": false,
+        "phenotype": "glycolytic",
+        "stroma": true
+      },
+      {
+        "acidic": true,
+        "damp_per_death": {
+          "AntibodyDrugConjugate": null,
+          "PDT": null,
+          "RSL3": null,
+          "SDT": 15.940958289628506
+        },
+        "deaths": {
+          "AntibodyDrugConjugate": 0,
+          "PDT": 0,
+          "RSL3": 0,
+          "SDT": 16041
+        },
+        "heterogeneous": false,
+        "hypoxic": false,
+        "phenotype": "glycolytic",
+        "stroma": true
+      },
+      {
+        "acidic": false,
+        "damp_per_death": {
+          "AntibodyDrugConjugate": null,
+          "PDT": null,
+          "RSL3": null,
+          "SDT": 15.655239723137033
+        },
+        "deaths": {
+          "AntibodyDrugConjugate": 0,
+          "PDT": 0,
+          "RSL3": 0,
+          "SDT": 3943
+        },
+        "heterogeneous": false,
+        "hypoxic": true,
+        "phenotype": "glycolytic",
+        "stroma": false
+      },
+      {
+        "acidic": true,
+        "damp_per_death": {
+          "AntibodyDrugConjugate": null,
+          "PDT": null,
+          "RSL3": null,
+          "SDT": 15.655239723137033
+        },
+        "deaths": {
+          "AntibodyDrugConjugate": 0,
+          "PDT": 0,
+          "RSL3": 0,
+          "SDT": 3943
+        },
+        "heterogeneous": false,
+        "hypoxic": true,
+        "phenotype": "glycolytic",
+        "stroma": false
+      },
+      {
+        "acidic": false,
+        "damp_per_death": {
+          "AntibodyDrugConjugate": null,
+          "PDT": null,
+          "RSL3": null,
+          "SDT": 15.65778945711498
+        },
+        "deaths": {
+          "AntibodyDrugConjugate": 0,
+          "PDT": 0,
+          "RSL3": 0,
+          "SDT": 3915
+        },
+        "heterogeneous": false,
+        "hypoxic": true,
+        "phenotype": "glycolytic",
+        "stroma": true
+      },
+      {
+        "acidic": true,
+        "damp_per_death": {
+          "AntibodyDrugConjugate": null,
+          "PDT": null,
+          "RSL3": null,
+          "SDT": 15.65778945711498
+        },
+        "deaths": {
+          "AntibodyDrugConjugate": 0,
+          "PDT": 0,
+          "RSL3": 0,
+          "SDT": 3915
+        },
+        "heterogeneous": false,
+        "hypoxic": true,
+        "phenotype": "glycolytic",
+        "stroma": true
+      },
+      {
+        "acidic": false,
+        "damp_per_death": {
+          "AntibodyDrugConjugate": 19.57020289364795,
+          "PDT": 20.06443401521556,
+          "RSL3": 17.733319071201667,
+          "SDT": 20.06443401521556
+        },
+        "deaths": {
+          "AntibodyDrugConjugate": 19999,
+          "PDT": 19999,
+          "RSL3": 8520,
+          "SDT": 19999
+        },
+        "heterogeneous": false,
+        "hypoxic": false,
+        "phenotype": "persister",
+        "stroma": false
+      },
+      {
+        "acidic": true,
+        "damp_per_death": {
+          "AntibodyDrugConjugate": 17.68743757016481,
+          "PDT": 20.06443401521556,
+          "RSL3": 17.554956335456474,
+          "SDT": 20.06443401521556
+        },
+        "deaths": {
+          "AntibodyDrugConjugate": 19293,
+          "PDT": 19999,
+          "RSL3": 481,
+          "SDT": 19999
+        },
+        "heterogeneous": false,
+        "hypoxic": false,
+        "phenotype": "persister",
+        "stroma": false
+      },
+      {
+        "acidic": false,
+        "damp_per_death": {
+          "AntibodyDrugConjugate": 19.57192155696781,
+          "PDT": 20.06289192541274,
+          "RSL3": 17.74104361071577,
+          "SDT": 20.06289192541274
+        },
+        "deaths": {
+          "AntibodyDrugConjugate": 19999,
+          "PDT": 19999,
+          "RSL3": 8322,
+          "SDT": 19999
+        },
+        "heterogeneous": false,
+        "hypoxic": false,
+        "phenotype": "persister",
+        "stroma": true
+      },
+      {
+        "acidic": true,
+        "damp_per_death": {
+          "AntibodyDrugConjugate": 17.68204217507781,
+          "PDT": 20.06289192541274,
+          "RSL3": 17.76689335028716,
+          "SDT": 20.06289192541274
+        },
+        "deaths": {
+          "AntibodyDrugConjugate": 19251,
+          "PDT": 19999,
+          "RSL3": 435,
+          "SDT": 19999
+        },
+        "heterogeneous": false,
+        "hypoxic": false,
+        "phenotype": "persister",
+        "stroma": true
+      },
+      {
+        "acidic": false,
+        "damp_per_death": {
+          "AntibodyDrugConjugate": 19.57020289364795,
+          "PDT": 19.107571977620108,
+          "RSL3": 17.733319071201667,
+          "SDT": 19.107571977620108
+        },
+        "deaths": {
+          "AntibodyDrugConjugate": 19999,
+          "PDT": 19998,
+          "RSL3": 8520,
+          "SDT": 19998
+        },
+        "heterogeneous": false,
+        "hypoxic": true,
+        "phenotype": "persister",
+        "stroma": false
+      },
+      {
+        "acidic": true,
+        "damp_per_death": {
+          "AntibodyDrugConjugate": 17.68743757016481,
+          "PDT": 19.107571977620108,
+          "RSL3": 17.554956335456474,
+          "SDT": 19.107571977620108
+        },
+        "deaths": {
+          "AntibodyDrugConjugate": 19293,
+          "PDT": 19998,
+          "RSL3": 481,
+          "SDT": 19998
+        },
+        "heterogeneous": false,
+        "hypoxic": true,
+        "phenotype": "persister",
+        "stroma": false
+      },
+      {
+        "acidic": false,
+        "damp_per_death": {
+          "AntibodyDrugConjugate": 19.57192155696781,
+          "PDT": 19.108909140233397,
+          "RSL3": 17.74104361071577,
+          "SDT": 19.108909140233397
+        },
+        "deaths": {
+          "AntibodyDrugConjugate": 19999,
+          "PDT": 19998,
+          "RSL3": 8322,
+          "SDT": 19998
+        },
+        "heterogeneous": false,
+        "hypoxic": true,
+        "phenotype": "persister",
+        "stroma": true
+      },
+      {
+        "acidic": true,
+        "damp_per_death": {
+          "AntibodyDrugConjugate": 17.68204217507781,
+          "PDT": 19.108909140233397,
+          "RSL3": 17.76689335028716,
+          "SDT": 19.108909140233397
+        },
+        "deaths": {
+          "AntibodyDrugConjugate": 19251,
+          "PDT": 19998,
+          "RSL3": 435,
+          "SDT": 19998
+        },
+        "heterogeneous": false,
+        "hypoxic": true,
+        "phenotype": "persister",
+        "stroma": true
+      },
+      {
+        "acidic": false,
+        "damp_per_death": {
+          "AntibodyDrugConjugate": 17.298329138947388,
+          "PDT": 17.61341586496103,
+          "RSL3": 17.733319071201667,
+          "SDT": 19.878556524434174
+        },
+        "deaths": {
+          "AntibodyDrugConjugate": 252,
+          "PDT": 18554,
+          "RSL3": 8520,
+          "SDT": 19999
+        },
+        "heterogeneous": false,
+        "hypoxic": false,
+        "phenotype": "persister",
+        "stroma": false
+      },
+      {
+        "acidic": true,
+        "damp_per_death": {
+          "AntibodyDrugConjugate": 17.33313015365544,
+          "PDT": 17.61341586496103,
+          "RSL3": 17.554956335456474,
+          "SDT": 19.878556524434174
+        },
+        "deaths": {
+          "AntibodyDrugConjugate": 251,
+          "PDT": 18554,
+          "RSL3": 481,
+          "SDT": 19999
+        },
+        "heterogeneous": false,
+        "hypoxic": false,
+        "phenotype": "persister",
+        "stroma": false
+      },
+      {
+        "acidic": false,
+        "damp_per_death": {
+          "AntibodyDrugConjugate": 17.705203851618805,
+          "PDT": 17.611832949986745,
+          "RSL3": 17.74104361071577,
+          "SDT": 19.876227324816607
+        },
+        "deaths": {
+          "AntibodyDrugConjugate": 220,
+          "PDT": 18485,
+          "RSL3": 8322,
+          "SDT": 19999
+        },
+        "heterogeneous": false,
+        "hypoxic": false,
+        "phenotype": "persister",
+        "stroma": true
+      },
+      {
+        "acidic": true,
+        "damp_per_death": {
+          "AntibodyDrugConjugate": 17.73990671856869,
+          "PDT": 17.611832949986745,
+          "RSL3": 17.76689335028716,
+          "SDT": 19.876227324816607
+        },
+        "deaths": {
+          "AntibodyDrugConjugate": 219,
+          "PDT": 18485,
+          "RSL3": 435,
+          "SDT": 19999
+        },
+        "heterogeneous": false,
+        "hypoxic": false,
+        "phenotype": "persister",
+        "stroma": true
+      },
+      {
+        "acidic": false,
+        "damp_per_death": {
+          "AntibodyDrugConjugate": 17.298329138947388,
+          "PDT": 17.56176170203537,
+          "RSL3": 17.733319071201667,
+          "SDT": 18.96348214597746
+        },
+        "deaths": {
+          "AntibodyDrugConjugate": 252,
+          "PDT": 11669,
+          "RSL3": 8520,
+          "SDT": 19998
+        },
+        "heterogeneous": false,
+        "hypoxic": true,
+        "phenotype": "persister",
+        "stroma": false
+      },
+      {
+        "acidic": true,
+        "damp_per_death": {
+          "AntibodyDrugConjugate": 17.33313015365544,
+          "PDT": 17.56176170203537,
+          "RSL3": 17.554956335456474,
+          "SDT": 18.96348214597746
+        },
+        "deaths": {
+          "AntibodyDrugConjugate": 251,
+          "PDT": 11669,
+          "RSL3": 481,
+          "SDT": 19998
+        },
+        "heterogeneous": false,
+        "hypoxic": true,
+        "phenotype": "persister",
+        "stroma": false
+      },
+      {
+        "acidic": false,
+        "damp_per_death": {
+          "AntibodyDrugConjugate": 17.705203851618805,
+          "PDT": 17.562142600877994,
+          "RSL3": 17.74104361071577,
+          "SDT": 18.963995311341776
+        },
+        "deaths": {
+          "AntibodyDrugConjugate": 220,
+          "PDT": 11408,
+          "RSL3": 8322,
+          "SDT": 19998
+        },
+        "heterogeneous": false,
+        "hypoxic": true,
+        "phenotype": "persister",
+        "stroma": true
+      },
+      {
+        "acidic": true,
+        "damp_per_death": {
+          "AntibodyDrugConjugate": 17.73990671856869,
+          "PDT": 17.562142600877994,
+          "RSL3": 17.76689335028716,
+          "SDT": 18.963995311341776
+        },
+        "deaths": {
+          "AntibodyDrugConjugate": 219,
+          "PDT": 11408,
+          "RSL3": 435,
+          "SDT": 19998
+        },
+        "heterogeneous": false,
+        "hypoxic": true,
+        "phenotype": "persister",
+        "stroma": true
+      },
+      {
+        "acidic": false,
+        "damp_per_death": {
+          "AntibodyDrugConjugate": 15.735757840026764,
+          "PDT": 16.088629283435367,
+          "RSL3": null,
+          "SDT": 16.088629283435367
+        },
+        "deaths": {
+          "AntibodyDrugConjugate": 12871,
+          "PDT": 17419,
+          "RSL3": 0,
+          "SDT": 17419
+        },
+        "heterogeneous": true,
+        "hypoxic": false,
+        "phenotype": "glycolytic",
+        "stroma": false
+      },
+      {
+        "acidic": true,
+        "damp_per_death": {
+          "AntibodyDrugConjugate": null,
+          "PDT": 16.088629283435367,
+          "RSL3": null,
+          "SDT": 16.088629283435367
+        },
+        "deaths": {
+          "AntibodyDrugConjugate": 0,
+          "PDT": 17419,
+          "RSL3": 0,
+          "SDT": 17419
+        },
+        "heterogeneous": true,
+        "hypoxic": false,
+        "phenotype": "glycolytic",
+        "stroma": false
+      },
+      {
+        "acidic": false,
+        "damp_per_death": {
+          "AntibodyDrugConjugate": 15.736702010494717,
+          "PDT": 16.08893009005204,
+          "RSL3": null,
+          "SDT": 16.08893009005204
+        },
+        "deaths": {
+          "AntibodyDrugConjugate": 12846,
+          "PDT": 17409,
+          "RSL3": 0,
+          "SDT": 17409
+        },
+        "heterogeneous": true,
+        "hypoxic": false,
+        "phenotype": "glycolytic",
+        "stroma": true
+      },
+      {
+        "acidic": true,
+        "damp_per_death": {
+          "AntibodyDrugConjugate": null,
+          "PDT": 16.08893009005204,
+          "RSL3": null,
+          "SDT": 16.08893009005204
+        },
+        "deaths": {
+          "AntibodyDrugConjugate": 0,
+          "PDT": 17409,
+          "RSL3": 0,
+          "SDT": 17409
+        },
+        "heterogeneous": true,
+        "hypoxic": false,
+        "phenotype": "glycolytic",
+        "stroma": true
+      },
+      {
+        "acidic": false,
+        "damp_per_death": {
+          "AntibodyDrugConjugate": 15.735757840026764,
+          "PDT": 15.63303141082666,
+          "RSL3": null,
+          "SDT": 15.63303141082666
+        },
+        "deaths": {
+          "AntibodyDrugConjugate": 12871,
+          "PDT": 5933,
+          "RSL3": 0,
+          "SDT": 5933
+        },
+        "heterogeneous": true,
+        "hypoxic": true,
+        "phenotype": "glycolytic",
+        "stroma": false
+      },
+      {
+        "acidic": true,
+        "damp_per_death": {
+          "AntibodyDrugConjugate": null,
+          "PDT": 15.63303141082666,
+          "RSL3": null,
+          "SDT": 15.63303141082666
+        },
+        "deaths": {
+          "AntibodyDrugConjugate": 0,
+          "PDT": 5933,
+          "RSL3": 0,
+          "SDT": 5933
+        },
+        "heterogeneous": true,
+        "hypoxic": true,
+        "phenotype": "glycolytic",
+        "stroma": false
+      },
+      {
+        "acidic": false,
+        "damp_per_death": {
+          "AntibodyDrugConjugate": 15.736702010494717,
+          "PDT": 15.635542797281582,
+          "RSL3": null,
+          "SDT": 15.635542797281582
+        },
+        "deaths": {
+          "AntibodyDrugConjugate": 12846,
+          "PDT": 5891,
+          "RSL3": 0,
+          "SDT": 5891
+        },
+        "heterogeneous": true,
+        "hypoxic": true,
+        "phenotype": "glycolytic",
+        "stroma": true
+      },
+      {
+        "acidic": true,
+        "damp_per_death": {
+          "AntibodyDrugConjugate": null,
+          "PDT": 15.635542797281582,
+          "RSL3": null,
+          "SDT": 15.635542797281582
+        },
+        "deaths": {
+          "AntibodyDrugConjugate": 0,
+          "PDT": 5891,
+          "RSL3": 0,
+          "SDT": 5891
+        },
+        "heterogeneous": true,
+        "hypoxic": true,
+        "phenotype": "glycolytic",
+        "stroma": true
+      },
+      {
+        "acidic": false,
+        "damp_per_death": {
+          "AntibodyDrugConjugate": null,
+          "PDT": null,
+          "RSL3": null,
+          "SDT": 15.93490361329425
+        },
+        "deaths": {
+          "AntibodyDrugConjugate": 0,
+          "PDT": 0,
+          "RSL3": 0,
+          "SDT": 16138
+        },
+        "heterogeneous": true,
+        "hypoxic": false,
+        "phenotype": "glycolytic",
+        "stroma": false
+      },
+      {
+        "acidic": true,
+        "damp_per_death": {
+          "AntibodyDrugConjugate": null,
+          "PDT": null,
+          "RSL3": null,
+          "SDT": 15.93490361329425
+        },
+        "deaths": {
+          "AntibodyDrugConjugate": 0,
+          "PDT": 0,
+          "RSL3": 0,
+          "SDT": 16138
+        },
+        "heterogeneous": true,
+        "hypoxic": false,
+        "phenotype": "glycolytic",
+        "stroma": false
+      },
+      {
+        "acidic": false,
+        "damp_per_death": {
+          "AntibodyDrugConjugate": null,
+          "PDT": null,
+          "RSL3": null,
+          "SDT": 15.934822483125295
+        },
+        "deaths": {
+          "AntibodyDrugConjugate": 0,
+          "PDT": 0,
+          "RSL3": 0,
+          "SDT": 16128
+        },
+        "heterogeneous": true,
+        "hypoxic": false,
+        "phenotype": "glycolytic",
+        "stroma": true
+      },
+      {
+        "acidic": true,
+        "damp_per_death": {
+          "AntibodyDrugConjugate": null,
+          "PDT": null,
+          "RSL3": null,
+          "SDT": 15.934822483125295
+        },
+        "deaths": {
+          "AntibodyDrugConjugate": 0,
+          "PDT": 0,
+          "RSL3": 0,
+          "SDT": 16128
+        },
+        "heterogeneous": true,
+        "hypoxic": false,
+        "phenotype": "glycolytic",
+        "stroma": true
+      },
+      {
+        "acidic": false,
+        "damp_per_death": {
+          "AntibodyDrugConjugate": null,
+          "PDT": null,
+          "RSL3": null,
+          "SDT": 15.643538525000931
+        },
+        "deaths": {
+          "AntibodyDrugConjugate": 0,
+          "PDT": 0,
+          "RSL3": 0,
+          "SDT": 4008
+        },
+        "heterogeneous": true,
+        "hypoxic": true,
+        "phenotype": "glycolytic",
+        "stroma": false
+      },
+      {
+        "acidic": true,
+        "damp_per_death": {
+          "AntibodyDrugConjugate": null,
+          "PDT": null,
+          "RSL3": null,
+          "SDT": 15.643538525000931
+        },
+        "deaths": {
+          "AntibodyDrugConjugate": 0,
+          "PDT": 0,
+          "RSL3": 0,
+          "SDT": 4008
+        },
+        "heterogeneous": true,
+        "hypoxic": true,
+        "phenotype": "glycolytic",
+        "stroma": false
+      },
+      {
+        "acidic": false,
+        "damp_per_death": {
+          "AntibodyDrugConjugate": null,
+          "PDT": null,
+          "RSL3": null,
+          "SDT": 15.647472077936442
+        },
+        "deaths": {
+          "AntibodyDrugConjugate": 0,
+          "PDT": 0,
+          "RSL3": 0,
+          "SDT": 3983
+        },
+        "heterogeneous": true,
+        "hypoxic": true,
+        "phenotype": "glycolytic",
+        "stroma": true
+      },
+      {
+        "acidic": true,
+        "damp_per_death": {
+          "AntibodyDrugConjugate": null,
+          "PDT": null,
+          "RSL3": null,
+          "SDT": 15.647472077936442
+        },
+        "deaths": {
+          "AntibodyDrugConjugate": 0,
+          "PDT": 0,
+          "RSL3": 0,
+          "SDT": 3983
+        },
+        "heterogeneous": true,
+        "hypoxic": true,
+        "phenotype": "glycolytic",
+        "stroma": true
+      },
+      {
+        "acidic": false,
+        "damp_per_death": {
+          "AntibodyDrugConjugate": 19.57899568538112,
+          "PDT": 20.07369064495553,
+          "RSL3": 17.692905217637122,
+          "SDT": 20.07369064495553
+        },
+        "deaths": {
+          "AntibodyDrugConjugate": 20000,
+          "PDT": 20000,
+          "RSL3": 9159,
+          "SDT": 20000
+        },
+        "heterogeneous": true,
+        "hypoxic": false,
+        "phenotype": "persister",
+        "stroma": false
+      },
+      {
+        "acidic": true,
+        "damp_per_death": {
+          "AntibodyDrugConjugate": 17.704517570465775,
+          "PDT": 20.07369064495553,
+          "RSL3": 17.542703059005973,
+          "SDT": 20.07369064495553
+        },
+        "deaths": {
+          "AntibodyDrugConjugate": 19015,
+          "PDT": 20000,
+          "RSL3": 861,
+          "SDT": 20000
+        },
+        "heterogeneous": true,
+        "hypoxic": false,
+        "phenotype": "persister",
+        "stroma": false
+      },
+      {
+        "acidic": false,
+        "damp_per_death": {
+          "AntibodyDrugConjugate": 19.578795986363932,
+          "PDT": 20.073161946780605,
+          "RSL3": 17.682176020862684,
+          "SDT": 20.073161946780605
+        },
+        "deaths": {
+          "AntibodyDrugConjugate": 20000,
+          "PDT": 20000,
+          "RSL3": 8948,
+          "SDT": 20000
+        },
+        "heterogeneous": true,
+        "hypoxic": false,
+        "phenotype": "persister",
+        "stroma": true
+      },
+      {
+        "acidic": true,
+        "damp_per_death": {
+          "AntibodyDrugConjugate": 17.70023864139971,
+          "PDT": 20.073161946780605,
+          "RSL3": 17.493225837173814,
+          "SDT": 20.073161946780605
+        },
+        "deaths": {
+          "AntibodyDrugConjugate": 18971,
+          "PDT": 20000,
+          "RSL3": 810,
+          "SDT": 20000
+        },
+        "heterogeneous": true,
+        "hypoxic": false,
+        "phenotype": "persister",
+        "stroma": true
+      },
+      {
+        "acidic": false,
+        "damp_per_death": {
+          "AntibodyDrugConjugate": 19.57899568538112,
+          "PDT": 19.10485430911373,
+          "RSL3": 17.692905217637122,
+          "SDT": 19.10485430911373
+        },
+        "deaths": {
+          "AntibodyDrugConjugate": 20000,
+          "PDT": 19999,
+          "RSL3": 9159,
+          "SDT": 19999
+        },
+        "heterogeneous": true,
+        "hypoxic": true,
+        "phenotype": "persister",
+        "stroma": false
+      },
+      {
+        "acidic": true,
+        "damp_per_death": {
+          "AntibodyDrugConjugate": 17.704517570465775,
+          "PDT": 19.10485430911373,
+          "RSL3": 17.542703059005973,
+          "SDT": 19.10485430911373
+        },
+        "deaths": {
+          "AntibodyDrugConjugate": 19015,
+          "PDT": 19999,
+          "RSL3": 861,
+          "SDT": 19999
+        },
+        "heterogeneous": true,
+        "hypoxic": true,
+        "phenotype": "persister",
+        "stroma": false
+      },
+      {
+        "acidic": false,
+        "damp_per_death": {
+          "AntibodyDrugConjugate": 19.578795986363932,
+          "PDT": 19.103273999728632,
+          "RSL3": 17.682176020862684,
+          "SDT": 19.103273999728632
+        },
+        "deaths": {
+          "AntibodyDrugConjugate": 20000,
+          "PDT": 19999,
+          "RSL3": 8948,
+          "SDT": 19999
+        },
+        "heterogeneous": true,
+        "hypoxic": true,
+        "phenotype": "persister",
+        "stroma": true
+      },
+      {
+        "acidic": true,
+        "damp_per_death": {
+          "AntibodyDrugConjugate": 17.70023864139971,
+          "PDT": 19.103273999728632,
+          "RSL3": 17.493225837173814,
+          "SDT": 19.103273999728632
+        },
+        "deaths": {
+          "AntibodyDrugConjugate": 18971,
+          "PDT": 19999,
+          "RSL3": 810,
+          "SDT": 19999
+        },
+        "heterogeneous": true,
+        "hypoxic": true,
+        "phenotype": "persister",
+        "stroma": true
+      },
+      {
+        "acidic": false,
+        "damp_per_death": {
+          "AntibodyDrugConjugate": 17.464251147391067,
+          "PDT": 17.627704507191336,
+          "RSL3": 17.692905217637122,
+          "SDT": 19.88301001893782
+        },
+        "deaths": {
+          "AntibodyDrugConjugate": 464,
+          "PDT": 18214,
+          "RSL3": 9159,
+          "SDT": 20000
+        },
+        "heterogeneous": true,
+        "hypoxic": false,
+        "phenotype": "persister",
+        "stroma": false
+      },
+      {
+        "acidic": true,
+        "damp_per_death": {
+          "AntibodyDrugConjugate": 17.458054908309347,
+          "PDT": 17.627704507191336,
+          "RSL3": 17.542703059005973,
+          "SDT": 19.88301001893782
+        },
+        "deaths": {
+          "AntibodyDrugConjugate": 463,
+          "PDT": 18214,
+          "RSL3": 861,
+          "SDT": 20000
+        },
+        "heterogeneous": true,
+        "hypoxic": false,
+        "phenotype": "persister",
+        "stroma": false
+      },
+      {
+        "acidic": false,
+        "damp_per_death": {
+          "AntibodyDrugConjugate": 17.386166400228895,
+          "PDT": 17.626341312995866,
+          "RSL3": 17.682176020862684,
+          "SDT": 19.882882806836555
+        },
+        "deaths": {
+          "AntibodyDrugConjugate": 434,
+          "PDT": 18137,
+          "RSL3": 8948,
+          "SDT": 20000
+        },
+        "heterogeneous": true,
+        "hypoxic": false,
+        "phenotype": "persister",
+        "stroma": true
+      },
+      {
+        "acidic": true,
+        "damp_per_death": {
+          "AntibodyDrugConjugate": 17.404041565352273,
+          "PDT": 17.626341312995866,
+          "RSL3": 17.493225837173814,
+          "SDT": 19.882882806836555
+        },
+        "deaths": {
+          "AntibodyDrugConjugate": 432,
+          "PDT": 18137,
+          "RSL3": 810,
+          "SDT": 20000
+        },
+        "heterogeneous": true,
+        "hypoxic": false,
+        "phenotype": "persister",
+        "stroma": true
+      },
+      {
+        "acidic": false,
+        "damp_per_death": {
+          "AntibodyDrugConjugate": 17.464251147391067,
+          "PDT": 17.569819060700762,
+          "RSL3": 17.692905217637122,
+          "SDT": 18.96308970366623
+        },
+        "deaths": {
+          "AntibodyDrugConjugate": 464,
+          "PDT": 11663,
+          "RSL3": 9159,
+          "SDT": 19998
+        },
+        "heterogeneous": true,
+        "hypoxic": true,
+        "phenotype": "persister",
+        "stroma": false
+      },
+      {
+        "acidic": true,
+        "damp_per_death": {
+          "AntibodyDrugConjugate": 17.458054908309347,
+          "PDT": 17.569819060700762,
+          "RSL3": 17.542703059005973,
+          "SDT": 18.96308970366623
+        },
+        "deaths": {
+          "AntibodyDrugConjugate": 463,
+          "PDT": 11663,
+          "RSL3": 861,
+          "SDT": 19998
+        },
+        "heterogeneous": true,
+        "hypoxic": true,
+        "phenotype": "persister",
+        "stroma": false
+      },
+      {
+        "acidic": false,
+        "damp_per_death": {
+          "AntibodyDrugConjugate": 17.386166400228895,
+          "PDT": 17.556650162029687,
+          "RSL3": 17.682176020862684,
+          "SDT": 18.96485501895148
+        },
+        "deaths": {
+          "AntibodyDrugConjugate": 434,
+          "PDT": 11468,
+          "RSL3": 8948,
+          "SDT": 19998
+        },
+        "heterogeneous": true,
+        "hypoxic": true,
+        "phenotype": "persister",
+        "stroma": true
+      },
+      {
+        "acidic": true,
+        "damp_per_death": {
+          "AntibodyDrugConjugate": 17.404041565352273,
+          "PDT": 17.556650162029687,
+          "RSL3": 17.493225837173814,
+          "SDT": 18.96485501895148
+        },
+        "deaths": {
+          "AntibodyDrugConjugate": 432,
+          "PDT": 11468,
+          "RSL3": 810,
+          "SDT": 19998
+        },
+        "heterogeneous": true,
+        "hypoxic": true,
+        "phenotype": "persister",
+        "stroma": true
+      }
+    ]
+  },
+  "panel_readable_rows": 32,
+  "panel_rows_with_absent_cohort": 72,
+  "panel_total_rows": 64,
+  "persister_immune_kills": {
+    "RSL3": 57591.0,
+    "SDT": 3.0
+  },
+  "predictions": [
+    {
+      "context": "stated as the binary's key finding, under \"Reproducing manuscript claims\"",
+      "high": 2.0,
+      "low": 1.5,
+      "name": "sim-icd README",
+      "quote": "SDT produces ~1.5-2x more DAMP per dead cell than RSL3",
+      "reached": false,
+      "shortfall_factor": 1.3072100362329389,
+      "source": "simulations/sim-icd/README.md"
+    },
+    {
+      "context": "registered under \"Expected Result\" for Simulation 3",
+      "high": 5.0,
+      "low": 2.0,
+      "name": "simulation-suite v2 plan",
+      "quote": "SDT/PDT produce 2-5\u00d7 more DAMP per dead cell than RSL3",
+      "reached": false,
+      "shortfall_factor": 1.7429467149772517,
+      "source": "plans/simulation-suite-v2-plan.md"
+    }
+  ],
+  "ratio_max": 1.1474820101004082,
+  "ratio_min": 1.0469278201239667,
+  "ratios": [
+    {
+      "ratio": 1.0469278201239667,
+      "regime": "2D spatial, release LP",
+      "rsl3": 18.26580296019916,
+      "sdt": 19.122977275935202
+    },
+    {
+      "ratio": 1.0747839719034131,
+      "regime": "sim-icd, OXPHOS",
+      "rsl3": 19.96496515263567,
+      "sdt": 21.458024545663
+    },
+    {
+      "ratio": 1.13318246685339,
+      "regime": "sim-icd, Persister",
+      "rsl3": 17.724021359747994,
+      "sdt": 20.08455024700141
+    },
+    {
+      "ratio": 1.1474820101004082,
+      "regime": "panel sweep, 32 readable rows",
+      "rsl3": null,
+      "sdt": null,
+      "span": [
+        1.0673782375710197,
+        1.1474820101004082
+      ]
+    }
+  ],
+  "readable_comparisons": 35,
+  "release_ratio": 1.0469278201239667,
+  "spatial": {
+    "archive": "analysis/immune-2d-measurements/observations.json.gz",
+    "arms": {
+      "Control": {
+        "completed_releases": 1,
+        "deaths": 1,
+        "mean_death_lp": 10.182343562599424,
+        "mean_release_lp": 17.450855384579423,
+        "total_release_damp": 17.450855384579423
+      },
+      "RSL3": {
+        "completed_releases": 160,
+        "deaths": 163,
+        "mean_death_lp": 10.247412401592728,
+        "mean_release_lp": 18.26580296019916,
+        "total_release_damp": 2922.528473631866
+      },
+      "SDT": {
+        "completed_releases": 139640,
+        "deaths": 139640,
+        "mean_death_lp": 10.265706624231965,
+        "mean_release_lp": 19.122977275935202,
+        "total_release_damp": 2670332.546811592
+      }
+    }
+  },
+  "verdict": "direction_holds_magnitude_refuted"
+}

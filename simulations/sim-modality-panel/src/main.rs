@@ -771,6 +771,17 @@ fn run_tme_sweep(a: &Args, params: &Params, immune: &ImmuneParams, rad: &Radiati
                                     "RSL3": rsl3_quality,
                                     "AntibodyDrugConjugate": damp_per_death(&adc_lps, immune),
                                 },
+                                // THE DENOMINATOR, so a `null` above is
+                                // readable rather than merely absent (#928): a
+                                // per-death mean over 1 cell and over 9,159 are
+                                // not the same evidence, and nothing in the row
+                                // used to say which it was.
+                                "deaths": {
+                                    "SDT": sdt_lps.len(),
+                                    "PDT": pdt_lps.len(),
+                                    "RSL3": rsl3_lps.len(),
+                                    "AntibodyDrugConjugate": adc_lps.len(),
+                                },
                                 "deep": depth_um > 0.0,
                                 "depth_um": depth_um,
                                 "hypoxic": hypoxic, "stroma": stroma, "acidic": acid,
@@ -825,13 +836,16 @@ fn norm_peak(rng: &mut StdRng, mean: f64) -> f64 {
     ferroptosis_core::cell::norm(rng, mean, mean * 0.2).max(0.0)
 }
 
-/// Death, AND the lipid peroxidation the cell carried when it died.
+/// Death, AND the lipid peroxidation the cell carried at the end of its
+/// post-death grace window.
 ///
-/// The second value is what the immune-coupling axis needs, and it is the
-/// quantity the ferroptosis chapters already argue about: a cell killed by a
-/// runaway ROS cascade dies with far more LP than one killed by slow GPX4
-/// inhibition, so it releases more DAMPs per death. "Quality of death" is not
-/// a metaphor here -- it is this number.
+/// The second value is what the immune-coupling axis needs. "FAR MORE" WAS
+/// MEASURED AND IT IS 7-15% (#928): this said "a cell killed by a runaway ROS
+/// cascade dies with far more LP than one killed by slow GPX4 inhibition", and
+/// across all 32 readable rows of `--tme-sweep` the SDT:RSL3 per-death ratio
+/// runs 1.0674x to 1.1475x. The direction holds everywhere; the word did not.
+/// See the sibling note below on why the at-death reading is ~10.2 for every
+/// arm, and `analysis/calibration/icd-damp-per-death.md` for the three regimes.
 fn run_to_death_lp(
     cell: &ferroptosis_core::cell::Cell,
     tx: Treatment,
@@ -897,16 +911,30 @@ fn immune_amplification(lps: &[f64], n: usize, immune: &ImmuneParams) -> f64 {
 /// at the glycolytic state and SDT hits the second at the persister state, so
 /// the two arms are never both readable in the same condition.
 ///
-/// Per-death release has neither problem. It is the "quality of death"
-/// quantity the ferroptosis chapters actually argue about -- a cell killed by
-/// a runaway ROS cascade dies carrying far more lipid peroxidation than one
-/// killed by slow GPX4 inhibition -- and it is comparable across arms whatever
-/// their kill fraction.
-fn damp_per_death(lps: &[f64], immune: &ImmuneParams) -> f64 {
+/// Per-death release does not have the saturation problem, and it is
+/// comparable across arms whatever their kill fraction. What it does NOT carry
+/// is a large difference: this said "a cell killed by a runaway ROS cascade
+/// dies carrying far more lipid peroxidation than one killed by slow GPX4
+/// inhibition", and measured over all 32 readable `--tme-sweep` rows the
+/// SDT:RSL3 ratio is 1.0674x to 1.1475x (#928, which also found 1.1332x in
+/// `sim-icd` and 1.0469x in the committed 2D spatial archive). It also does not
+/// RANK the way the sentence implies: in the 8 hypoxic rows
+/// `AntibodyDrugConjugate` releases MORE per death than SDT (19.5702 against
+/// 19.1076 at the persister state), so a cytotoxic payload out-releases the
+/// ROS cascade wherever oxygen limits the cascade.
+///
+/// NONE, NOT ZERO, FOR AN EMPTY COHORT. This returned `0.0` when no cell died,
+/// which under a column headed DAMP-per-death reads as a measured potency of
+/// zero: 72 of the sweep's 256 arm-rows published it (RSL3 32, ADC 24, PDT 16 --
+/// the PDT ones being the deep rows where its depth physics kills nothing), and
+/// every one of them sits at a kill count of exactly zero. The caller
+/// serializes `None` as JSON `null`, so an absent cohort is distinguishable
+/// from a silent one.
+fn damp_per_death(lps: &[f64], immune: &ImmuneParams) -> Option<f64> {
     if lps.is_empty() {
-        return 0.0;
+        return None;
     }
-    ferroptosis_core::immune::calculate_damp_release(lps, immune).1
+    Some(ferroptosis_core::immune::calculate_damp_release(lps, immune).1)
 }
 
 fn kill_fraction_pheno<F>(n: usize, seed: u64, pheno: Phenotype, mut f: F) -> f64

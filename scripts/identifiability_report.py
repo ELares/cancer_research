@@ -42,6 +42,8 @@ HYPOXIA_FORM = (REPO_ROOT / "analysis" / "calibration"
                 / "hypoxia-gap-form-sensitivity.json")
 PENETRATION_AXIS = (REPO_ROOT / "analysis" / "calibration"
                     / "penetration-access-vs-depth.json")
+IMMUNE_PER_DEATH = (REPO_ROOT / "analysis" / "calibration"
+                    / "icd-damp-per-death.json")
 OUT_MD = REPO_ROOT / "analysis" / "identifiability-report.md"
 OUT_JSON = REPO_ROOT / "analysis" / "identifiability-report.json"
 
@@ -242,6 +244,71 @@ def _hypoxia_verdict() -> dict:
     }
 
 
+def _immune_per_cell_clause() -> str:
+    """The MEASURED reason the per-cell reading is not available to this row.
+
+    DELIBERATELY NOT A VERDICT DERIVATION, and the distinction is the point.
+    The immune row's `directional_only` rests on the COUNT axis -- the 104:1
+    changes ~25x with geometry alone -- so it would read `directional_only`
+    whatever the per-cell magnitude turned out to be. Wiring the verdict to
+    #928 would manufacture a dependency that does not exist, which is the
+    guard-computes-its-own-expectation shape one level up.
+
+    What #928 does supply is evidence for a clause this row already states.
+    #927 corrected the row from 'SDT >> RSL3 immune priming' to the
+    manuscript's counts-not-immunogenicity wording, and that correction stood
+    on READING the manuscript. The per-cell quantity has since been measured in
+    three regimes (`icd-damp-per-death.md`): 1.047x to 1.148x across 35
+    readable comparisons, against the 1.5-2x `sim-icd`'s README told readers to
+    expect and the 2-5x the v2 plan registered. So the per-cell reading is not
+    merely unclaimed by the manuscript -- at the magnitude the engine itself
+    documented, it is refuted.
+
+    Refuses a missing or incomplete artifact rather than falling back to a
+    sentence: a static clause quoting 1.047x would go stale the moment anyone
+    re-measured, which is exactly how this report's `overall` paragraph came to
+    contradict the row above it in #925.
+    """
+    d = json.loads(IMMUNE_PER_DEATH.read_text(encoding="utf-8"))
+    for key in ("ratio_min", "ratio_max", "readable_comparisons",
+                "direction_holds_everywhere", "every_prediction_refuted",
+                "predictions", "at_death_ratio",
+                "both_arms_near_threshold_at_death"):
+        if key not in d:
+            raise ValueError(
+                f"per-death DAMP artifact is missing {key!r}; this clause is "
+                "derived from it and must not fall back to a sentence")
+    if d["ratio_min"] is None or d["ratio_max"] is None:
+        raise ValueError(
+            "per-death DAMP artifact carries no readable ratio, so nothing "
+            "here can be said about the per-cell magnitude")
+    bands = ", ".join(f"{p['low']:g}-{p['high']:g}x ({p['source']})"
+                      for p in d["predictions"])
+    clause = (
+        f". AND THE PER-CELL READING IS NOW REFUTED RATHER THAN MERELY "
+        f"UNCLAIMED (#928): measured in three regimes the SDT:RSL3 DAMP per "
+        f"dead cell is {d['ratio_min']:.4f}x to {d['ratio_max']:.4f}x across "
+        f"{d['readable_comparisons']} readable comparisons, against the "
+        f"documented {bands}"
+    )
+    if d["every_prediction_refuted"]:
+        clause += ", so no documented band is reached"
+    else:
+        clause += ", and at least one documented band IS reached"
+    if d["direction_holds_everywhere"]:
+        clause += (" -- the DIRECTION holds in every one of them, and only the "
+                   "magnitude is withdrawn")
+    else:
+        clause += (" -- and the direction does NOT hold in every comparison, "
+                   "which is more than this row's wording accounts for")
+    if d["both_arms_near_threshold_at_death"]:
+        clause += (f". The mechanism the engine gave for it fails at the moment "
+                   f"it names: the two arms differ by a factor of "
+                   f"{d['at_death_ratio']:.4f} in LP at the moment of death, "
+                   f"because death IS the threshold crossing")
+    return clause
+
+
 def _penetration_verdict() -> dict:
     """Derive the penetration row from what the observable actually contains.
 
@@ -355,8 +422,20 @@ def build() -> dict:
     bliss = _bliss_verdict()
     hypoxia = _hypoxia_verdict()
     penetration = _penetration_verdict()
+    # The immune row's VERDICT is not derived and must not be -- see
+    # `_immune_per_cell_clause`. What is derived is the measured evidence for
+    # the per-cell clause the row already carries, appended to the hardcoded
+    # rationale rather than replacing it, because #927's manuscript-reading
+    # half of that clause stands on its own.
+    immune_base = next(h for h in HEADLINES
+                       if h["key"] == "immune_amplification_ratio")
+    immune = {
+        "rationale": immune_base["rationale"] + _immune_per_cell_clause(),
+        "source": immune_base["source"] + "; calibration/icd-damp-per-death.md (#928)",
+    }
     derived = {"bliss_synergy": bliss, "hypoxia_kill_collapse": hypoxia,
-               "penetration_gap": penetration}
+               "penetration_gap": penetration,
+               "immune_amplification_ratio": immune}
     # A key that matches NOTHING would silently leave the hardcoded row in
     # place, which is the whole defect this derivation exists to remove.
     known = {h["key"] for h in HEADLINES}

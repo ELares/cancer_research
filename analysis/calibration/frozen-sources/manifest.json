@@ -21,6 +21,11 @@
         "recovered_from_commit": "27626a255b0f9b3fbb29e46877b2d65f36da272f"
       }
     },
+    "simulations/ferroptosis-core/src/immune.rs": {
+      "d3dfb859902676cc9247f0c46dc9e2a8869b13112d96accda3730a132071a722": {
+        "recovered_from_commit": "7ba16cccf370bfbfb6559ea6873062f7db6c85ea"
+      }
+    },
     "simulations/ferroptosis-core/src/immune_spatial.rs": {
       "1e6048cd6c8177ff4015b0212eca2f2baa225426d8975075aaec29040615ae2b": {
         "recovered_from_commit": "cd8374d3a6dafacdc9ed2bb5d612a0efc1943d98"

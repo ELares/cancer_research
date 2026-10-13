@@ -313,3 +313,86 @@ def test_the_immune_row_claims_counts_not_per_cell_immunogenicity():
             "immunogenicity per dead cell") in ms, (
         "the manuscript sentence this row is pinned to has changed; re-check "
         "which reading the row is allowed to claim before editing this guard")
+
+
+def _per_death_artifact(tmp_path, monkeypatch, *, ratio_max=1.1475,
+                        refuted=True, direction=True, at_death=1.0018,
+                        near=True, drop=None):
+    """A per-death DAMP artifact with chosen derived values."""
+    import json
+    payload = {
+        "ratio_min": 1.0469,
+        "ratio_max": ratio_max,
+        "readable_comparisons": 35,
+        "direction_holds_everywhere": direction,
+        "every_prediction_refuted": refuted,
+        "at_death_ratio": at_death,
+        "both_arms_near_threshold_at_death": near,
+        "predictions": [
+            {"low": 1.5, "high": 2.0, "source": "simulations/sim-icd/README.md"},
+            {"low": 2.0, "high": 5.0, "source": "plans/simulation-suite-v2-plan.md"},
+        ],
+    }
+    if drop:
+        payload.pop(drop)
+    src = tmp_path / "per-death.json"
+    src.write_text(json.dumps(payload))
+    monkeypatch.setattr(ir, "IMMUNE_PER_DEATH", src)
+    return src
+
+
+def test_the_immune_row_carries_the_measured_per_cell_magnitude(tmp_path, monkeypatch):
+    """#927 corrected this row by READING the manuscript; #928 measured it.
+
+    The clause must carry the measured magnitude and the documented bands it
+    falls short of, so the row's refusal of the per-cell reading is evidenced
+    rather than only careful.
+    """
+    _per_death_artifact(tmp_path, monkeypatch)
+    row = [h for h in ir.build()["headlines"]
+           if h["key"] == "immune_amplification_ratio"][0]
+    assert "1.0469x to 1.1475x" in row["rationale"]
+    assert "1.5-2x" in row["rationale"] and "2-5x" in row["rationale"]
+    assert "no documented band is reached" in row["rationale"]
+    assert "icd-damp-per-death.md" in row["source"]
+    # AND THE VERDICT IS DELIBERATELY UNTOUCHED. This row reads
+    # `directional_only` because the 104:1 moves ~25x with geometry on the
+    # COUNT axis, which is true whatever the per-cell magnitude is. Deriving
+    # the verdict from #928 would manufacture a dependency that does not exist.
+    assert row["verdict"] == "directional_only"
+
+
+def test_a_per_cell_magnitude_reaching_the_band_changes_the_clause(
+        tmp_path, monkeypatch):
+    """The clause is derived, so a measurement that reached the documented band
+    would have to be reported as such rather than as a refutation."""
+    _per_death_artifact(tmp_path, monkeypatch, ratio_max=2.4, refuted=False)
+    row = [h for h in ir.build()["headlines"]
+           if h["key"] == "immune_amplification_ratio"][0]
+    assert "at least one documented band IS reached" in row["rationale"]
+    assert "no documented band is reached" not in row["rationale"]
+    assert row["verdict"] == "directional_only", (
+        "the count-axis verdict must not move with the per-cell magnitude")
+
+
+def test_a_per_cell_direction_that_inverted_would_be_reported(tmp_path, monkeypatch):
+    """The row's wording accounts for a small positive difference. If the
+    direction itself failed, the row would be understating the problem and the
+    clause has to say so."""
+    _per_death_artifact(tmp_path, monkeypatch, direction=False)
+    row = [h for h in ir.build()["headlines"]
+           if h["key"] == "immune_amplification_ratio"][0]
+    assert "direction does NOT hold in every comparison" in row["rationale"]
+    assert "only the magnitude is withdrawn" not in row["rationale"]
+
+
+def test_missing_per_death_evidence_cannot_reuse_a_hardcoded_clause(
+        tmp_path, monkeypatch):
+    """A static clause quoting a measured number goes stale silently, which is
+    how this report's own summary came to contradict the row above it."""
+    monkeypatch.setattr(ir, "IMMUNE_PER_DEATH", tmp_path / "absent.json")
+    with pytest.raises(OSError):
+        ir._immune_per_cell_clause()
+    _per_death_artifact(tmp_path, monkeypatch, drop="ratio_max")
+    with pytest.raises(ValueError, match="missing 'ratio_max'"):
+        ir._immune_per_cell_clause()

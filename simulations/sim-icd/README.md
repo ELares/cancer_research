@@ -46,7 +46,7 @@ JSON array of 12 objects (3 phenotypes x 4 treatments):
   "n_cells": 100000,
   "n_dead": 99950,
   "death_rate": 0.9995,
-  "avg_lp_at_death": 19.83,
+  "avg_final_lp": 19.83,
   "immune_no_pd1": {
     "total_damps": 1981500.0,
     "damp_per_dead_cell": 19.83,
@@ -68,32 +68,53 @@ JSON array of 12 objects (3 phenotypes x 4 treatments):
 
 | Field | Description |
 |-------|-------------|
-| avg_lp_at_death | Mean LP level at the moment of death (higher = more membrane damage = more DAMPs) |
-| damp_per_dead_cell | DAMP release proportional to LP at death |
+| avg_final_lp | Mean LP after all 180 steps, over the cells that died. **NOT LP at the moment of death**, which is ~10.25 for every arm against a `death_threshold` of 10.0 -- death IS the threshold crossing. This field was called `avg_lp_at_death` and described here as "LP level at the moment of death" until #928; the two quantities differ by 78% (RSL3) and 86% (SDT) WITHIN one run, measured per cell in `analysis/immune-2d-measurements/observations.json.gz` (death 10.2474/10.2657 against release 18.2658/19.1230). `null` when no cell died. |
+| damp_per_dead_cell | `avg_final_lp` x `damp_per_lp`, which is 1.0 and uncalibrated. `null` when no cell died (it was `0.0`, which read as a measured potency of zero). |
 | dc_activation_fraction | Fraction of dendritic cells activated (0.0-1.0) |
-| immune_kills | Number of additional tumor cells killed by immune response |
+| immune_kills | Number of additional tumor cells killed by immune response. **Capped at the surviving population**, so an arm that kills everything biochemically earns almost none -- see the measured inversion below. |
 
 ## Reproducing manuscript claims
 
-**Chapter 7, Section 7.2 (ICD comparison):**
+**The per-dead-cell DAMP comparison:**
 ```bash
 cargo run --release -p sim-icd -- --output-dir output/icd
 # Inspect: output/icd/icd_comparison.json
-# Key finding (printed to stderr):
+# Key finding (printed to stderr): SDT produces 1.133x the DAMP per dead cell
+# of RSL3 at the persister state (20.0846 vs 17.7240), and 1.075x at OXPHOS.
+```
+
+**THE PREDICTION THIS SECTION USED TO STATE WAS REFUTED BY THE BINARY BESIDE
+IT (#928).** Where the block above now gives the measured values, it used to
+read:
+
+```
 #   SDT produces ~1.5-2x more DAMP per dead cell than RSL3
 #   SDT+anti-PD1 immune kills >> RSL3+anti-PD1 immune kills
 ```
 
-**Core claim: SDT >> RSL3 for immune activation:**
+Neither reproduces. The ratio is **1.047x to 1.148x** across all three regimes
+the repository can run -- this binary, `sim-modality-panel --tme-sweep` over 32
+readable conditions, and the committed 2D spatial archive -- so the direction
+holds everywhere and the magnitude reaches no part of the 1.5-2x band. The
+second line inverts outright: SDT earns **3** immune kills against RSL3's
+**57,591**, because SDT kills 99.997% of persisters and `immune_cascade` caps
+kills at the surviving population. The lines are kept rather than deleted
+because a stated expectation that failed is evidence, and `scripts/icd_damp_per_death.py`
+pins this quote so the measurement and the claim cannot drift apart.
+
+Nothing in the manuscript rests on the refuted band; Section 8.2 already
+declines the per-cell reading. Full accounting:
+`analysis/calibration/icd-damp-per-death.md`.
+
+**Direction check (not a magnitude check):**
 ```bash
 cargo run --release -p sim-icd 2>&1 | grep "SDT produces"
-# Expected: SDT produces X.Xx more DAMP per dead cell than RSL3
 ```
 
 ## Caveats
 
 - Immune cascade is a simplified pipeline model (DAMP -> DC -> T cell -> kill), not a spatially resolved immune simulation
-- DAMP quantity is derived from LP at death, which is model-determined (the threshold-locking effect means LP at death is closer to the threshold than biology might predict)
+- DAMP quantity is derived from the post-death LP this binary reports, which is model-determined. The threshold-locking effect named in this list is not a minor caveat but the reason the documented contrast fails: LP at the moment of death is pinned near the threshold for EVERY arm, so a per-arm difference exists only after death (#928)
 - Anti-PD1 is modeled as a binary modifier on the PD-1/PD-L1 suppression fraction, not a dose-response curve
 - No spatial effects -- immune response is computed from population-level DAMP totals
 - No temporal dynamics of immune priming (days-to-weeks DC maturation not modeled)
