@@ -1766,6 +1766,82 @@ def test_the_report_alone_writes_nothing(tmp_path, monkeypatch, capsys):
         "the report must say how to act on it")
 
 
+def test_a_slice_marked_done_having_walked_nothing_is_found(tmp_path, monkeypatch):
+    """The larger half of #913, invisible to both earlier detectors.
+
+    `seen = 0, hits = -1, done = 1` -- nothing walked, no total, retired. The
+    shortfall detector needs `hits > 0` and the zeroed detector needs
+    `seen > 0`, so ZERO SATISFIED BOTH and the worst row the ledger can hold
+    was the one it could not see. 24 consecutive MED slices (1991-2014) sat
+    here holding 3,110,537 records by the service's own count.
+    """
+    c = _ledger(tmp_path, monkeypatch, [("MED", 2000, 0, -1, 1)])
+    assert [(r[0], r[1]) for r in fx.incomplete_slices(c)] == [("MED", 2000)], (
+        "a slice marked done having walked nothing was not flagged; this is "
+        "the shape that hid 3.1M records behind a complete-looking ledger")
+    c.close()
+
+
+def test_a_genuinely_empty_slice_is_not_flagged(tmp_path, monkeypatch):
+    """Why the clause is keyed on `hits < 0` and NOT on `seen = 0`.
+
+    An empty year walks nothing too, and it is not damage: 112 PPR slices
+    (1900-2011) are legitimately empty because preprints did not exist, and
+    the service returns hitCount 0 for them (measured, not assumed). Keying
+    the detector on `seen = 0` would reopen all of them on every pass forever.
+    After #912 a zero total written by a real response is trustworthy, so an
+    empty slice must be allowed to settle at 0.
+    """
+    c = _ledger(tmp_path, monkeypatch,
+                [("PPR", 1950, 0, 0, 1), ("PPR", 2010, 0, 0, 1)])
+    assert fx.incomplete_slices(c) == [], (
+        "a legitimately empty slice was flagged; keyed on seen=0 rather than "
+        "on the absence of a total, this reopens 112 PPR slices forever")
+    c.close()
+
+
+def test_the_legacy_zero_total_migration_runs_exactly_once(tmp_path, monkeypatch):
+    """v1 restores the -1 sentinel on pre-#912 rows, and then stops.
+
+    The idempotence is the load-bearing half. If the migration ran on every
+    open it would keep de-certifying the genuine zeros #912 made trustworthy,
+    so every empty PPR slice would be reopened on every pass -- the exact
+    behaviour the detector is keyed to avoid.
+    """
+    monkeypatch.setattr(fx, "STATE_DB", tmp_path / "state.sqlite")
+
+    # A ledger as it stood before #912: a zero total, and no version marker.
+    c = fx.state()
+    c.execute("INSERT INTO slice(src,year,cursor,seen,kept,hits,done,query_id) "
+              "VALUES ('MED',2000,'*',0,0,0,1,'q')")
+    c.execute("PRAGMA user_version=0")
+    c.commit()
+    c.close()
+
+    c = fx.state()
+    hits, = c.execute("SELECT hits FROM slice WHERE year=2000").fetchone()
+    ver, = c.execute("PRAGMA user_version").fetchone()
+    assert hits == -1, (
+        f"legacy zero total is still {hits}; it reads as a certified-empty "
+        "slice and the detector cannot distinguish it from a never-walked one")
+    assert ver == fx.SCHEMA_VERSION, f"version marker not set: {ver}"
+    assert [(r[0], r[1]) for r in fx.incomplete_slices(c)] == [("MED", 2000)], (
+        "the migrated row must now be visible to the detector")
+
+    # A genuine post-#912 empty walk, recorded AFTER the migration ran.
+    c.execute("INSERT INTO slice(src,year,cursor,seen,kept,hits,done,query_id) "
+              "VALUES ('PPR',1950,'*',0,0,0,1,'q')")
+    c.commit()
+    c.close()
+
+    c = fx.state()
+    hits, = c.execute("SELECT hits FROM slice WHERE src='PPR'").fetchone()
+    c.close()
+    assert hits == 0, (
+        f"a genuine zero recorded after the migration was de-certified to "
+        f"{hits}; the migration re-ran and will reopen every empty slice")
+
+
 def test_retiring_with_no_recorded_total_at_all_also_says_so(
         tmp_path, monkeypatch, capsys):
     """The gap the #910 fix CREATED, on a fresh slice.
