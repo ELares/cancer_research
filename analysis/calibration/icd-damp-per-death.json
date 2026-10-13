@@ -153,14 +153,17 @@
   "p5": {
     "band": 1.5,
     "both_legs_inside_band": true,
+    "dc_normalisations_agree": true,
     "legs": [
       {
         "damp_per_death_ratio": 1.0747839719034131,
+        "dc_activation_ratio": 1.052327203542847,
         "dc_maturation_per_death_ratio": 1.052327203542847,
         "phenotype": "OXPHOS"
       },
       {
         "damp_per_death_ratio": 1.13318246685339,
+        "dc_activation_ratio": 1.0950155678990667,
         "dc_maturation_per_death_ratio": 1.095015567899067,
         "phenotype": "Persister"
       }

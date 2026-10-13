@@ -98,9 +98,20 @@ re-interpretation.
 > falsification condition.** That does NOT falsify the biological hypothesis,
 > which is what E3 tests. It establishes that the model does not predict what
 > P5's model-output line says it predicts: on the per-cell axis the model
-> predicts the null. If E3 returned agreement within 1.5x, that result would
+> predicts a small POSITIVE difference that falls inside the band P5 registers
+> as falsification -- not a null, but not distinguishable from one at P5's own
+> resolution. If E3 returned agreement within 1.5x, that result would
 > confirm the model and falsify P5 as registered — the prediction and the model
 > do not agree about what the model says.
+>
+> **Which leg carries this.** P5's contrast is DENSE versus SPARSE kill, a
+> spatial property, and `sim-icd` has no geometry — it is a population of
+> independent cells, so its SDT-versus-RSL3 contrast is a death-MODE
+> contrast that this registration identifies with the dense and sparse arms
+> by name but not by mechanism. The leg that genuinely measures dense
+> against sparse is the 2D spatial archive, where SDT kills 139,640 cells
+> and RSL3 kills 163 in the SAME geometry, and it gives 1.0469x. The
+> conclusion rests on that leg; the other two agree with it.
 >
 > What survives on the model side is the DIRECTION (SDT above RSL3 in all 35
 > readable comparisons) and the COUNT ratio, which is the quantity the

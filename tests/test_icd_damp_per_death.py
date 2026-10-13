@@ -505,3 +505,41 @@ def test_the_registration_carries_the_measurement_without_amending_it():
         "the note must carry both measured readouts, not only the DAMP one")
     assert "does NOT falsify the biological hypothesis" in text, (
         "the note must keep the model/biology distinction the finding rests on")
+
+
+def test_the_page_says_which_leg_carries_the_p5_conclusion(mod, stored):
+    """Self-review of #928: P5's dense-versus-sparse contrast is SPATIAL, and
+    two of the three measurement sites have no geometry at all. The page must
+    name the leg whose mechanism matches the registration rather than letting
+    35 comparisons stand in for it."""
+    md = mod.render(mod.assemble(_raw(stored)))
+    assert "P5's contrast is DENSE versus SPARSE kill" in md
+    assert "`sim-icd` has no geometry at all" in md
+    assert "in the SAME geometry" in md
+    # And the loose reading has to stay out.
+    assert "the null P5 would be falsified by" not in md
+    assert "not a null, but not distinguishable from one" in md
+    assert "SAME ratio to five decimals" in md, (
+        "the two DC normalisations agreeing is the check that the readout is "
+        "per-cell at all; the page must state it")
+    text = PREREG.read_text(encoding="utf-8")
+    assert "spatial property" in text and "1.0469x" in text, (
+        "the registration note must carry the same scoping, not only the page")
+
+
+def test_the_dc_leg_is_checked_through_two_normalisations(mod, stored):
+    """`mature_dcs / kills` and `dc_activation_fraction` must give the same
+    ratio, or the DC figure is not a per-cell readout and P5's DC leg is not
+    being measured at all. Derived, and the disagreeing branch is driven."""
+    d = mod.assemble(_raw(stored))
+    assert d["p5"]["dc_normalisations_agree"] is True
+    assert "SAME ratio to five decimals" in mod.render(d)
+    raw = _raw(stored)
+    for row in raw["icd"]["rows"]:
+        if row["phenotype"] == "Persister" and row["treatment"] == "SDT":
+            row["dc_activation_fraction"] = row["dc_activation_fraction"] * 2.0
+    d2 = mod.assemble(raw)
+    assert d2["p5"]["dc_normalisations_agree"] is False
+    md = mod.render(d2)
+    assert "They DISAGREE" in md
+    assert "SAME ratio to five decimals" not in md

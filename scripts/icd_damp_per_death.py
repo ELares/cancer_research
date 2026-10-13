@@ -395,8 +395,17 @@ def assemble(raw: dict) -> dict:
         damp = s_row["damp_per_dead_cell"] / r_row["damp_per_dead_cell"]
         dc_s = s_row["mature_dcs"] / s_row["n_dead"]
         dc_r = r_row["mature_dcs"] / r_row["n_dead"]
+        # TWO NORMALISATIONS OF THE SAME READOUT, kept apart on purpose.
+        # `mature_dcs / kills` and `dc_activation_fraction` must give the same
+        # ratio, because the cascade's mature-DC count is proportional to the
+        # activation fraction times the kill count. If they disagreed, the
+        # quantity would not be per-cell at all, and the page would be
+        # measuring P5's readout with the wrong instrument.
+        act = (s_row["dc_activation_fraction"] / r_row["dc_activation_fraction"]
+               if r_row["dc_activation_fraction"] else None)
         legs.append({"phenotype": pheno, "damp_per_death_ratio": damp,
-                     "dc_maturation_per_death_ratio": dc_s / dc_r})
+                     "dc_maturation_per_death_ratio": dc_s / dc_r,
+                     "dc_activation_ratio": act})
     out["p5"] = {
         "band": band,
         "quote": P5_QUOTE,
@@ -405,6 +414,10 @@ def assemble(raw: dict) -> dict:
         "both_legs_inside_band": bool(legs) and all(
             lg["damp_per_death_ratio"] < band
             and lg["dc_maturation_per_death_ratio"] < band for lg in legs),
+        "dc_normalisations_agree": bool(legs) and all(
+            lg["dc_activation_ratio"] is not None
+            and abs(lg["dc_maturation_per_death_ratio"] - lg["dc_activation_ratio"])
+            < 1e-5 for lg in legs),
         "worst_leg": max(
             (max(lg["damp_per_death_ratio"], lg["dc_maturation_per_death_ratio"])
              for lg in legs), default=None),
@@ -567,7 +580,9 @@ def render(d: dict) -> str:
                 "\"about 4:1 in 3D (down from the 2D 104:1 ceiling)\" and the "
                 "manuscript already records those as total immune-kill ratios "
                 "rather than per-cell readouts; measured, the per-cell output is "
-                "the null P5 would be falsified by.\n")
+                "a small POSITIVE difference that falls inside the band P5 "
+                "registers as falsification -- not a null, but not "
+                "distinguishable from one at P5's own resolution.\n")
             L.append(
                 "**The threshold is not amended and must not be.** It is parsed "
                 "from the registration here rather than restated, so this page "
@@ -575,6 +590,33 @@ def render(d: dict) -> str:
                 "Amending a registered threshold after measuring against it is "
                 "the thing preregistration exists to prevent; the manuscript "
                 "declined to amend it for the same reason, and so does this.\n")
+            L.append(
+                "**Which leg carries this, stated rather than assumed.** P5's "
+                "contrast is DENSE versus SPARSE kill, which is a spatial "
+                "property, and `sim-icd` has no geometry at all -- it is a "
+                "population of independent cells, so its SDT-versus-RSL3 "
+                "contrast is a death-MODE contrast that the registration "
+                "identifies with the dense and sparse arms by name but not by "
+                "mechanism. The leg that genuinely measures dense against "
+                f"sparse is the 2D spatial archive, where SDT kills "
+                f"{sp['SDT']['deaths']:,} cells and RSL3 kills "
+                f"{sp['RSL3']['deaths']:,} in the SAME geometry, and it gives "
+                f"{d['release_ratio']:.4f}x. So the conclusion rests on the leg "
+                "whose mechanism matches the registration, and the other two "
+                "agree with it.\n")
+            L.append(
+                "The DC leg is measured through two normalisations that must "
+                "agree: `mature_dcs` divided by the kill count, and "
+                "`dc_activation_fraction`. "
+                + ("They give the SAME ratio to five decimals, because the "
+                   "cascade's mature-DC count is proportional to the activation "
+                   "fraction times the kill count -- which is the check that "
+                   "the quantity is per-cell at all."
+                   if p5["dc_normalisations_agree"] else
+                   "**They DISAGREE**, so the DC figure above is not a per-cell "
+                   "readout and P5's DC leg is not being measured here; nothing "
+                   "should be concluded from it until that is explained.")
+                + "\n")
         else:
             L.append(
                 f"At least one readout exceeds the registered {p5['band']:g}x "
