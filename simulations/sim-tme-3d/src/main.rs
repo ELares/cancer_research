@@ -14091,12 +14091,13 @@ mod tests {
             global_only.overall_kill_rate,
             both.overall_kill_rate
         );
-        // The uniform floor protects the DYING compartment more than a
-        // hypoxia-keyed one of the same nominal strength, because the kill lives
-        // at the rim where the map returns ~0. Not a matched comparison (the two
-        // floors have different spatial mass) -- the point is only that the
-        // uniform approximation the #502 arm shipped with is NOT conservative
-        // here: it over-protects the compartment that dies.
+        // The uniform floor leaves OVERALL kill lower than a hypoxia-keyed one
+        // does, and since essentially all the kill sits in the outer shell that
+        // is a statement about the shell: the uniform floor discounts the block
+        // where the dying happens, where the map returns ~0. Not a matched
+        // comparison (the two floors have different spatial mass) -- the point is
+        // only that the uniform approximation the #502 arm shipped with is NOT
+        // conservative here.
         assert!(
             global_only.overall_kill_rate < map_only.overall_kill_rate,
             "a uniform 0.3 floor should discount the block more than a hypoxia map \
