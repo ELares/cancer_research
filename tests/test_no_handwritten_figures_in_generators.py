@@ -65,6 +65,11 @@ GENERATORS = [
     # countable noun, in the one page whose entire subject is a hand-written
     # count outliving the thing it counted
     REPO_ROOT / "scripts" / "modality_module_depth.py",
+    # enrolled on arrival (#930): the page's entire argument is that a figure
+    # must be derived, and its one hand-written quantity on first pass was the
+    # "95%" naming its own confidence interval -- which would have gone stale
+    # the moment anyone changed the bootstrap quantiles. Derived now.
+    REPO_ROOT / "scripts" / "trial_isoeffect_sweep.py",
 ]
 
 

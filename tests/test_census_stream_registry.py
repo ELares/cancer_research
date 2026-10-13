@@ -136,6 +136,16 @@ REGISTRY = {
         "{records} and justified it with a census denominator that does not "
         "exist, which is exactly the invented-justification failure this "
         "registry exists to prevent, committed inside the registry itself."),
+    "trial_isoeffect_sweep.py": (
+        {"records"},
+        "The first selection gate is the PUBLICATION TYPE -- a record is only "
+        "considered if NLM filed it as a randomised or controlled trial -- and "
+        "records_unindexed carries no pub_types field at all, nor an abstract "
+        "to read the schedules out of. So that stream is STRUCTURALLY unable "
+        "to supply a single selected trial, which makes this a property of the "
+        "streams rather than a choice to narrow the denominator. The report "
+        "states its denominator as the trials it could read, not as the "
+        "census, for the same reason."),
     "census_evidence_design.py": (
         {"records"},
         "Study design is read from NLM publication types and MeSH check tags, "

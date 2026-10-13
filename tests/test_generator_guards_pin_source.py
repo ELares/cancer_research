@@ -77,6 +77,10 @@ IN_SCOPE = {
     # #928: same shape -- every derived-field guard drives `assemble()` on
     # doctored raw, and the engine-source guards read the Rust directly.
     "test_icd_damp_per_death.py",
+    # #930: same shape -- every derived-field guard drives `assemble()` on
+    # doctored trial rows, and the selection/extraction guards read the
+    # generator's own regexes and AST.
+    "test_trial_isoeffect_sweep.py",
 }
 
 

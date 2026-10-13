@@ -1,0 +1,246 @@
+{
+  "_how_sampled": "scripts/trial_isoeffect_sweep.py JUDGE_SEED=20930; the pool is sorted by PMID BEFORE shuffling so the draw depends on the seed and not on census shard order; 16 drawn from the equivalence arm and 10 from the difference arm.",
+  "_label_limit": "`reported_verdict` adjudicates the OUTCOME LABEL, not the arm extraction. Most rows are `unclear` because an abstract often does not state the primary comparison plainly enough to confirm or refute the regex. That is why the report quotes NO classifier precision: a figure computed over a majority of unadjudicable rows would describe my reading rather than the classifier.",
+  "_limit": "Judged from ABSTRACTS, not full papers. An arm stated only in the methods of the full text cannot be checked here, so this bounds abstract-level extraction and not trial-level truth.",
+  "_what": "Hand-judged sample behind the extraction-precision figure in analysis/trial-isoeffect-sweep.md (#930). Judged by reading each record's own abstract against the arms the extractor returned.",
+  "seed": 20930,
+  "verdicts": [
+    {
+      "arms_verdict": "wrong",
+      "error_mode": "multi_component_arm",
+      "note": "AH arm is 1.6 Gy b.i.d. to 54.4 Gy; the extracted 32 Gy/20 is only its whole-brain portion",
+      "pmid": 9336134,
+      "reported": "equivalence",
+      "reported_verdict": "unclear",
+      "selection_verdict": "primary"
+    },
+    {
+      "arms_verdict": "wrong",
+      "error_mode": "multi_target_arm",
+      "label_note": "matched on 'hypothesizing similar toxicity and survival', which is the trial's HYPOTHESIS, not its finding",
+      "note": "45 Gy/25 and 46 Gy/23 are PELVIC NODAL doses paired against prostate doses",
+      "pmid": 39271420,
+      "reported": "equivalence",
+      "reported_verdict": "design_language_only",
+      "selection_verdict": "primary"
+    },
+    {
+      "arms_verdict": "correct",
+      "error_mode": null,
+      "note": "62 Gy/20 vs 80 Gy/40, both stated as the randomised arms",
+      "pmid": 20447774,
+      "reported": "equivalence",
+      "reported_verdict": "confirmed_by_result",
+      "selection_verdict": "primary"
+    },
+    {
+      "arms_verdict": "correct",
+      "error_mode": null,
+      "note": "78 Gy/39 3D-CRT vs 70 Gy/35 conventional; arms correct, TECHNIQUE also differs",
+      "pmid": 8621278,
+      "reported": "equivalence",
+      "reported_verdict": "unclear",
+      "selection_verdict": "primary"
+    },
+    {
+      "arms_verdict": "wrong",
+      "error_mode": "multi_component_arm",
+      "note": "35.75 Gy/13 is EBRT only; that arm also receives 17 Gy/2 HDR brachytherapy",
+      "pmid": 17531335,
+      "reported": "equivalence",
+      "reported_verdict": "unclear",
+      "selection_verdict": "primary"
+    },
+    {
+      "arms_verdict": "correct",
+      "error_mode": null,
+      "note": "36.4 Gy/7 (7x5.2) PBI vs 50 Gy/25 WBI; numbers right, TARGET VOLUME differs",
+      "pmid": 17531400,
+      "reported": "equivalence",
+      "reported_verdict": "confirmed_by_result",
+      "selection_verdict": "primary"
+    },
+    {
+      "arms_verdict": "correct",
+      "error_mode": null,
+      "note": "45 Gy/30 b.i.d. vs 42 Gy/15 once daily, correctly read",
+      "pmid": 27549509,
+      "reported": "equivalence",
+      "reported_verdict": "unclear",
+      "selection_verdict": "secondary"
+    },
+    {
+      "arms_verdict": "correct",
+      "error_mode": null,
+      "note": "65.4 Gy/30 vs 60 Gy/30, correctly read (same fraction count)",
+      "pmid": 40197313,
+      "reported": "equivalence",
+      "reported_verdict": "unclear",
+      "selection_verdict": "primary"
+    },
+    {
+      "arms_verdict": "wrong",
+      "error_mode": "dose_range_as_two_arms",
+      "note": "control is '40-45 Gy in 20-23 fractions'; the two extracted arms are experimental arms of DIFFERENT strata",
+      "pmid": 21664710,
+      "reported": "equivalence",
+      "reported_verdict": "confirmed_by_result",
+      "selection_verdict": "primary"
+    },
+    {
+      "arms_verdict": "correct",
+      "error_mode": null,
+      "note": "60 Gy/30 vs 66 Gy/33, randomised arms, p=0.55",
+      "pmid": 28410809,
+      "reported": "equivalence",
+      "reported_verdict": "confirmed_by_result",
+      "selection_verdict": "primary"
+    },
+    {
+      "arms_verdict": "correct",
+      "error_mode": null,
+      "note": "15 Gy/1 and 5x5 Gy SRT variants vs 30 Gy/10 WBRT; control-anchored pairing is right",
+      "pmid": 27793446,
+      "reported": "equivalence",
+      "reported_verdict": "confirmed_by_result",
+      "selection_verdict": "primary"
+    },
+    {
+      "arms_verdict": "correct",
+      "error_mode": null,
+      "label_note": "matched on 'noninferiority trial', a description of the design",
+      "note": "25 Gy/5 vs 40 Gy/15, correctly read",
+      "pmid": 28602417,
+      "reported": "equivalence",
+      "reported_verdict": "design_language_only",
+      "selection_verdict": "secondary"
+    },
+    {
+      "arms_verdict": "correct",
+      "error_mode": null,
+      "note": "72 Gy/60 b.i.d. vs 60 Gy/30 once daily, RTOG 9006 arms",
+      "pmid": 29404979,
+      "reported": "equivalence",
+      "reported_verdict": "confirmed_by_result",
+      "selection_verdict": "primary"
+    },
+    {
+      "arms_verdict": "correct",
+      "error_mode": null,
+      "note": "45 Gy/30 b.i.d. vs 66 Gy/33 once daily, CONVERT arms",
+      "pmid": 31002954,
+      "reported": "equivalence",
+      "reported_verdict": "unclear",
+      "selection_verdict": "secondary"
+    },
+    {
+      "arms_verdict": "wrong",
+      "error_mode": "arm_variants_paired",
+      "note": "20 Gy/5 and 30 Gy/10 are both variants of the MULTIFRACTION arm; the 8 Gy single-fraction arm was missed",
+      "pmid": 10577696,
+      "reported": "equivalence",
+      "reported_verdict": "unclear",
+      "selection_verdict": "primary"
+    },
+    {
+      "arms_verdict": "correct",
+      "error_mode": null,
+      "note": "67.2 Gy/42 AHFX-S vs 70.5 Gy/41 AFX-C, both arm totals",
+      "pmid": 7790243,
+      "reported": "equivalence",
+      "reported_verdict": "unclear",
+      "selection_verdict": "primary"
+    },
+    {
+      "arms_verdict": "wrong",
+      "error_mode": "multi_component_arm",
+      "note": "41.4 Gy/23 is the first phase of the LCAF arm, whose total is 68.4 Gy/41",
+      "pmid": 12182982,
+      "reported": "difference",
+      "reported_verdict": "unclear",
+      "selection_verdict": "primary"
+    },
+    {
+      "arms_verdict": "correct",
+      "error_mode": null,
+      "note": "62 Gy/20 vs 80 Gy/40 correctly read from the randomisation",
+      "pmid": 18990503,
+      "reported": "difference",
+      "reported_verdict": "unclear",
+      "selection_verdict": "secondary"
+    },
+    {
+      "arms_verdict": "correct",
+      "error_mode": null,
+      "note": "20 Gy/5 and 30 Gy/10 are two of three genuine arms",
+      "pmid": 38920717,
+      "reported": "difference",
+      "reported_verdict": "confirmed_by_result",
+      "selection_verdict": "primary"
+    },
+    {
+      "arms_verdict": "wrong",
+      "error_mode": "cross_trial_pair",
+      "note": "CEBI 140 and CEBI 142 are two trials in one report; 21 Gy/14 and 60 Gy/48 come from different ones",
+      "pmid": 9273186,
+      "reported": "difference",
+      "reported_verdict": "unclear",
+      "selection_verdict": "primary"
+    },
+    {
+      "arms_verdict": "correct",
+      "error_mode": null,
+      "note": "50.4 Gy/28 CRT vs 58.8 Gy/28 SIB, the randomised arms",
+      "pmid": 40971156,
+      "reported": "difference",
+      "reported_verdict": "confirmed_by_result",
+      "selection_verdict": "primary"
+    },
+    {
+      "arms_verdict": "wrong",
+      "error_mode": "multi_component_arm",
+      "note": "40 Gy/20 is EBRT only; that arm also receives a 35 Gy iridium implant",
+      "pmid": 15718316,
+      "reported": "difference",
+      "reported_verdict": "unclear",
+      "selection_verdict": "primary"
+    },
+    {
+      "arms_verdict": "correct",
+      "error_mode": null,
+      "label_note": "reports median survival of 8.5 months in BOTH groups -- an equivalence result -- but sits in the difference group because the phrase is 'in both groups', which the regex does not know",
+      "note": "35 Gy/10 vs 45 Gy/15, the randomised arms",
+      "pmid": 8581393,
+      "reported": "difference",
+      "reported_verdict": "mislabelled",
+      "selection_verdict": "primary"
+    },
+    {
+      "arms_verdict": "correct",
+      "error_mode": null,
+      "note": "80 Gy/40 vs 62 Gy/20, the randomised arms",
+      "pmid": 28355113,
+      "reported": "difference",
+      "reported_verdict": "unclear",
+      "selection_verdict": "primary"
+    },
+    {
+      "arms_verdict": "wrong",
+      "error_mode": "multi_component_arm",
+      "note": "50 Gy/25 arm also gets 12 Gy/2 brachytherapy, and the randomisation is RT vs chemo-RT not fractionation",
+      "pmid": 17445928,
+      "reported": "difference",
+      "reported_verdict": "unclear",
+      "selection_verdict": "primary"
+    },
+    {
+      "arms_verdict": "wrong",
+      "error_mode": "dose_range_as_two_arms",
+      "note": "'between 66 Gy in 33 fractions and 74 Gy in 37 fractions' is ONE arm given across a range; the randomisation is RT vs RT+Etanidazole",
+      "pmid": 9308928,
+      "reported": "difference",
+      "reported_verdict": "unclear",
+      "selection_verdict": "primary"
+    }
+  ]
+}
