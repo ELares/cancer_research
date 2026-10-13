@@ -23,11 +23,21 @@ TWO THINGS ARE WRONG WITH THAT LABEL, AND BOTH ARE MEASURED HERE.
     lambda is the kill depth (14.7 -> 3.7 um) and the overall kill fraction
     (0.0658 -> 0.0461), neither of which is the headline.
 
-    This matters because of which parameter carries the evidence. #335 validated
+    This matters because of which parameter carries the evidence, and the
+    distinction is narrower than "anchored vs unanchored". #335 validated
     `lambda` against measured data (Primeau 2005, Tannock 2002) and
-    CALIBRATION_STATUS records that validation; `vascular_permeability` is an
-    uncalibrated preset. The headline attributes a validated-sounding property to
-    the knob that has no anchor, and does not use the knob that has one.
+    CALIBRATION_STATUS records that validation -- a MAGNITUDE check. The
+    permeability presets are not uncited: 0.4 carries "Ref: Olive et al.,
+    Science 2009 (pancreatic desmoplasia)" and 0.15 carries "Ref: Sarkaria et
+    al., Neuro-Oncology 2018 (BBB and drug delivery)". But those citations
+    support the DIRECTION, not the numbers -- no measured permeability value
+    appears anywhere in the repository, CALIBRATION_STATUS lists lambda as
+    validated and permeability nowhere, and the manuscript itself says "all
+    transport parameters are estimated, not calibrated". So the headline rests
+    on an estimated magnitude while the one magnitude that was checked against
+    data cancels out of it. (An earlier draft of this file said permeability
+    "carries no anchor", which is too strong and was caught in self-review by
+    reading the preset doc comments.)
 
 (2) THE 300/300 IS ENTAILED, NOT MEASURED. `cell_seed` in sim-tissue-pk is
     `seed + bin_idx * N_CELLS * 2 + i * 2` -- it does not depend on the tissue --
@@ -404,10 +414,18 @@ def render(d: dict) -> str:
             "this analysis does not hold.\n"
         )
     L.append(
-        "This is the parameter split that matters: #335 validated `lambda` "
-        "against measured data (Primeau 2005, Tannock 2002) and "
-        "`CALIBRATION_STATUS.md` records it; `vascular_permeability` carries no "
-        "anchor in this repository. The headline uses only the unanchored one.\n"
+        "This is the parameter split that matters, and it is narrower than "
+        "anchored-versus-unanchored. #335 validated `lambda` against measured "
+        "data (Primeau 2005, Tannock 2002) and `CALIBRATION_STATUS.md` records "
+        "that MAGNITUDE check. The permeability presets are not uncited -- 0.4 "
+        "carries Olive 2009 (pancreatic desmoplasia) and 0.15 carries Sarkaria "
+        "2018 (BBB and drug delivery) -- but those support the DIRECTION, not "
+        "the numbers: no measured permeability value appears anywhere here, "
+        "`CALIBRATION_STATUS.md` lists lambda as validated and permeability "
+        "nowhere, and the manuscript says all transport parameters are "
+        "estimated rather than calibrated. So the headline rests on an "
+        "estimated magnitude while the one magnitude checked against data "
+        "cancels out of it.\n"
     )
 
     L.append("## 2. The three numbers are one dose-response at three points\n")
@@ -533,9 +551,9 @@ def render(d: dict) -> str:
 
     L.append("## Scope\n")
     L.append(
-        "- Nothing is recalibrated. `vascular_permeability` has no published "
-        "anchor in this repository, and supplying one from memory would be "
-        "worse than naming it uncalibrated.\n"
+        "- Nothing is recalibrated. The permeability presets cite their "
+        "direction but not their magnitude, and supplying a number from memory "
+        "would be worse than naming it estimated.\n"
         "- The manuscript's Section 6.1 treatment is CORRECT and untouched: it "
         "attributes the numbers to vascular permeability, names the vessel "
         "wall as the highest-concentration position, and calls the transport "

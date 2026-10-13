@@ -256,8 +256,8 @@ def _penetration_verdict() -> dict:
         `exp(-r/lambda)` is 1 for every lambda. Measured: the two drugs
         `sim-tissue-pk` ships differ two-fold in penetration length and return
         BIT-IDENTICAL wall kills. So the quantity is a `vascular_permeability`
-        gradient, and lambda -- the one transport parameter #335 anchored to
-        measured data -- does not enter it.
+        gradient, and lambda -- the one transport MAGNITUDE #335 checked
+        against measured data -- does not enter it.
       - All three tissues run identical cells with identical RNG at bin 0, so
         the three numbers are ONE monotone dose-response at three fixed
         decreasing concentrations. A paired comparison of that cannot invert, so
@@ -326,8 +326,11 @@ def _penetration_verdict() -> dict:
             "penetration result: the observable sits at r = 0 where "
             f"exp(-r/lambda) = 1, and two drugs differing {v['lambda_ratio']:.1f}"
             "-fold in penetration length return bit-identical wall kills, so "
-            "what is ordered is the uncalibrated `vascular_permeability` and "
-            "not the lambda #335 anchored to measured data"
+            "what is ordered is `vascular_permeability`, whose magnitudes are "
+            "estimates (the presets cite Olive 2009 and Sarkaria 2018 for their "
+            "DIRECTION; no measured permeability value appears in the "
+            "repository), and not the lambda whose magnitude #335 checked "
+            "against measured data"
             + (f". Where lambda does act -- each tissue's own deepest cell -- "
                f"the poorly/CNS ordering inverts below lambda ~ {cross:.0f} um, "
                "because access and distance rank these three tissues "

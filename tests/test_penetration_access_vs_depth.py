@@ -221,6 +221,9 @@ def test_the_generator_derives_its_figures_rather_than_stating_them():
     literals. Pin the source: none of the published figures may appear in it."""
     src = _src()
     body = src.split('"""', 2)[-1]  # the module docstring may quote figures
+    assert len(body) > 2000, (
+        "the docstring split left almost nothing to scan, so the literal "
+        "checks below would pass vacuously")
     for literal in ("0.121", "0.026", "0.018", "50.98", "0.0658", "14.7"):
         assert literal not in body, (
             f"{literal!r} is hardcoded in the generator body; every published "
