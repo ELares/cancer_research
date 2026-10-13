@@ -48,10 +48,10 @@ The production simulation matrix uses fixed in-vivo defaults. The in-vitro singl
 
 - **Drivers:** lp_propagation, lp_rate, gpx4_rate
 - **Non-identifiable:** none flagged for this headline
-- **Prior-predictive spread:** very wide per-tissue intervals (e.g. well-vascularized median 0.23 ~[0.00, 0.93]; CNS/BBB median 0.04 ~[0.00, 0.77]) because the bistable switch dominates; BUT the within-draw across-tissue ORDERING (well >= poorly >= CNS) held in 300/300 draws
+- **Prior-predictive spread:** very wide per-tissue intervals (e.g. well-vascularized median 0.23 ~[0.00, 0.93]; CNS/BBB median 0.04 ~[0.00, 0.77]) because the bistable switch dominates; the within-draw across-tissue ORDERING (well >= poorly >= CNS) held in 200/200 draws here and 300/300 as published -- but that is ENTAILED, not measured: one monotone dose-response at three fixed decreasing concentrations with a shared RNG stream cannot invert. Measured against its own no-drug control (0.014), the CNS figure is +0.004 of drug-attributable kill
 - **Data-conditioned:** no (prior-predictive; transport params at fixed uncalibrated presets, their own ranges not swept)
-- **Verdict:** `direction_robust_magnitude_not` (the penetration-gradient ordering is parameter-robust (per-draw, not inferred from the overlapping marginals); the absolute per-tissue magnitudes are not point-estimable)
-- **Source:** headline-uncertainty-penetration-report.md (#332)
+- **Verdict:** `direction_robust_by_construction_magnitude_not` (the ordering IS robust to the 11 rate constants, but by construction rather than by measurement, and it is not a penetration result: the observable sits at r = 0 where exp(-r/lambda) = 1, and two drugs differing 2.0-fold in penetration length return bit-identical wall kills, so what is ordered is the uncalibrated `vascular_permeability` and not the lambda #335 anchored to measured data. Where lambda does act -- each tissue's own deepest cell -- the poorly/CNS ordering inverts below lambda ~ 51 um, because access and distance rank these three tissues differently; so the direction is robust at the wall and not at depth. The absolute per-tissue magnitudes are not point-estimable)
+- **Source:** headline-uncertainty-penetration-report.md (#332); calibration/penetration-access-vs-depth.md (#926)
 ### SDT:RSL3 immune-kill ratio (the 104:1)
 
 - **Drivers:** lp_propagation, lp_rate, sdt_ros
@@ -64,7 +64,7 @@ The production simulation matrix uses fixed in-vivo defaults. The in-vitro singl
 
 ## Overall
 
-No headline output is fully point-estimable. The single-cell kill rate and the immune ratio are directional-only. Uniform Bliss supra-additivity is not established by the reported ensemble, and its magnitude is uncalibrated. The penetration ordering is direction-robust but magnitude-uncalibrated, and the hypoxia asymmetry is direction-robust only at a FIXED O2 form -- measured along that axis its sign changes, so it is not direction-robust unconditionally. With 11 free rate constants, 6 non-identifiable from the kill rate, and 0 of the headlines data-conditioned in the production regime, the honest reading of every reported magnitude is order-of-magnitude / directional, exactly as the manuscript labels them.
+No headline output is fully point-estimable. The single-cell kill rate and the immune ratio are directional-only. Uniform Bliss supra-additivity is not established by the reported ensemble, and its magnitude is uncalibrated. The hypoxia asymmetry is direction-robust only at a FIXED O2 form -- measured along that axis its sign changes, so it is not direction-robust unconditionally. The penetration ordering holds in every draw, but by CONSTRUCTION -- one monotone dose-response at three fixed decreasing concentrations -- and it orders vascular access, not penetration: the observable sits where the penetration length cancels. With 11 free rate constants, 6 non-identifiable from the kill rate, and 0 of the headlines data-conditioned in the production regime, the honest reading of every reported magnitude is order-of-magnitude / directional, exactly as the manuscript labels them.
 
 ## What would make a headline point-estimable
 

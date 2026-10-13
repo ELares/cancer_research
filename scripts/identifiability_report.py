@@ -40,6 +40,8 @@ PRCC = REPO_ROOT / "analysis" / "prcc-results.json"
 BLISS_UNCERTAINTY = REPO_ROOT / "analysis" / "headline-uncertainty-report.md"
 HYPOXIA_FORM = (REPO_ROOT / "analysis" / "calibration"
                 / "hypoxia-gap-form-sensitivity.json")
+PENETRATION_AXIS = (REPO_ROOT / "analysis" / "calibration"
+                    / "penetration-access-vs-depth.json")
 OUT_MD = REPO_ROOT / "analysis" / "identifiability-report.md"
 OUT_JSON = REPO_ROOT / "analysis" / "identifiability-report.json"
 
@@ -240,6 +242,102 @@ def _hypoxia_verdict() -> dict:
     }
 
 
+def _penetration_verdict() -> dict:
+    """Derive the penetration row from what the observable actually contains.
+
+    This row used to be hardcoded `direction_robust_magnitude_not` with the
+    rationale "the penetration-gradient ordering is parameter-robust (per-draw,
+    not inferred from the overlapping marginals)". That parenthetical defends
+    against the wrong objection. The ordering is not in doubt because the
+    marginals overlap; it is in doubt as EVIDENCE, for two measured reasons
+    (#926, `penetration-access-vs-depth.md`):
+
+      - The observable is `vessel_wall_death_rate`, read at `r = 0`, where
+        `exp(-r/lambda)` is 1 for every lambda. Measured: the two drugs
+        `sim-tissue-pk` ships differ two-fold in penetration length and return
+        BIT-IDENTICAL wall kills. So the quantity is a `vascular_permeability`
+        gradient, and lambda -- the one transport parameter #335 anchored to
+        measured data -- does not enter it.
+      - All three tissues run identical cells with identical RNG at bin 0, so
+        the three numbers are ONE monotone dose-response at three fixed
+        decreasing concentrations. A paired comparison of that cannot invert, so
+        the draw count is entailed rather than informative.
+
+    The claim is not false and this does not say it is. It is robust by
+    construction, and it is about access rather than penetration.
+    """
+    d = json.loads(PENETRATION_AXIS.read_text(encoding="utf-8"))
+    v = d.get("derived")
+    if not isinstance(v, dict):
+        raise ValueError(
+            "penetration axis artifact has no `derived` block; the verdict is "
+            "derived from it and must not fall back to a label")
+    for key in ("lambda_cancels_at_the_wall", "lambda_ratio",
+                "headline_is_one_dose_response", "dose_response_monotone",
+                "ordering_entailed_not_measured", "access_and_distance_agree",
+                "deep_crossover_lambda_um", "drug_attributable"):
+        if key not in v:
+            raise ValueError(
+                f"penetration axis artifact is missing {key!r}; the verdict is "
+                "derived from it and must not fall back to a label")
+    if not v["headline_is_one_dose_response"]:
+        raise ValueError(
+            "the penetration run does not reproduce the binary's own wall "
+            "kills from the single-cell binding, so it is not describing the "
+            "observable the published interval used")
+
+    cns = v["access_order"][-1]
+    cns_add = float(v["drug_attributable"][cns]["drug_attributable"])
+    ctrl = float(v["drug_attributable"][cns]["control"])
+    prior = d["prior_ordering"]
+    spread = (
+        "very wide per-tissue intervals (e.g. well-vascularized median 0.23 "
+        "~[0.00, 0.93]; CNS/BBB median 0.04 ~[0.00, 0.77]) because the bistable "
+        "switch dominates; the within-draw across-tissue ORDERING "
+        f"(well >= poorly >= CNS) held in {prior['ordering_preserved']}/"
+        f"{prior['n_draws']} draws here and 300/300 as published -- but that is "
+        "ENTAILED, not measured: one monotone dose-response at three fixed "
+        "decreasing concentrations with a shared RNG stream cannot invert. "
+        f"Measured against its own no-drug control ({ctrl:.3f}), the CNS figure "
+        f"is {cns_add:+.3f} of drug-attributable kill"
+    )
+
+    if not v["lambda_cancels_at_the_wall"]:
+        return {
+            "prior_predictive": spread,
+            "source": "headline-uncertainty-penetration-report.md (#332); calibration/penetration-access-vs-depth.md (#926)",
+            "verdict": "direction_robust_magnitude_not",
+            "rationale": (
+                "the ordering is parameter-robust and the observable does "
+                "respond to the penetration length, so reading it as a "
+                "penetration result is supported; magnitudes are not "
+                "point-estimable"
+            ),
+        }
+    cross = v["deep_crossover_lambda_um"]
+    disagree = not v["access_and_distance_agree"]
+    return {
+        "prior_predictive": spread,
+        "source": "headline-uncertainty-penetration-report.md (#332); calibration/penetration-access-vs-depth.md (#926)",
+        "verdict": "direction_robust_by_construction_magnitude_not",
+        "rationale": (
+            "the ordering IS robust to the 11 rate constants, but by "
+            "construction rather than by measurement, and it is not a "
+            "penetration result: the observable sits at r = 0 where "
+            f"exp(-r/lambda) = 1, and two drugs differing {v['lambda_ratio']:.1f}"
+            "-fold in penetration length return bit-identical wall kills, so "
+            "what is ordered is the uncalibrated `vascular_permeability` and "
+            "not the lambda #335 anchored to measured data"
+            + (f". Where lambda does act -- each tissue's own deepest cell -- "
+               f"the poorly/CNS ordering inverts below lambda ~ {cross:.0f} um, "
+               "because access and distance rank these three tissues "
+               "differently; so the direction is robust at the wall and not at "
+               "depth" if disagree else "")
+            + ". The absolute per-tissue magnitudes are not point-estimable"
+        ),
+    }
+
+
 def build() -> dict:
     prcc = json.loads(PRCC.read_text(encoding="utf-8"))
     params = prcc["metadata"]["parameters"]
@@ -253,7 +351,9 @@ def build() -> dict:
         assert p in params, f"dominant param {p!r} not in the PRCC parameter set"
     bliss = _bliss_verdict()
     hypoxia = _hypoxia_verdict()
-    derived = {"bliss_synergy": bliss, "hypoxia_kill_collapse": hypoxia}
+    penetration = _penetration_verdict()
+    derived = {"bliss_synergy": bliss, "hypoxia_kill_collapse": hypoxia,
+               "penetration_gap": penetration}
     # A key that matches NOTHING would silently leave the hardcoded row in
     # place, which is the whole defect this derivation exists to remove.
     known = {h["key"] for h in HEADLINES}
@@ -273,14 +373,27 @@ def build() -> dict:
     # summarises the moment the hypoxia verdict started tracking the measured
     # form axis: the row said `direction_and_magnitude_uncertain` while this
     # line still called the asymmetry direction-robust.
+    # DERIVED, and split from the penetration clause it used to share a
+    # sentence with. Bundling them meant one static half could contradict the
+    # other's row: the sentence called the penetration ordering direction-robust
+    # while the penetration verdict started qualifying that as true only by
+    # construction. Each clause now tracks its own row.
     hypoxia_summary = (
-        "The penetration ordering is direction-robust but magnitude-uncalibrated, "
-        "and the hypoxia asymmetry is direction-robust only at a FIXED O2 form -- "
+        "The hypoxia asymmetry is direction-robust only at a FIXED O2 form -- "
         "measured along that axis its sign changes, so it is not direction-robust "
         "unconditionally. "
         if hypoxia["verdict"] != "direction_robust_magnitude_not" else
-        "The hypoxia asymmetry and the penetration ordering are direction-robust "
-        "but magnitude-uncalibrated. "
+        "The hypoxia asymmetry is direction-robust but magnitude-uncalibrated. "
+    )
+    penetration_summary = (
+        "The penetration ordering holds in every draw, but by CONSTRUCTION -- "
+        "one monotone dose-response at three fixed decreasing concentrations -- "
+        "and it orders vascular access, not penetration: the observable sits "
+        "where the penetration length cancels. "
+        if penetration["verdict"] == "direction_robust_by_construction_magnitude_not"
+        else
+        "The penetration ordering is direction-robust but "
+        "magnitude-uncalibrated. "
     )
     joint_information = _joint_information()
     if joint_information.get("unassessable"):
@@ -310,6 +423,7 @@ def build() -> dict:
             "No headline output is fully point-estimable. The single-cell kill rate "
             "and the immune ratio are directional-only. " + bliss_summary +
             hypoxia_summary +
+            penetration_summary +
             "With 11 free rate constants, 6 non-identifiable "
             "from the kill rate, and 0 of the headlines data-conditioned in the "
             "production regime, the honest reading of every reported magnitude is "
