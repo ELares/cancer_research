@@ -1,0 +1,24 @@
+{
+  "full_dependence_outside_published_interval": true,
+  "gap_at_full": -9.660758741128822e-05,
+  "gap_at_zero": 0.8660647270835656,
+  "gap_by_dependence": {
+    "0": 0.8660647270835656,
+    "0.25": 0.6366737264519006,
+    "0.5": 0.29129417010366737,
+    "0.75": 0.0469364247761305,
+    "1": -9.660758741128822e-05
+  },
+  "monotone_decreasing": true,
+  "published": {
+    "default_point": 0.866,
+    "interval_95": [
+      0.163,
+      0.999
+    ],
+    "median": 0.96,
+    "source": "analysis/headline-uncertainty-tme-report.md (#332)"
+  },
+  "reproduces_published_point": true,
+  "sign_changes_across_form_axis": true
+}
