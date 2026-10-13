@@ -79,7 +79,12 @@ def test_the_premise_still_holds():
     v = _verdicts()
     assert v, "identifiability-report.json no longer records per-headline verdicts"
     assert all(x in ("directional_only", "direction_robust_magnitude_not",
-                    "direction_and_magnitude_uncertain") for x in v), (
+                    "direction_and_magnitude_uncertain",
+                    # #926: robust, but entailed rather than measured. Weaker
+                    # than direction_robust_magnitude_not, so the premise that
+                    # nothing is point-estimable still holds.
+                    "direction_robust_by_construction_magnitude_not")
+               for x in v), (
         f"a headline now carries a verdict this guard does not know about: {set(v)}. "
         "If something became point-estimable, the surfaces below may legitimately "
         "state it as a magnitude.")

@@ -70,6 +70,10 @@ IN_SCOPE = {
     "test_site_coverage.py",
     "test_oxygen_form_check.py",
     "test_descriptor_recall.py",
+    # #926: every guard drives `assemble()` on doctored raw input, so a
+    # generator change can break them. Joins the BLOCKING list per the
+    # note above, not the advisory sweep.
+    "test_penetration_access_vs_depth.py",
 }
 
 

@@ -49,7 +49,11 @@ def test_no_headline_is_point_estimable():
     """Uncertain direction is permitted; no headline is point-estimable."""
     r = ir.build()
     allowed = {"directional_only", "direction_robust_magnitude_not",
-               "direction_and_magnitude_uncertain"}
+               "direction_and_magnitude_uncertain",
+               # #926: robust, but entailed by a monotone dose-response at
+               # three fixed concentrations rather than measured. Still not
+               # point-estimable, which is what this guard is about.
+               "direction_robust_by_construction_magnitude_not"}
     for h in r["headlines"]:
         assert h["verdict"] in allowed, f"{h['key']} claims {h['verdict']}"
     # At least the single-cell kill rate and the immune ratio are directional-only.
@@ -123,8 +127,12 @@ def test_the_hypoxia_verdict_tracks_the_measured_form_axis(tmp_path, monkeypatch
     assert "survives BOTH" in row["rationale"]
     # The SUMMARY must agree with the row. A static sentence here called the
     # asymmetry direction-robust while the row withdrew it.
-    assert "hypoxia asymmetry and the penetration ordering are direction-robust" \
-        in report["overall"]
+    # The two clauses were SPLIT in #926: bundled, one static half could
+    # contradict the other's row. So the hypoxia clause is checked on its own,
+    # and the penetration clause is checked against its own artifact in
+    # test_the_penetration_verdict_tracks_the_measured_lambda_axis.
+    assert "The hypoxia asymmetry is direction-robust but " \
+        "magnitude-uncalibrated." in report["overall"]
 
     # Sign flips -> the direction claim must be withdrawn.
     _form_artifact(tmp_path, monkeypatch, 0.866065, -0.000097)
@@ -179,3 +187,100 @@ def test_report_is_deterministic_and_committed_json_is_fresh():
     assert r1 == r2
     committed = json.loads((REPO_ROOT / "analysis" / "identifiability-report.json").read_text())
     assert committed == r1, "analysis/identifiability-report.json is stale; re-run scripts/identifiability_report.py"
+
+
+def _axis_artifact(tmp_path, monkeypatch, *, cancels=True, entailed=True,
+                   reproduces=True, drop=None):
+    """A penetration access-vs-depth artifact with chosen derived flags.
+
+    Written as the generator writes it -- raw measurements plus a `derived`
+    block -- because that is the contract `_penetration_verdict` reads."""
+    import json
+    tissues = ["Epithelial (well-vascularized)",
+               "Epithelial (poorly-vascularized)",
+               "Neuroectodermal (CNS/BBB)"]
+    derived = {
+        "lambda_cancels_at_the_wall": cancels,
+        "lambda_ratio": 2.0,
+        "headline_is_one_dose_response": reproduces,
+        "dose_response_monotone": entailed,
+        "ordering_entailed_not_measured": entailed,
+        "access_order": tissues,
+        "distance_order": [tissues[0], tissues[2], tissues[1]],
+        "access_and_distance_agree": False,
+        "deep_crossover_lambda_um": 50.98,
+        "drug_attributable": {
+            t: {"headline": h, "control": 0.014,
+                "drug_attributable": h - 0.014,
+                "fold_over_control": h / 0.014}
+            for t, h in zip(tissues, (0.121, 0.026, 0.018))
+        },
+    }
+    if drop:
+        derived.pop(drop)
+    src = tmp_path / "axis.json"
+    src.write_text(json.dumps({
+        "prior_ordering": {"n_draws": 200, "ordering_preserved": 200,
+                           "cns_above_own_control": 173},
+        "derived": derived,
+    }))
+    monkeypatch.setattr(ir, "PENETRATION_AXIS", src)
+    return src
+
+
+def test_the_penetration_verdict_tracks_the_measured_lambda_axis(
+        tmp_path, monkeypatch):
+    """When the observable is measured to be lambda-free, the row may not call
+    the ordering a parameter-robustness result."""
+    _axis_artifact(tmp_path, monkeypatch, cancels=True)
+    v = ir._penetration_verdict()
+    assert v["verdict"] == "direction_robust_by_construction_magnitude_not"
+    assert "by construction" in v["rationale"]
+    assert "vascular_permeability" in v["rationale"]
+    # and the summary paragraph must agree with the row it summarises
+    built = ir.build()
+    row = [h for h in built["headlines"] if h["key"] == "penetration_gap"][0]
+    assert row["verdict"] == v["verdict"]
+    assert "by CONSTRUCTION" in built["overall"]
+    # INDEPENDENCE: the hypoxia artifact here is the real (sign-flipping) one,
+    # so both clauses must be present with their own wording at once. Bundled,
+    # one branch decided the other's sentence.
+    assert "not direction-robust uncond" in built["overall"], (
+        "the hypoxia clause stopped tracking its own row when the penetration "
+        "clause was split out")
+
+
+def test_a_lambda_responsive_observable_gets_the_plain_verdict(
+        tmp_path, monkeypatch):
+    """The inverse direction: if the wall kill DID move with the penetration
+    length, reading it as a penetration result would be supported, and the row
+    must say so rather than keeping the stronger caveat."""
+    _axis_artifact(tmp_path, monkeypatch, cancels=False)
+    v = ir._penetration_verdict()
+    assert v["verdict"] == "direction_robust_magnitude_not"
+    assert "by construction" not in v["rationale"]
+    built = ir.build()
+    assert "by CONSTRUCTION" not in built["overall"]
+
+
+def test_missing_penetration_axis_evidence_cannot_reuse_a_hardcoded_verdict(
+        tmp_path, monkeypatch):
+    """A missing field must RAISE. Falling back would silently republish the
+    hardcoded `penetration-gradient ordering is parameter-robust` row that this
+    derivation exists to remove."""
+    _axis_artifact(tmp_path, monkeypatch, drop="lambda_cancels_at_the_wall")
+    with pytest.raises(ValueError, match="lambda_cancels_at_the_wall"):
+        ir._penetration_verdict()
+    missing = tmp_path / "gone.json"
+    monkeypatch.setattr(ir, "PENETRATION_AXIS", missing)
+    with pytest.raises(OSError):
+        ir._penetration_verdict()
+
+
+def test_an_axis_run_that_does_not_reproduce_the_wall_kills_is_refused(
+        tmp_path, monkeypatch):
+    """If the single-cell binding cannot reproduce the binary's own wall kills,
+    the run is not describing the observable the published interval used."""
+    _axis_artifact(tmp_path, monkeypatch, reproduces=False)
+    with pytest.raises(ValueError, match="does not reproduce"):
+        ir._penetration_verdict()
