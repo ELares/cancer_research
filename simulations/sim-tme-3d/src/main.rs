@@ -13375,6 +13375,143 @@ mod tests {
     /// when the dependence is on it must raise hypoxic-core kill, because the
     /// hyperbola leaves an anoxic cell about a third of its yield where the
     /// straight line leaves it none.
+    /// Which modality reaches the hypoxic core once BOTH measured O2 forms
+    /// are applied -- the §7.1 question, asked for the first time with neither
+    /// leg on a placeholder.
+    ///
+    /// The two corrections this repo has landed push in OPPOSITE directions.
+    /// #383 O2-couples the Fenton reaction, which takes RSL3's deep-core kill
+    /// DOWN (the O2-independent Fenton let an anoxic core keep burning iron).
+    /// #726 replaces the linear SDT oxygen dependence with the measured
+    /// Alper-Howard-Flanders hyperbola, which takes SDT's deep-core kill UP
+    /// (the straight line reads ~0 below 10 mmHg where the hyperbola reads
+    /// 0.81). Each was measured on its own; nothing had compared them.
+    ///
+    /// MEASURED, at the §7.1 config (grid 60, lambda=50um, 180 steps, one
+    /// condition NAME across every arm so cond_seed cannot vary):
+    ///
+    ///   RSL3, Fenton O2-independent (placeholder)   0.515% overall  3.3e-4 hypoxic
+    ///   RSL3, Fenton O2-coupled (#383)              0.429% overall  0e0    hypoxic
+    ///   SDT, O2 effect off (placeholder)           93.759% overall  8.4e-1 hypoxic
+    ///   SDT, linear O2 dependence (placeholder)    21.239% overall  0e0    hypoxic
+    ///   SDT, measured OER hyperbola (#726)         68.814% overall  7.9e-2 hypoxic
+    ///
+    /// THE COMPARISON IS ONLY EXPRESSIBLE UNDER THE MEASURED FORMS. Both
+    /// placeholders put the core at exactly zero -- the linear SDT form and
+    /// (to 3e-4) the O2-independent Fenton -- so a reader comparing the two
+    /// legs as previously parameterised was comparing two zeros. With the
+    /// measured forms the core separates completely: SDT reaches it at 7.9%
+    /// and RSL3 does not reach it AT ALL.
+    ///
+    /// WHAT THIS IS NOT. The magnitudes are uncalibrated: `sdt_ros` defaults to
+    /// the same 5.0 as `pdt_ros` and is the #336 knob, the arms are compared at
+    /// equal NOMINAL dose rather than equal delivered or clinical exposure, and
+    /// the engine's SDT and PDT differ only in depth physics, so this contrasts
+    /// exogenous physical ROS against GPX4 inhibition rather than two named
+    /// agents. What is calibrated is the SHAPE of each O2 response. No ratio is
+    /// quoted, because one side is an exact zero and the quotient would be an
+    /// artifact of that rather than a measurement.
+    ///
+    /// The shared condition NAME is the right control -- `cond_seed` hashes it,
+    /// so varying it would vary the stochastic realisation alongside the thing
+    /// under test -- but it is NOT load-bearing here and the mutation sweep says
+    /// so: giving each arm its own name leaves every assertion green, because a
+    /// 7.9%-versus-exactly-0 separation dwarfs seed-to-seed noise. It makes the
+    /// arms exactly comparable rather than rescuing a marginal result, and it
+    /// would become load-bearing the moment anyone tightened an assertion to a
+    /// precise figure.
+    #[test]
+    fn only_the_measured_o2_forms_separate_the_modalities_in_the_core() {
+        let cfg = RunConfig {
+            grid_dim: 60,
+            n_steps: 180,
+        };
+        // ONE name for every arm, so cond_seed is identical and only the
+        // treatment and the O2 response forms vary.
+        let cond = |t: Treatment, tn: &str| Condition {
+            name: "corrected_core".to_string(),
+            treatment: t,
+            treatment_name: tn.to_string(),
+            o2_lambda: Some(50.0),
+            immune_on: false,
+            stromal_on: false,
+            ph_on: false,
+            dose_schedule: DoseSchedule::Constant,
+        };
+        let run = |t: Treatment, tn: &str, ov: Overrides| {
+            run_one_condition_full(&cond(t, tn), cfg, None, ov)
+        };
+
+        let rsl3_corrected = run(
+            Treatment::RSL3,
+            "RSL3",
+            Overrides {
+                fenton_o2_dependence: 1.0,
+                ..Default::default()
+            },
+        );
+        let sdt_linear = run(
+            Treatment::SDT,
+            "SDT",
+            Overrides {
+                sdt_o2_dependence: 1.0,
+                ..Default::default()
+            },
+        );
+        let sdt_oer = run(
+            Treatment::SDT,
+            "SDT",
+            Overrides {
+                sdt_o2_dependence: 1.0,
+                sdt_o2_use_oer: true,
+                ..Default::default()
+            },
+        );
+
+        // Under the corrected Fenton, GPX4 inhibition does not reach the core
+        // at all. Exact, not merely small.
+        assert_eq!(
+            rsl3_corrected.hypoxic_kill_rate, 0.0,
+            "RSL3 with the Fenton O2-coupled must leave the anoxic core \
+             untouched; got {:e}",
+            rsl3_corrected.hypoxic_kill_rate
+        );
+        // NON-VACUITY: it still kills elsewhere, so that zero is a statement
+        // about hypoxia and not about a run that does nothing.
+        assert!(
+            rsl3_corrected.overall_kill_rate > 0.001,
+            "the corrected RSL3 arm killed almost nothing anywhere ({:.6}), so \
+             its deep-core zero says nothing about oxygen",
+            rsl3_corrected.overall_kill_rate
+        );
+
+        // THE PLACEHOLDER SDT FORM ALSO GIVES EXACTLY ZERO, which is the point:
+        // as previously parameterised both legs read zero in the core and the
+        // §7.1 comparison could not be made at all.
+        assert_eq!(
+            sdt_linear.hypoxic_kill_rate, 0.0,
+            "the linear placeholder must read zero in the core, else the claim \
+             that only the measured form separates the modalities is wrong; \
+             got {:e}",
+            sdt_linear.hypoxic_kill_rate
+        );
+        // ... and the measured hyperbola does reach it.
+        assert!(
+            sdt_oer.hypoxic_kill_rate > 0.01,
+            "the measured OER form must reach the hypoxic core; got {:e}",
+            sdt_oer.hypoxic_kill_rate
+        );
+        // The separation is the result: physical exogenous ROS reaches a
+        // compartment GPX4 inhibition does not, under both measured forms.
+        assert!(
+            sdt_oer.hypoxic_kill_rate > rsl3_corrected.hypoxic_kill_rate,
+            "measured-form SDT must out-reach corrected RSL3 in the core: \
+             {:e} vs {:e}",
+            sdt_oer.hypoxic_kill_rate,
+            rsl3_corrected.hypoxic_kill_rate
+        );
+    }
+
     #[test]
     fn the_oer_form_raises_hypoxic_kill_and_is_inert_when_the_dependence_is_off() {
         let cfg = RunConfig {
