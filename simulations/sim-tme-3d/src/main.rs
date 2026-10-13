@@ -13980,7 +13980,101 @@ mod tests {
     /// which is the honest statement this test exists to pin: the only
     /// configuration in which a hypoxic cysteine escape changes the deep core
     /// is one the repo already does not believe. #383's O2-coupled Fenton is the
-    /// correction, and composing all three is future work, not a claim here.
+    /// correction, and composing all three is done in
+    /// `the_cysteine_escape_has_no_deep_core_role_once_the_fenton_is_o2_coupled`:
+    /// with the Fenton O2-coupled the deep zone records EXACTLY zero kills,
+    /// so the escape has no deep-core role in a corrected model at all.
+    /// Composing all three #383/#365/#916 layers, which #920 deferred.
+    ///
+    /// #920 recorded that the hypoxic cysteine escape moves the deep core ONLY
+    /// under the #365 hypoxia-iron regime, and that SS7.1 flags that regime as a
+    /// MODEL ARTIFACT: the Fenton term is O2-independent, so an anoxic core that
+    /// should have lost its H2O2 substrate still burns iron. #383 is the
+    /// correction. Applying it answers the question #920 left open, and the
+    /// answer is sharper than the one it recorded.
+    ///
+    /// WITH THE FENTON O2-COUPLED THE DEEP ZONE RECORDS EXACTLY ZERO KILLS --
+    /// `0e0`, not a small number -- with hypoxia-iron on, with a 90% System Xc-
+    /// block, with and without the escape. So the escape's deep-core effect is
+    /// not merely small in a corrected model, it is IDENTICALLY ZERO, because
+    /// there is no kill left for a protective mechanism to remove. The whole
+    /// 3.09% deep-core kill the #365 regime produced was the artifact.
+    ///
+    /// The escape stays real where the dying is: under the corrected Fenton it
+    /// still takes the rim from 6.29% to 4.24% (overall 3.33% -> 2.24%).
+    ///
+    /// GUARDED AGAINST ITS OWN DEGENERACY, because an `== 0.0` assertion is the
+    /// shape a dead run satisfies: the first arm must show the core CAN die, and
+    /// the corrected arms must still kill in the rim and still respond to the
+    /// knob. Zero cannot satisfy this test by the simulation doing nothing.
+    #[test]
+    fn the_cysteine_escape_has_no_deep_core_role_once_the_fenton_is_o2_coupled() {
+        let cond = cystine_escape_condition(Some(50.0));
+        let arm = |fenton: f64, sens: f64| {
+            run_one_condition_full(
+                &cond,
+                CYSTINE_ESCAPE_CFG,
+                None,
+                Overrides {
+                    ferritinophagy_release: 2.0,
+                    hypoxia_iron_sensitivity: 2.0,
+                    fenton_o2_dependence: fenton,
+                    hypoxia_transsulfuration_sensitivity: sens,
+                    param_overrides: erastin_override(0.9),
+                    ..Default::default()
+                },
+            )
+        };
+
+        // PRECONDITION: the uncorrected regime kills in the deep core, so there
+        // is something for the correction to remove. Without this the zeros
+        // below are satisfied by a model that never kills anything.
+        let artifact = arm(0.0, 0.0);
+        assert!(
+            artifact.hypoxic_kill_rate > 0.02,
+            "precondition: the O2-independent Fenton must kill in the deep core; \
+             got {:.6}",
+            artifact.hypoxic_kill_rate
+        );
+
+        let (corrected, corrected_escape) = (arm(1.0, 0.0), arm(1.0, 1.0));
+
+        // The correction removes the deep-core kill ENTIRELY, not partially.
+        assert_eq!(
+            corrected.hypoxic_kill_rate, 0.0,
+            "O2-coupling the Fenton must leave the anoxic core with no kill at \
+             all; got {:e} against an uncorrected {:e}",
+            corrected.hypoxic_kill_rate, artifact.hypoxic_kill_rate
+        );
+        // ... so the escape has nothing to act on there.
+        assert_eq!(
+            corrected_escape.hypoxic_kill_rate, corrected.hypoxic_kill_rate,
+            "the escape cannot change a compartment that does not die"
+        );
+
+        // NON-VACUITY, both halves. The corrected run still kills MATERIALLY,
+        // so the deep-core zero is a statement about hypoxia rather than about
+        // a run that barely kills at all. Deliberately not
+        // `normoxic_kill_rate > 0.0`, which the strict inequality below already
+        // implies -- a non-negative rate cannot be strictly greater than
+        // another unless it exceeds zero -- so that form was a guard that could
+        // not fail while its neighbour held.
+        assert!(
+            corrected.overall_kill_rate > 0.01,
+            "the corrected run kills only {:.6} overall, so the deep-core zero \
+             says nothing about hypoxia",
+            corrected.overall_kill_rate
+        );
+        // and the escape knob is still live there.
+        assert!(
+            corrected_escape.normoxic_kill_rate < corrected.normoxic_kill_rate,
+            "the escape must still blunt the rim under the corrected Fenton: \
+             {:.6} -> {:.6}",
+            corrected.normoxic_kill_rate,
+            corrected_escape.normoxic_kill_rate
+        );
+    }
+
     #[test]
     fn the_escape_reaches_the_deep_core_only_where_the_core_dies() {
         let cond = cystine_escape_condition(Some(50.0));
