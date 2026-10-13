@@ -115,6 +115,12 @@ LANDMARK_SRC = PROJECT_ROOT / "analysis" / "calibration" / "cysteine_depletion_l
 PARAMS_RS = PROJECT_ROOT / "simulations" / "ferroptosis-core" / "src" / "params.rs"
 BIOCHEM_RS = PROJECT_ROOT / "simulations" / "ferroptosis-core" / "src" / "biochem.rs"
 CELL_RS = PROJECT_ROOT / "simulations" / "ferroptosis-core" / "src" / "cell.rs"
+# The one spatial binary the #502 arm can be driven in (#918) and the only
+# consumer of the per-cell floor (#920). Scanned, not assumed: the claim this
+# page used to publish -- that `erastin_xc_inhib` is reachable in no simulation
+# binary -- was TRUE when written and false the moment #918 landed, and nothing
+# failed, because the sentence was prose rather than a measurement.
+TME3D_RS = PROJECT_ROOT / "simulations" / "sim-tme-3d" / "src" / "main.rs"
 OUT_MD = PROJECT_ROOT / "analysis" / "calibration" / "cysteine-depletion-feasibility.md"
 OUT_JSON = PROJECT_ROOT / "analysis" / "calibration" / "cysteine-depletion-feasibility.json"
 
@@ -254,6 +260,10 @@ def read_structural_facts() -> dict:
     params_src = PARAMS_RS.read_text()
     biochem_src = BIOCHEM_RS.read_text()
     cell_src = CELL_RS.read_text()
+    # Production code only -- everything before the crate's test module.
+    tme3d_src = TME3D_RS.read_text()
+    cut = tme3d_src.find("\n#[cfg(test)]")
+    tme3d_prod = tme3d_src if cut < 0 else tme3d_src[:cut]
 
     # A `Params` field declaration, not a mention: `pub <name>: f64,`.
     def declares(src: str, name: str) -> bool:
@@ -282,6 +292,19 @@ def read_structural_facts() -> dict:
         # cystine factor, a complete block is zero regardless of NRF2.
         "nrf2_cannot_rescue_complete_block": bool(resynth) and len(gated) == len(resynth),
         "escape_can_vary_per_cell": declares(cell_src, "transsulfuration_floor"),
+        # Is the #502 arm driveable in a spatial binary at all, and does anything
+        # write the per-cell floor? Both measured on PRODUCTION code only: the
+        # `#[cfg(test)]` module is cut first, because an A/B test setting a
+        # parameter is not a consumer, and this repo has already shipped a
+        # detector whose only match was inside a test block.
+        "arm_is_spatially_reachable": re.search(
+            r"apply_param_overrides\(\s*&mut\s+params", tme3d_prod
+        )
+        is not None,
+        "floor_has_spatial_consumer": re.search(
+            r"\.transsulfuration_floor\s*=\s*Some\(", tme3d_prod
+        )
+        is not None,
     }
 
 
@@ -589,13 +612,18 @@ def render(d: dict) -> str:
         "the constant, while any specific figure is not. Measuring the Km in a pancreatic line "
         "is the cheap next step and would need no new model code.",
         "",
-        ("## The spatial escape, now expressible in the library"
+        ("## The spatial escape, now wired end to end"
+         if st["floor_has_spatial_consumer"]
+         else "## The spatial escape, now expressible in the library"
          if st["escape_can_vary_per_cell"]
          else "## What is NOT expressible, and it is wiring rather than data"),
         "",
         f"- `transsulfuration_floor` is a `Params` field: {st['floor_is_params_field']}",
         f"- it has a per-cell `Cell` counterpart: {st['floor_is_cell_field']}",
         f"- `cell.nrf2` is a per-cell field: {st['nrf2_is_cell_field']}",
+        f"- the #502 arm is driveable in sim-tme-3d: {st['arm_is_spatially_reachable']}",
+        f"- something writes the per-cell floor in sim-tme-3d: "
+        f"{st['floor_has_spatial_consumer']}",
         f"- glutathione resynthesis sites in `biochem.rs`: {st['gsh_resynthesis_sites']}, "
         f"of which {st['resynthesis_sites_gated_by_cystine']} are multiplied by "
         f"`xc_cystine_factor()` and {st['resynthesis_sites_scaled_by_nrf2']} by `cell.nrf2`",
@@ -615,16 +643,31 @@ def render(d: dict) -> str:
         "prediction: both papers were in hand before the structure was consulted, and nothing "
         "here was forecast in advance."
         + (
-            " **The library can now express it** (#916): `Cell::transsulfuration_floor` "
-            "overrides the global field per cell, so the escape can be made largest "
-            "exactly where the trigger is. What is still missing is a SPATIAL CONSUMER, "
-            "and the blocker is not this axis -- `erastin_xc_inhib` is reachable in no "
-            "simulation binary at all, and sim-tme-3d applies no parameter overrides, so "
-            "a per-cell floor there would multiply a cystine factor that no erastin "
-            "dose has moved off its no-op value (#918). This paragraph was written "
-            "when the floor was global-only; it is "
-            "derived from the engine rather than asserted, which is why it changed when "
-            "the engine did."
+            " **The engine can now be asked** (#916 library, #918 reachability, #920 "
+            "consumer): sim-tme-3d writes each tumour cell's floor from its own O2 "
+            "supply, and the #502 arm can be driven there, so the escape is largest "
+            "exactly where the trigger is. WHAT IT MEASURED IS DELIBERATELY NOT "
+            "QUOTED HERE -- it comes from a spatial run this page cannot "
+            "recompute, and a figure copied in from elsewhere is a figure nothing on "
+            "this page can keep honest. It lives with the consumer: sim-tme-3d's own "
+            "A/B tests and the layer's row in "
+            "`simulations/calibration/CALIBRATION_STATUS.md`. This paragraph has now "
+            "been rewritten TWICE by the engine changing under it, which is the whole "
+            "reason the facts above are re-parsed rather than asserted."
+            if st["floor_has_spatial_consumer"]
+            else " **The library can now express it** (#916): "
+            "`Cell::transsulfuration_floor` overrides the global field per cell, so "
+            "the escape can be made largest exactly where the trigger is. What is "
+            "still missing is a SPATIAL CONSUMER"
+            + (
+                ", though the #502 arm is now driveable in sim-tme-3d (#918), so the "
+                "floor would no longer multiply a no-op."
+                if st["arm_is_spatially_reachable"]
+                else ", and the blocker is not this axis -- `erastin_xc_inhib` is "
+                "reachable in no simulation binary at all, and sim-tme-3d applies no "
+                "parameter overrides, so a per-cell floor there would multiply a "
+                "cystine factor that no erastin dose has moved off its no-op value."
+            )
             if st["escape_can_vary_per_cell"]
             else " The engine cannot state it today, because the hypoxia field is "
             "per-cell and the escape is global. Moving the floor to `Cell` is a wiring "
@@ -638,9 +681,12 @@ def render(d: dict) -> str:
         f"- the concentration-to-fraction map has a **named, failable target** "
         f"(Km {d['km_uM']} uM, PMID {c['xct_cystine_km']['source_pmid']}; reference "
         f"{d['reference_uM']:.1f} uM by formulation)",
-        ("- a hypoxia-graded escape is **expressible in the library** (#916) but has no "
-         "spatial consumer, and the blocker is that `erastin_xc_inhib` is reachable in no "
-         "simulation binary (#918)"
+        ("- a hypoxia-graded escape is **wired end to end** (#916 library, #918 "
+         "reachability, #920 spatial consumer), so it is now a question the engine can be "
+         "asked rather than a gap; what it answers is reported with the consumer, not here"
+         if st["floor_has_spatial_consumer"]
+         else "- a hypoxia-graded escape is **expressible in the library** (#916) but has no "
+         "spatial consumer"
          if st["escape_can_vary_per_cell"]
          else "- a hypoxia-graded escape is **not expressible**: a per-cell floor is missing"),
         "- the depletion-buys-less headline is **in-vitro only**: the gap exists because "
