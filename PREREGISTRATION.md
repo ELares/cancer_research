@@ -73,6 +73,40 @@ re-interpretation.
 - *Quantitative model output:* the dense-to-sparse DAMP-per-cell (or DC-maturation-per-cell) ratio is about 4:1 in 3D (down from the 2D 104:1 ceiling; it can fall below 1 under the immunosuppressive-ferroptosis arm at high death density).
 - *Falsification threshold:* DAMP release and DC maturation per dead cell agree within 1.5x between dense (SDT or 3D) and sparse (RSL3) kill (signal proportional to dead-cell count regardless of geometry or kill quality).
 
+> **MEASUREMENT NOTE, 2026-10-13 (#928). THE THRESHOLD ABOVE IS NOT AMENDED.**
+> It stands exactly as registered; what follows is the model measured against
+> it, which had never been done on the per-cell axis.
+>
+> The *Quantitative model output* line states a per-cell ratio of "about 4:1 in
+> 3D (down from the 2D 104:1 ceiling)". Those two figures are **total
+> immune-kill ratios**, not per-dead-cell readouts — the manuscript (§8.2)
+> already records that mislabel and withdraws the normalized reading, and this
+> line was not corrected with it.
+>
+> Measured, both registered readouts, from `sim-icd` at the default config:
+>
+> | phenotype | DAMP per dead cell | DC maturation per dead cell |
+> |---|--:|--:|
+> | Persister | 1.1332x | 1.0950x |
+> | OXPHOS | 1.0748x | 1.0523x |
+>
+> Both agree **within 1.5x**, by a wide margin, and the same holds across all
+> 32 readable `sim-modality-panel --tme-sweep` conditions (1.0674–1.1475x) and
+> in the committed 2D spatial archive (1.0469x).
+>
+> **So the model's own per-cell output satisfies this prediction's registered
+> falsification condition.** That does NOT falsify the biological hypothesis,
+> which is what E3 tests. It establishes that the model does not predict what
+> P5's model-output line says it predicts: on the per-cell axis the model
+> predicts the null. If E3 returned agreement within 1.5x, that result would
+> confirm the model and falsify P5 as registered — the prediction and the model
+> do not agree about what the model says.
+>
+> What survives on the model side is the DIRECTION (SDT above RSL3 in all 35
+> readable comparisons) and the COUNT ratio, which is the quantity the
+> manuscript reports. Full accounting, with the band parsed from this file so
+> the two cannot drift: `analysis/calibration/icd-damp-per-death.md`.
+
 **P6. CAF coculture protects RSL3 more than SDT.**
 - *Quantitative model output:* CAFs raise the RSL3 IC50 fold-shift above the SDT IC50 fold-shift (boundary-cell kill: RSL3 halves, 3.0 percent to 1.5 percent, while SDT barely moves, 96.1 percent to 91.2 percent).
 - *Falsification threshold:* the RSL3 and SDT IC50 fold-shifts with CAFs agree within 1.5x (equal shielding), or neither shifts more than 1.2x (no metabolic-cooperation effect).

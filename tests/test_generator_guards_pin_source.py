@@ -74,6 +74,9 @@ IN_SCOPE = {
     # generator change can break them. Joins the BLOCKING list per the
     # note above, not the advisory sweep.
     "test_penetration_access_vs_depth.py",
+    # #928: same shape -- every derived-field guard drives `assemble()` on
+    # doctored raw, and the engine-source guards read the Rust directly.
+    "test_icd_damp_per_death.py",
 }
 
 
