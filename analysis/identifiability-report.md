@@ -58,7 +58,7 @@ The production simulation matrix uses fixed in-vivo defaults. The in-vitro singl
 - **Non-identifiable:** none flagged for this headline
 - **Prior-predictive spread:** the 104:1 (2D, near DAMP saturation) falls to ~4:1 in 3D geometry; the separate SDT immune kill fraction using final non-ferroptotic counts spans ~[0.009, 0.171], low-but-positive within this prior-predictive interval. The listed Morris drivers describe that final-population fraction, not the SDT:RSL3 count ratio. The fraction does not measure eligibility at earlier immune windows or isolate per-cell DAMP amplification
 - **Data-conditioned:** no; geometry-dependent (the 2D-vs-3D shrink is a structural, not parametric, effect)
-- **Verdict:** `directional_only` (the ratio is presented as a directional ceiling, not a number: it changes ~25x with geometry alone, which a parametric analysis cannot capture, so only the direction (SDT >> RSL3 immune priming) is claimed)
+- **Verdict:** `directional_only` (the ratio is presented as a directional ceiling, not a number: it changes ~25x with geometry alone, which a parametric analysis cannot capture, so only the direction is claimed -- and the direction is over TOTAL IMMUNE-KILL COUNTS, which is the manuscript's own careful wording ('compares total immune-kill counts, not DAMP potency or immunogenicity per dead cell'). This row used to say 'SDT >> RSL3 immune priming', which is the per-cell reading the manuscript explicitly declines: SDT leads on counts because it kills far more cells, and per ferroptotic death the comparison does not run its way, so 'priming' claimed more than the source it summarises)
 - **Source:** headline-sensitivity-report.md (#331); CALIBRATION_STATUS.md immune row
 
 

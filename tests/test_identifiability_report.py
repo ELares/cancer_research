@@ -284,3 +284,32 @@ def test_an_axis_run_that_does_not_reproduce_the_wall_kills_is_refused(
     _axis_artifact(tmp_path, monkeypatch, reproduces=False)
     with pytest.raises(ValueError, match="does not reproduce"):
         ir._penetration_verdict()
+
+
+def test_the_immune_row_claims_counts_not_per_cell_immunogenicity():
+    """The manuscript is careful here and the row must not be looser than it.
+
+    v1.md states: "The approximately 104:1 ratio compares total immune-kill
+    counts, not DAMP potency or immunogenicity per dead cell." The row used to
+    retain the direction as "SDT >> RSL3 immune PRIMING", which is exactly the
+    per-cell reading that sentence declines -- SDT leads on counts because it
+    kills far more cells (139,640 against 163 in the committed 2D run), and per
+    ferroptotic death the comparison does not run its way.
+
+    Pinned against the manuscript so the two cannot drift apart: this is the
+    `one-artifact-describes-another` shape, where a derived label outruns the
+    source it summarises.
+    """
+    row = [h for h in ir.build()["headlines"]
+           if h["key"] == "immune_amplification_ratio"][0]
+    rationale = row["rationale"]
+    assert "immune-kill counts" in rationale, (
+        "the row must say what the ratio compares")
+    assert "immune priming) is claimed" not in rationale, (
+        "the per-cell 'priming' reading is back; the manuscript declines it")
+
+    ms = (REPO_ROOT / "article" / "drafts" / "v1.md").read_text(encoding="utf-8")
+    assert ("compares total immune-kill counts, not DAMP potency or "
+            "immunogenicity per dead cell") in ms, (
+        "the manuscript sentence this row is pinned to has changed; re-check "
+        "which reading the row is allowed to claim before editing this guard")
