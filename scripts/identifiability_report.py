@@ -211,8 +211,7 @@ def _hypoxia_verdict() -> dict:
         "CONSTANTS at a FIXED O2 form, which the sweep never varies. Measured "
         f"along the form axis instead, the gap runs {zero:+.6f} at zero "
         f"dependence to {full:+.6f} at full"
-        + (f", {'outside' if outside else 'inside'} that interval" if True else "")
-        + "."
+        + f", {'outside' if outside else 'inside'} that interval."
     )
     if flips:
         return {
