@@ -137,10 +137,10 @@
         "gsh_scav_efficiency"
       ],
       "non_identifiable_params": [],
-      "prior_predictive": "gap stays POSITIVE across its 95% interval ~[0.16, 1.00] (median 0.96, point 0.87) under the O2-independent assumption",
+      "prior_predictive": "gap stays POSITIVE across its 95% interval ~[0.163, 0.999] (median 0.96, point 0.866) under the O2-independent assumption -- an interval over the 11 RATE CONSTANTS at a FIXED O2 form, which the sweep never varies. Measured along the form axis instead, the gap runs +0.866065 at zero dependence to -0.000097 at full, outside that interval.",
       "data_conditioned": "no (prior-predictive); additionally ASSUMPTION-bracketed: the magnitude collapses from ~87.8% to ~0% under full SDT O2-dependence (#336/#358), which the lead clinical agent SONALA-001 occupies",
-      "verdict": "direction_robust_magnitude_not",
-      "rationale": "the asymmetry SIGN is parameter-robust, but the magnitude is both wide (interval) and assumption-dependent (the contested SDT O2-dependence), so it is an assumption restated quantitatively, not a calibrated prediction",
+      "verdict": "direction_and_magnitude_uncertain",
+      "rationale": "the asymmetry SIGN is robust across the 11 rate constants but NOT across the O2 response form: measured, the gap changes sign (+0.866065 -> -0.000097), and full O2-dependence is the regime the lead clinical agent SONALA-001 occupies. A difference that collapses through zero has no robust sign to report, so the earlier `direction_robust` reading was scoped to the rate constants at a fixed form and is withdrawn as an unconditional claim. The magnitude is not point-estimable either",
       "source": "headline-sensitivity-report.md (#331); headline-uncertainty-tme-report.md (#332); manuscript Section 7.1"
     },
     {
@@ -174,5 +174,5 @@
       "source": "headline-sensitivity-report.md (#331); CALIBRATION_STATUS.md immune row"
     }
   ],
-  "overall": "No headline output is fully point-estimable. The single-cell kill rate and the immune ratio are directional-only. Uniform Bliss supra-additivity is not established by the reported ensemble, and its magnitude is uncalibrated. The hypoxia asymmetry (under the O2-independent assumption) and the penetration ordering are direction-robust but magnitude-uncalibrated. With 11 free rate constants, 6 non-identifiable from the kill rate, and 0 of the headlines data-conditioned in the production regime, the honest reading of every reported magnitude is order-of-magnitude / directional, exactly as the manuscript labels them."
+  "overall": "No headline output is fully point-estimable. The single-cell kill rate and the immune ratio are directional-only. Uniform Bliss supra-additivity is not established by the reported ensemble, and its magnitude is uncalibrated. The penetration ordering is direction-robust but magnitude-uncalibrated, and the hypoxia asymmetry is direction-robust only at a FIXED O2 form -- measured along that axis its sign changes, so it is not direction-robust unconditionally. With 11 free rate constants, 6 non-identifiable from the kill rate, and 0 of the headlines data-conditioned in the production regime, the honest reading of every reported magnitude is order-of-magnitude / directional, exactly as the manuscript labels them."
 }

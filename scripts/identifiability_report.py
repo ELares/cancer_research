@@ -38,6 +38,8 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[1]
 PRCC = REPO_ROOT / "analysis" / "prcc-results.json"
 BLISS_UNCERTAINTY = REPO_ROOT / "analysis" / "headline-uncertainty-report.md"
+HYPOXIA_FORM = (REPO_ROOT / "analysis" / "calibration"
+                / "hypoxia-gap-form-sensitivity.json")
 OUT_MD = REPO_ROOT / "analysis" / "identifiability-report.md"
 OUT_JSON = REPO_ROOT / "analysis" / "identifiability-report.json"
 
@@ -172,6 +174,72 @@ def _bliss_verdict() -> dict:
     }
 
 
+def _hypoxia_verdict() -> dict:
+    """Derive the hypoxia row from the MEASURED form axis, not from a label.
+
+    The §7.1 interval (#332) samples the 11 rate constants and never passes
+    `--sdt-o2-dependence`, so it is computed entirely at the O2 setting most
+    favourable to a positive gap. This row used to be hardcoded
+    `direction_robust_magnitude_not` with the rationale "the asymmetry SIGN is
+    parameter-robust, but the magnitude is ... assumption-dependent".
+
+    The magnitude collapse was already recorded. The SIGN at the collapsed end
+    was not, and a difference that collapses THROUGH zero does not have a robust
+    sign to report. So the verdict is computed from the committed measurement:
+    if the gap changes sign across the form axis, the direction is not robust
+    and the row may not say that it is.
+    """
+    d = json.loads(HYPOXIA_FORM.read_text(encoding="utf-8"))
+    for key in ("gap_at_zero", "gap_at_full", "sign_changes_across_form_axis",
+                "reproduces_published_point", "published"):
+        if key not in d:
+            raise ValueError(
+                f"hypoxia form-sensitivity artifact is missing {key!r}; the "
+                "verdict is derived from it and must not fall back to a label")
+    if not d["reproduces_published_point"]:
+        raise ValueError(
+            "the form-sensitivity run does not reproduce the published default "
+            "point, so it is not comparable with the interval it qualifies")
+    lo, hi = d["published"]["interval_95"]
+    zero, full = float(d["gap_at_zero"]), float(d["gap_at_full"])
+    flips = bool(d["sign_changes_across_form_axis"])
+    outside = bool(d.get("full_dependence_outside_published_interval"))
+    spread = (
+        f"gap stays POSITIVE across its 95% interval ~[{lo}, {hi}] (median "
+        f"{d['published']['median']}, point {d['published']['default_point']}) "
+        "under the O2-independent assumption -- an interval over the 11 RATE "
+        "CONSTANTS at a FIXED O2 form, which the sweep never varies. Measured "
+        f"along the form axis instead, the gap runs {zero:+.6f} at zero "
+        f"dependence to {full:+.6f} at full"
+        + f", {'outside' if outside else 'inside'} that interval."
+    )
+    if flips:
+        return {
+            "prior_predictive": spread,
+            "verdict": "direction_and_magnitude_uncertain",
+            "rationale": (
+                "the asymmetry SIGN is robust across the 11 rate constants but "
+                "NOT across the O2 response form: measured, the gap changes "
+                f"sign ({zero:+.6f} -> {full:+.6f}), and full O2-dependence is "
+                "the regime the lead clinical agent SONALA-001 occupies. A "
+                "difference that collapses through zero has no robust sign to "
+                "report, so the earlier `direction_robust` reading was scoped "
+                "to the rate constants at a fixed form and is withdrawn as an "
+                "unconditional claim. The magnitude is not point-estimable "
+                "either"
+            ),
+        }
+    return {
+        "prior_predictive": spread,
+        "verdict": "direction_robust_magnitude_not",
+        "rationale": (
+            "the asymmetry sign survives BOTH the rate constants and the "
+            f"measured O2 form axis ({zero:+.6f} -> {full:+.6f}), while the "
+            "magnitude is wide and uncalibrated"
+        ),
+    }
+
+
 def build() -> dict:
     prcc = json.loads(PRCC.read_text(encoding="utf-8"))
     params = prcc["metadata"]["parameters"]
@@ -184,12 +252,35 @@ def build() -> dict:
     for p in SOBOL_DOMINANT:
         assert p in params, f"dominant param {p!r} not in the PRCC parameter set"
     bliss = _bliss_verdict()
-    headlines = [{**h, **bliss} if h["key"] == "bliss_synergy" else dict(h)
+    hypoxia = _hypoxia_verdict()
+    derived = {"bliss_synergy": bliss, "hypoxia_kill_collapse": hypoxia}
+    # A key that matches NOTHING would silently leave the hardcoded row in
+    # place, which is the whole defect this derivation exists to remove.
+    known = {h["key"] for h in HEADLINES}
+    missing = sorted(set(derived) - known)
+    if missing:
+        raise ValueError(
+            f"derived verdict keys {missing} match no headline; the hardcoded "
+            "row would have been published instead")
+    headlines = [{**h, **derived[h["key"]]} if h["key"] in derived else dict(h)
                  for h in HEADLINES]
     bliss_summary = (
         "Bliss supra-additivity holds across the sampled ensemble, with an uncalibrated magnitude. "
         if bliss["verdict"] == "direction_robust_magnitude_not" else
         "Uniform Bliss supra-additivity is not established by the reported ensemble, and its magnitude is uncalibrated. "
+    )
+    # DERIVED, because a static sentence here contradicted the row it
+    # summarises the moment the hypoxia verdict started tracking the measured
+    # form axis: the row said `direction_and_magnitude_uncertain` while this
+    # line still called the asymmetry direction-robust.
+    hypoxia_summary = (
+        "The penetration ordering is direction-robust but magnitude-uncalibrated, "
+        "and the hypoxia asymmetry is direction-robust only at a FIXED O2 form -- "
+        "measured along that axis its sign changes, so it is not direction-robust "
+        "unconditionally. "
+        if hypoxia["verdict"] != "direction_robust_magnitude_not" else
+        "The hypoxia asymmetry and the penetration ordering are direction-robust "
+        "but magnitude-uncalibrated. "
     )
     joint_information = _joint_information()
     if joint_information.get("unassessable"):
@@ -218,8 +309,7 @@ def build() -> dict:
         "overall": (
             "No headline output is fully point-estimable. The single-cell kill rate "
             "and the immune ratio are directional-only. " + bliss_summary +
-            "The hypoxia asymmetry (under the O2-independent assumption) and the "
-            "penetration ordering are direction-robust but magnitude-uncalibrated. "
+            hypoxia_summary +
             "With 11 free rate constants, 6 non-identifiable "
             "from the kill rate, and 0 of the headlines data-conditioned in the "
             "production regime, the honest reading of every reported magnitude is "
