@@ -1,0 +1,6845 @@
+{
+  "all_pair_count": 371,
+  "bands": {
+    "rows": [
+      {
+        "difference": {
+          "in_band": 6,
+          "pairs": 26,
+          "rate": 0.23076923076923078
+        },
+        "equivalence": {
+          "in_band": 7,
+          "pairs": 34,
+          "rate": 0.20588235294117646
+        },
+        "high_gy": 4.5,
+        "low_gy": 2.3,
+        "ratio": 0.892156862745098,
+        "site": "breast",
+        "source_pmid": 24055415
+      },
+      {
+        "difference": {
+          "in_band": 15,
+          "pairs": 31,
+          "rate": 0.4838709677419355
+        },
+        "equivalence": {
+          "in_band": 18,
+          "pairs": 30,
+          "rate": 0.6
+        },
+        "high_gy": 3.0,
+        "low_gy": 1.2,
+        "ratio": 1.24,
+        "site": "prostate",
+        "source_pmid": 23972468
+      }
+    ],
+    "sites_with_a_sourced_band": [
+      "breast",
+      "prostate"
+    ]
+  },
+  "census_shards": 1334,
+  "confound_counts": {
+    "brachytherapy_component": 31,
+    "chemotherapy_comentioned": 72,
+    "dose_range_in_abstract": 11,
+    "target_volume_comentioned": 42,
+    "twice_daily": 40
+  },
+  "curated_agreement": [
+    {
+      "agrees": true,
+      "delta_gy": 0.0,
+      "hand_arms": [
+        [
+          74.0,
+          37
+        ],
+        [
+          60.0,
+          20
+        ]
+      ],
+      "hand_read_alpha_beta_gy": 2.2857142857142856,
+      "in_sweep": true,
+      "pmid": 27339115,
+      "site": "prostate",
+      "swept_alpha_beta_gy": 2.2857142857142856,
+      "swept_arms": [
+        [
+          74.0,
+          37
+        ],
+        [
+          60.0,
+          20
+        ]
+      ],
+      "trial": "CHHiP"
+    },
+    {
+      "agrees": true,
+      "delta_gy": 0.030167504187604943,
+      "hand_arms": [
+        [
+          50.0,
+          25
+        ],
+        [
+          40.05,
+          15
+        ]
+      ],
+      "hand_read_alpha_beta_gy": 0.6968341708542707,
+      "in_sweep": true,
+      "pmid": 24055415,
+      "site": "breast",
+      "swept_alpha_beta_gy": 0.6666666666666657,
+      "swept_arms": [
+        [
+          50.0,
+          25
+        ],
+        [
+          40.0,
+          15
+        ]
+      ],
+      "trial": "START-B"
+    }
+  ],
+  "elapsed_time_sweepable": false,
+  "extraction_audit": {
+    "by_group": {
+      "difference": {
+        "correct": 5,
+        "judged": 10,
+        "precision": 0.5
+      },
+      "equivalence": {
+        "correct": 11,
+        "judged": 16,
+        "precision": 0.6875
+      }
+    },
+    "correct": 16,
+    "differential": true,
+    "error_modes": [
+      [
+        "multi_component_arm",
+        5
+      ],
+      [
+        "dose_range_as_two_arms",
+        2
+      ],
+      [
+        "arm_variants_paired",
+        1
+      ],
+      [
+        "cross_trial_pair",
+        1
+      ],
+      [
+        "multi_target_arm",
+        1
+      ]
+    ],
+    "judged": 26,
+    "precision": 0.6153846153846154,
+    "seed": 20930,
+    "selection_precision": 0.8461538461538461,
+    "selection_primary": 22
+  },
+  "funnel": {
+    "design_admissible": 294,
+    "dropped_fewer_than_two_arms": 10728,
+    "dropped_secondary_analysis": 30,
+    "dropped_terminated_early": 10,
+    "radiotherapy_randomised_trials": 11062,
+    "reported_a_difference": 198,
+    "selected_equivalence": 96,
+    "two_or_more_arms": 334
+  },
+  "label_basis": {
+    "design_language_only_share": 0.3854166666666667,
+    "difference": {
+      "pairs": 196,
+      "positive": 90,
+      "rate": 0.45918367346938777
+    },
+    "enrichment": 1.3698924731182796,
+    "equivalence": {
+      "pairs": 62,
+      "positive": 39,
+      "rate": 0.6290322580645161
+    },
+    "equivalence_label_counts": [
+      [
+        "result_only",
+        48
+      ],
+      [
+        "both",
+        11
+      ],
+      [
+        "design_only",
+        37
+      ],
+      [
+        "neither",
+        0
+      ]
+    ],
+    "result_language_share": 0.6145833333333334
+  },
+  "pair_count": 310,
+  "positive_solution": {
+    "crude_enrichment": 1.432748538011696,
+    "difference": {
+      "pairs": 196,
+      "positive": 90,
+      "rate": 0.45918367346938777
+    },
+    "difference_by_trial": {
+      "rate": 0.4968944099378882,
+      "trials": 161,
+      "with_a_positive_pair": 80
+    },
+    "enrichment_holds_in_every_stratum": true,
+    "equivalence": {
+      "pairs": 114,
+      "positive": 75,
+      "rate": 0.6578947368421053
+    },
+    "equivalence_by_trial": {
+      "rate": 0.735632183908046,
+      "trials": 87,
+      "with_a_positive_pair": 64
+    },
+    "gap_confound_is_real": true,
+    "gap_strata": [
+      {
+        "difference": {
+          "pairs": 44,
+          "positive": 25,
+          "rate": 0.5681818181818182
+        },
+        "equivalence": {
+          "pairs": 32,
+          "positive": 20,
+          "rate": 0.625
+        },
+        "gap_high": 0.15,
+        "gap_low": 0.0,
+        "ratio": 1.0999999999999999
+      },
+      {
+        "difference": {
+          "pairs": 61,
+          "positive": 37,
+          "rate": 0.6065573770491803
+        },
+        "equivalence": {
+          "pairs": 41,
+          "positive": 34,
+          "rate": 0.8292682926829268
+        },
+        "gap_high": 0.3,
+        "gap_low": 0.15,
+        "ratio": 1.3671720500988793
+      },
+      {
+        "difference": {
+          "pairs": 45,
+          "positive": 15,
+          "rate": 0.3333333333333333
+        },
+        "equivalence": {
+          "pairs": 14,
+          "positive": 6,
+          "rate": 0.42857142857142855
+        },
+        "gap_high": 0.45,
+        "gap_low": 0.3,
+        "ratio": 1.2857142857142858
+      },
+      {
+        "difference": {
+          "pairs": 46,
+          "positive": 13,
+          "rate": 0.2826086956521739
+        },
+        "equivalence": {
+          "pairs": 27,
+          "positive": 15,
+          "rate": 0.5555555555555556
+        },
+        "gap_high": 1.01,
+        "gap_low": 0.45,
+        "ratio": 1.9658119658119662
+      }
+    ],
+    "interval": {
+      "confidence_pct": 95,
+      "excludes_null": true,
+      "high": 1.7837666455294865,
+      "low": 1.1588235294117648,
+      "median": 1.4360149112674578,
+      "resamples": 2000,
+      "seed": 42
+    },
+    "median_relative_dose_gap": {
+      "difference": 0.265993265993266,
+      "equivalence": 0.20512820512820512
+    },
+    "stratum_pooled_enrichment": 1.3605417957143513
+  },
+  "question": "whether a randomised trial's own equivalence verdict is predicted by the existence of a positive isoeffective alpha/beta between its two schedules",
+  "site_pattern": {
+    "hand_read_verdicts_differ": true,
+    "pattern_reproduces": true,
+    "rows": [
+      {
+        "agrees": true,
+        "band_independent_of_the_trial": true,
+        "hand_read_alpha_beta_gy": 2.2857142857142856,
+        "hand_read_in_band": true,
+        "site": "prostate",
+        "swept_favours_equivalence": true,
+        "swept_in_band_ratio": 1.24,
+        "trial": "CHHiP"
+      },
+      {
+        "agrees": true,
+        "band_independent_of_the_trial": false,
+        "hand_read_alpha_beta_gy": 0.6968341708542707,
+        "hand_read_in_band": false,
+        "site": "breast",
+        "swept_favours_equivalence": false,
+        "swept_in_band_ratio": 0.892156862745098,
+        "trial": "START-B"
+      }
+    ],
+    "sites_agreeing": 2,
+    "sites_agreeing_on_an_independent_band": 1,
+    "sites_decided": 2,
+    "sites_with_an_independent_band": 1
+  },
+  "survives_hand_verification": true,
+  "survives_result_language_restriction": true,
+  "trials": [
+    {
+      "arms": [
+        [
+          65.0,
+          26
+        ],
+        [
+          71.5,
+          52
+        ]
+      ],
+      "confounds": [
+        "chemotherapy_comentioned",
+        "twice_daily"
+      ],
+      "label_basis": "neither",
+      "pmid": 1333071,
+      "reported": "difference",
+      "sites": [],
+      "title": "[Prospective randomized trials comparing hyperfractionated radiotherapy with conventional radiotherapy in stage III non-small cell lung canc",
+      "year": 1992
+    },
+    {
+      "arms": [
+        [
+          15.0,
+          6
+        ],
+        [
+          20.0,
+          10
+        ],
+        [
+          35.0,
+          28
+        ],
+        [
+          36.0,
+          9
+        ],
+        [
+          38.5,
+          11
+        ],
+        [
+          55.0,
+          25
+        ],
+        [
+          70.0,
+          56
+        ]
+      ],
+      "confounds": [
+        "chemotherapy_comentioned"
+      ],
+      "label_basis": "neither",
+      "pmid": 1429086,
+      "reported": "difference",
+      "sites": [],
+      "title": "Multimodality treatment programs for malignant pleural mesothelioma using high-dose hemithorax irradiation.",
+      "year": 1992
+    },
+    {
+      "arms": [
+        [
+          21.0,
+          3
+        ],
+        [
+          42.0,
+          6
+        ]
+      ],
+      "confounds": [
+        "brachytherapy_component"
+      ],
+      "label_basis": "neither",
+      "pmid": 1717341,
+      "reported": "difference",
+      "sites": [],
+      "title": "Laser versus laser plus afterloading with iridium-192 in the palliative treatment of malignant stenosis of the esophagus: a prospective, ran",
+      "year": 1991
+    },
+    {
+      "arms": [
+        [
+          32.0,
+          4
+        ],
+        [
+          50.0,
+          25
+        ]
+      ],
+      "confounds": [
+        "chemotherapy_comentioned"
+      ],
+      "label_basis": "neither",
+      "pmid": 1722769,
+      "reported": "difference",
+      "sites": [],
+      "title": "[Uterine cervix cancer. Clinical stage III. Combined radiotherapy and chemotherapy treatment].",
+      "year": 1991
+    },
+    {
+      "arms": [
+        [
+          45.0,
+          25
+        ],
+        [
+          66.0,
+          33
+        ]
+      ],
+      "confounds": [
+        "brachytherapy_component"
+      ],
+      "label_basis": "neither",
+      "pmid": 1846848,
+      "reported": "difference",
+      "sites": [],
+      "title": "Low-dose continuous infusion cisplatin combined with external beam irradiation for advanced colorectal adenocarcinoma and unresectable non-s",
+      "year": 1991
+    },
+    {
+      "arms": [
+        [
+          32.0,
+          4
+        ],
+        [
+          50.0,
+          20
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "neither",
+      "pmid": 1995527,
+      "reported": "difference",
+      "sites": [],
+      "title": "Fraction size in external beam radiation therapy in the treatment of melanoma.",
+      "year": 1991
+    },
+    {
+      "arms": [
+        [
+          23.0,
+          4
+        ],
+        [
+          45.0,
+          25
+        ]
+      ],
+      "confounds": [
+        "chemotherapy_comentioned"
+      ],
+      "label_basis": "neither",
+      "pmid": 2254102,
+      "reported": "difference",
+      "sites": [
+        "breast"
+      ],
+      "title": "The use of a specific hypofractionated radiation therapy regimen versus classical fractionation in the treatment of breast cancer: a randomi",
+      "year": 1990
+    },
+    {
+      "arms": [
+        [
+          31.2,
+          4
+        ],
+        [
+          45.0,
+          18
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "neither",
+      "pmid": 2452146,
+      "reported": "difference",
+      "sites": [],
+      "title": "A randomized study on palliative radiation therapy for inoperable non small cell carcinoma of the lung.",
+      "year": 1988
+    },
+    {
+      "arms": [
+        [
+          20.0,
+          10
+        ],
+        [
+          22.5,
+          5
+        ],
+        [
+          30.0,
+          15
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "neither",
+      "pmid": 2462264,
+      "reported": "difference",
+      "sites": [],
+      "title": "Randomized prospective clinical study of small, large and twice-a-day fraction radiotherapy for painful bone metastases.",
+      "year": 1988
+    },
+    {
+      "arms": [
+        [
+          40.0,
+          20
+        ],
+        [
+          55.0,
+          25
+        ]
+      ],
+      "confounds": [
+        "chemotherapy_comentioned"
+      ],
+      "label_basis": "neither",
+      "pmid": 2551355,
+      "reported": "difference",
+      "sites": [],
+      "title": "Treatment of small cell lung cancer. Two-drug versus four-drug chemotherapy and loco-regional irradiation with or without prophylactic crani",
+      "year": 1989
+    },
+    {
+      "arms": [
+        [
+          12.5,
+          5
+        ],
+        [
+          25.0,
+          5
+        ],
+        [
+          30.0,
+          15
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "neither",
+      "pmid": 2637078,
+      "reported": "difference",
+      "sites": [],
+      "title": "[Clinical experience with different modes of preoperative radiotherapy in advanced carcinomas of the tongue and the floor of the mouth].",
+      "year": 1989
+    },
+    {
+      "arms": [
+        [
+          30.0,
+          10
+        ],
+        [
+          50.0,
+          20
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "neither",
+      "pmid": 2994386,
+      "reported": "difference",
+      "sites": [],
+      "title": "Whole brain irradiation for metastases from lung carcinoma. A clinical investigation.",
+      "year": 1985
+    },
+    {
+      "arms": [
+        [
+          9.9,
+          3
+        ],
+        [
+          10.0,
+          4
+        ],
+        [
+          10.0,
+          5
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "neither",
+      "pmid": 3141982,
+      "reported": "difference",
+      "sites": [],
+      "title": "Late radiation injuries of the gastrointestinal tract in the H2 and H5 EORTC Hodgkin's disease trials: emphasis on the role of exploratory l",
+      "year": 1988
+    },
+    {
+      "arms": [
+        [
+          8.0,
+          1
+        ],
+        [
+          30.0,
+          10
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "neither",
+      "pmid": 3775071,
+      "reported": "difference",
+      "sites": [],
+      "title": "Prospective randomised trial of single and multifraction radiotherapy schedules in the treatment of painful bony metastases.",
+      "year": 1986
+    },
+    {
+      "arms": [
+        [
+          70.0,
+          35
+        ],
+        [
+          75.0,
+          44
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "neither",
+      "pmid": 7569030,
+      "reported": "difference",
+      "sites": [],
+      "title": "The EORTC randomized trial on three fractions per day and misonidazole (trial no. 22811) in advanced head and neck cancer: long-term results",
+      "year": 1995
+    },
+    {
+      "arms": [
+        [
+          20.0,
+          10
+        ],
+        [
+          25.0,
+          10
+        ]
+      ],
+      "confounds": [
+        "chemotherapy_comentioned"
+      ],
+      "label_basis": "neither",
+      "pmid": 7642415,
+      "reported": "difference",
+      "sites": [],
+      "title": "Alternating chemo-radiotherapy in bladder cancer: a conservative approach.",
+      "year": 1995
+    },
+    {
+      "arms": [
+        [
+          8.0,
+          1
+        ],
+        [
+          40.0,
+          20
+        ]
+      ],
+      "confounds": [
+        "chemotherapy_comentioned"
+      ],
+      "label_basis": "neither",
+      "pmid": 7679610,
+      "reported": "difference",
+      "sites": [],
+      "title": "Radiation recall skin toxicity with bleomycin in a patient with Kaposi sarcoma related to acquired immune deficiency syndrome.",
+      "year": 1993
+    },
+    {
+      "arms": [
+        [
+          18.0,
+          3
+        ],
+        [
+          25.0,
+          10
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "neither",
+      "pmid": 7681997,
+      "reported": "difference",
+      "sites": [
+        "breast"
+      ],
+      "title": "Results of a randomized clinical trial comparing two radiation schedules in the palliative treatment of brain metastases.",
+      "year": 1993
+    },
+    {
+      "arms": [
+        [
+          66.0,
+          33
+        ],
+        [
+          74.0,
+          37
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "neither",
+      "pmid": 7790241,
+      "reported": "difference",
+      "sites": [],
+      "title": "Results of an RTOG phase III trial (RTOG 85-27) comparing radiotherapy plus etanidazole with radiotherapy alone for locally advanced head an",
+      "year": 1995
+    },
+    {
+      "arms": [
+        [
+          54.0,
+          30
+        ],
+        [
+          67.2,
+          42
+        ],
+        [
+          70.5,
+          41
+        ]
+      ],
+      "confounds": [
+        "twice_daily"
+      ],
+      "label_basis": "result_only",
+      "pmid": 7790243,
+      "reported": "equivalence",
+      "sites": [],
+      "title": "Randomized phase I/II trial of two variants of accelerated fractionated radiotherapy regimens for advanced head and neck cancer: results of ",
+      "year": 1995
+    },
+    {
+      "arms": [
+        [
+          20.4,
+          12
+        ],
+        [
+          70.0,
+          35
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "neither",
+      "pmid": 7790244,
+      "reported": "difference",
+      "sites": [],
+      "title": "Fast-neutron therapy in advanced head and neck cancer: a collaborative international randomized trial.",
+      "year": 1995
+    },
+    {
+      "arms": [
+        [
+          34.0,
+          4
+        ],
+        [
+          60.0,
+          30
+        ]
+      ],
+      "confounds": [
+        "target_volume_comentioned"
+      ],
+      "label_basis": "neither",
+      "pmid": 8092118,
+      "reported": "difference",
+      "sites": [],
+      "title": "Results of three consecutive combined treatments for malignant gliomas. Ten-year experience at a single institution.",
+      "year": 1994
+    },
+    {
+      "arms": [
+        [
+          30.0,
+          10
+        ],
+        [
+          50.0,
+          25
+        ]
+      ],
+      "confounds": [
+        "dose_range_in_abstract"
+      ],
+      "label_basis": "neither",
+      "pmid": 8131705,
+      "reported": "difference",
+      "sites": [],
+      "title": "Morphology and pathology of radiation-induced esophagitis. Double-blind study of naproxen vs placebo for prevention of radiation injury.",
+      "year": 1994
+    },
+    {
+      "arms": [
+        [
+          20.4,
+          12
+        ],
+        [
+          66.0,
+          33
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "neither",
+      "pmid": 8226141,
+      "reported": "difference",
+      "sites": [],
+      "title": "Neutron vs. photon radiation therapy for inoperable regional non-small cell lung cancer: results of a multicenter randomized trial.",
+      "year": 1993
+    },
+    {
+      "arms": [
+        [
+          20.0,
+          5
+        ],
+        [
+          50.0,
+          25
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "neither",
+      "pmid": 8232735,
+      "reported": "difference",
+      "sites": [],
+      "title": "[Comparison of two methods of postoperative radiotherapy in anaplastic cerebral oligodendroglioma].",
+      "year": 1993
+    },
+    {
+      "arms": [
+        [
+          8.0,
+          1
+        ],
+        [
+          20.0,
+          10
+        ],
+        [
+          40.0,
+          20
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "neither",
+      "pmid": 8262827,
+      "reported": "difference",
+      "sites": [],
+      "title": "A randomized prospective trial of radiation therapy for AIDS-associated Kaposi's sarcoma.",
+      "year": 1993
+    },
+    {
+      "arms": [
+        [
+          25.0,
+          10
+        ],
+        [
+          40.0,
+          15
+        ]
+      ],
+      "confounds": [
+        "chemotherapy_comentioned"
+      ],
+      "label_basis": "neither",
+      "pmid": 8276650,
+      "reported": "difference",
+      "sites": [],
+      "title": "Patterns of failure following loco-regional radiotherapy in the treatment of limited stage small cell lung cancer.",
+      "year": 1994
+    },
+    {
+      "arms": [
+        [
+          20.0,
+          5
+        ],
+        [
+          50.0,
+          25
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "neither",
+      "pmid": 8289094,
+      "reported": "difference",
+      "sites": [],
+      "title": "Postoperative hypofractionated radiotherapy versus conventionally fractionated radiotherapy in malignant gliomas. A preliminary report on a ",
+      "year": 1993
+    },
+    {
+      "arms": [
+        [
+          25.0,
+          10
+        ],
+        [
+          40.0,
+          15
+        ]
+      ],
+      "confounds": [
+        "chemotherapy_comentioned"
+      ],
+      "label_basis": "neither",
+      "pmid": 8381164,
+      "reported": "difference",
+      "sites": [],
+      "title": "Importance of timing for thoracic irradiation in the combined modality treatment of limited-stage small-cell lung cancer. The National Cance",
+      "year": 1993
+    },
+    {
+      "arms": [
+        [
+          25.0,
+          10
+        ],
+        [
+          50.0,
+          20
+        ]
+      ],
+      "confounds": [
+        "chemotherapy_comentioned"
+      ],
+      "label_basis": "result_only",
+      "pmid": 8454478,
+      "reported": "equivalence",
+      "sites": [],
+      "title": "A randomized trial of radiation therapy compared to split course radiation therapy combined with mitomycin C and 5 fluorouracil as initial t",
+      "year": 1993
+    },
+    {
+      "arms": [
+        [
+          35.0,
+          10
+        ],
+        [
+          45.0,
+          15
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "neither",
+      "pmid": 8581393,
+      "reported": "difference",
+      "sites": [],
+      "title": "Palliative radiation for stage 3 non-small cell lung cancer--a prospective study of two moderately high dose regimens.",
+      "year": 1995
+    },
+    {
+      "arms": [
+        [
+          70.0,
+          35
+        ],
+        [
+          78.0,
+          39
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "both",
+      "pmid": 8621278,
+      "reported": "equivalence",
+      "sites": [
+        "prostate"
+      ],
+      "title": "Conventional vs. conformal radiotherapy for prostate cancer: preliminary results of dosimetry and acute toxicity.",
+      "year": 1996
+    },
+    {
+      "arms": [
+        [
+          25.0,
+          10
+        ],
+        [
+          30.0,
+          10
+        ]
+      ],
+      "confounds": [
+        "chemotherapy_comentioned"
+      ],
+      "label_basis": "neither",
+      "pmid": 8777169,
+      "reported": "difference",
+      "sites": [],
+      "title": "A randomized study of high-dose split course radiotherapy preceded by high-dose chemotherapy versus high-dose radiotherapy only in locally a",
+      "year": 1996
+    },
+    {
+      "arms": [
+        [
+          25.0,
+          11
+        ],
+        [
+          33.0,
+          11
+        ]
+      ],
+      "confounds": [
+        "chemotherapy_comentioned"
+      ],
+      "label_basis": "neither",
+      "pmid": 9081352,
+      "reported": "difference",
+      "sites": [],
+      "title": "Prophylactic cranial irradiation in limited stage small cell lung cancer: survival benefit in patients with favourable characteristics.",
+      "year": 1996
+    },
+    {
+      "arms": [
+        [
+          22.5,
+          3
+        ],
+        [
+          25.5,
+          3
+        ],
+        [
+          30.0,
+          4
+        ],
+        [
+          34.0,
+          4
+        ]
+      ],
+      "confounds": [
+        "brachytherapy_component"
+      ],
+      "label_basis": "design_only",
+      "pmid": 9122857,
+      "reported": "equivalence",
+      "sites": [],
+      "title": "HDR and MDR intracavitary treatment for carcinoma of the uterine cervix. A prospective randomized study.",
+      "year": 1997
+    },
+    {
+      "arms": [
+        [
+          50.0,
+          20
+        ],
+        [
+          52.5,
+          20
+        ]
+      ],
+      "confounds": [
+        "dose_range_in_abstract"
+      ],
+      "label_basis": "neither",
+      "pmid": 9231929,
+      "reported": "difference",
+      "sites": [],
+      "title": "Carbogen and nicotinamide in the treatment of bladder cancer with radical radiotherapy.",
+      "year": 1997
+    },
+    {
+      "arms": [
+        [
+          21.0,
+          14
+        ],
+        [
+          60.0,
+          48
+        ]
+      ],
+      "confounds": [
+        "chemotherapy_comentioned"
+      ],
+      "label_basis": "neither",
+      "pmid": 9273186,
+      "reported": "difference",
+      "sites": [],
+      "title": "[Optimization of combined radiotherapy and chemotherapy in treatment of non-small cell lung carcinoma].",
+      "year": 1997
+    },
+    {
+      "arms": [
+        [
+          70.0,
+          35
+        ],
+        [
+          72.0,
+          45
+        ]
+      ],
+      "confounds": [
+        "twice_daily"
+      ],
+      "label_basis": "neither",
+      "pmid": 9288839,
+      "reported": "difference",
+      "sites": [],
+      "title": "Accelerated fractionation (AF) compared to conventional fractionation (CF) improves loco-regional control in the radiotherapy of advanced he",
+      "year": 1997
+    },
+    {
+      "arms": [
+        [
+          66.0,
+          33
+        ],
+        [
+          74.0,
+          37
+        ]
+      ],
+      "confounds": [
+        "dose_range_in_abstract"
+      ],
+      "label_basis": "neither",
+      "pmid": 9308928,
+      "reported": "difference",
+      "sites": [],
+      "title": "Results of a European randomized trial of Etanidazole combined with radiotherapy in head and neck carcinomas.",
+      "year": 1997
+    },
+    {
+      "arms": [
+        [
+          30.0,
+          10
+        ],
+        [
+          32.0,
+          20
+        ]
+      ],
+      "confounds": [
+        "twice_daily"
+      ],
+      "label_basis": "design_only",
+      "pmid": 9336134,
+      "reported": "equivalence",
+      "sites": [],
+      "title": "A randomized phase III study of accelerated hyperfractionation versus standard in patients with unresected brain metastases: a report of the",
+      "year": 1997
+    },
+    {
+      "arms": [
+        [
+          3.6,
+          2
+        ],
+        [
+          5.0,
+          2
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "neither",
+      "pmid": 9364627,
+      "reported": "difference",
+      "sites": [],
+      "title": "Accelerated radiotherapy for brain metastases.",
+      "year": 1997
+    },
+    {
+      "arms": [
+        [
+          12.0,
+          2
+        ],
+        [
+          16.0,
+          2
+        ],
+        [
+          18.0,
+          3
+        ]
+      ],
+      "confounds": [
+        "brachytherapy_component",
+        "chemotherapy_comentioned"
+      ],
+      "label_basis": "neither",
+      "pmid": 9457834,
+      "reported": "difference",
+      "sites": [],
+      "title": "Fractionated high dose rate intraluminal brachytherapy in palliation of advanced esophageal cancer.",
+      "year": 1998
+    },
+    {
+      "arms": [
+        [
+          24.0,
+          12
+        ],
+        [
+          30.0,
+          10
+        ],
+        [
+          36.0,
+          18
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "neither",
+      "pmid": 9470828,
+      "reported": "difference",
+      "sites": [],
+      "title": "Prophylactic cranial irradiation is indicated following complete response to induction therapy in small cell lung cancer: results of a multi",
+      "year": 1997
+    },
+    {
+      "arms": [
+        [
+          50.0,
+          25
+        ],
+        [
+          64.0,
+          32
+        ]
+      ],
+      "confounds": [
+        "chemotherapy_comentioned"
+      ],
+      "label_basis": "result_only",
+      "pmid": 10235156,
+      "reported": "equivalence",
+      "sites": [],
+      "title": "Chemoradiotherapy of locally advanced esophageal cancer: long-term follow-up of a prospective randomized trial (RTOG 85-01). Radiation Thera",
+      "year": 1999
+    },
+    {
+      "arms": [
+        [
+          27.0,
+          18
+        ],
+        [
+          41.4,
+          23
+        ]
+      ],
+      "confounds": [
+        "twice_daily"
+      ],
+      "label_basis": "neither",
+      "pmid": 10386713,
+      "reported": "difference",
+      "sites": [],
+      "title": "Late course accelerated fractionation in radiotherapy of esophageal carcinoma.",
+      "year": 1999
+    },
+    {
+      "arms": [
+        [
+          8.0,
+          1
+        ],
+        [
+          30.0,
+          10
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "result_only",
+      "pmid": 10554645,
+      "reported": "equivalence",
+      "sites": [
+        "breast",
+        "prostate"
+      ],
+      "title": "[Remineralization and pain relief in bone metastases after after different radiotherapy fractions (10 times 3 Gy vs. 1 time 8 Gy). A prospec",
+      "year": 1999
+    },
+    {
+      "arms": [
+        [
+          30.0,
+          15
+        ],
+        [
+          48.0,
+          32
+        ],
+        [
+          50.4,
+          28
+        ]
+      ],
+      "confounds": [
+        "chemotherapy_comentioned",
+        "twice_daily"
+      ],
+      "label_basis": "neither",
+      "pmid": 10561342,
+      "reported": "difference",
+      "sites": [],
+      "title": "Phase III comparison of twice-daily split-course irradiation versus once-daily irradiation for patients with limited stage small-cell lung c",
+      "year": 1999
+    },
+    {
+      "arms": [
+        [
+          8.0,
+          1
+        ],
+        [
+          20.0,
+          5
+        ],
+        [
+          30.0,
+          10
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "result_only",
+      "pmid": 10577696,
+      "reported": "equivalence",
+      "sites": [],
+      "title": "8 Gy single fraction radiotherapy for the treatment of metastatic skeletal pain: randomised comparison with a multifraction schedule over 12",
+      "year": 1999
+    },
+    {
+      "arms": [
+        [
+          54.0,
+          36
+        ],
+        [
+          60.0,
+          30
+        ]
+      ],
+      "confounds": [
+        "twice_daily"
+      ],
+      "label_basis": "design_only",
+      "pmid": 10577699,
+      "reported": "equivalence",
+      "sites": [],
+      "title": "Continuous, hyperfractionated, accelerated radiotherapy (CHART) versus conventional radiotherapy in non-small cell lung cancer: mature data ",
+      "year": 1999
+    },
+    {
+      "arms": [
+        [
+          54.0,
+          36
+        ],
+        [
+          66.0,
+          33
+        ]
+      ],
+      "confounds": [
+        "twice_daily"
+      ],
+      "label_basis": "neither",
+      "pmid": 10660202,
+      "reported": "difference",
+      "sites": [],
+      "title": "Repair halftimes estimated from observations of treatment-related morbidity after CHART or conventional radiotherapy in head and neck cancer",
+      "year": 1999
+    },
+    {
+      "arms": [
+        [
+          24.0,
+          4
+        ],
+        [
+          50.0,
+          25
+        ]
+      ],
+      "confounds": [
+        "brachytherapy_component"
+      ],
+      "label_basis": "result_only",
+      "pmid": 10696738,
+      "reported": "equivalence",
+      "sites": [],
+      "title": "Effect of concurrent intra-arterial infusion of platinum drugs for patients with stage III or IV uterine cervical cancer treated with radica",
+      "year": 2000
+    },
+    {
+      "arms": [
+        [
+          28.0,
+          4
+        ],
+        [
+          66.0,
+          33
+        ]
+      ],
+      "confounds": [
+        "brachytherapy_component"
+      ],
+      "label_basis": "neither",
+      "pmid": 10699477,
+      "reported": "difference",
+      "sites": [],
+      "title": "Hypofractionation in glioblastoma multiforme.",
+      "year": 2000
+    },
+    {
+      "arms": [
+        [
+          8.0,
+          1
+        ],
+        [
+          20.0,
+          5
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "neither",
+      "pmid": 10705020,
+      "reported": "difference",
+      "sites": [
+        "breast",
+        "prostate"
+      ],
+      "title": "A role for radiotherapy in neuropathic bone pain: preliminary response rates from a prospective trial (Trans-tasman radiation oncology group",
+      "year": 2000
+    },
+    {
+      "arms": [
+        [
+          21.0,
+          3
+        ],
+        [
+          35.0,
+          10
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "neither",
+      "pmid": 10802363,
+      "reported": "difference",
+      "sites": [],
+      "title": "A randomized trial of hypofractionated schedules of palliative radiotherapy in the management of bladder carcinoma: results of medical resea",
+      "year": 2000
+    },
+    {
+      "arms": [
+        [
+          46.8,
+          26
+        ],
+        [
+          65.0,
+          26
+        ],
+        [
+          70.8,
+          38
+        ]
+      ],
+      "confounds": [
+        "chemotherapy_comentioned"
+      ],
+      "label_basis": "neither",
+      "pmid": 10802368,
+      "reported": "difference",
+      "sites": [],
+      "title": "Concomitant boost radiation therapy for inoperable non-small-cell lung cancer: preliminary report of a prospective randomized study.",
+      "year": 2000
+    },
+    {
+      "arms": [
+        [
+          55.0,
+          20
+        ],
+        [
+          64.0,
+          32
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "neither",
+      "pmid": 10863060,
+      "reported": "difference",
+      "sites": [
+        "prostate"
+      ],
+      "title": "Chronic effects of therapeutic irradiation for localized prostatic carcinoma on anorectal function.",
+      "year": 2000
+    },
+    {
+      "arms": [
+        [
+          67.2,
+          42
+        ],
+        [
+          70.0,
+          35
+        ],
+        [
+          72.0,
+          42
+        ]
+      ],
+      "confounds": [
+        "twice_daily"
+      ],
+      "label_basis": "result_only",
+      "pmid": 10924966,
+      "reported": "equivalence",
+      "sites": [],
+      "title": "A Radiation Therapy Oncology Group (RTOG) phase III randomized study to compare hyperfractionation and two variants of accelerated fractiona",
+      "year": 2000
+    },
+    {
+      "arms": [
+        [
+          23.4,
+          13
+        ],
+        [
+          36.0,
+          20
+        ]
+      ],
+      "confounds": [
+        "chemotherapy_comentioned"
+      ],
+      "label_basis": "neither",
+      "pmid": 10944134,
+      "reported": "difference",
+      "sites": [],
+      "title": "Low-stage medulloblastoma: final analysis of trial comparing standard-dose with reduced-dose neuraxis irradiation.",
+      "year": 2000
+    },
+    {
+      "arms": [
+        [
+          15.0,
+          5
+        ],
+        [
+          21.0,
+          7
+        ],
+        [
+          30.0,
+          10
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "neither",
+      "pmid": 11172962,
+      "reported": "difference",
+      "sites": [],
+      "title": "Radiotherapy optimization in early-stage Dupuytren's contracture: first results of a randomized clinical study.",
+      "year": 2001
+    },
+    {
+      "arms": [
+        [
+          8.0,
+          2
+        ],
+        [
+          12.0,
+          4
+        ],
+        [
+          15.0,
+          5
+        ]
+      ],
+      "confounds": [
+        "twice_daily"
+      ],
+      "label_basis": "neither",
+      "pmid": 11395246,
+      "reported": "difference",
+      "sites": [
+        "breast",
+        "prostate"
+      ],
+      "title": "Fractionated half-body irradiation (HBI) for the rapid palliation of widespread, symptomatic, metastatic bone disease: a randomized Phase II",
+      "year": 2001
+    },
+    {
+      "arms": [
+        [
+          2.0,
+          1
+        ],
+        [
+          59.4,
+          33
+        ],
+        [
+          70.0,
+          35
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "neither",
+      "pmid": 11439206,
+      "reported": "difference",
+      "sites": [],
+      "title": "A randomised trial of accelerated and conventional radiotherapy for stage III and IV squamous carcinoma of the head and neck: a Trans-Tasman",
+      "year": 2001
+    },
+    {
+      "arms": [
+        [
+          25.0,
+          19
+        ],
+        [
+          50.0,
+          25
+        ]
+      ],
+      "confounds": [
+        "target_volume_comentioned"
+      ],
+      "label_basis": "neither",
+      "pmid": 11578723,
+      "reported": "difference",
+      "sites": [],
+      "title": "Postoperative pelvic radiotherapy with or without elective irradiation of para-aortic nodes and liver in rectal cancer patients. A controlle",
+      "year": 2001
+    },
+    {
+      "arms": [
+        [
+          50.0,
+          25
+        ],
+        [
+          60.0,
+          30
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "neither",
+      "pmid": 11593579,
+      "reported": "difference",
+      "sites": [],
+      "title": "Postoperative radiotherapy for stage I thymoma: a prospective randomized trial in 29 cases.",
+      "year": 1999
+    },
+    {
+      "arms": [
+        [
+          54.0,
+          36
+        ],
+        [
+          60.0,
+          30
+        ],
+        [
+          60.0,
+          40
+        ],
+        [
+          66.0,
+          44
+        ],
+        [
+          70.0,
+          35
+        ]
+      ],
+      "confounds": [
+        "chemotherapy_comentioned",
+        "twice_daily"
+      ],
+      "label_basis": "neither",
+      "pmid": 11696618,
+      "reported": "difference",
+      "sites": [],
+      "title": "Randomized phase I study of standard-fractionated or accelerated-hyperfractionated radiotherapy with concurrent cisplatin and vindesine for ",
+      "year": 2001
+    },
+    {
+      "arms": [
+        [
+          50.4,
+          28
+        ],
+        [
+          64.8,
+          36
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "neither",
+      "pmid": 11980997,
+      "reported": "difference",
+      "sites": [],
+      "title": "Prospective randomized trial of low- versus high-dose radiation therapy in adults with supratentorial low-grade glioma: initial report of a ",
+      "year": 2002
+    },
+    {
+      "arms": [
+        [
+          16.0,
+          2
+        ],
+        [
+          18.0,
+          3
+        ]
+      ],
+      "confounds": [
+        "brachytherapy_component"
+      ],
+      "label_basis": "neither",
+      "pmid": 12007950,
+      "reported": "difference",
+      "sites": [],
+      "title": "Prospective randomized trial of HDR brachytherapy as a sole modality in palliation of advanced esophageal carcinoma--an International Atomic",
+      "year": 2002
+    },
+    {
+      "arms": [
+        [
+          63.0,
+          34
+        ],
+        [
+          69.6,
+          58
+        ]
+      ],
+      "confounds": [
+        "chemotherapy_comentioned",
+        "twice_daily"
+      ],
+      "label_basis": "neither",
+      "pmid": 12062596,
+      "reported": "difference",
+      "sites": [],
+      "title": "Randomized phase II chemotherapy and radiotherapy trial for patients with locally advanced inoperable non-small-cell lung cancer: long-term ",
+      "year": 2002
+    },
+    {
+      "arms": [
+        [
+          50.0,
+          25
+        ],
+        [
+          66.0,
+          33
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "neither",
+      "pmid": 12103287,
+      "reported": "difference",
+      "sites": [],
+      "title": "Preoperative versus postoperative radiotherapy in soft-tissue sarcoma of the limbs: a randomised trial.",
+      "year": 2002
+    },
+    {
+      "arms": [
+        [
+          30.31,
+          7
+        ],
+        [
+          36.4,
+          7
+        ]
+      ],
+      "confounds": [
+        "brachytherapy_component",
+        "target_volume_comentioned"
+      ],
+      "label_basis": "both",
+      "pmid": 12115793,
+      "reported": "equivalence",
+      "sites": [
+        "breast"
+      ],
+      "title": "Sole brachytherapy of the tumor bed after conservative surgery for T1 breast cancer: five-year results of a phase I-II study and initial fin",
+      "year": 2002
+    },
+    {
+      "arms": [
+        [
+          42.5,
+          16
+        ],
+        [
+          50.0,
+          25
+        ]
+      ],
+      "confounds": [
+        "target_volume_comentioned"
+      ],
+      "label_basis": "neither",
+      "pmid": 12165639,
+      "reported": "difference",
+      "sites": [
+        "breast"
+      ],
+      "title": "Randomized trial of breast irradiation schedules after lumpectomy for women with lymph node-negative breast cancer.",
+      "year": 2002
+    },
+    {
+      "arms": [
+        [
+          41.4,
+          23
+        ],
+        [
+          66.0,
+          44
+        ],
+        [
+          68.4,
+          41
+        ]
+      ],
+      "confounds": [
+        "twice_daily"
+      ],
+      "label_basis": "neither",
+      "pmid": 12182982,
+      "reported": "difference",
+      "sites": [],
+      "title": "Comparison between continuous accelerated hyperfractionated and late-course accelerated hyperfractionated radiotherapy for esophageal carcin",
+      "year": 2002
+    },
+    {
+      "arms": [
+        [
+          30.0,
+          20
+        ],
+        [
+          60.0,
+          30
+        ]
+      ],
+      "confounds": [
+        "chemotherapy_comentioned",
+        "twice_daily"
+      ],
+      "label_basis": "result_only",
+      "pmid": 12243810,
+      "reported": "equivalence",
+      "sites": [],
+      "title": "Phase III trial comparing chemotherapy plus once-daily or twice-daily radiotherapy in Stage III non-small-cell lung cancer.",
+      "year": 2002
+    },
+    {
+      "arms": [
+        [
+          55.0,
+          20
+        ],
+        [
+          64.0,
+          32
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "result_only",
+      "pmid": 12605972,
+      "reported": "equivalence",
+      "sites": [
+        "prostate"
+      ],
+      "title": "Evidence for efficacy without increased toxicity of hypofractionated radiotherapy for prostate carcinoma: early results of a Phase III rando",
+      "year": 2003
+    },
+    {
+      "arms": [
+        [
+          50.4,
+          28
+        ],
+        [
+          64.8,
+          36
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "neither",
+      "pmid": 12829670,
+      "reported": "difference",
+      "sites": [],
+      "title": "Effects of radiotherapy on cognitive function in patients with low-grade glioma measured by the folstein mini-mental state examination.",
+      "year": 2003
+    },
+    {
+      "arms": [
+        [
+          59.4,
+          33
+        ],
+        [
+          70.0,
+          35
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "result_only",
+      "pmid": 12972305,
+      "reported": "equivalence",
+      "sites": [],
+      "title": "The effect of anaemia on efficacy and normal tissue toxicity following radiotherapy for locally advanced squamous cell carcinoma of the head",
+      "year": 2003
+    },
+    {
+      "arms": [
+        [
+          40.0,
+          15
+        ],
+        [
+          60.0,
+          30
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "neither",
+      "pmid": 15051755,
+      "reported": "difference",
+      "sites": [],
+      "title": "Abbreviated course of radiation therapy in older patients with glioblastoma multiforme: a prospective randomized clinical trial.",
+      "year": 2004
+    },
+    {
+      "arms": [
+        [
+          22.5,
+          3
+        ],
+        [
+          25.5,
+          3
+        ],
+        [
+          30.0,
+          4
+        ],
+        [
+          32.0,
+          4
+        ],
+        [
+          34.0,
+          4
+        ],
+        [
+          35.6,
+          4
+        ]
+      ],
+      "confounds": [
+        "brachytherapy_component"
+      ],
+      "label_basis": "neither",
+      "pmid": 15062145,
+      "reported": "difference",
+      "sites": [],
+      "title": "Prospective study of HDR (192Ir) versus MDR (137Cs) intracavitary brachytherapy for carcinoma of the uterine cervix.",
+      "year": 2003
+    },
+    {
+      "arms": [
+        [
+          50.4,
+          28
+        ],
+        [
+          64.8,
+          36
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "neither",
+      "pmid": 15093907,
+      "reported": "difference",
+      "sites": [],
+      "title": "Importance of baseline mini-mental state examination as a prognostic factor for patients with low-grade glioma.",
+      "year": 2004
+    },
+    {
+      "arms": [
+        [
+          52.5,
+          20
+        ],
+        [
+          55.0,
+          16
+        ],
+        [
+          57.5,
+          20
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "design_only",
+      "pmid": 15093917,
+      "reported": "equivalence",
+      "sites": [],
+      "title": "Radiotherapy for muscle-invasive carcinoma of the bladder: results of a randomized trial comparing conventional whole bladder with dose-esca",
+      "year": 2004
+    },
+    {
+      "arms": [
+        [
+          24.0,
+          16
+        ],
+        [
+          50.4,
+          28
+        ]
+      ],
+      "confounds": [
+        "twice_daily"
+      ],
+      "label_basis": "neither",
+      "pmid": 15234027,
+      "reported": "difference",
+      "sites": [],
+      "title": "Long-term results of a phase III trial comparing once-daily radiotherapy with twice-daily radiotherapy in limited-stage small-cell lung canc",
+      "year": 2004
+    },
+    {
+      "arms": [
+        [
+          26.0,
+          4
+        ],
+        [
+          32.5,
+          5
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "neither",
+      "pmid": 15318711,
+      "reported": "difference",
+      "sites": [],
+      "title": "[A randomized study of efficacy of regimes of large-fraction irradiation for metastatic lesions to the skeleton. (I) Single factor analysis]",
+      "year": 2004
+    },
+    {
+      "arms": [
+        [
+          15.0,
+          5
+        ],
+        [
+          20.0,
+          10
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "neither",
+      "pmid": 15329905,
+      "reported": "difference",
+      "sites": [
+        "breast"
+      ],
+      "title": "Efficacy of radiotherapy for ovarian ablation: results of a breast intergroup study.",
+      "year": 2004
+    },
+    {
+      "arms": [
+        [
+          16.0,
+          2
+        ],
+        [
+          30.0,
+          10
+        ]
+      ],
+      "confounds": [
+        "brachytherapy_component"
+      ],
+      "label_basis": "neither",
+      "pmid": 15607150,
+      "reported": "difference",
+      "sites": [],
+      "title": "Randomized prospective study comparing high-dose-rate intraluminal brachytherapy (HDRILBT) alone with HDRILBT and external beam radiotherapy",
+      "year": 2004
+    },
+    {
+      "arms": [
+        [
+          20.0,
+          10
+        ],
+        [
+          30.0,
+          15
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "neither",
+      "pmid": 15718317,
+      "reported": "difference",
+      "sites": [],
+      "title": "Randomized trial of 30 versus 20 Gy in the adjuvant treatment of stage I Testicular Seminoma: a report on Medical Research Council Trial TE1",
+      "year": 2005
+    },
+    {
+      "arms": [
+        [
+          40.0,
+          20
+        ],
+        [
+          66.0,
+          33
+        ]
+      ],
+      "confounds": [
+        "brachytherapy_component"
+      ],
+      "label_basis": "neither",
+      "pmid": 15718316,
+      "reported": "difference",
+      "sites": [
+        "prostate"
+      ],
+      "title": "Randomized trial comparing iridium implant plus external-beam radiation therapy with external-beam radiation therapy alone in node-negative ",
+      "year": 2005
+    },
+    {
+      "arms": [
+        [
+          16.0,
+          2
+        ],
+        [
+          30.0,
+          10
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "result_only",
+      "pmid": 15860852,
+      "reported": "equivalence",
+      "sites": [],
+      "title": "Results of the Dutch National study of the palliative effect of irradiation using two different treatment schemes for non-small-cell lung ca",
+      "year": 2005
+    },
+    {
+      "arms": [
+        [
+          41.6,
+          13
+        ],
+        [
+          42.9,
+          13
+        ],
+        [
+          50.0,
+          25
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "design_only",
+      "pmid": 15878095,
+      "reported": "equivalence",
+      "sites": [
+        "breast"
+      ],
+      "title": "Fractionation sensitivity and dose response of late adverse effects in the breast after radiotherapy for early breast cancer: long-term resu",
+      "year": 2005
+    },
+    {
+      "arms": [
+        [
+          60.8,
+          32
+        ],
+        [
+          64.0,
+          32
+        ]
+      ],
+      "confounds": [
+        "twice_daily"
+      ],
+      "label_basis": "both",
+      "pmid": 15878099,
+      "reported": "equivalence",
+      "sites": [],
+      "title": "A randomised trial of accelerated radiotherapy for localised invasive bladder cancer.",
+      "year": 2005
+    },
+    {
+      "arms": [
+        [
+          8.0,
+          1
+        ],
+        [
+          20.0,
+          5
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "neither",
+      "pmid": 15878101,
+      "reported": "difference",
+      "sites": [],
+      "title": "Randomized trial of 8 Gy in 1 versus 20 Gy in 5 fractions of radiotherapy for neuropathic pain due to bone metastases (Trans-Tasman Radiatio",
+      "year": 2005
+    },
+    {
+      "arms": [
+        [
+          41.4,
+          23
+        ],
+        [
+          68.4,
+          41
+        ]
+      ],
+      "confounds": [
+        "chemotherapy_comentioned",
+        "twice_daily"
+      ],
+      "label_basis": "neither",
+      "pmid": 15990003,
+      "reported": "difference",
+      "sites": [],
+      "title": "Late course accelerated hyperfractionated radiotherapy plus concurrent chemotherapy for squamous cell carcinoma of the esophagus: a phase II",
+      "year": 2005
+    },
+    {
+      "arms": [
+        [
+          52.5,
+          20
+        ],
+        [
+          66.0,
+          33
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "design_only",
+      "pmid": 16135479,
+      "reported": "equivalence",
+      "sites": [
+        "prostate"
+      ],
+      "title": "Randomized trial comparing two fractionation schedules for patients with localized prostate cancer.",
+      "year": 2005
+    },
+    {
+      "arms": [
+        [
+          56.25,
+          25
+        ],
+        [
+          60.0,
+          30
+        ],
+        [
+          63.0,
+          28
+        ],
+        [
+          66.0,
+          33
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "result_only",
+      "pmid": 16169681,
+      "reported": "equivalence",
+      "sites": [],
+      "title": "Radiotherapy for early glottic carcinoma (T1N0M0): results of prospective randomized study of radiation fraction size and overall treatment ",
+      "year": 2006
+    },
+    {
+      "arms": [
+        [
+          70.2,
+          26
+        ],
+        [
+          76.0,
+          38
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "neither",
+      "pmid": 16242256,
+      "reported": "difference",
+      "sites": [
+        "prostate"
+      ],
+      "title": "Dosimetry and preliminary acute toxicity in the first 100 men treated for prostate cancer on a randomized hypofractionation dose escalation ",
+      "year": 2006
+    },
+    {
+      "arms": [
+        [
+          46.0,
+          23
+        ],
+        [
+          50.4,
+          28
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "neither",
+      "pmid": 16427212,
+      "reported": "difference",
+      "sites": [],
+      "title": "A phase III randomized trial of postoperative pelvic irradiation in Stage IB cervical carcinoma with poor prognostic features: follow-up of ",
+      "year": 2006
+    },
+    {
+      "arms": [
+        [
+          64.0,
+          32
+        ],
+        [
+          70.0,
+          35
+        ]
+      ],
+      "confounds": [
+        "twice_daily"
+      ],
+      "label_basis": "neither",
+      "pmid": 16782926,
+      "reported": "difference",
+      "sites": [],
+      "title": "Phase III randomized trial of very accelerated radiation therapy compared with conventional radiation therapy in squamous cell head and neck",
+      "year": 2006
+    },
+    {
+      "arms": [
+        [
+          8.0,
+          1
+        ],
+        [
+          30.0,
+          10
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "neither",
+      "pmid": 16814950,
+      "reported": "difference",
+      "sites": [
+        "breast",
+        "prostate"
+      ],
+      "title": "Continuing evidence for poorer treatment outcomes for single male patients: retreatment data from RTOG 97-14.",
+      "year": 2006
+    },
+    {
+      "arms": [
+        [
+          55.0,
+          20
+        ],
+        [
+          64.0,
+          32
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "both",
+      "pmid": 16965866,
+      "reported": "equivalence",
+      "sites": [
+        "prostate"
+      ],
+      "title": "Hypofractionated versus conventionally fractionated radiation therapy for prostate carcinoma: updated results of a phase III randomized tria",
+      "year": 2006
+    },
+    {
+      "arms": [
+        [
+          11.1,
+          5
+        ],
+        [
+          50.0,
+          25
+        ]
+      ],
+      "confounds": [
+        "target_volume_comentioned"
+      ],
+      "label_basis": "result_only",
+      "pmid": 17224195,
+      "reported": "equivalence",
+      "sites": [
+        "breast"
+      ],
+      "title": "Randomised trial of standard 2D radiotherapy (RT) versus intensity modulated radiotherapy (IMRT) in patients prescribed breast radiotherapy.",
+      "year": 2007
+    },
+    {
+      "arms": [
+        [
+          12.0,
+          2
+        ],
+        [
+          50.0,
+          25
+        ],
+        [
+          66.0,
+          33
+        ]
+      ],
+      "confounds": [
+        "brachytherapy_component",
+        "chemotherapy_comentioned"
+      ],
+      "label_basis": "neither",
+      "pmid": 17445928,
+      "reported": "difference",
+      "sites": [],
+      "title": "A randomised trial of radiotherapy compared with cisplatin chemo-radiotherapy in patients with unresectable squamous cell cancer of the esop",
+      "year": 2007
+    },
+    {
+      "arms": [
+        [
+          35.75,
+          13
+        ],
+        [
+          55.0,
+          20
+        ]
+      ],
+      "confounds": [
+        "brachytherapy_component"
+      ],
+      "label_basis": "design_only",
+      "pmid": 17531335,
+      "reported": "equivalence",
+      "sites": [
+        "prostate"
+      ],
+      "title": "High dose rate brachytherapy in combination with external beam radiotherapy in the radical treatment of prostate cancer: initial results of ",
+      "year": 2007
+    },
+    {
+      "arms": [
+        [
+          36.4,
+          7
+        ],
+        [
+          50.0,
+          25
+        ]
+      ],
+      "confounds": [
+        "brachytherapy_component",
+        "target_volume_comentioned"
+      ],
+      "label_basis": "result_only",
+      "pmid": 17531400,
+      "reported": "equivalence",
+      "sites": [
+        "breast"
+      ],
+      "title": "Breast-conserving treatment with partial or whole breast irradiation for low-risk invasive breast carcinoma--5-year results of a randomized ",
+      "year": 2007
+    },
+    {
+      "arms": [
+        [
+          22.5,
+          15
+        ],
+        [
+          45.0,
+          25
+        ],
+        [
+          66.0,
+          33
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "neither",
+      "pmid": 18343310,
+      "reported": "difference",
+      "sites": [],
+      "title": "Concomitant boost radiotherapy compared with conventional radiotherapy in squamous cell carcinoma of the head and neck--a phase III trial fr",
+      "year": 2008
+    },
+    {
+      "arms": [
+        [
+          40.0,
+          15
+        ],
+        [
+          40.05,
+          15
+        ],
+        [
+          50.0,
+          25
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "neither",
+      "pmid": 18355913,
+      "reported": "difference",
+      "sites": [
+        "breast"
+      ],
+      "title": "The UK Standardisation of Breast Radiotherapy (START) Trial B of radiotherapy hypofractionation for treatment of early breast cancer: a rand",
+      "year": 2008
+    },
+    {
+      "arms": [
+        [
+          39.0,
+          13
+        ],
+        [
+          41.6,
+          13
+        ],
+        [
+          50.0,
+          25
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "result_only",
+      "pmid": 18356109,
+      "reported": "equivalence",
+      "sites": [
+        "breast"
+      ],
+      "title": "The UK Standardisation of Breast Radiotherapy (START) Trial A of radiotherapy hypofractionation for treatment of early breast cancer: a rand",
+      "year": 2008
+    },
+    {
+      "arms": [
+        [
+          20.0,
+          5
+        ],
+        [
+          40.0,
+          20
+        ]
+      ],
+      "confounds": [
+        "twice_daily"
+      ],
+      "label_basis": "neither",
+      "pmid": 18555546,
+      "reported": "difference",
+      "sites": [],
+      "title": "A phase III study of accelerated versus conventional hypofractionated whole brain irradiation in patients of good performance status with br",
+      "year": 2008
+    },
+    {
+      "arms": [
+        [
+          64.0,
+          32
+        ],
+        [
+          74.0,
+          37
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "neither",
+      "pmid": 18565744,
+      "reported": "difference",
+      "sites": [
+        "prostate"
+      ],
+      "title": "Accuracy and reproducibility of conformal radiotherapy using data from a randomised controlled trial of conformal radiotherapy in prostate c",
+      "year": 2008
+    },
+    {
+      "arms": [
+        [
+          62.0,
+          20
+        ],
+        [
+          80.0,
+          40
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "neither",
+      "pmid": 18990503,
+      "reported": "difference",
+      "sites": [
+        "prostate"
+      ],
+      "title": "Mathematical model for evaluating incidence of acute rectal toxicity during conventional or hypofractionated radiotherapy courses for prosta",
+      "year": 2009
+    },
+    {
+      "arms": [
+        [
+          62.0,
+          20
+        ],
+        [
+          80.0,
+          40
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "neither",
+      "pmid": 19070211,
+      "reported": "difference",
+      "sites": [
+        "prostate"
+      ],
+      "title": "Color Doppler quantitative measures to predict outcome of biopsies in prostate cancer.",
+      "year": 2008
+    },
+    {
+      "arms": [
+        [
+          38.5,
+          10
+        ],
+        [
+          50.0,
+          25
+        ]
+      ],
+      "confounds": [
+        "target_volume_comentioned"
+      ],
+      "label_basis": "design_only",
+      "pmid": 19231103,
+      "reported": "equivalence",
+      "sites": [
+        "breast"
+      ],
+      "title": "Does three-dimensional external beam partial breast irradiation spare lung tissue compared with standard whole breast irradiation?",
+      "year": 2009
+    },
+    {
+      "arms": [
+        [
+          18.0,
+          4
+        ],
+        [
+          39.0,
+          13
+        ],
+        [
+          74.0,
+          37
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "neither",
+      "pmid": 19605967,
+      "reported": "difference",
+      "sites": [
+        "prostate"
+      ],
+      "title": "A randomized trial comparing hypofractionated and conventionally fractionated three-dimensional conformal external-beam radiotherapy for loc",
+      "year": 2009
+    },
+    {
+      "arms": [
+        [
+          62.0,
+          20
+        ],
+        [
+          80.0,
+          40
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "neither",
+      "pmid": 19689825,
+      "reported": "difference",
+      "sites": [
+        "prostate"
+      ],
+      "title": "Modeling of alpha/beta for late rectal toxicity from a randomized phase II study: conventional versus hypofractionated scheme for localized ",
+      "year": 2009
+    },
+    {
+      "arms": [
+        [
+          39.0,
+          13
+        ],
+        [
+          57.0,
+          17
+        ],
+        [
+          74.0,
+          37
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "neither",
+      "pmid": 19899003,
+      "reported": "difference",
+      "sites": [
+        "prostate"
+      ],
+      "title": "A randomized trial comparing hypofractionated and conventionally fractionated three-dimensional external-beam radiotherapy for localized pro",
+      "year": 2009
+    },
+    {
+      "arms": [
+        [
+          62.0,
+          20
+        ],
+        [
+          80.0,
+          40
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "design_only",
+      "pmid": 20047800,
+      "reported": "equivalence",
+      "sites": [
+        "prostate"
+      ],
+      "title": "A prospective phase III randomized trial of hypofractionation versus conventional fractionation in patients with high-risk prostate cancer.",
+      "year": 2010
+    },
+    {
+      "arms": [
+        [
+          8.0,
+          1
+        ],
+        [
+          40.0,
+          20
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "result_only",
+      "pmid": 20084712,
+      "reported": "equivalence",
+      "sites": [],
+      "title": "Single versus conventional fractionated radiotherapy in the palliation of painful bone metastases.",
+      "year": 2007
+    },
+    {
+      "arms": [
+        [
+          42.5,
+          16
+        ],
+        [
+          50.0,
+          25
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "neither",
+      "pmid": 20147717,
+      "reported": "difference",
+      "sites": [
+        "breast"
+      ],
+      "title": "Long-term results of hypofractionated radiation therapy for breast cancer.",
+      "year": 2010
+    },
+    {
+      "arms": [
+        [
+          25.0,
+          5
+        ],
+        [
+          50.0,
+          25
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "result_only",
+      "pmid": 20155787,
+      "reported": "equivalence",
+      "sites": [],
+      "title": "Interim analysis of the Stockholm III trial of preoperative radiotherapy regimens for rectal cancer.",
+      "year": 2010
+    },
+    {
+      "arms": [
+        [
+          45.0,
+          25
+        ],
+        [
+          50.0,
+          25
+        ]
+      ],
+      "confounds": [
+        "chemotherapy_comentioned",
+        "twice_daily"
+      ],
+      "label_basis": "neither",
+      "pmid": 20194850,
+      "reported": "difference",
+      "sites": [],
+      "title": "Comparison of two neoadjuvant chemoradiotherapy regimens for locally advanced rectal cancer: results of the phase III trial ACCORD 12/0405-P",
+      "year": 2010
+    },
+    {
+      "arms": [
+        [
+          62.0,
+          20
+        ],
+        [
+          80.0,
+          40
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "design_only",
+      "pmid": 20447774,
+      "reported": "equivalence",
+      "sites": [
+        "prostate"
+      ],
+      "title": "Acute and late toxicity in a randomized trial of conventional versus hypofractionated three-dimensional conformal radiotherapy for prostate ",
+      "year": 2011
+    },
+    {
+      "arms": [
+        [
+          55.0,
+          20
+        ],
+        [
+          64.0,
+          32
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "result_only",
+      "pmid": 20934277,
+      "reported": "equivalence",
+      "sites": [
+        "prostate"
+      ],
+      "title": "Hypofractionated versus conventionally fractionated radiotherapy for prostate carcinoma: final results of phase III randomized trial.",
+      "year": 2011
+    },
+    {
+      "arms": [
+        [
+          55.0,
+          20
+        ],
+        [
+          64.0,
+          32
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "neither",
+      "pmid": 20956620,
+      "reported": "difference",
+      "sites": [],
+      "title": "Radiotherapy with concurrent carbogen and nicotinamide in bladder carcinoma.",
+      "year": 2010
+    },
+    {
+      "arms": [
+        [
+          45.0,
+          30
+        ],
+        [
+          66.0,
+          33
+        ]
+      ],
+      "confounds": [
+        "chemotherapy_comentioned",
+        "twice_daily"
+      ],
+      "label_basis": "neither",
+      "pmid": 21353720,
+      "reported": "difference",
+      "sites": [],
+      "title": "Use of G-CSF during concurrent chemotherapy and thoracic radiotherapy in patients with limited-stage small-cell lung cancer safety data from",
+      "year": 2011
+    },
+    {
+      "arms": [
+        [
+          24.0,
+          12
+        ],
+        [
+          30.0,
+          15
+        ]
+      ],
+      "confounds": [
+        "dose_range_in_abstract"
+      ],
+      "label_basis": "result_only",
+      "pmid": 21664710,
+      "reported": "equivalence",
+      "sites": [],
+      "title": "Reduced dose radiotherapy for local control in non-Hodgkin lymphoma: a randomised phase III trial.",
+      "year": 2011
+    },
+    {
+      "arms": [
+        [
+          28.5,
+          5
+        ],
+        [
+          30.0,
+          5
+        ],
+        [
+          50.0,
+          25
+        ]
+      ],
+      "confounds": [
+        "target_volume_comentioned"
+      ],
+      "label_basis": "neither",
+      "pmid": 21752481,
+      "reported": "difference",
+      "sites": [
+        "breast"
+      ],
+      "title": "First results of the randomised UK FAST Trial of radiotherapy hypofractionation for treatment of early breast cancer (CRUKE/04/015).",
+      "year": 2011
+    },
+    {
+      "arms": [
+        [
+          60.0,
+          40
+        ],
+        [
+          66.0,
+          33
+        ]
+      ],
+      "confounds": [
+        "chemotherapy_comentioned",
+        "twice_daily"
+      ],
+      "label_basis": "neither",
+      "pmid": 21757247,
+      "reported": "difference",
+      "sites": [],
+      "title": "Final results of the randomized phase III CHARTWEL-trial (ARO 97-1) comparing hyperfractionated-accelerated versus conventionally fractionat",
+      "year": 2011
+    },
+    {
+      "arms": [
+        [
+          30.0,
+          15
+        ],
+        [
+          40.0,
+          20
+        ]
+      ],
+      "confounds": [
+        "chemotherapy_comentioned"
+      ],
+      "label_basis": "neither",
+      "pmid": 21892106,
+      "reported": "difference",
+      "sites": [],
+      "title": "A randomized phase II trial of two regimens of moderate dose chemoradiation therapy for patients with non-small cell lung cancer not suitabl",
+      "year": 2011
+    },
+    {
+      "arms": [
+        [
+          30.0,
+          10
+        ],
+        [
+          66.0,
+          33
+        ]
+      ],
+      "confounds": [
+        "chemotherapy_comentioned"
+      ],
+      "label_basis": "neither",
+      "pmid": 21932025,
+      "reported": "difference",
+      "sites": [],
+      "title": "Regional hyperthermia combined with chemoradiotherapy in primary or recurrent locally advanced pancreatic cancer : an open-label comparative",
+      "year": 2011
+    },
+    {
+      "arms": [
+        [
+          45.0,
+          30
+        ],
+        [
+          66.0,
+          33
+        ]
+      ],
+      "confounds": [
+        "target_volume_comentioned",
+        "twice_daily"
+      ],
+      "label_basis": "neither",
+      "pmid": 22014897,
+      "reported": "difference",
+      "sites": [],
+      "title": "Omitting elective nodal irradiation during thoracic irradiation in limited-stage small cell lung cancer--evidence from a phase II trial.",
+      "year": 2012
+    },
+    {
+      "arms": [
+        [
+          30.0,
+          20
+        ],
+        [
+          48.0,
+          40
+        ]
+      ],
+      "confounds": [
+        "twice_daily"
+      ],
+      "label_basis": "neither",
+      "pmid": 22134512,
+      "reported": "difference",
+      "sites": [],
+      "title": "A phase III study of late course accelerated hyperfractionated radiotherapy versus conventionally fractionated radiotherapy in patients with",
+      "year": 2012
+    },
+    {
+      "arms": [
+        [
+          77.0,
+          35
+        ],
+        [
+          95.0,
+          35
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "neither",
+      "pmid": 22141598,
+      "reported": "difference",
+      "sites": [
+        "prostate"
+      ],
+      "title": "Single blind randomized phase III trial to investigate the benefit of a focal lesion ablative microboost in prostate cancer (FLAME-trial): s",
+      "year": 2011
+    },
+    {
+      "arms": [
+        [
+          10.0,
+          2
+        ],
+        [
+          50.4,
+          28
+        ]
+      ],
+      "confounds": [
+        "brachytherapy_component",
+        "chemotherapy_comentioned"
+      ],
+      "label_basis": "result_only",
+      "pmid": 22592048,
+      "reported": "equivalence",
+      "sites": [],
+      "title": "Dose-effect relationship in chemoradiotherapy for locally advanced rectal cancer: a randomized trial comparing two radiation doses.",
+      "year": 2012
+    },
+    {
+      "arms": [
+        [
+          42.0,
+          15
+        ],
+        [
+          50.0,
+          25
+        ]
+      ],
+      "confounds": [
+        "target_volume_comentioned"
+      ],
+      "label_basis": "result_only",
+      "pmid": 22656865,
+      "reported": "equivalence",
+      "sites": [
+        "breast"
+      ],
+      "title": "Short course radiotherapy with simultaneous integrated boost for stage I-II breast cancer, early toxicities of a randomized clinical trial.",
+      "year": 2012
+    },
+    {
+      "arms": [
+        [
+          55.0,
+          20
+        ],
+        [
+          64.0,
+          32
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "result_only",
+      "pmid": 22836050,
+      "reported": "equivalence",
+      "sites": [
+        "prostate"
+      ],
+      "title": "Pathophysiology and natural history of anorectal sequelae following radiation therapy for carcinoma of the prostate.",
+      "year": 2012
+    },
+    {
+      "arms": [
+        [
+          39.0,
+          13
+        ],
+        [
+          40.0,
+          15
+        ],
+        [
+          41.6,
+          13
+        ],
+        [
+          42.5,
+          16
+        ],
+        [
+          50.0,
+          25
+        ]
+      ],
+      "confounds": [
+        "dose_range_in_abstract",
+        "target_volume_comentioned"
+      ],
+      "label_basis": "design_only",
+      "pmid": 22910644,
+      "reported": "equivalence",
+      "sites": [
+        "breast"
+      ],
+      "title": "Modern hypofractionation schedules for tangential whole breast irradiation decrease the fraction size-corrected dose to the heart.",
+      "year": 2013
+    },
+    {
+      "arms": [
+        [
+          27.0,
+          18
+        ],
+        [
+          41.4,
+          23
+        ]
+      ],
+      "confounds": [
+        "chemotherapy_comentioned",
+        "twice_daily"
+      ],
+      "label_basis": "neither",
+      "pmid": 22913676,
+      "reported": "difference",
+      "sites": [],
+      "title": "Long-term outcome of irradiation with or without chemotherapy for esophageal squamous cell carcinoma: a final report on a prospective trial.",
+      "year": 2012
+    },
+    {
+      "arms": [
+        [
+          40.0,
+          15
+        ],
+        [
+          50.0,
+          25
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "neither",
+      "pmid": 23036277,
+      "reported": "difference",
+      "sites": [
+        "breast"
+      ],
+      "title": "A randomised controlled trial to evaluate both the role and the optimal fractionation of radiotherapy in the conservative management of earl",
+      "year": 2012
+    },
+    {
+      "arms": [
+        [
+          14.4,
+          2
+        ],
+        [
+          15.2,
+          4
+        ]
+      ],
+      "confounds": [
+        "brachytherapy_component"
+      ],
+      "label_basis": "neither",
+      "pmid": 23289530,
+      "reported": "difference",
+      "sites": [],
+      "title": "Mature results of a randomized trial comparing two fractionation schedules of high dose rate endoluminal brachytherapy for the treatment of ",
+      "year": 2013
+    },
+    {
+      "arms": [
+        [
+          54.0,
+          30
+        ],
+        [
+          65.0,
+          30
+        ]
+      ],
+      "confounds": [
+        "chemotherapy_comentioned",
+        "target_volume_comentioned"
+      ],
+      "label_basis": "neither",
+      "pmid": 23540553,
+      "reported": "difference",
+      "sites": [],
+      "title": "The effect of concomitant chemotherapy on parotid gland function following head and neck IMRT.",
+      "year": 2013
+    },
+    {
+      "arms": [
+        [
+          28.0,
+          14
+        ],
+        [
+          44.0,
+          22
+        ]
+      ],
+      "confounds": [
+        "dose_range_in_abstract"
+      ],
+      "label_basis": "neither",
+      "pmid": 23600305,
+      "reported": "difference",
+      "sites": [
+        "prostate"
+      ],
+      "title": "[Options of hypofractionation of proton boost in locally advanced prostate cancer].",
+      "year": 2012
+    },
+    {
+      "arms": [
+        [
+          25.0,
+          5
+        ],
+        [
+          50.0,
+          20
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "neither",
+      "pmid": 23719685,
+      "reported": "difference",
+      "sites": [],
+      "title": "Does high-dose radiotherapy benefit palliative lung cancer patients?: An intradepartmental comparison of two dose regimens.",
+      "year": 2013
+    },
+    {
+      "arms": [
+        [
+          66.0,
+          33
+        ],
+        [
+          67.5,
+          40
+        ]
+      ],
+      "confounds": [
+        "chemotherapy_comentioned",
+        "target_volume_comentioned"
+      ],
+      "label_basis": "neither",
+      "pmid": 23746674,
+      "reported": "difference",
+      "sites": [],
+      "title": "Comparison of concomitant boost radiotherapy against concurrent chemoradiation in locally advanced oropharyngeal cancers: a phase III random",
+      "year": 2013
+    },
+    {
+      "arms": [
+        [
+          39.0,
+          13
+        ],
+        [
+          40.0,
+          15
+        ],
+        [
+          50.0,
+          25
+        ]
+      ],
+      "confounds": [
+        "chemotherapy_comentioned",
+        "target_volume_comentioned"
+      ],
+      "label_basis": "result_only",
+      "pmid": 24055415,
+      "reported": "equivalence",
+      "sites": [
+        "breast"
+      ],
+      "title": "The UK Standardisation of Breast Radiotherapy (START) trials of radiotherapy hypofractionation for treatment of early breast cancer: 10-year",
+      "year": 2013
+    },
+    {
+      "arms": [
+        [
+          60.0,
+          30
+        ],
+        [
+          66.0,
+          30
+        ]
+      ],
+      "confounds": [
+        "chemotherapy_comentioned"
+      ],
+      "label_basis": "neither",
+      "pmid": 24061990,
+      "reported": "difference",
+      "sites": [],
+      "title": "[A randomized controlled trial of intensity-modulated radiation therapy plus docetaxel and cisplatin versus simple intensity-modulated radia",
+      "year": 2013
+    },
+    {
+      "arms": [
+        [
+          17.0,
+          2
+        ],
+        [
+          35.75,
+          13
+        ]
+      ],
+      "confounds": [
+        "brachytherapy_component"
+      ],
+      "label_basis": "neither",
+      "pmid": 24100150,
+      "reported": "difference",
+      "sites": [
+        "prostate"
+      ],
+      "title": "Dosimetric predictors of biochemical control of prostate cancer in patients randomised to external beam radiotherapy with a boost of high do",
+      "year": 2014
+    },
+    {
+      "arms": [
+        [
+          70.2,
+          26
+        ],
+        [
+          76.0,
+          38
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "both",
+      "pmid": 24101042,
+      "reported": "equivalence",
+      "sites": [
+        "prostate"
+      ],
+      "title": "Randomized trial of hypofractionated external-beam radiotherapy for prostate cancer.",
+      "year": 2013
+    },
+    {
+      "arms": [
+        [
+          39.0,
+          13
+        ],
+        [
+          54.0,
+          30
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "design_only",
+      "pmid": 24560760,
+      "reported": "equivalence",
+      "sites": [],
+      "title": "Hypofractionated conformal radiotherapy for pediatric diffuse intrinsic pontine glioma (DIPG): a randomized controlled trial.",
+      "year": 2014
+    },
+    {
+      "arms": [
+        [
+          64.0,
+          32
+        ],
+        [
+          74.0,
+          37
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "neither",
+      "pmid": 24581940,
+      "reported": "difference",
+      "sites": [
+        "prostate"
+      ],
+      "title": "Escalated-dose versus control-dose conformal radiotherapy for prostate cancer: long-term results from the MRC RT01 randomised controlled tri",
+      "year": 2014
+    },
+    {
+      "arms": [
+        [
+          67.2,
+          42
+        ],
+        [
+          72.0,
+          42
+        ]
+      ],
+      "confounds": [
+        "twice_daily"
+      ],
+      "label_basis": "result_only",
+      "pmid": 24613816,
+      "reported": "equivalence",
+      "sites": [],
+      "title": "Final results of local-regional control and late toxicity of RTOG 9003: a randomized trial of altered fractionation radiation for locally ad",
+      "year": 2014
+    },
+    {
+      "arms": [
+        [
+          44.0,
+          22
+        ],
+        [
+          55.0,
+          22
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "neither",
+      "pmid": 24638270,
+      "reported": "difference",
+      "sites": [],
+      "title": "Simultaneous integrated boost-intensity modulated radiation therapy for inoperable hepatocellular carcinoma.",
+      "year": 2014
+    },
+    {
+      "arms": [
+        [
+          30.0,
+          12
+        ],
+        [
+          50.0,
+          25
+        ]
+      ],
+      "confounds": [
+        "brachytherapy_component"
+      ],
+      "label_basis": "neither",
+      "pmid": 25172603,
+      "reported": "difference",
+      "sites": [],
+      "title": "Reirradiation for patients with recurrence head and neck squamous cell carcinoma: a single-institution comparative study.",
+      "year": 2014
+    },
+    {
+      "arms": [
+        [
+          70.0,
+          35
+        ],
+        [
+          76.0,
+          38
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "neither",
+      "pmid": 25212601,
+      "reported": "difference",
+      "sites": [
+        "prostate"
+      ],
+      "title": "Results and DVH analysis of late rectal bleeding in patients treated with 3D-CRT or IMRT for localized prostate cancer.",
+      "year": 2015
+    },
+    {
+      "arms": [
+        [
+          70.0,
+          35
+        ],
+        [
+          72.0,
+          42
+        ]
+      ],
+      "confounds": [
+        "chemotherapy_comentioned"
+      ],
+      "label_basis": "neither",
+      "pmid": 25366680,
+      "reported": "difference",
+      "sites": [],
+      "title": "Randomized phase III trial to test accelerated versus standard fractionation in combination with concurrent cisplatin for head and neck carc",
+      "year": 2014
+    },
+    {
+      "arms": [
+        [
+          15.0,
+          5
+        ],
+        [
+          50.0,
+          25
+        ]
+      ],
+      "confounds": [
+        "chemotherapy_comentioned"
+      ],
+      "label_basis": "neither",
+      "pmid": 25888548,
+      "reported": "difference",
+      "sites": [],
+      "title": "RandomizEd controlled trial for pre-operAtive dose-escaLation BOOST in locally advanced rectal cancer (RECTAL BOOST study): study protocol f",
+      "year": 2015
+    },
+    {
+      "arms": [
+        [
+          67.2,
+          32
+        ],
+        [
+          75.2,
+          32
+        ],
+        [
+          83.2,
+          32
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "neither",
+      "pmid": 25923839,
+      "reported": "difference",
+      "sites": [
+        "prostate"
+      ],
+      "title": "Clinical and technical feasibility of ultra-boost irradiation in Dominant Intraprostatic Lesion by Tomotherapy: preliminary experience and r",
+      "year": 2016
+    },
+    {
+      "arms": [
+        [
+          12.4,
+          4
+        ],
+        [
+          62.0,
+          20
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "design_only",
+      "pmid": 25964594,
+      "reported": "equivalence",
+      "sites": [
+        "prostate"
+      ],
+      "title": "Hypofractionated Dose Escalated 3D Conformal Radiotherapy for Prostate Cancer: Outcomes from a Mono-Institutional Phase II Study.",
+      "year": 2015
+    },
+    {
+      "arms": [
+        [
+          8.0,
+          1
+        ],
+        [
+          16.0,
+          1
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "neither",
+      "pmid": 25981049,
+      "reported": "difference",
+      "sites": [],
+      "title": "Biological 18[F]-FDG-PET image-guided dose painting by numbers for painful uncomplicated bone metastases: A 3-arm randomized phase II trial.",
+      "year": 2015
+    },
+    {
+      "arms": [
+        [
+          24.0,
+          1
+        ],
+        [
+          30.0,
+          10
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "neither",
+      "pmid": 26054533,
+      "reported": "difference",
+      "sites": [],
+      "title": "High-dose single-fraction IMRT versus fractionated external beam radiotherapy for patients with spinal bone metastases: study protocol for a",
+      "year": 2015
+    },
+    {
+      "arms": [
+        [
+          10.0,
+          1
+        ],
+        [
+          16.0,
+          2
+        ],
+        [
+          39.0,
+          13
+        ]
+      ],
+      "confounds": [
+        "chemotherapy_comentioned"
+      ],
+      "label_basis": "result_only",
+      "pmid": 26163093,
+      "reported": "equivalence",
+      "sites": [],
+      "title": "The International Atomic Energy Agency (IAEA) randomized trial of palliative treatment of incurable locally advanced non small cell lung can",
+      "year": 2015
+    },
+    {
+      "arms": [
+        [
+          30.0,
+          15
+        ],
+        [
+          42.0,
+          15
+        ],
+        [
+          45.0,
+          30
+        ]
+      ],
+      "confounds": [
+        "chemotherapy_comentioned",
+        "twice_daily"
+      ],
+      "label_basis": "neither",
+      "pmid": 26494411,
+      "reported": "difference",
+      "sites": [],
+      "title": "Randomized phase II trial comparing twice daily hyperfractionated with once daily hypofractionated thoracic radiotherapy in limited disease ",
+      "year": 2016
+    },
+    {
+      "arms": [
+        [
+          35.0,
+          5
+        ],
+        [
+          40.0,
+          5
+        ]
+      ],
+      "confounds": [
+        "chemotherapy_comentioned"
+      ],
+      "label_basis": "neither",
+      "pmid": 26535989,
+      "reported": "difference",
+      "sites": [],
+      "title": "Preoperative Radiosurgery for Soft Tissue Sarcoma.",
+      "year": 2018
+    },
+    {
+      "arms": [
+        [
+          48.0,
+          20
+        ],
+        [
+          60.0,
+          30
+        ]
+      ],
+      "confounds": [
+        "chemotherapy_comentioned"
+      ],
+      "label_basis": "result_only",
+      "pmid": 26544097,
+      "reported": "equivalence",
+      "sites": [],
+      "title": "Efficacy of 18F-fluorodeoxyglucose positron emission tomography/computed tomography as a predictor of response in locally advanced non-small",
+      "year": 2016
+    },
+    {
+      "arms": [
+        [
+          3.6,
+          2
+        ],
+        [
+          7.2,
+          4
+        ],
+        [
+          10.8,
+          6
+        ]
+      ],
+      "confounds": [
+        "twice_daily"
+      ],
+      "label_basis": "neither",
+      "pmid": 26687902,
+      "reported": "difference",
+      "sites": [],
+      "title": "Continuous hyperfractionated accelerated radiotherapy - Escalated dose (CHART-ED): A phase I study.",
+      "year": 2016
+    },
+    {
+      "arms": [
+        [
+          45.0,
+          30
+        ],
+        [
+          66.0,
+          33
+        ]
+      ],
+      "confounds": [
+        "chemotherapy_comentioned",
+        "twice_daily"
+      ],
+      "label_basis": "neither",
+      "pmid": 26792218,
+      "reported": "difference",
+      "sites": [],
+      "title": "Protocol for the CONVERT trial-Concurrent ONce-daily VErsus twice-daily RadioTherapy: an international 2-arm randomised controlled trial of ",
+      "year": 2016
+    },
+    {
+      "arms": [
+        [
+          69.96,
+          33
+        ],
+        [
+          73.92,
+          33
+        ]
+      ],
+      "confounds": [
+        "chemotherapy_comentioned"
+      ],
+      "label_basis": "neither",
+      "pmid": 26813432,
+      "reported": "difference",
+      "sites": [],
+      "title": "[Phase II clinical trial of two different modes of administration of the induction chemotherapy for locally advanced nasopharyngeal carcinom",
+      "year": 2015
+    },
+    {
+      "arms": [
+        [
+          25.0,
+          5
+        ],
+        [
+          50.4,
+          28
+        ]
+      ],
+      "confounds": [
+        "chemotherapy_comentioned"
+      ],
+      "label_basis": "neither",
+      "pmid": 26884592,
+      "reported": "difference",
+      "sites": [],
+      "title": "Long-course oxaliplatin-based preoperative chemoradiation versus 5 \u00d7 5 Gy and consolidation chemotherapy for cT4 or fixed cT3 rectal cancer:",
+      "year": 2016
+    },
+    {
+      "arms": [
+        [
+          46.8,
+          26
+        ],
+        [
+          78.0,
+          39
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "result_only",
+      "pmid": 26959612,
+      "reported": "equivalence",
+      "sites": [
+        "prostate"
+      ],
+      "title": "Comparison of dosimetric parameters and acute toxicity after whole-pelvic vs prostate-only volumetric-modulated arc therapy with daily image",
+      "year": 2016
+    },
+    {
+      "arms": [
+        [
+          16.0,
+          1
+        ],
+        [
+          18.0,
+          1
+        ],
+        [
+          20.0,
+          5
+        ],
+        [
+          24.0,
+          1
+        ],
+        [
+          27.0,
+          3
+        ],
+        [
+          30.0,
+          5
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "neither",
+      "pmid": 27035507,
+      "reported": "difference",
+      "sites": [],
+      "title": "The use of spine stereotactic radiosurgery for oligometastatic disease.",
+      "year": 2016
+    },
+    {
+      "arms": [
+        [
+          70.0,
+          28
+        ],
+        [
+          73.8,
+          41
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "both",
+      "pmid": 27044935,
+      "reported": "equivalence",
+      "sites": [
+        "prostate"
+      ],
+      "title": "Randomized Phase III Noninferiority Study Comparing Two Radiotherapy Fractionation Schedules in Patients With Low-Risk Prostate Cancer.",
+      "year": 2016
+    },
+    {
+      "arms": [
+        [
+          57.0,
+          19
+        ],
+        [
+          60.0,
+          20
+        ],
+        [
+          74.0,
+          37
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "both",
+      "pmid": 27339115,
+      "reported": "equivalence",
+      "sites": [
+        "prostate"
+      ],
+      "title": "Conventional versus hypofractionated high-dose intensity-modulated radiotherapy for prostate cancer: 5-year outcomes of the randomised, non-",
+      "year": 2016
+    },
+    {
+      "arms": [
+        [
+          21.0,
+          3
+        ],
+        [
+          50.0,
+          25
+        ]
+      ],
+      "confounds": [
+        "brachytherapy_component",
+        "chemotherapy_comentioned"
+      ],
+      "label_basis": "result_only",
+      "pmid": 27368915,
+      "reported": "equivalence",
+      "sites": [],
+      "title": "Comparison of dosimetric parameters and acute toxicity of intensity-modulated and three-dimensional radiotherapy in patients with cervix car",
+      "year": 2016
+    },
+    {
+      "arms": [
+        [
+          30.1,
+          7
+        ],
+        [
+          32.0,
+          8
+        ]
+      ],
+      "confounds": [
+        "brachytherapy_component",
+        "dose_range_in_abstract",
+        "target_volume_comentioned"
+      ],
+      "label_basis": "neither",
+      "pmid": 27422584,
+      "reported": "difference",
+      "sites": [
+        "breast"
+      ],
+      "title": "GEC-ESTRO multicenter phase 3-trial: Accelerated partial breast irradiation with interstitial multicatheter brachytherapy versus external be",
+      "year": 2016
+    },
+    {
+      "arms": [
+        [
+          62.0,
+          20
+        ],
+        [
+          80.0,
+          40
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "neither",
+      "pmid": 27475670,
+      "reported": "difference",
+      "sites": [
+        "prostate"
+      ],
+      "title": "Macroscopic Hematuria After Conventional or Hypofractionated Radiation Therapy: Results From a Prospective Phase 3 Study.",
+      "year": 2016
+    },
+    {
+      "arms": [
+        [
+          8.0,
+          1
+        ],
+        [
+          16.0,
+          1
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "neither",
+      "pmid": 27527354,
+      "reported": "difference",
+      "sites": [],
+      "title": "Variations in target volume definition and dose to normal tissue using anatomic versus biological imaging (18 F-FDG-PET) in the treatment of",
+      "year": 2017
+    },
+    {
+      "arms": [
+        [
+          42.0,
+          15
+        ],
+        [
+          45.0,
+          30
+        ]
+      ],
+      "confounds": [
+        "chemotherapy_comentioned",
+        "twice_daily"
+      ],
+      "label_basis": "result_only",
+      "pmid": 27549509,
+      "reported": "equivalence",
+      "sites": [],
+      "title": "Comorbidity and outcomes of concurrent chemo- and radiotherapy in limited disease small cell lung cancer.",
+      "year": 2016
+    },
+    {
+      "arms": [
+        [
+          64.6,
+          19
+        ],
+        [
+          78.0,
+          39
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "result_only",
+      "pmid": 27665195,
+      "reported": "equivalence",
+      "sites": [
+        "prostate"
+      ],
+      "title": "Sexual Function After Hypofractionated Versus Conventionally Fractionated Radiotherapy for Prostate Cancer: Results From the Randomized Phas",
+      "year": 2016
+    },
+    {
+      "arms": [
+        [
+          15.0,
+          1
+        ],
+        [
+          25.0,
+          5
+        ],
+        [
+          30.0,
+          10
+        ]
+      ],
+      "confounds": [
+        "target_volume_comentioned"
+      ],
+      "label_basis": "design_only",
+      "pmid": 27793446,
+      "reported": "equivalence",
+      "sites": [],
+      "title": "Stereotactic radiotherapy of the tumor bed compared to whole brain radiotherapy after surgery of single brain metastasis: Results from a ran",
+      "year": 2016
+    },
+    {
+      "arms": [
+        [
+          48.0,
+          4
+        ],
+        [
+          60.0,
+          8
+        ],
+        [
+          60.0,
+          15
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "neither",
+      "pmid": 27876603,
+      "reported": "difference",
+      "sites": [],
+      "title": "Canadian Phase III Randomized Trial of Stereotactic Body Radiotherapy Versus Conventionally Hypofractionated Radiotherapy for Stage I, Medic",
+      "year": 2017
+    },
+    {
+      "arms": [
+        [
+          10.0,
+          4
+        ],
+        [
+          14.88,
+          6
+        ],
+        [
+          40.05,
+          15
+        ]
+      ],
+      "confounds": [
+        "target_volume_comentioned"
+      ],
+      "label_basis": "neither",
+      "pmid": 28062087,
+      "reported": "difference",
+      "sites": [
+        "breast"
+      ],
+      "title": "Does an integrated boost increase acute toxicity in prone hypofractionated breast irradiation? A randomized controlled trial.",
+      "year": 2017
+    },
+    {
+      "arms": [
+        [
+          25.0,
+          5
+        ],
+        [
+          50.0,
+          25
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "design_only",
+      "pmid": 28190762,
+      "reported": "equivalence",
+      "sites": [],
+      "title": "Optimal fractionation of preoperative radiotherapy and timing to surgery for rectal cancer (Stockholm III): a multicentre, randomised, non-b",
+      "year": 2017
+    },
+    {
+      "arms": [
+        [
+          60.0,
+          20
+        ],
+        [
+          78.0,
+          39
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "both",
+      "pmid": 28296582,
+      "reported": "equivalence",
+      "sites": [
+        "prostate"
+      ],
+      "title": "Randomized Trial of a Hypofractionated Radiation Regimen for the Treatment of Localized Prostate Cancer.",
+      "year": 2017
+    },
+    {
+      "arms": [
+        [
+          62.0,
+          20
+        ],
+        [
+          80.0,
+          40
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "neither",
+      "pmid": 28355113,
+      "reported": "difference",
+      "sites": [
+        "prostate"
+      ],
+      "title": "Moderate Hypofractionation in High-Risk, Organ-Confined Prostate Cancer: Final Results of a Phase III Randomized Trial.",
+      "year": 2017
+    },
+    {
+      "arms": [
+        [
+          60.0,
+          30
+        ],
+        [
+          66.0,
+          33
+        ]
+      ],
+      "confounds": [
+        "chemotherapy_comentioned"
+      ],
+      "label_basis": "result_only",
+      "pmid": 28410809,
+      "reported": "equivalence",
+      "sites": [],
+      "title": "A randomized phase II trial of concurrent chemoradiation with two doses of radiotherapy, 60Gy and 66Gy, concomitant with a fixed dose of ora",
+      "year": 2017
+    },
+    {
+      "arms": [
+        [
+          25.0,
+          5
+        ],
+        [
+          40.0,
+          15
+        ]
+      ],
+      "confounds": [
+        "chemotherapy_comentioned"
+      ],
+      "label_basis": "design_only",
+      "pmid": 28602417,
+      "reported": "equivalence",
+      "sites": [],
+      "title": "Survival Outcomes With Short-Course Radiation Therapy in Elderly Patients With Glioblastoma: Data From a Randomized Phase 3 Trial.",
+      "year": 2017
+    },
+    {
+      "arms": [
+        [
+          25.0,
+          10
+        ],
+        [
+          45.0,
+          15
+        ]
+      ],
+      "confounds": [
+        "chemotherapy_comentioned"
+      ],
+      "label_basis": "neither",
+      "pmid": 28648948,
+      "reported": "difference",
+      "sites": [],
+      "title": "Randomized Phase II Study Comparing Prophylactic Cranial Irradiation Alone to Prophylactic Cranial Irradiation and Consolidative Extracrania",
+      "year": 2017
+    },
+    {
+      "arms": [
+        [
+          40.0,
+          20
+        ],
+        [
+          66.0,
+          33
+        ]
+      ],
+      "confounds": [
+        "brachytherapy_component"
+      ],
+      "label_basis": "neither",
+      "pmid": 28816169,
+      "reported": "difference",
+      "sites": [
+        "prostate"
+      ],
+      "title": "Long-Term Results of a Randomized Trial Comparing Iridium Implant Plus External Beam Radiation Therapy With External Beam Radiation Therapy ",
+      "year": 2017
+    },
+    {
+      "arms": [
+        [
+          74.0,
+          33
+        ],
+        [
+          95.0,
+          33
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "neither",
+      "pmid": 28830293,
+      "reported": "difference",
+      "sites": [],
+      "title": "The NARLAL2 dose escalation trial: dosimetric implications of inter-fractional changes in organs at risk.",
+      "year": 2018
+    },
+    {
+      "arms": [
+        [
+          64.6,
+          19
+        ],
+        [
+          78.0,
+          39
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "neither",
+      "pmid": 28943074,
+      "reported": "difference",
+      "sites": [
+        "prostate"
+      ],
+      "title": "Local Protocol Variations for Image Guided Radiation Therapy in the Multicenter Dutch Hypofractionation (HYPRO) Trial: Impact of Rectal Ball",
+      "year": 2017
+    },
+    {
+      "arms": [
+        [
+          40.0,
+          15
+        ],
+        [
+          50.0,
+          25
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "result_only",
+      "pmid": 29205080,
+      "reported": "equivalence",
+      "sites": [],
+      "title": "The potential benefits from respiratory gating for breast cancer patients regarding target coverage and dose to organs at risk when applying",
+      "year": 2018
+    },
+    {
+      "arms": [
+        [
+          42.0,
+          15
+        ],
+        [
+          45.0,
+          30
+        ]
+      ],
+      "confounds": [
+        "twice_daily"
+      ],
+      "label_basis": "neither",
+      "pmid": 29374714,
+      "reported": "difference",
+      "sites": [],
+      "title": "Survival in Limited Disease Small Cell Lung Cancer According to N3 Lymph Node Involvement.",
+      "year": 2018
+    },
+    {
+      "arms": [
+        [
+          20.0,
+          5
+        ],
+        [
+          30.0,
+          10
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "neither",
+      "pmid": 29374734,
+      "reported": "difference",
+      "sites": [],
+      "title": "Comparison of Two Radiotherapy Regimens for Metastatic Spinal Cord Compression: Subgroup Analyses from a Randomized Trial.",
+      "year": 2018
+    },
+    {
+      "arms": [
+        [
+          60.0,
+          30
+        ],
+        [
+          72.0,
+          60
+        ]
+      ],
+      "confounds": [
+        "twice_daily"
+      ],
+      "label_basis": "result_only",
+      "pmid": 29404979,
+      "reported": "equivalence",
+      "sites": [],
+      "title": "NRG oncology RTOG 9006: a phase III randomized trial of hyperfractionated radiotherapy (RT) and BCNU versus standard RT and BCNU for maligna",
+      "year": 2018
+    },
+    {
+      "arms": [
+        [
+          56.0,
+          16
+        ],
+        [
+          67.0,
+          25
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "neither",
+      "pmid": 29485064,
+      "reported": "difference",
+      "sites": [
+        "prostate"
+      ],
+      "title": "4 Weeks Versus 5 Weeks of Hypofractionated High-dose Radiation Therapy as Primary Therapy for Prostate Cancer: Interim Safety Analysis of a ",
+      "year": 2018
+    },
+    {
+      "arms": [
+        [
+          70.2,
+          39
+        ],
+        [
+          79.2,
+          44
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "neither",
+      "pmid": 29543933,
+      "reported": "difference",
+      "sites": [
+        "prostate"
+      ],
+      "title": "Effect of Standard vs Dose-Escalated Radiation Therapy for Patients With Intermediate-Risk Prostate Cancer: The NRG Oncology RTOG 0126 Rando",
+      "year": 2018
+    },
+    {
+      "arms": [
+        [
+          57.0,
+          19
+        ],
+        [
+          60.0,
+          20
+        ],
+        [
+          74.0,
+          37
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "neither",
+      "pmid": 29559283,
+      "reported": "difference",
+      "sites": [
+        "prostate"
+      ],
+      "title": "Ki67 Is an Independent Predictor of Recurrence in the Largest Randomized Trial of 3 Radiation Fractionation Schedules in Localized Prostate ",
+      "year": 2018
+    },
+    {
+      "arms": [
+        [
+          60.0,
+          20
+        ],
+        [
+          78.0,
+          39
+        ]
+      ],
+      "confounds": [
+        "brachytherapy_component"
+      ],
+      "label_basis": "neither",
+      "pmid": 29903505,
+      "reported": "difference",
+      "sites": [
+        "prostate"
+      ],
+      "title": "Randomised Phase II Feasibility Trial of Image-guided External Beam Radiotherapy With or Without High Dose Rate Brachytherapy Boost in Men w",
+      "year": 2018
+    },
+    {
+      "arms": [
+        [
+          50.0,
+          20
+        ],
+        [
+          60.0,
+          20
+        ],
+        [
+          60.0,
+          30
+        ]
+      ],
+      "confounds": [
+        "chemotherapy_comentioned"
+      ],
+      "label_basis": "neither",
+      "pmid": 29936695,
+      "reported": "difference",
+      "sites": [],
+      "title": "Hypofractionated accelerated radiotherapy (HART) with concurrent and adjuvant temozolomide in newly diagnosed glioblastoma: a phase II rando",
+      "year": 2018
+    },
+    {
+      "arms": [
+        [
+          45.0,
+          15
+        ],
+        [
+          50.0,
+          4
+        ],
+        [
+          60.0,
+          10
+        ]
+      ],
+      "confounds": [
+        "twice_daily"
+      ],
+      "label_basis": "neither",
+      "pmid": 30012526,
+      "reported": "difference",
+      "sites": [],
+      "title": "Safety of Combined Immunotherapy and Thoracic Radiation Therapy: Analysis of 3 Single-Institutional Phase I/II Trials.",
+      "year": 2018
+    },
+    {
+      "arms": [
+        [
+          10.0,
+          5
+        ],
+        [
+          50.0,
+          25
+        ]
+      ],
+      "confounds": [
+        "target_volume_comentioned"
+      ],
+      "label_basis": "neither",
+      "pmid": 30474504,
+      "reported": "difference",
+      "sites": [
+        "breast"
+      ],
+      "title": "External accelerated partial breast irradiation for ductal carcinoma in situ: long-term follow-up from a phase 3 randomized trial.",
+      "year": 2019
+    },
+    {
+      "arms": [
+        [
+          70.0,
+          35
+        ],
+        [
+          78.0,
+          39
+        ]
+      ],
+      "confounds": [
+        "target_volume_comentioned"
+      ],
+      "label_basis": "neither",
+      "pmid": 30836166,
+      "reported": "difference",
+      "sites": [
+        "prostate"
+      ],
+      "title": "Dose Escalation for Prostate Adenocarcinoma: A Long-Term Update on the Outcomes of a Phase 3, Single Institution Randomized Clinical Trial.",
+      "year": 2019
+    },
+    {
+      "arms": [
+        [
+          45.0,
+          30
+        ],
+        [
+          66.0,
+          33
+        ]
+      ],
+      "confounds": [
+        "chemotherapy_comentioned",
+        "twice_daily"
+      ],
+      "label_basis": "result_only",
+      "pmid": 31002954,
+      "reported": "equivalence",
+      "sites": [],
+      "title": "18F-Fludeoxyglucose PET/CT in SCLC: Analysis of the CONVERT Randomized Controlled Trial.",
+      "year": 2019
+    },
+    {
+      "arms": [
+        [
+          25.0,
+          5
+        ],
+        [
+          50.0,
+          25
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "neither",
+      "pmid": 31015165,
+      "reported": "difference",
+      "sites": [],
+      "title": "Tumour regression after radiotherapy for rectal cancer - Results from the randomised Stockholm III trial.",
+      "year": 2019
+    },
+    {
+      "arms": [
+        [
+          25.0,
+          5
+        ],
+        [
+          50.0,
+          25
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "result_only",
+      "pmid": 31197822,
+      "reported": "equivalence",
+      "sites": [],
+      "title": "Postoperative complications in relation to overall treatment time in patients with rectal cancer receiving neoadjuvant radiotherapy.",
+      "year": 2019
+    },
+    {
+      "arms": [
+        [
+          25.0,
+          5
+        ],
+        [
+          50.4,
+          28
+        ]
+      ],
+      "confounds": [
+        "chemotherapy_comentioned"
+      ],
+      "label_basis": "neither",
+      "pmid": 31234886,
+      "reported": "difference",
+      "sites": [],
+      "title": "Cost-effectiveness analysis of long-course oxaliplatin and bolus of fluorouracil based preoperative chemoradiotherapy vs. 5x5Gy radiation pl",
+      "year": 2019
+    },
+    {
+      "arms": [
+        [
+          8.0,
+          1
+        ],
+        [
+          24.0,
+          6
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "design_only",
+      "pmid": 31344434,
+      "reported": "equivalence",
+      "sites": [],
+      "title": "Net Pain Relief After Palliative Radiation Therapy for Painful Bone Metastases: A Useful Measure to Reflect Response Duration? A Further Ana",
+      "year": 2019
+    },
+    {
+      "arms": [
+        [
+          20.0,
+          1
+        ],
+        [
+          30.0,
+          3
+        ],
+        [
+          35.0,
+          5
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "neither",
+      "pmid": 31426760,
+      "reported": "difference",
+      "sites": [],
+      "title": "Stereotactic ablative radiotherapy for the comprehensive treatment of 4-10 oligometastatic tumors (SABR-COMET-10): study protocol for a rand",
+      "year": 2019
+    },
+    {
+      "arms": [
+        [
+          30.0,
+          1
+        ],
+        [
+          60.0,
+          3
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "design_only",
+      "pmid": 31445956,
+      "reported": "equivalence",
+      "sites": [],
+      "title": "One Versus Three Fractions of Stereotactic Body Radiation Therapy for Peripheral Stage I to II Non-Small Cell Lung Cancer: A Randomized, Mul",
+      "year": 2019
+    },
+    {
+      "arms": [
+        [
+          62.0,
+          20
+        ],
+        [
+          78.0,
+          39
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "design_only",
+      "pmid": 31540791,
+      "reported": "equivalence",
+      "sites": [
+        "prostate"
+      ],
+      "title": "Intensity-modulated fractionated radiotherapy versus stereotactic body radiotherapy for prostate cancer (PACE-B): acute toxicity findings fr",
+      "year": 2019
+    },
+    {
+      "arms": [
+        [
+          64.6,
+          19
+        ],
+        [
+          78.0,
+          39
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "neither",
+      "pmid": 31593756,
+      "reported": "difference",
+      "sites": [
+        "prostate"
+      ],
+      "title": "Hyprofractionated Versus Conventionally Fractionated Radiation Therapy for Patients with Intermediate- or High-Risk, Localized, Prostate Can",
+      "year": 2020
+    },
+    {
+      "arms": [
+        [
+          30.0,
+          10
+        ],
+        [
+          37.5,
+          15
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "neither",
+      "pmid": 31654784,
+      "reported": "difference",
+      "sites": [],
+      "title": "Optimizing Whole Brain Radiation Therapy Dose and Fractionation: Results From a Prospective Phase 3 Trial (NCCTG N107C [Alliance]/CEC.3).",
+      "year": 2020
+    },
+    {
+      "arms": [
+        [
+          66.0,
+          33
+        ],
+        [
+          72.0,
+          36
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "neither",
+      "pmid": 31669564,
+      "reported": "difference",
+      "sites": [
+        "prostate"
+      ],
+      "title": "Toxicity and Biochemical Outcomes of Dose-Intensified Postoperative Radiation Therapy for Prostate Cancer: Results of a Randomized Phase III",
+      "year": 2020
+    },
+    {
+      "arms": [
+        [
+          39.0,
+          13
+        ],
+        [
+          60.0,
+          30
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "neither",
+      "pmid": 31728883,
+      "reported": "difference",
+      "sites": [],
+      "title": "Hypofractionated radiotherapy with temozolomide in diffuse intrinsic pontine gliomas: a randomized controlled trial.",
+      "year": 2020
+    },
+    {
+      "arms": [
+        [
+          50.0,
+          4
+        ],
+        [
+          70.0,
+          10
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "neither",
+      "pmid": 31990759,
+      "reported": "difference",
+      "sites": [],
+      "title": "Metabolic Responses to Metformin in Inoperable Early-stage Non-Small Cell Lung Cancer Treated With Stereotactic Radiotherapy: Results of a R",
+      "year": 2020
+    },
+    {
+      "arms": [
+        [
+          42.7,
+          7
+        ],
+        [
+          78.0,
+          39
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "result_only",
+      "pmid": 32004582,
+      "reported": "equivalence",
+      "sites": [
+        "prostate"
+      ],
+      "title": "Erectile Dysfunction and Absorbed Dose to Penile Base Structures in a Randomized Trial Comparing Ultrahypofractionated and Conventionally Fr",
+      "year": 2020
+    },
+    {
+      "arms": [
+        [
+          17.0,
+          2
+        ],
+        [
+          39.0,
+          13
+        ]
+      ],
+      "confounds": [
+        "chemotherapy_comentioned"
+      ],
+      "label_basis": "neither",
+      "pmid": 32521876,
+      "reported": "difference",
+      "sites": [],
+      "title": "A randomized study comparing two hypofractioned 3-D conformal radiotherapy for stage IIIb-IV non small cell lung cancer.",
+      "year": 2020
+    },
+    {
+      "arms": [
+        [
+          20.0,
+          5
+        ],
+        [
+          27.0,
+          3
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "neither",
+      "pmid": 32592381,
+      "reported": "difference",
+      "sites": [],
+      "title": "Randomized Pilot Study of 20 Gy in 5 Fractions versus 27 Gy in 3 Fractions Radiotherapy for Treating Painful Bone Metastases: A Single Insti",
+      "year": 2020
+    },
+    {
+      "arms": [
+        [
+          43.5,
+          15
+        ],
+        [
+          50.0,
+          25
+        ]
+      ],
+      "confounds": [
+        "target_volume_comentioned"
+      ],
+      "label_basis": "both",
+      "pmid": 32780661,
+      "reported": "equivalence",
+      "sites": [
+        "breast"
+      ],
+      "title": "Hypofractionated Versus Conventional Fractionated Radiotherapy After Breast-Conserving Surgery in the Modern Treatment Era: A Multicenter, R",
+      "year": 2020
+    },
+    {
+      "arms": [
+        [
+          30.0,
+          5
+        ],
+        [
+          50.0,
+          25
+        ]
+      ],
+      "confounds": [
+        "target_volume_comentioned"
+      ],
+      "label_basis": "neither",
+      "pmid": 32840419,
+      "reported": "difference",
+      "sites": [
+        "breast"
+      ],
+      "title": "Accelerated Partial-Breast Irradiation Compared With Whole-Breast Irradiation for Early Breast Cancer: Long-Term Results of the Randomized P",
+      "year": 2020
+    },
+    {
+      "arms": [
+        [
+          40.0,
+          15
+        ],
+        [
+          50.0,
+          25
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "design_only",
+      "pmid": 32910709,
+      "reported": "equivalence",
+      "sites": [
+        "breast"
+      ],
+      "title": "Hypofractionated Versus Standard Fractionated Radiotherapy in Patients With Early Breast Cancer or Ductal Carcinoma In Situ in a Randomized ",
+      "year": 2020
+    },
+    {
+      "arms": [
+        [
+          66.0,
+          30
+        ],
+        [
+          70.0,
+          35
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "result_only",
+      "pmid": 32938468,
+      "reported": "equivalence",
+      "sites": [],
+      "title": "Intensity-modulated radiation therapy versus three-dimensional conformal radiotherapy in head and neck squamous cell carcinoma: long-term an",
+      "year": 2020
+    },
+    {
+      "arms": [
+        [
+          57.4,
+          28
+        ],
+        [
+          59.4,
+          33
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "result_only",
+      "pmid": 32980384,
+      "reported": "equivalence",
+      "sites": [
+        "breast"
+      ],
+      "title": "Postoperative radiotherapy with intensity-modulated radiation therapy versus 3-dimensional conformal radiotherapy in early breast cancer: A ",
+      "year": 2021
+    },
+    {
+      "arms": [
+        [
+          25.0,
+          5
+        ],
+        [
+          45.0,
+          25
+        ]
+      ],
+      "confounds": [
+        "brachytherapy_component"
+      ],
+      "label_basis": "neither",
+      "pmid": 33036579,
+      "reported": "difference",
+      "sites": [
+        "prostate"
+      ],
+      "title": "Is hypofractionated whole pelvis radiotherapy (WPRT) as well tolerated as conventionally fractionated WPRT in prostate cancer patients? The ",
+      "year": 2020
+    },
+    {
+      "arms": [
+        [
+          45.0,
+          15
+        ],
+        [
+          50.0,
+          4
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "neither",
+      "pmid": 33051340,
+      "reported": "difference",
+      "sites": [],
+      "title": "Pembrolizumab with or without radiation therapy for metastatic non-small cell lung cancer: a randomized phase I/II trial.",
+      "year": 2020
+    },
+    {
+      "arms": [
+        [
+          8.0,
+          1
+        ],
+        [
+          18.0,
+          1
+        ],
+        [
+          20.0,
+          5
+        ],
+        [
+          30.0,
+          3
+        ],
+        [
+          30.0,
+          10
+        ],
+        [
+          35.0,
+          5
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "neither",
+      "pmid": 33333200,
+      "reported": "difference",
+      "sites": [],
+      "title": "Pain Response After Stereotactic Body Radiation Therapy Versus Conventional Radiation Therapy in Patients With Bone Metastases-A Phase 2 Ran",
+      "year": 2021
+    },
+    {
+      "arms": [
+        [
+          70.0,
+          28
+        ],
+        [
+          80.0,
+          40
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "design_only",
+      "pmid": 33653964,
+      "reported": "equivalence",
+      "sites": [
+        "prostate"
+      ],
+      "title": "Hypofractionated versus conventionally fractionated image-guided volumetric-modulated arc radiotherapy for localized prostate cancer: a phas",
+      "year": 2021
+    },
+    {
+      "arms": [
+        [
+          45.0,
+          30
+        ],
+        [
+          60.0,
+          40
+        ]
+      ],
+      "confounds": [
+        "chemotherapy_comentioned",
+        "dose_range_in_abstract",
+        "twice_daily"
+      ],
+      "label_basis": "neither",
+      "pmid": 33662285,
+      "reported": "difference",
+      "sites": [],
+      "title": "High-dose versus standard-dose twice-daily thoracic radiotherapy for patients with limited stage small-cell lung cancer: an open-label, rand",
+      "year": 2021
+    },
+    {
+      "arms": [
+        [
+          68.0,
+          25
+        ],
+        [
+          78.0,
+          39
+        ]
+      ],
+      "confounds": [
+        "target_volume_comentioned"
+      ],
+      "label_basis": "neither",
+      "pmid": 33705985,
+      "reported": "difference",
+      "sites": [
+        "prostate"
+      ],
+      "title": "Clinical Outcomes of the CHIRP Trial: A Phase II Prospective Randomized Trial of Conventionally Fractionated Versus Moderately Hypofractiona",
+      "year": 2021
+    },
+    {
+      "arms": [
+        [
+          42.56,
+          16
+        ],
+        [
+          50.0,
+          25
+        ]
+      ],
+      "confounds": [
+        "target_volume_comentioned"
+      ],
+      "label_basis": "both",
+      "pmid": 33797199,
+      "reported": "equivalence",
+      "sites": [
+        "breast"
+      ],
+      "title": "Outcome of hypofractionated breast irradiation and intraoperative electron boost in early breast cancer: A randomized non-inferiority clinic",
+      "year": 2021
+    },
+    {
+      "arms": [
+        [
+          50.4,
+          28
+        ],
+        [
+          54.0,
+          27
+        ]
+      ],
+      "confounds": [
+        "chemotherapy_comentioned"
+      ],
+      "label_basis": "neither",
+      "pmid": 34309117,
+      "reported": "difference",
+      "sites": [],
+      "title": "Postoperative Adjuvant Therapy Versus Surgery Alone for Stage IIB-III Esophageal Squamous Cell Carcinoma: A Phase III Randomized Controlled ",
+      "year": 2021
+    },
+    {
+      "arms": [
+        [
+          28.0,
+          1
+        ],
+        [
+          48.0,
+          4
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "result_only",
+      "pmid": 34455431,
+      "reported": "equivalence",
+      "sites": [],
+      "title": "Single-Fraction vs Multifraction Stereotactic Ablative Body Radiotherapy for Pulmonary Oligometastases (SAFRON II): The Trans Tasman Radiati",
+      "year": 2021
+    },
+    {
+      "arms": [
+        [
+          40.0,
+          20
+        ],
+        [
+          50.0,
+          25
+        ]
+      ],
+      "confounds": [
+        "brachytherapy_component"
+      ],
+      "label_basis": "neither",
+      "pmid": 34598883,
+      "reported": "difference",
+      "sites": [],
+      "title": "Low-Dose-Rate versus High-Dose-Rate intracavitary brachytherapy in cervical cancer - Final Results of a Phase III randomized trial.",
+      "year": 2021
+    },
+    {
+      "arms": [
+        [
+          25.0,
+          5
+        ],
+        [
+          34.0,
+          10
+        ],
+        [
+          40.0,
+          15
+        ],
+        [
+          60.0,
+          30
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "design_only",
+      "pmid": 34654402,
+      "reported": "equivalence",
+      "sites": [],
+      "title": "A randomized phase III study of short-course radiotherapy combined with Temozolomide in elderly patients with newly diagnosed glioblastoma; ",
+      "year": 2021
+    },
+    {
+      "arms": [
+        [
+          36.25,
+          5
+        ],
+        [
+          76.0,
+          38
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "result_only",
+      "pmid": 35049677,
+      "reported": "equivalence",
+      "sites": [
+        "prostate"
+      ],
+      "title": "Prospective Randomized Phase II Study of Stereotactic Body Radiotherapy (SBRT) vs. Conventional Fractionated Radiotherapy (CFRT) for Chinese",
+      "year": 2021
+    },
+    {
+      "arms": [
+        [
+          75.2,
+          32
+        ],
+        [
+          77.55,
+          33
+        ]
+      ],
+      "confounds": [
+        "chemotherapy_comentioned"
+      ],
+      "label_basis": "neither",
+      "pmid": 35074433,
+      "reported": "difference",
+      "sites": [],
+      "title": "Diffusion-Weighted Magnetic Resonance Imaging-Guided Dose Painting in Patients With Locoregionally Advanced Nasopharyngeal Carcinoma Treated",
+      "year": 2022
+    },
+    {
+      "arms": [
+        [
+          39.0,
+          13
+        ],
+        [
+          45.0,
+          15
+        ],
+        [
+          54.0,
+          30
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "design_only",
+      "pmid": 35150788,
+      "reported": "equivalence",
+      "sites": [],
+      "title": "Hypofractionated Radiation Therapy For Diffuse Intrinsic Pontine Glioma: A Noninferiority Randomized Study Including 253 Children.",
+      "year": 2022
+    },
+    {
+      "arms": [
+        [
+          20.0,
+          5
+        ],
+        [
+          30.0,
+          10
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "neither",
+      "pmid": 35201290,
+      "reported": "difference",
+      "sites": [],
+      "title": "Palliative Radiation for Advanced Central Lung Tumors With Intentional Avoidance of the Esophagus (PROACTIVE): A Phase 3 Randomized Clinical",
+      "year": 2022
+    },
+    {
+      "arms": [
+        [
+          55.8,
+          31
+        ],
+        [
+          70.2,
+          39
+        ]
+      ],
+      "confounds": [
+        "chemotherapy_comentioned"
+      ],
+      "label_basis": "neither",
+      "pmid": 35568246,
+      "reported": "difference",
+      "sites": [],
+      "title": "Radiation Therapy Dose Escalation in Unresectable Ewing Sarcoma: Final Results of a Phase 3 Randomized Controlled Trial.",
+      "year": 2022
+    },
+    {
+      "arms": [
+        [
+          55.0,
+          20
+        ],
+        [
+          64.0,
+          32
+        ]
+      ],
+      "confounds": [
+        "chemotherapy_comentioned"
+      ],
+      "label_basis": "neither",
+      "pmid": 35577644,
+      "reported": "difference",
+      "sites": [],
+      "title": "Chemoradiotherapy in Muscle-invasive Bladder Cancer: 10-yr Follow-up of the Phase 3 Randomised Controlled BC2001 Trial.",
+      "year": 2022
+    },
+    {
+      "arms": [
+        [
+          42.5,
+          16
+        ],
+        [
+          50.0,
+          25
+        ]
+      ],
+      "confounds": [
+        "dose_range_in_abstract"
+      ],
+      "label_basis": "neither",
+      "pmid": 35616948,
+      "reported": "difference",
+      "sites": [
+        "breast"
+      ],
+      "title": "Effect of Supine vs Prone Breast Radiotherapy on Acute Toxic Effects of the Skin Among Women With Large Breast Size: A Randomized Clinical T",
+      "year": 2022
+    },
+    {
+      "arms": [
+        [
+          6.0,
+          5
+        ],
+        [
+          12.0,
+          4
+        ],
+        [
+          26.0,
+          5
+        ],
+        [
+          40.0,
+          15
+        ]
+      ],
+      "confounds": [
+        "target_volume_comentioned"
+      ],
+      "label_basis": "design_only",
+      "pmid": 35817323,
+      "reported": "equivalence",
+      "sites": [
+        "breast"
+      ],
+      "title": "HYPORT adjuvant acute toxicity and patient dosimetry quality assurance results - Interim analysis.",
+      "year": 2022
+    },
+    {
+      "arms": [
+        [
+          25.0,
+          5
+        ],
+        [
+          40.0,
+          5
+        ]
+      ],
+      "confounds": [
+        "dose_range_in_abstract"
+      ],
+      "label_basis": "neither",
+      "pmid": 35834226,
+      "reported": "difference",
+      "sites": [],
+      "title": "Efficacy of Preoperative mFOLFIRINOX vs mFOLFIRINOX Plus Hypofractionated Radiotherapy for Borderline Resectable Adenocarcinoma of the Pancr",
+      "year": 2022
+    },
+    {
+      "arms": [
+        [
+          25.0,
+          5
+        ],
+        [
+          60.0,
+          30
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "design_only",
+      "pmid": 35901337,
+      "reported": "equivalence",
+      "sites": [],
+      "title": "A Randomized Study of Short Course (One Week) Radiation Therapy with or without Temozolomide in Elderly and/or Frail Patients with Newly Dia",
+      "year": 2022
+    },
+    {
+      "arms": [
+        [
+          62.0,
+          20
+        ],
+        [
+          78.0,
+          39
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "design_only",
+      "pmid": 36113498,
+      "reported": "equivalence",
+      "sites": [
+        "prostate"
+      ],
+      "title": "Intensity-modulated radiotherapy versus stereotactic body radiotherapy for prostate cancer (PACE-B): 2-year toxicity results from an open-la",
+      "year": 2022
+    },
+    {
+      "arms": [
+        [
+          24.0,
+          3
+        ],
+        [
+          50.0,
+          25
+        ]
+      ],
+      "confounds": [
+        "brachytherapy_component",
+        "chemotherapy_comentioned"
+      ],
+      "label_basis": "neither",
+      "pmid": 36412399,
+      "reported": "difference",
+      "sites": [],
+      "title": "A randomized study for dosimetric assessment and clinical impact of bone marrow sparing intensity-modulated radiation therapy versus 3-dimen",
+      "year": 2022
+    },
+    {
+      "arms": [
+        [
+          30.0,
+          5
+        ],
+        [
+          50.0,
+          25
+        ]
+      ],
+      "confounds": [
+        "target_volume_comentioned"
+      ],
+      "label_basis": "neither",
+      "pmid": 36472353,
+      "reported": "difference",
+      "sites": [
+        "breast"
+      ],
+      "title": "Accelerated Partial Breast Irradiation: Florence Phase 3 Trial Experience and Future Perspectives.",
+      "year": 2023
+    },
+    {
+      "arms": [
+        [
+          32.0,
+          16
+        ],
+        [
+          46.0,
+          23
+        ]
+      ],
+      "confounds": [
+        "brachytherapy_component",
+        "target_volume_comentioned"
+      ],
+      "label_basis": "neither",
+      "pmid": 36528488,
+      "reported": "difference",
+      "sites": [
+        "prostate"
+      ],
+      "title": "An Updated Analysis of the Survival Endpoints of ASCENDE-RT.",
+      "year": 2023
+    },
+    {
+      "arms": [
+        [
+          45.0,
+          30
+        ],
+        [
+          60.0,
+          40
+        ]
+      ],
+      "confounds": [
+        "chemotherapy_comentioned",
+        "twice_daily"
+      ],
+      "label_basis": "neither",
+      "pmid": 36716960,
+      "reported": "difference",
+      "sites": [],
+      "title": "Treatment Outcomes of Older Participants in a Randomized Trial Comparing Two Schedules of Twice-Daily Thoracic Radiotherapy in Limited-Stage",
+      "year": 2023
+    },
+    {
+      "arms": [
+        [
+          42.5,
+          16
+        ],
+        [
+          50.0,
+          25
+        ]
+      ],
+      "confounds": [
+        "target_volume_comentioned"
+      ],
+      "label_basis": "result_only",
+      "pmid": 36827900,
+      "reported": "equivalence",
+      "sites": [
+        "breast"
+      ],
+      "title": "Long-term outcomes and effects of hypofractionated radiotherapy in microinvasive breast cancer: Analysis from a randomized trial.",
+      "year": 2023
+    },
+    {
+      "arms": [
+        [
+          60.0,
+          27
+        ],
+        [
+          65.0,
+          54
+        ]
+      ],
+      "confounds": [
+        "target_volume_comentioned",
+        "twice_daily"
+      ],
+      "label_basis": "neither",
+      "pmid": 36842439,
+      "reported": "difference",
+      "sites": [],
+      "title": "Hyperfractionation compared with standard fractionation in intensity-modulated radiotherapy for patients with locally advanced recurrent nas",
+      "year": 2023
+    },
+    {
+      "arms": [
+        [
+          25.0,
+          5
+        ],
+        [
+          36.25,
+          5
+        ]
+      ],
+      "confounds": [
+        "target_volume_comentioned"
+      ],
+      "label_basis": "neither",
+      "pmid": 36893820,
+      "reported": "difference",
+      "sites": [
+        "prostate"
+      ],
+      "title": "A Randomized Feasibility Trial of Stereotactic Prostate Radiation Therapy With or Without Elective Nodal Irradiation in High-Risk Localized ",
+      "year": 2023
+    },
+    {
+      "arms": [
+        [
+          16.0,
+          8
+        ],
+        [
+          36.0,
+          15
+        ],
+        [
+          40.0,
+          15
+        ],
+        [
+          48.0,
+          15
+        ],
+        [
+          53.0,
+          15
+        ]
+      ],
+      "confounds": [
+        "target_volume_comentioned"
+      ],
+      "label_basis": "design_only",
+      "pmid": 37302395,
+      "reported": "equivalence",
+      "sites": [
+        "breast"
+      ],
+      "title": "Dose-escalated simultaneous integrated boost radiotherapy in early breast cancer (IMPORT HIGH): a multicentre, phase 3, non-inferiority, ope",
+      "year": 2023
+    },
+    {
+      "arms": [
+        [
+          20.0,
+          10
+        ],
+        [
+          21.0,
+          7
+        ],
+        [
+          50.0,
+          25
+        ]
+      ],
+      "confounds": [
+        "brachytherapy_component"
+      ],
+      "label_basis": "neither",
+      "pmid": 37660737,
+      "reported": "difference",
+      "sites": [],
+      "title": "Intensity-Modulated Radiation Therapy Alone Versus Intensity-Modulated Radiation Therapy and Brachytherapy for Early-Stage Oropharyngeal Can",
+      "year": 2024
+    },
+    {
+      "arms": [
+        [
+          25.0,
+          5
+        ],
+        [
+          45.0,
+          25
+        ]
+      ],
+      "confounds": [
+        "chemotherapy_comentioned"
+      ],
+      "label_basis": "neither",
+      "pmid": 37702850,
+      "reported": "difference",
+      "sites": [],
+      "title": "Randomized Controlled Trial of Neoadjuvant Short-Course Radiotherapy Followed by Consolidation Chemotherapy Versus Long-Course Chemoradiothe",
+      "year": 2024
+    },
+    {
+      "arms": [
+        [
+          40.05,
+          15
+        ],
+        [
+          50.0,
+          25
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "design_only",
+      "pmid": 37710198,
+      "reported": "equivalence",
+      "sites": [
+        "breast"
+      ],
+      "title": "Radiotherapy versus low-dose tamoxifen following breast-conserving surgery for low-risk and estrogen receptor-positive breast ductal carcino",
+      "year": 2023
+    },
+    {
+      "arms": [
+        [
+          66.0,
+          33
+        ],
+        [
+          72.0,
+          36
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "result_only",
+      "pmid": 37717784,
+      "reported": "equivalence",
+      "sites": [
+        "prostate"
+      ],
+      "title": "Dose-Intensified Postoperative Radiation Therapy for Prostate Cancer: Long-Term Results From the PKUFH Randomized Phase 3 Trial.",
+      "year": 2024
+    },
+    {
+      "arms": [
+        [
+          40.0,
+          20
+        ],
+        [
+          56.0,
+          35
+        ]
+      ],
+      "confounds": [
+        "chemotherapy_comentioned"
+      ],
+      "label_basis": "design_only",
+      "pmid": 37932681,
+      "reported": "equivalence",
+      "sites": [],
+      "title": "Novel approach of prophylactic radiation to reduce toxicities comparing 2-step40 with 56-Gy simultaneous integrated boost intensity-modulate",
+      "year": 2023
+    },
+    {
+      "arms": [
+        [
+          32.0,
+          16
+        ],
+        [
+          46.0,
+          23
+        ]
+      ],
+      "confounds": [
+        "target_volume_comentioned"
+      ],
+      "label_basis": "neither",
+      "pmid": 37979707,
+      "reported": "difference",
+      "sites": [
+        "prostate"
+      ],
+      "title": "Randomized Trial of Concomitant Hypofractionated Intensity Modulated Radiation Therapy Boost Versus Conventionally Fractionated Intensity Mo",
+      "year": 2024
+    },
+    {
+      "arms": [
+        [
+          26.0,
+          5
+        ],
+        [
+          27.0,
+          5
+        ],
+        [
+          40.0,
+          15
+        ]
+      ],
+      "confounds": [
+        "target_volume_comentioned"
+      ],
+      "label_basis": "design_only",
+      "pmid": 37991196,
+      "reported": "equivalence",
+      "sites": [
+        "breast"
+      ],
+      "title": "One versus three weeks hypofractionated whole breast radiotherapy for early breast cancer treatment: the FAST-Forward phase III RCT.",
+      "year": 2023
+    },
+    {
+      "arms": [
+        [
+          25.0,
+          5
+        ],
+        [
+          45.0,
+          25
+        ],
+        [
+          46.0,
+          23
+        ]
+      ],
+      "confounds": [
+        "brachytherapy_component"
+      ],
+      "label_basis": "result_only",
+      "pmid": 38072323,
+      "reported": "equivalence",
+      "sites": [
+        "prostate"
+      ],
+      "title": "Is Ultrahypofractionated Whole Pelvis Radiation Therapy (WPRT) as Well Tolerated as Conventionally Fractionated WPRT in Patients With Prosta",
+      "year": 2024
+    },
+    {
+      "arms": [
+        [
+          26.0,
+          5
+        ],
+        [
+          34.0,
+          10
+        ]
+      ],
+      "confounds": [
+        "target_volume_comentioned"
+      ],
+      "label_basis": "design_only",
+      "pmid": 38167339,
+      "reported": "equivalence",
+      "sites": [
+        "breast"
+      ],
+      "title": "HYPofractionated Adjuvant RadioTherapy in 1 versus 2 weeks in high-risk patients with breast cancer (HYPART): a non-inferiority, open-label,",
+      "year": 2024
+    },
+    {
+      "arms": [
+        [
+          30.0,
+          5
+        ],
+        [
+          40.5,
+          15
+        ]
+      ],
+      "confounds": [
+        "target_volume_comentioned"
+      ],
+      "label_basis": "neither",
+      "pmid": 38220538,
+      "reported": "difference",
+      "sites": [
+        "breast"
+      ],
+      "title": "Adjuvant Hypofractionated Whole Breast Irradiation (WBI) vs. Accelerated Partial Breast Irradiation (APBI) in Postmenopausal Women with Earl",
+      "year": 2024
+    },
+    {
+      "arms": [
+        [
+          25.0,
+          5
+        ],
+        [
+          35.0,
+          5
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "neither",
+      "pmid": 38232937,
+      "reported": "difference",
+      "sites": [],
+      "title": "Prospective Randomized Phase 2 Trial of Hypofractionated Stereotactic Radiation Therapy of 25 Gy in 5 Fractions Compared With 35 Gy in 5 Fra",
+      "year": 2024
+    },
+    {
+      "arms": [
+        [
+          56.0,
+          16
+        ],
+        [
+          67.0,
+          25
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "design_only",
+      "pmid": 38278333,
+      "reported": "equivalence",
+      "sites": [
+        "prostate"
+      ],
+      "title": "Moderate hypofractionated radiotherapy for prostate cancer: 3-year toxicity results of a multicentre randomized phase 3, non-inferiority tri",
+      "year": 2024
+    },
+    {
+      "arms": [
+        [
+          62.5,
+          25
+        ],
+        [
+          66.6,
+          37
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "design_only",
+      "pmid": 38483412,
+      "reported": "equivalence",
+      "sites": [
+        "prostate"
+      ],
+      "title": "Noninferiority of Hypofractionated vs Conventional Postprostatectomy Radiotherapy for Genitourinary and Gastrointestinal Symptoms: The NRG-G",
+      "year": 2024
+    },
+    {
+      "arms": [
+        [
+          45.0,
+          30
+        ],
+        [
+          66.0,
+          33
+        ]
+      ],
+      "confounds": [
+        "chemotherapy_comentioned",
+        "target_volume_comentioned",
+        "twice_daily"
+      ],
+      "label_basis": "neither",
+      "pmid": 38521132,
+      "reported": "difference",
+      "sites": [],
+      "title": "Long-Term Outcomes After Concurrent Once- or Twice-Daily Chemoradiation in Limited-Stage Small Cell Lung Cancer: A Brief Report From the CON",
+      "year": 2024
+    },
+    {
+      "arms": [
+        [
+          21.0,
+          14
+        ],
+        [
+          36.0,
+          24
+        ]
+      ],
+      "confounds": [
+        "dose_range_in_abstract"
+      ],
+      "label_basis": "neither",
+      "pmid": 38553363,
+      "reported": "difference",
+      "sites": [],
+      "title": "A Randomised Phase II Trial to Evaluate the Feasibility of Radiotherapy Dose Escalation, Facilitated by Intensity-Modulated Arc Radiotherapy",
+      "year": 2024
+    },
+    {
+      "arms": [
+        [
+          54.0,
+          30
+        ],
+        [
+          66.0,
+          30
+        ]
+      ],
+      "confounds": [
+        "chemotherapy_comentioned",
+        "target_volume_comentioned"
+      ],
+      "label_basis": "neither",
+      "pmid": 38575432,
+      "reported": "difference",
+      "sites": [],
+      "title": "Reducing Salivary Toxicity with Adaptive Radiotherapy (ReSTART): A Randomized Controlled Trial Comparing Conventional IMRT to Adaptive IMRT ",
+      "year": 2024
+    },
+    {
+      "arms": [
+        [
+          37.5,
+          15
+        ],
+        [
+          40.05,
+          15
+        ],
+        [
+          45.0,
+          25
+        ],
+        [
+          50.0,
+          25
+        ]
+      ],
+      "confounds": [
+        "target_volume_comentioned"
+      ],
+      "label_basis": "neither",
+      "pmid": 38578640,
+      "reported": "difference",
+      "sites": [
+        "breast"
+      ],
+      "title": "Premastectomy Radiotherapy and Immediate Breast Reconstruction: A Randomized Clinical Trial.",
+      "year": 2024
+    },
+    {
+      "arms": [
+        [
+          45.0,
+          30
+        ],
+        [
+          60.0,
+          40
+        ]
+      ],
+      "confounds": [
+        "chemotherapy_comentioned",
+        "twice_daily"
+      ],
+      "label_basis": "neither",
+      "pmid": 38583494,
+      "reported": "difference",
+      "sites": [],
+      "title": "Evaluation of Radiation Therapy Treatment Plans in a Randomized Phase 2 Trial Comparing 2 Schedules of Twice-Daily Thoracic Radiation Therap",
+      "year": 2024
+    },
+    {
+      "arms": [
+        [
+          52.5,
+          20
+        ],
+        [
+          66.0,
+          33
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "neither",
+      "pmid": 38583574,
+      "reported": "difference",
+      "sites": [
+        "prostate"
+      ],
+      "title": "Timing of radiotherapy (RT) after radical prostatectomy (RP): long-term outcomes in the RADICALS-RT trial (NCT00541047).",
+      "year": 2024
+    },
+    {
+      "arms": [
+        [
+          27.0,
+          2
+        ],
+        [
+          40.0,
+          5
+        ]
+      ],
+      "confounds": [
+        "brachytherapy_component"
+      ],
+      "label_basis": "design_only",
+      "pmid": 38589860,
+      "reported": "equivalence",
+      "sites": [
+        "prostate"
+      ],
+      "title": "SABR-Dual: a phase II/III trial of two-fraction versus five-fraction stereotactic radiotherapy for localized low- and favorable intermediate",
+      "year": 2024
+    },
+    {
+      "arms": [
+        [
+          8.0,
+          1
+        ],
+        [
+          20.0,
+          5
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "neither",
+      "pmid": 38704149,
+      "reported": "difference",
+      "sites": [],
+      "title": "Quality-of-life outcomes in metastatic spinal cord compression: findings from the SCORAD trial.",
+      "year": 2024
+    },
+    {
+      "arms": [
+        [
+          19.0,
+          1
+        ],
+        [
+          27.0,
+          2
+        ]
+      ],
+      "confounds": [
+        "brachytherapy_component"
+      ],
+      "label_basis": "neither",
+      "pmid": 38879130,
+      "reported": "difference",
+      "sites": [
+        "prostate"
+      ],
+      "title": "Prostate high dose-rate brachytherapy as monotherapy for low and intermediate-risk prostate cancer: Efficacy results from a randomized phase",
+      "year": 2024
+    },
+    {
+      "arms": [
+        [
+          20.0,
+          5
+        ],
+        [
+          30.0,
+          10
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "neither",
+      "pmid": 38920717,
+      "reported": "difference",
+      "sites": [],
+      "title": "Osteolytic Bone Metastasis: Different Radiotherapy Fractionation Schedules Compared Clinically and Radiographically.",
+      "year": 2024
+    },
+    {
+      "arms": [
+        [
+          38.0,
+          5
+        ],
+        [
+          79.2,
+          44
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "both",
+      "pmid": 38972465,
+      "reported": "equivalence",
+      "sites": [
+        "prostate"
+      ],
+      "title": "Stereotactic Body Proton Therapy Versus Conventionally Fractionated Proton Therapy for Early Prostate Cancer: A Randomized, Controlled, Phas",
+      "year": 2024
+    },
+    {
+      "arms": [
+        [
+          4.0,
+          2
+        ],
+        [
+          20.0,
+          10
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "neither",
+      "pmid": 38990564,
+      "reported": "difference",
+      "sites": [],
+      "title": "Response-Adapted Ultralow-Dose Radiation Therapy for Orbital Indolent B-Cell Lymphoma: A Phase 2 Nonrandomized Controlled Trial.",
+      "year": 2024
+    },
+    {
+      "arms": [
+        [
+          32.0,
+          16
+        ],
+        [
+          46.0,
+          23
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "result_only",
+      "pmid": 39009322,
+      "reported": "equivalence",
+      "sites": [
+        "prostate"
+      ],
+      "title": "Helical Tomotherapy Versus 3-Dimensional Conformal Radiation Therapy in High-Risk Prostate Cancer: A Phase 3 Randomized Controlled Trial.",
+      "year": 2024
+    },
+    {
+      "arms": [
+        [
+          50.4,
+          28
+        ],
+        [
+          60.0,
+          30
+        ]
+      ],
+      "confounds": [
+        "chemotherapy_comentioned"
+      ],
+      "label_basis": "neither",
+      "pmid": 39059185,
+      "reported": "difference",
+      "sites": [],
+      "title": "Standard or high dose chemoradiotherapy, with or without the protease inhibitor nelfinavir, in patients with locally advanced pancreatic can",
+      "year": 2024
+    },
+    {
+      "arms": [
+        [
+          66.0,
+          33
+        ],
+        [
+          74.0,
+          33
+        ]
+      ],
+      "confounds": [
+        "chemotherapy_comentioned"
+      ],
+      "label_basis": "neither",
+      "pmid": 39134086,
+      "reported": "difference",
+      "sites": [],
+      "title": "Adaptive radiotherapy (up to 74 Gy) or standard radiotherapy (66 Gy) for patients with stage III non-small-cell lung cancer, according to [1",
+      "year": 2024
+    },
+    {
+      "arms": [
+        [
+          45.0,
+          25
+        ],
+        [
+          46.0,
+          23
+        ],
+        [
+          68.0,
+          25
+        ],
+        [
+          76.0,
+          38
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "result_only",
+      "pmid": 39271420,
+      "reported": "equivalence",
+      "sites": [
+        "prostate"
+      ],
+      "title": "Hypofractionated Dose Escalation Radiotherapy for High-Risk Prostate Cancer: the survival analysis of the Prostate Cancer Study-5 (PCS-5), a",
+      "year": 2025
+    },
+    {
+      "arms": [
+        [
+          48.0,
+          4
+        ],
+        [
+          60.0,
+          8
+        ],
+        [
+          60.0,
+          15
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "neither",
+      "pmid": 39298144,
+      "reported": "difference",
+      "sites": [],
+      "title": "Stereotactic vs Hypofractionated Radiotherapy for Inoperable Stage I Non-Small Cell Lung Cancer: The LUSTRE Phase 3 Randomized Clinical Tria",
+      "year": 2024
+    },
+    {
+      "arms": [
+        [
+          70.0,
+          28
+        ],
+        [
+          79.2,
+          44
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "neither",
+      "pmid": 39357788,
+      "reported": "difference",
+      "sites": [
+        "prostate"
+      ],
+      "title": "Setting the Stage: Feasibility and Baseline Characteristics in the PARTIQoL Trial Comparing Proton Therapy Versus Intensity Modulated Radiat",
+      "year": 2025
+    },
+    {
+      "arms": [
+        [
+          60.0,
+          30
+        ],
+        [
+          71.0,
+          30
+        ]
+      ],
+      "confounds": [
+        "chemotherapy_comentioned"
+      ],
+      "label_basis": "result_only",
+      "pmid": 39365957,
+      "reported": "equivalence",
+      "sites": [],
+      "title": "Primary Results of NRG-RTOG1106/ECOG-ACRIN 6697: A Randomized Phase II Trial of Individualized Adaptive (chemo)Radiotherapy Using Midtreatme",
+      "year": 2024
+    },
+    {
+      "arms": [
+        [
+          36.25,
+          5
+        ],
+        [
+          62.0,
+          20
+        ],
+        [
+          78.0,
+          39
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "design_only",
+      "pmid": 39413377,
+      "reported": "equivalence",
+      "sites": [
+        "prostate"
+      ],
+      "title": "Phase 3 Trial of Stereotactic Body Radiotherapy in Localized Prostate Cancer.",
+      "year": 2024
+    },
+    {
+      "arms": [
+        [
+          25.0,
+          5
+        ],
+        [
+          40.05,
+          15
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "neither",
+      "pmid": 40059195,
+      "reported": "difference",
+      "sites": [],
+      "title": "Dummy run study for outlining and plan quality of intensity-modulated radiotherapy in elderly patients with newly diagnosed glioblastoma: Th",
+      "year": 2025
+    },
+    {
+      "arms": [
+        [
+          40.0,
+          15
+        ],
+        [
+          50.0,
+          25
+        ]
+      ],
+      "confounds": [
+        "target_volume_comentioned"
+      ],
+      "label_basis": "design_only",
+      "pmid": 40097073,
+      "reported": "equivalence",
+      "sites": [
+        "breast"
+      ],
+      "title": "Early toxicity of moderately hypofractionated radiation therapy in breast cancer patients receiving locoregional irradiation: First results ",
+      "year": 2025
+    },
+    {
+      "arms": [
+        [
+          60.0,
+          30
+        ],
+        [
+          65.4,
+          30
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "result_only",
+      "pmid": 40197313,
+      "reported": "equivalence",
+      "sites": [],
+      "title": "Reirradiation based on diffusion-weighted magnetic resonance imaging-guided dose- painting for locally advanced recurrent nasopharyngeal car",
+      "year": 2025
+    },
+    {
+      "arms": [
+        [
+          45.0,
+          30
+        ],
+        [
+          60.0,
+          40
+        ]
+      ],
+      "confounds": [
+        "chemotherapy_comentioned",
+        "twice_daily"
+      ],
+      "label_basis": "neither",
+      "pmid": 40258573,
+      "reported": "difference",
+      "sites": [],
+      "title": "High-Dose Versus Standard-Dose Twice-Daily Thoracic Radiotherapy in Limited-Stage SCLC: Final Survival Data, Long-Term Toxicity, and Relapse",
+      "year": 2025
+    },
+    {
+      "arms": [
+        [
+          40.05,
+          15
+        ],
+        [
+          50.0,
+          25
+        ]
+      ],
+      "confounds": [
+        "target_volume_comentioned"
+      ],
+      "label_basis": "neither",
+      "pmid": 40366003,
+      "reported": "difference",
+      "sites": [
+        "breast"
+      ],
+      "title": "Comparison of Outcomes of Microsurgical Breast Reconstruction after Premastectomy and Postmastectomy Radiation Therapy.",
+      "year": 2025
+    },
+    {
+      "arms": [
+        [
+          24.0,
+          2
+        ],
+        [
+          36.25,
+          5
+        ]
+      ],
+      "confounds": [],
+      "label_basis": "neither",
+      "pmid": 40403882,
+      "reported": "difference",
+      "sites": [
+        "prostate"
+      ],
+      "title": "HERMES: Randomized Trial of 2-Fraction or 5-Fraction Magnetic Resonance Imaging-Guided Adaptive Prostate Radiation Therapy.",
+      "year": 2025
+    },
+    {
+      "arms": [
+        [
+          36.0,
+          15
+        ],
+        [
+          40.0,
+          15
+        ]
+      ],
+      "confounds": [
+        "chemotherapy_comentioned",
+        "target_volume_comentioned"
+      ],
+      "label_basis": "design_only",
+      "pmid": 40516558,
+      "reported": "equivalence",
+      "sites": [
+        "breast"
+      ],
+      "title": "Partial-breast radiotherapy after breast conservation surgery for women with early breast cancer (UK IMPORT LOW): 10-year outcomes from a mu",
+      "year": 2025
+    },
+    {
+      "arms": [
+        [
+          26.0,
+          5
+        ],
+        [
+          34.0,
+          10
+        ]
+      ],
+      "confounds": [
+        "target_volume_comentioned"
+      ],
+      "label_basis": "neither",
+      "pmid": 40780546,
+      "reported": "difference",
+      "sites": [
+        "breast"
+      ],
+      "title": "HYPofractionated Adjuvant RadioTherapy in 1 Versus 2 Weeks in High-Risk Patients With Breast Cancer (HYPART): Acute Toxicity Results.",
+      "year": 2026
+    },
+    {
+      "arms": [
+        [
+          44.0,
+          20
+        ],
+        [
+          45.0,
+          25
+        ]
+      ],
+      "confounds": [
+        "brachytherapy_component",
+        "chemotherapy_comentioned"
+      ],
+      "label_basis": "result_only",
+      "pmid": 40897075,
+      "reported": "equivalence",
+      "sites": [],
+      "title": "Early Results of Hypofractionated Chemoradiation in Cervical Cancer with 44 Gy/ 20 F vs 45 Gy/ 25 F: A Phase II, Open-Label, Randomised Cont",
+      "year": 2025
+    },
+    {
+      "arms": [
+        [
+          50.4,
+          28
+        ],
+        [
+          58.8,
+          28
+        ]
+      ],
+      "confounds": [
+        "chemotherapy_comentioned"
+      ],
+      "label_basis": "neither",
+      "pmid": 40971156,
+      "reported": "difference",
+      "sites": [],
+      "title": "Chemoradiotherapy With or Without Simultaneous Integrated Boost for Cervical Cancer With Full-Thickness Stromal Invasion: A Phase 3 Randomiz",
+      "year": 2025
+    },
+    {
+      "arms": [
+        [
+          40.0,
+          15
+        ],
+        [
+          50.0,
+          25
+        ]
+      ],
+      "confounds": [
+        "target_volume_comentioned"
+      ],
+      "label_basis": "neither",
+      "pmid": 41173355,
+      "reported": "difference",
+      "sites": [
+        "breast"
+      ],
+      "title": "Comprehensive radiotherapy quality assurance analysis from individual DICOM data in the HypoG-01 phase 3 trial.",
+      "year": 2026
+    },
+    {
+      "arms": [
+        [
+          54.0,
+          27
+        ],
+        [
+          70.0,
+          35
+        ]
+      ],
+      "confounds": [
+        "chemotherapy_comentioned"
+      ],
+      "label_basis": "neither",
+      "pmid": 41240223,
+      "reported": "difference",
+      "sites": [],
+      "title": "Prospective study comparing acute toxicity and objective response rate between simultaneous integrated boost and sequential boost Intensity-",
+      "year": 2025
+    }
+  ],
+  "uninformative_pairs": {
+    "enrichment_if_included": 1.6203703703703702,
+    "never_admits_a_positive_solution": true,
+    "pairs": 61,
+    "share_of_difference": 0.2,
+    "share_of_equivalence": 0.09523809523809523
+  },
+  "verdict": "inversion_carries_direction_magnitude_is_design_not_tissue",
+  "verified_subset": {
+    "difference": {
+      "pairs": 5,
+      "positive": 2,
+      "rate": 0.4
+    },
+    "enrichment": 1.5909090909090908,
+    "equivalence": {
+      "pairs": 11,
+      "positive": 7,
+      "rate": 0.6363636363636364
+    },
+    "trials": 16
+  }
+}

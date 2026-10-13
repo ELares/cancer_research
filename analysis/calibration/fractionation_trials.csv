@@ -1,8 +1,18 @@
 # Randomised fractionation trials whose two arms were reported as not
 # differing, plus the alpha/beta the radiobiology literature estimates for the
-# same site INDEPENDENTLY of these schedules. The schedules are protocol
-# facts; the outcome column is the trial's own conclusion; the alpha/beta
-# column is somebody else's estimate and is what the model is checked against.
+# same site. The schedules are protocol facts; the outcome column is the
+# trial's own conclusion; the alpha/beta column is an estimate the model is
+# checked against.
+#
+# THE BANDS ARE NOT ALL INDEPENDENT OF THE TRIALS THEY JUDGE, and this header
+# used to claim they were (#930). Compare published_ab_source_pmid against
+# pmid: where they are EQUAL the band is an estimate the same authors made
+# from the same data, so the row tests whether a simple two-arm EQD2 inversion
+# recovers what a fuller analysis of that data found -- a real statement about
+# the arithmetic, but a weaker one than a disagreement with independent data.
+# `scripts/trial_isoeffect_sweep.py` derives that comparison per row rather
+# than trusting this comment, since a provenance claim a column cannot prove
+# is exactly the shape that goes stale.
 #
 # Columns:
 #   site, trial, pmid, arm_a_fractions, arm_a_dose_per_fraction_gy,
