@@ -13396,12 +13396,23 @@ mod tests {
     ///   SDT, linear O2 dependence (placeholder)    21.239% overall  0e0    hypoxic
     ///   SDT, measured OER hyperbola (#726)         68.814% overall  7.9e-2 hypoxic
     ///
-    /// THE COMPARISON IS ONLY EXPRESSIBLE UNDER THE MEASURED FORMS. Both
-    /// placeholders put the core at exactly zero -- the linear SDT form and
-    /// (to 3e-4) the O2-independent Fenton -- so a reader comparing the two
-    /// legs as previously parameterised was comparing two zeros. With the
-    /// measured forms the core separates completely: SDT reaches it at 7.9%
-    /// and RSL3 does not reach it AT ALL.
+    /// THE ANSWER IS DECIDED BY WHICH SHAPES YOU PICK, AND ONE DEFENSIBLE
+    /// PAIRING INVERTS IT. Three pairings, three qualitatively different §7.1
+    /// verdicts on the hypoxic zone:
+    ///
+    ///   defaults as shipped (no SDT O2 effect, O2-indep Fenton)
+    ///       SDT 84.08% vs RSL3 0.033%  -> SDT by ~2,582x
+    ///   first-written O2 shapes (linear SDT, O2-indep Fenton)
+    ///       SDT  0.00% vs RSL3 0.033%  -> RSL3 WINS, the direction INVERTED
+    ///   measured shapes (OER SDT, O2-coupled Fenton)
+    ///       SDT  7.95% vs RSL3 0.000%  -> SDT, with RSL3 at exactly zero
+    ///
+    /// So the hypoxia leg is NOT robust to the functional forms -- it is a
+    /// statement about them. The measured pairing is the one to believe,
+    /// because both shapes are independently anchored (eighty years of
+    /// radiobiology for the hyperbola, the Haber-Weiss chain for the Fenton),
+    /// and it supports the §7.1 direction. But the first-written pairing says
+    /// the opposite, and that sensitivity is the result worth recording.
     ///
     /// WHAT THIS IS NOT. The magnitudes are uncalibrated: `sdt_ros` defaults to
     /// the same 5.0 as `pdt_ros` and is the #336 knob, the arms are compared at
@@ -13421,7 +13432,7 @@ mod tests {
     /// would become load-bearing the moment anyone tightened an assertion to a
     /// precise figure.
     #[test]
-    fn only_the_measured_o2_forms_separate_the_modalities_in_the_core() {
+    fn the_hypoxia_leg_is_decided_by_the_o2_shapes_and_one_pairing_inverts_it() {
         let cfg = RunConfig {
             grid_dim: 60,
             n_steps: 180,
@@ -13450,6 +13461,7 @@ mod tests {
                 ..Default::default()
             },
         );
+        let rsl3_uncorrected = run(Treatment::RSL3, "RSL3", Overrides::default());
         let sdt_linear = run(
             Treatment::SDT,
             "SDT",
@@ -13509,6 +13521,21 @@ mod tests {
              {:e} vs {:e}",
             sdt_oer.hypoxic_kill_rate,
             rsl3_corrected.hypoxic_kill_rate
+        );
+
+        // AND THE FIRST-WRITTEN SHAPES INVERT IT, which is the sharpest thing
+        // here. Pair the two legs as they were ORIGINALLY parameterised -- the
+        // linear SDT dependence against the O2-independent Fenton -- and GPX4
+        // inhibition reaches the hypoxic core while physical ROS does not,
+        // the OPPOSITE of the §7.1 direction. So this leg is not robust to the
+        // functional forms; it is a statement ABOUT them.
+        assert!(
+            rsl3_uncorrected.hypoxic_kill_rate > sdt_linear.hypoxic_kill_rate,
+            "the first-written shapes must invert the comparison, else the \
+             sensitivity this test exists to record is not real: RSL3 {:e} vs \
+             SDT {:e}",
+            rsl3_uncorrected.hypoxic_kill_rate,
+            sdt_linear.hypoxic_kill_rate
         );
     }
 
