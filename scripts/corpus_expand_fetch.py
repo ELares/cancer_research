@@ -74,6 +74,8 @@ OUT_ROOT = Path(os.getenv(
     str(Path.home() / "nas" / "cancer-atlas" / "expanded"),
 ))
 STATE_DB = REPO / "corpus" / "atlas" / "expand_state.sqlite"
+# Bumped when a migration in `state()` must run once over an existing ledger.
+SCHEMA_VERSION = 1
 SEARCH = "https://www.ebi.ac.uk/europepmc/webservices/rest/search"
 CONTACT = os.getenv("FERRO_CONTACT", "cancer-research-corpus")
 UA = f"cancer-research-corpus/1.0 (+{CONTACT}) python-urllib"
@@ -315,8 +317,42 @@ def state() -> sqlite3.Connection:
         c.execute("ALTER TABLE slice ADD COLUMN deferred INTEGER NOT NULL DEFAULT 0")
     if "query_id" not in cols:
         c.execute("ALTER TABLE slice ADD COLUMN query_id TEXT NOT NULL DEFAULT ''")
+    _migrate(c)
     c.commit()
     return c
+
+
+def _migrate(c) -> None:
+    """One-time migrations, gated on PRAGMA user_version.
+
+    v1 -- RESTORE THE "NEVER ASKED" SENTINEL (#913). Before #912 an absent
+    `hitCount` was written as 0, so `hits = 0` on an existing row means either
+    "the service reported an empty slice" or "the response was degraded and the
+    total was lost", and NOTHING IN THE LEDGER DISTINGUISHES THEM. The schema
+    default is -1 for exactly that reason, and no row carried it: all 139
+    zero-total rows predate the fix.
+
+    That ambiguity is what hid the larger half of #913. A row reading
+    `seen=0, hits=0, done=1` is indistinguishable from a genuinely empty year,
+    and 24 consecutive MED slices (1991-2014) sat in it -- each marked complete
+    having walked NOTHING, while the service reports 64,965 records for 1991
+    and 274,868 for 2014. Restoring -1 makes them say "unknown" instead of
+    "empty", which is what the detector reads.
+
+    Bounded to run ONCE, because after #912 a `hits = 0` written by a real
+    response is TRUSTWORTHY -- a genuinely empty slice must be allowed to
+    settle at 0 and stop being flagged, so this must never become a standing
+    rule.
+    """
+    if c.execute("PRAGMA user_version").fetchone()[0] >= SCHEMA_VERSION:
+        return
+    n = c.execute("UPDATE slice SET hits=-1 WHERE hits=0").rowcount
+    c.execute(f"PRAGMA user_version={SCHEMA_VERSION}")
+    c.commit()
+    if n:
+        print(f"ledger migration v{SCHEMA_VERSION}: {n} slice(s) carrying a "
+              f"zero total written before #912 now read as UNKNOWN (-1); "
+              f"run --incomplete to see which cannot be certified complete")
 
 
 def reopen_stale_slices(st, verbose: bool = True) -> int:
@@ -1077,10 +1113,17 @@ def run(years, sources, limit_new=None, verbose=True) -> dict:
                     # whose responses NEVER carried one retires with total = -1
                     # and walked > 0 -- no recorded total to compare against.
                     # `short` is False there, so without this it would be
-                    # exactly as silent as the thing being fixed. The two
-                    # damaged slices carry hits=0 rather than -1, which is
-                    # itself the proof an UPDATE ran with a zero: the schema
-                    # default was never overwritten on a healthy path.
+                    # exactly as silent as the thing being fixed.
+                    #
+                    # This comment used to read the proof off the live ledger:
+                    # "the two damaged slices carry hits=0 rather than -1,
+                    # which is itself the proof an UPDATE ran with a zero".
+                    # That was true when written and `_migrate` v1 has since
+                    # restored -1 on all 139 such rows, so it is recorded here
+                    # as history rather than as something a reader can still
+                    # check in the data. Both values behave identically from
+                    # here on -- `total > 0` is false and `total <= 0` true for
+                    # each -- which is why the migration could be safe.
                     no_total = total <= 0 and walked > 0
                     st.execute("UPDATE slice SET done=1, deferred=0 "
                                "WHERE src=? AND year=?", (src, year))
@@ -1154,6 +1197,37 @@ def incomplete_slices(c) -> list:
          arise on a sound path. Bounded: 3 slices match today (MED 1990, MED
          2015, MED 2022) and the clause can be dropped once they are recovered.
 
+      3. `hits < 0` -- NO TOTAL WAS EVER OBTAINED, whatever was walked. The
+         first two detectors BOTH REQUIRE A NON-ZERO COUNT (`hits > 0` or
+         `seen > 0`) and so are blind to the worst row the ledger can hold:
+         one marked done having walked NOTHING. That is not hypothetical and
+         it is the larger half of #913 -- 24 consecutive MED slices (1991-2014)
+         read `seen=0, hits=0, done=1`, while the service reports 64,965
+         records for 1991 and 274,868 for 2014. #912's own analysis missed them
+         because it reasoned over "2 of 122 WALKED slices", a denominator that
+         excludes every slice with `seen = 0` by construction.
+
+         ZERO SATISFIED BOTH CHECKS. A detector asking "did the walk fall short
+         of the total?" cannot fire when neither number exists, so the damaged
+         rows were the ones it could not see. The fix is a clause keyed on the
+         ABSENCE of a total rather than on a shortfall between two totals.
+
+         It is keyed on `hits < 0` and NOT on `seen = 0`, which is the whole
+         difficulty: a genuinely empty year also walked nothing, and 112 PPR
+         slices (1900-2011) are legitimately empty because preprints did not
+         exist. Flagging `seen = 0` would reopen those forever. After #912 a
+         zero total written by a real response is trustworthy, so an empty
+         slice settles at `hits = 0` and stops being flagged, while a slice
+         whose total was never obtained keeps the -1 the schema defaults to.
+         The one-time `_migrate` v1 restores that sentinel on legacy rows.
+
+         A slice the service PERSISTENTLY refuses a total for stays flagged
+         every pass, and that is the honest outcome rather than a loop: this
+         function only REPORTS, the rewind needs `--reopen-incomplete`, so an
+         operator sees "still cannot be certified" instead of the crawl
+         re-walking it forever. That distinction is why the bounding #907
+         needed is not needed here.
+
     Deliberately NOT `seen % PAGE == 0`. That is how the two damaged slices were
     FOUND -- exactly 2 of 122 walked slices landed on a page boundary and they
     were precisely the two carrying hits=0 and done=1 -- but it is unsafe as a
@@ -1163,7 +1237,8 @@ def incomplete_slices(c) -> list:
     return list(c.execute(
         "SELECT src, year, seen, hits FROM slice "
         "WHERE done=1 AND ((hits > 0 AND seen < hits) "
-        "               OR (hits <= 0 AND seen > 0)) "
+        "               OR (hits <= 0 AND seen > 0) "
+        "               OR hits < 0) "
         "ORDER BY src, year"))
 
 
@@ -1191,8 +1266,12 @@ def main() -> int:
             return 0
         print(f"  {'src':5} {'year':>5} {'walked':>10} {'total':>10}  why")
         for src, year, seen, hits in rows:
-            why = ("walked short of the recorded total" if hits > 0
-                   else "no total was ever recorded, so completeness is UNKNOWN")
+            if hits > 0:
+                why = "walked short of the recorded total"
+            elif seen > 0:
+                why = "no total was ever recorded, so completeness is UNKNOWN"
+            else:
+                why = "NOTHING was walked and no total recorded -- never ran"
             total = f"{hits:,}" if hits > 0 else "-"
             print(f"  {src:5} {year:>5} {seen:>10,} {total:>10}  {why}")
         if not a.reopen_incomplete:
