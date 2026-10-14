@@ -24,12 +24,12 @@ The full-prior half must reproduce each committed report's own figures to within
 
 | headline | published median | published 95% | admissible median | admissible 95% | reproduces |
 |---|---|---|---|---|---|
-| Bliss synergy, RSL3 + FSP1i | 1.348 | [1.000, 5.242] | 2.529 | [1.075, 6.353] | yes |
-| Hypoxia kill-collapse gap, SDT minus RSL3 | 0.960 | [0.163, 0.999] | 0.914 | withheld (n=36) | yes |
-| SDT immune kill fraction, final counts | 0.042 | [0.009, 0.171] | 0.033 | withheld (n=36) | yes |
-| Vessel-wall RSL3 kill, well-vascularized | 0.231 | [0.002, 0.926] | 0.053 | [0.001, 0.422] | yes |
-| Vessel-wall RSL3 kill, poorly-vascularized | 0.076 | [0.000, 0.826] | 0.009 | [0.000, 0.052] | yes |
-| Vessel-wall RSL3 kill, CNS / BBB | 0.043 | [0.000, 0.770] | 0.004 | [0.000, 0.025] | yes |
+| Bliss synergy (RSL3 + FSP1i) | 1.348 | [1.000, 5.242] | 2.529 | [1.075, 6.353] | yes |
+| Hypoxia kill-collapse gap (SDT minus RSL3) | 0.960 | [0.163, 0.999] | 0.914 | withheld (n=36) | yes |
+| SDT immune kill fraction (final counts) | 0.042 | [0.009, 0.171] | 0.033 | withheld (n=36) | yes |
+| Vessel-wall RSL3 kill: well-vascularized | 0.231 | [0.002, 0.926] | 0.053 | [0.001, 0.422] | yes |
+| Vessel-wall RSL3 kill: poorly-vascularized | 0.076 | [0.000, 0.826] | 0.009 | [0.000, 0.052] | yes |
+| Vessel-wall RSL3 kill: CNS / BBB | 0.043 | [0.000, 0.770] | 0.004 | [0.000, 0.025] | yes |
 
 Reproduction: 6 of 6 headline observables, each on every published quantile and both range endpoints.
 
@@ -41,32 +41,32 @@ A shift counts as MATERIAL when it exceeds 10% of that observable's own publishe
 
 | headline | quantile | full prior | admissible | change | material |
 |---|---|---|---|---|---|
-| Bliss synergy, RSL3 + FSP1i | low | 1.000 | 1.075 | +0.075 | no |
-| Bliss synergy, RSL3 + FSP1i | median | 1.348 | 2.529 | +1.181 | yes |
-| Bliss synergy, RSL3 + FSP1i | high | 5.242 | 6.353 | +1.111 | yes |
-| Hypoxia kill-collapse gap, SDT minus RSL3 | low | 0.163 | 0.083 | -0.080 | not quoted (too few admissible draws) |
-| Hypoxia kill-collapse gap, SDT minus RSL3 | median | 0.960 | 0.914 | -0.046 | no |
-| Hypoxia kill-collapse gap, SDT minus RSL3 | high | 0.999 | 0.999 | -0.000 | not quoted (too few admissible draws) |
-| SDT immune kill fraction, final counts | low | 0.009 | 0.007 | -0.003 | not quoted (too few admissible draws) |
-| SDT immune kill fraction, final counts | median | 0.042 | 0.033 | -0.009 | no |
-| SDT immune kill fraction, final counts | high | 0.171 | 0.095 | -0.075 | not quoted (too few admissible draws) |
-| Vessel-wall RSL3 kill, well-vascularized | low | 0.002 | 0.001 | -0.001 | no |
-| Vessel-wall RSL3 kill, well-vascularized | median | 0.231 | 0.053 | -0.178 | yes |
-| Vessel-wall RSL3 kill, well-vascularized | high | 0.926 | 0.422 | -0.504 | yes |
-| Vessel-wall RSL3 kill, poorly-vascularized | low | 0.000 | 0.000 | +0.000 | no |
-| Vessel-wall RSL3 kill, poorly-vascularized | median | 0.076 | 0.009 | -0.067 | no |
-| Vessel-wall RSL3 kill, poorly-vascularized | high | 0.826 | 0.052 | -0.774 | yes |
-| Vessel-wall RSL3 kill, CNS / BBB | low | 0.000 | 0.000 | +0.000 | no |
-| Vessel-wall RSL3 kill, CNS / BBB | median | 0.043 | 0.004 | -0.039 | no |
-| Vessel-wall RSL3 kill, CNS / BBB | high | 0.770 | 0.025 | -0.745 | yes |
+| Bliss synergy (RSL3 + FSP1i) | low | 1.000 | 1.075 | +0.075 | no |
+| Bliss synergy (RSL3 + FSP1i) | median | 1.348 | 2.529 | +1.181 | yes |
+| Bliss synergy (RSL3 + FSP1i) | high | 5.242 | 6.353 | +1.111 | yes |
+| Hypoxia kill-collapse gap (SDT minus RSL3) | low | 0.163 | 0.083 | -0.080 | not quoted (too few admissible draws) |
+| Hypoxia kill-collapse gap (SDT minus RSL3) | median | 0.960 | 0.914 | -0.046 | no |
+| Hypoxia kill-collapse gap (SDT minus RSL3) | high | 0.999 | 0.999 | -0.000 | not quoted (too few admissible draws) |
+| SDT immune kill fraction (final counts) | low | 0.009 | 0.007 | -0.003 | not quoted (too few admissible draws) |
+| SDT immune kill fraction (final counts) | median | 0.042 | 0.033 | -0.009 | no |
+| SDT immune kill fraction (final counts) | high | 0.171 | 0.095 | -0.075 | not quoted (too few admissible draws) |
+| Vessel-wall RSL3 kill: well-vascularized | low | 0.002 | 0.001 | -0.001 | no |
+| Vessel-wall RSL3 kill: well-vascularized | median | 0.231 | 0.053 | -0.178 | yes |
+| Vessel-wall RSL3 kill: well-vascularized | high | 0.926 | 0.422 | -0.504 | yes |
+| Vessel-wall RSL3 kill: poorly-vascularized | low | 0.000 | 0.000 | +0.000 | no |
+| Vessel-wall RSL3 kill: poorly-vascularized | median | 0.076 | 0.009 | -0.067 | no |
+| Vessel-wall RSL3 kill: poorly-vascularized | high | 0.826 | 0.052 | -0.774 | yes |
+| Vessel-wall RSL3 kill: CNS / BBB | low | 0.000 | 0.000 | +0.000 | no |
+| Vessel-wall RSL3 kill: CNS / BBB | median | 0.043 | 0.004 | -0.039 | no |
+| Vessel-wall RSL3 kill: CNS / BBB | high | 0.770 | 0.025 | -0.745 | yes |
 
 ### The correction does not run one way
 
-Admissibility keeps the draws whose defences are strong enough that an untreated cell survives, which is a single mechanism -- and across these headlines it moves 5 medians DOWN and 1 UP. Down: Hypoxia kill-collapse gap, SDT minus RSL3, SDT immune kill fraction, final counts, Vessel-wall RSL3 kill, well-vascularized, Vessel-wall RSL3 kill, poorly-vascularized, Vessel-wall RSL3 kill, CNS / BBB. Up: Bliss synergy, RSL3 + FSP1i. Reporting whichever was looked at first would have flattered the page in whichever direction that happened to be.
+Admissibility keeps the draws whose defences are strong enough that an untreated cell survives, which is a single mechanism -- and across these headlines it moves 5 medians DOWN and 1 UP. Down: Hypoxia kill-collapse gap (SDT minus RSL3), SDT immune kill fraction (final counts), Vessel-wall RSL3 kill: well-vascularized, Vessel-wall RSL3 kill: poorly-vascularized, Vessel-wall RSL3 kill: CNS / BBB. Up: Bliss synergy (RSL3 + FSP1i). Reporting whichever was looked at first would have flattered the page in whichever direction that happened to be.
 
-The sharpest consequence is where this leaves the manuscript's own unperturbed point estimate. For **Bliss synergy, RSL3 + FSP1i** (point 1.992, full-prior median 1.348, admissible median 2.529), **Vessel-wall RSL3 kill, well-vascularized** (point 0.121, full-prior median 0.231, admissible median 0.053), **Vessel-wall RSL3 kill, poorly-vascularized** (point 0.026, full-prior median 0.076, admissible median 0.009), **Vessel-wall RSL3 kill, CNS / BBB** (point 0.018, full-prior median 0.043, admissible median 0.004) the median crosses from one side of the published point to the other, so the conditioned prior disagrees with the full prior about whether the headline figure is optimistic or pessimistic.
+The sharpest consequence is where this leaves the manuscript's own unperturbed point estimate. For **Bliss synergy (RSL3 + FSP1i)** (point 1.992, full-prior median 1.348, admissible median 2.529), **Vessel-wall RSL3 kill: well-vascularized** (point 0.121, full-prior median 0.231, admissible median 0.053), **Vessel-wall RSL3 kill: poorly-vascularized** (point 0.026, full-prior median 0.076, admissible median 0.009), **Vessel-wall RSL3 kill: CNS / BBB** (point 0.018, full-prior median 0.043, admissible median 0.004) the median crosses from one side of the published point to the other, so the conditioned prior disagrees with the full prior about whether the headline figure is optimistic or pessimistic.
 
-The published point estimate still falls inside the admissible interval for 4 of 6 observables, and cannot be placed either way for Hypoxia kill-collapse gap, SDT minus RSL3, SDT immune kill fraction, final counts, whose tails are withheld above.
+The published point estimate still falls inside the admissible interval for 4 of 6 observables, and cannot be placed either way for Hypoxia kill-collapse gap (SDT minus RSL3), SDT immune kill fraction (final counts), whose tails are withheld above.
 
 ## Is the Bliss move real, or is its denominator collapsing?
 
@@ -117,7 +117,7 @@ Admissibility keeps strong-defence draws, which is a claim about the PARAMETERS,
 
 The falsifier is the DRUG parameters (`sdt_ros`, `rsl3_gpx4_inhib`): had conditioning pushed them down, the kill reductions above would be partly an artifact of keeping weaker-drug draws and the whole comparison would be circular. Largest drug-parameter shift 0.013 against a bar of 0.10: **untouched**. The kill falls because the defences kept are stronger, not because the drug kept is weaker.
 
-### Does this move any per-headline verdict?
+## Does this move any per-headline verdict?
 
 `identifiability-report.md` reads these intervals for its per-headline verdicts, and those are DIRECTION claims rather than magnitudes -- so what would move one is a SIGN change, not a shifted quantile. Measured: no conditioned median changes sign, so no verdict in that report is contradicted by this page. The magnitudes it already declines to quote are the ones that move.
 

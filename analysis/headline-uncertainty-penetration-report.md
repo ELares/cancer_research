@@ -29,8 +29,8 @@ Every interval above is computed over the FULL uniform prior. `analysis/headline
 
 Quantiles above that move materially once those draws are removed:
 
-- **Vessel-wall RSL3 kill, well-vascularized**: median 0.231 -> 0.053; high 0.926 -> 0.422
-- **Vessel-wall RSL3 kill, poorly-vascularized**: high 0.826 -> 0.052
-- **Vessel-wall RSL3 kill, CNS / BBB**: high 0.770 -> 0.025
+- **Vessel-wall RSL3 kill: well-vascularized**: median 0.231 -> 0.053; high 0.926 -> 0.422
+- **Vessel-wall RSL3 kill: poorly-vascularized**: high 0.826 -> 0.052
+- **Vessel-wall RSL3 kill: CNS / BBB**: high 0.770 -> 0.025
 
 Conditioning is not inference: it removes draws the model itself declares invalid and adds no data. See that page for the direction of each correction, the circularity falsifier it has to pass, and what it does not claim.

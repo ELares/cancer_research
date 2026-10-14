@@ -29,6 +29,6 @@ Every interval above is computed over the FULL uniform prior. `analysis/headline
 
 Quantiles above that move materially once those draws are removed:
 
-- **Bliss synergy, RSL3 + FSP1i**: median 1.348 -> 2.529; high 5.242 -> 6.353
+- **Bliss synergy (RSL3 + FSP1i)**: median 1.348 -> 2.529; high 5.242 -> 6.353
 
 Conditioning is not inference: it removes draws the model itself declares invalid and adds no data. See that page for the direction of each correction, the circularity falsifier it has to pass, and what it does not claim.

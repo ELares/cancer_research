@@ -331,15 +331,20 @@ FAMILY_SAMPLES = {"bliss": DEFAULT_SAMPLES,
                   "penetration": DEFAULT_PEN_SAMPLES}
 
 # (column, family, label as this page prints it, key in the parsed report)
+#
+# The labels carry NO COMMAS, deliberately: several sections list the affected
+# observables inline, and a label with a comma in it makes such a list
+# unreadable -- there is no telling where one entry ends.
 OBSERVABLES = (
-    (BLISS_COLUMN, "bliss", "Bliss synergy, RSL3 + FSP1i", "synergy"),
-    ("tme_hypoxia_gap", "tme", "Hypoxia kill-collapse gap, SDT minus RSL3", "hypoxia"),
-    ("tme_immune", "tme", "SDT immune kill fraction, final counts", "immune"),
+    (BLISS_COLUMN, "bliss", "Bliss synergy (RSL3 + FSP1i)", "synergy"),
+    ("tme_hypoxia_gap", "tme", "Hypoxia kill-collapse gap (SDT minus RSL3)",
+     "hypoxia"),
+    ("tme_immune", "tme", "SDT immune kill fraction (final counts)", "immune"),
     ("pen_well_vascularized", "penetration",
-     "Vessel-wall RSL3 kill, well-vascularized", "well_vascularized"),
+     "Vessel-wall RSL3 kill: well-vascularized", "well_vascularized"),
     ("pen_poorly_vascularized", "penetration",
-     "Vessel-wall RSL3 kill, poorly-vascularized", "poorly_vascularized"),
-    ("pen_cns_bbb", "penetration", "Vessel-wall RSL3 kill, CNS / BBB", "cns_bbb"),
+     "Vessel-wall RSL3 kill: poorly-vascularized", "poorly_vascularized"),
+    ("pen_cns_bbb", "penetration", "Vessel-wall RSL3 kill: CNS / BBB", "cns_bbb"),
 )
 
 
@@ -1090,7 +1095,7 @@ def render(d) -> str:
              f"The kill falls because the defences kept are stronger, not "
              f"because the drug kept is weaker.\n")
 
-    L.append("### Does this move any per-headline verdict?\n")
+    L.append("## Does this move any per-headline verdict?\n")
     flips = d["sign_flips"]
     L.append(f"`identifiability-report.md` reads these intervals for its "
              f"per-headline verdicts, and those are DIRECTION claims rather "

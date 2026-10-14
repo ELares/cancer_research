@@ -1086,3 +1086,11 @@ def test_load_reports_a_missing_citation_as_missing(monkeypatch):
     assert M.load()["subadditive_citations"] == {path: False}, (
         "the loader reports a citation present when its phrase is absent, so "
         "the page's note about those sites is not checked at all")
+
+
+def test_no_observable_label_contains_a_comma():
+    """Several sections list the affected observables inline, separated by
+    commas. A label with a comma in it makes such a list unreadable, which it
+    was on the first pass."""
+    bad = [label for _, _, label, _ in M.OBSERVABLES if "," in label]
+    assert not bad, f"these labels would break every inline list: {bad}"

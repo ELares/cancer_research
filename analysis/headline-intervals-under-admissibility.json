@@ -165,7 +165,7 @@
         "p97_5": 5.242083174999999
       },
       "interval_quotable": true,
-      "label": "Bliss synergy, RSL3 + FSP1i",
+      "label": "Bliss synergy (RSL3 + FSP1i)",
       "n_admissible": 125,
       "n_admissible_floor": 100,
       "n_failed": 0,
@@ -270,7 +270,7 @@
         "p97_5": 0.9994676
       },
       "interval_quotable": false,
-      "label": "Hypoxia kill-collapse gap, SDT minus RSL3",
+      "label": "Hypoxia kill-collapse gap (SDT minus RSL3)",
       "n_admissible": 36,
       "n_admissible_floor": 100,
       "n_failed": 0,
@@ -375,7 +375,7 @@
         "p97_5": 0.17058192499999994
       },
       "interval_quotable": false,
-      "label": "SDT immune kill fraction, final counts",
+      "label": "SDT immune kill fraction (final counts)",
       "n_admissible": 36,
       "n_admissible_floor": 100,
       "n_failed": 0,
@@ -480,7 +480,7 @@
         "p97_5": 0.9263499999999997
       },
       "interval_quotable": true,
-      "label": "Vessel-wall RSL3 kill, well-vascularized",
+      "label": "Vessel-wall RSL3 kill: well-vascularized",
       "n_admissible": 125,
       "n_admissible_floor": 100,
       "n_failed": 0,
@@ -585,7 +585,7 @@
         "p97_5": 0.8258749999999996
       },
       "interval_quotable": true,
-      "label": "Vessel-wall RSL3 kill, poorly-vascularized",
+      "label": "Vessel-wall RSL3 kill: poorly-vascularized",
       "n_admissible": 125,
       "n_admissible_floor": 100,
       "n_failed": 0,
@@ -690,7 +690,7 @@
         "p97_5": 0.7703999999999996
       },
       "interval_quotable": true,
-      "label": "Vessel-wall RSL3 kill, CNS / BBB",
+      "label": "Vessel-wall RSL3 kill: CNS / BBB",
       "n_admissible": 125,
       "n_admissible_floor": 100,
       "n_failed": 0,
@@ -892,8 +892,8 @@
   "tolerance": 0.001,
   "verdict": true,
   "withheld_tails": [
-    "Hypoxia kill-collapse gap, SDT minus RSL3",
-    "SDT immune kill fraction, final counts"
+    "Hypoxia kill-collapse gap (SDT minus RSL3)",
+    "SDT immune kill fraction (final counts)"
   ],
   "worst_untreated": {
     "max": 0.959,
