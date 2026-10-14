@@ -63,6 +63,8 @@ SRC = PROJECT_ROOT / "analysis" / "calibration" / "acsl4_prevalence_tcga.csv"
 OUT = PROJECT_ROOT / "analysis" / "calibration" / "calibration-feasibility.md"
 RAW = PROJECT_ROOT / "analysis" / "calibration" / "calibration-feasibility.json"
 
+JOIN = PROJECT_ROOT / "analysis" / "depmap-ferroptosis-join.json"
+
 GAPS = ["HMOX1", "TP53", "TFRC", "KEAP1"]
 ANCHORED = ["ACSL4", "GPX4", "SLC7A11"]
 EXP_LOW = 0.5 * (1 + erf(-1 / sqrt(2)))       # 15.87%
@@ -72,6 +74,19 @@ EXP_VLOW = 0.5 * (1 + erf(-2 / sqrt(2)))      # 2.28%
 # test: distribution-free, and the right test for "is this consistently above the
 # line", which a median alone cannot answer.
 ALPHA = 0.01
+
+
+def join_outcome() -> dict:
+    """What the cell-line join reports, read from its artifact rather than
+    restated here. Returns `{}` before that leg has been run."""
+    if not JOIN.exists():
+        return {}
+    d = json.loads(JOIN.read_text())
+    return {"rows": d.get("data_blocked_rows", {}),
+            "doi": d.get("provenance", {}).get("figshare_doi"),
+            "source": d.get("provenance", {}).get("source"),
+            "n_lines": d.get("provenance", {}).get("n_joined_lines"),
+            "verdict": d.get("verdict")}
 
 
 def sign_test(above: int, n: int) -> float:
@@ -218,9 +233,10 @@ def main() -> int:
                  f"expectation, exceeding it in "
                  f"{stats['TP53']['types_above_expected_verylow']}/32 types "
                  f"(p={stats['TP53']['p_verylow']:.1g}), with the widest inter-cancer "
-                 "spread. Consistent with real deletion. CTRPv2 also carries 828 cell "
-                 "lines x 5 ferroptosis inducers for a sensitivity join if a cell-line "
-                 "expression source can be obtained."),
+                 "spread. Consistent with real deletion. The cell-line sensitivity join "
+                 "this row used to name as conditional has since been run (#932): "
+                 "the expression source was obtainable and TP53 does not clear "
+                 "the rule there either."),
     }
     for g in GAPS:
         status, why = reasons[g]
@@ -232,18 +248,47 @@ def main() -> int:
         "in the deep tail, not what ferroptosis sensitivity to give them. The honest",
         "outcome is a data-blocked row, which is what #444 did for ACSL4 before #462",
         "found a partial anchor.", "",
-        "## What would change the answer", "",
-        "A cell-line expression matrix joinable to the committed CTRPv2 curves would",
-        "make all four testable at once: correlate expression against ferroptosis-",
-        "inducer EC50 across 828 lines. The DepMap download catalogue served that until",
-        "recently and now returns HTML rather than the documented CSV, so that join is",
-        "blocked on access, not on method.", "",
+        "## What changed the answer: the join was not blocked", "",
+        "This section used to say that a cell-line expression matrix joinable to the",
+        "committed CTRPv2 curves would make all four testable at once, and that the",
+        "join was blocked on ACCESS because the DepMap download catalogue had begun",
+        "returning HTML rather than the documented CSV. The first half was right. The",
+        "second was a statement about ONE DOOR: that portal API does still serve a",
+        "verification page, and DepMap also publishes every public release on figshare",
+        "under CC BY, served without a gate. The join has been run (#932).", "",]
+    join = join_outcome()
+    if join:
+        L += [
+            f"Source: {join['source']}, {join['doi']}, joined on `ModelID`, which the",
+            f"committed curves already carry, over {join['n_lines']} cell lines. The",
+            f"report is `analysis/depmap-ferroptosis-join.md` and its headline verdict",
+            f"is `{join['verdict']}`. Per gap gene:", "",
+            "| gene | second route |", "|---|---|",
+        ]
+        for g in GAPS:
+            row = join["rows"].get(g, {})
+            L.append(f"| {g} | `{row.get('verdict', 'not reported')}` |")
+        L += [
+            "",
+            "So the four verdicts above stand, and their REASON changes: it is no",
+            "longer that a route could not be tried. Both routes have now been tried",
+            "and neither anchors these genes. That is a stronger negative than the one",
+            "this page used to carry, and it is the one to cite.", "",
+        ]
+    else:
+        L += [
+            "The join's own artifact is absent, so this page cannot report what it",
+            "found. Run `scripts/fetch_depmap_ctrpv2_join.py` then",
+            "`scripts/depmap_ferroptosis_join.py`.", "",
+        ]
+    L += [
         "## Limits", "",
-        "* **Scope of the negative.** Two routes were tried: cBioPortal expression",
-        "  prevalence (measured above) and the DepMap cell-line join (access-blocked).",
-        "  The data-blocked verdicts mean \"neither route tried anchors this gene\", not",
-        "  \"no dataset anywhere could\". A targeted knockdown or overexpression",
-        "  dose-response search per gene has not been run.",
+        "* **Scope of the negative.** Two routes have been tried: cBioPortal",
+        "  expression prevalence (measured above) and the DepMap cell-line join",
+        "  (#932, run; see the section above). The data-blocked verdicts mean",
+        "  \"neither route anchors this gene\", not \"no dataset anywhere could\". A",
+        "  targeted knockdown or overexpression dose-response search per gene has",
+        "  not been run.",
         "* Bulk tumour mRNA, which #462 already found does not rank the ACSL4-low",
         "  refractory phenotype the cell-line literature reports. The same caveat",
         "  applies here with more force.",
