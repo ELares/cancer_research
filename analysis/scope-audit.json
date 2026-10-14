@@ -12,6 +12,7 @@
    "immune-2d-measurement-report",
    "immune-2d-replication",
    "immune-measurement-report",
+   "intervals-under-admissibility",
    "key-findings",
    "modality-calibration",
    "modality-coverage",
@@ -187,7 +188,7 @@
   "top_mechanism": "immunotherapy",
   "top_n": 2297
  },
- "n_analyses": 158,
+ "n_analyses": 159,
  "n_predictions": 29,
  "n_predictions_ferroptosis": 10,
  "n_therapy_subject": 1,

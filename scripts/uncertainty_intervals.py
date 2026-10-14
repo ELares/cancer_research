@@ -174,6 +174,51 @@ def fmt_pct(x):
     return f"{100 * x:.1f}%"
 
 
+CONDITIONED = REPO / "analysis" / "intervals-under-admissibility.json"
+
+
+def conditioning_note():
+    """What #936 found when this prior was restricted to draws the model calls
+    viable, read from its artifact rather than restated here.
+
+    This generator's interpretation bullets were written before anyone checked
+    whether the prior satisfies the manuscript's baseline-viability constraint.
+    Most of it does not, and several of those bullets do not survive the
+    restriction. Deriving the qualification from the sibling artifact is what
+    stops the two pages drifting apart; a hand-written note here would go stale
+    the first time that page is regenerated.
+    """
+    if not CONDITIONED.exists():
+        return []
+    d = json.loads(CONDITIONED.read_text())
+    adm = d["admissibility"]
+    refuted = d["claims_refuted"]
+    survived = d["claims_survived"]
+    out = [
+        "", "## These intervals are not conditioned on the model being viable", "",
+        f"**{adm['n_admissible']} of {adm['n_draws']} draws "
+        f"({100 * adm['fraction']:.1f}%) in the prior above satisfy the "
+        f"manuscript's own baseline-viability constraint**, and this analysis "
+        f"never checked: its conditions are treated arms only, so no untreated "
+        f"death rate was computed here. `analysis/intervals-under-admissibility.md` "
+        f"(#936) adds the untreated arms on the SAME draws and partitions them.",
+        "",
+        f"Of the interpretation bullets below, **{len(refuted)} do not survive "
+        f"that restriction and {len(survived)} do**. Refuted:",
+        "",
+    ]
+    out += [f"- \"{c}\"" for c in refuted] or ["- (none)"]
+    out += ["", "Surviving:", ""]
+    out += [f"- \"{c}\"" for c in survived] or ["- (none)"]
+    out += [
+        "",
+        "The figures in the table itself are unchanged and correct for the prior "
+        "as swept; what the restriction changes is what they MEAN. Read that "
+        "page before quoting any bullet from this one.", "",
+    ]
+    return out
+
+
 def write_report(stats, points):
     lines = []
     lines.append("# Prior-predictive uncertainty intervals on the kill switch (#332)\n")
@@ -227,6 +272,9 @@ def write_report(stats, points):
         "intervals span the full plausible range, so a wide interval means the "
         "headline number is sensitive to the (uncalibrated) parameter choice and "
         "should be read as order-of-magnitude.\n"
+    )
+    lines.extend(conditioning_note())
+    lines.append(
         "- **The RSL3 death rates carry the widest intervals.** The bistable "
         "switch's tipping point sits inside the swept range, so the Persister x RSL3 "
         "death rate spans nearly the full [0, 1] under the parameter uncertainty: "

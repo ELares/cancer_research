@@ -1,0 +1,358 @@
+{
+  "admissibility": {
+    "fraction": 0.377,
+    "n_admissible": 754,
+    "n_draws": 2000,
+    "n_draws_untreated_over_half": 179,
+    "reportable": true,
+    "worst_untreated_max": 0.9645,
+    "worst_untreated_median": 0.041,
+    "worst_untreated_p90": 0.474
+  },
+  "claims_refuted": [
+    "The RSL3 death rates carry the widest intervals",
+    "OXPHOS x RSL3 stays low-but-wide",
+    "Persister x SDT sits >98% across the entire prior"
+  ],
+  "claims_survived": [
+    "The Glycolytic x RSL3 floor (~0% across the entire prior) is the robust exception",
+    "the Glycolytic x SDT interval is WIDE"
+  ],
+  "conditions": {
+    "Glycolytic/RSL3": {
+      "admissible_only": {
+        "high": 0.0,
+        "low": 0.0,
+        "median": 0.0,
+        "n": 754,
+        "width": 0.0
+      },
+      "full_prior": {
+        "high": 0.0,
+        "low": 0.0,
+        "median": 0.0,
+        "n": 2000,
+        "width": 0.0
+      },
+      "lower_shift": 0.0,
+      "lower_tail_extended": false,
+      "median_moved_materially": false,
+      "median_shift": 0.0,
+      "published": {
+        "high": 0.0,
+        "low": 0.0,
+        "median": 0.0,
+        "point": 0.0
+      },
+      "reproduces_published": true,
+      "upper_ratio": null,
+      "upper_tail_collapsed": false,
+      "width_ratio": null
+    },
+    "Glycolytic/SDT": {
+      "admissible_only": {
+        "high": 1.0,
+        "low": 0.008324999999999999,
+        "median": 0.893,
+        "n": 754,
+        "width": 0.991675
+      },
+      "full_prior": {
+        "high": 1.0,
+        "low": 0.034975000000000006,
+        "median": 0.984,
+        "n": 2000,
+        "width": 0.965025
+      },
+      "lower_shift": -0.026650000000000007,
+      "lower_tail_extended": true,
+      "median_moved_materially": true,
+      "median_shift": -0.09099999999999997,
+      "published": {
+        "high": 1.0,
+        "low": 0.035,
+        "median": 0.9840000000000001,
+        "point": 0.872
+      },
+      "reproduces_published": true,
+      "upper_ratio": 1.0,
+      "upper_tail_collapsed": false,
+      "width_ratio": 1.027615864873967
+    },
+    "OXPHOS/RSL3": {
+      "admissible_only": {
+        "high": 0.06834999999999991,
+        "low": 0.0,
+        "median": 0.001,
+        "n": 754,
+        "width": 0.06834999999999991
+      },
+      "full_prior": {
+        "high": 0.7507249999999988,
+        "low": 0.0,
+        "median": 0.02,
+        "n": 2000,
+        "width": 0.7507249999999988
+      },
+      "lower_shift": 0.0,
+      "lower_tail_extended": false,
+      "median_moved_materially": false,
+      "median_shift": -0.019,
+      "published": {
+        "high": 0.7509999999999999,
+        "low": 0.0,
+        "median": 0.02,
+        "point": 0.011000000000000001
+      },
+      "reproduces_published": true,
+      "upper_ratio": 0.09104532285457394,
+      "upper_tail_collapsed": true,
+      "width_ratio": 0.09104532285457394
+    },
+    "OXPHOS/SDT": {
+      "admissible_only": {
+        "high": 1.0,
+        "low": 0.45961250000000003,
+        "median": 0.999,
+        "n": 754,
+        "width": 0.5403875
+      },
+      "full_prior": {
+        "high": 1.0,
+        "low": 0.6814375,
+        "median": 1.0,
+        "n": 2000,
+        "width": 0.31856249999999997
+      },
+      "lower_shift": -0.221825,
+      "lower_tail_extended": true,
+      "median_moved_materially": false,
+      "median_shift": -0.0010000000000000009,
+      "published": {
+        "high": 1.0,
+        "low": 0.6809999999999999,
+        "median": 1.0,
+        "point": 0.9990000000000001
+      },
+      "reproduces_published": true,
+      "upper_ratio": 1.0,
+      "upper_tail_collapsed": false,
+      "width_ratio": 1.696331175201099
+    },
+    "Persister/RSL3": {
+      "admissible_only": {
+        "high": 0.8931999999999998,
+        "low": 0.006,
+        "median": 0.1545,
+        "n": 754,
+        "width": 0.8871999999999998
+      },
+      "full_prior": {
+        "high": 0.9965,
+        "low": 0.0159875,
+        "median": 0.5527500000000001,
+        "n": 2000,
+        "width": 0.9805125
+      },
+      "lower_shift": -0.009987500000000002,
+      "lower_tail_extended": false,
+      "median_moved_materially": true,
+      "median_shift": -0.3982500000000001,
+      "published": {
+        "high": 0.997,
+        "low": 0.016,
+        "median": 0.5529999999999999,
+        "point": 0.425
+      },
+      "reproduces_published": true,
+      "upper_ratio": 0.8963371801304563,
+      "upper_tail_collapsed": false,
+      "width_ratio": 0.9048329317576265
+    },
+    "Persister/SDT": {
+      "admissible_only": {
+        "high": 1.0,
+        "low": 0.9634125,
+        "median": 1.0,
+        "n": 754,
+        "width": 0.036587499999999995
+      },
+      "full_prior": {
+        "high": 1.0,
+        "low": 0.9815,
+        "median": 1.0,
+        "n": 2000,
+        "width": 0.01849999999999996
+      },
+      "lower_shift": -0.018087500000000034,
+      "lower_tail_extended": false,
+      "median_moved_materially": false,
+      "median_shift": 0.0,
+      "published": {
+        "high": 1.0,
+        "low": 0.982,
+        "median": 1.0,
+        "point": 1.0
+      },
+      "reproduces_published": true,
+      "upper_ratio": 1.0,
+      "upper_tail_collapsed": false,
+      "width_ratio": 1.9777027027027065
+    },
+    "PersisterNrf2/RSL3": {
+      "admissible_only": {
+        "high": 0.017174999999999954,
+        "low": 0.0,
+        "median": 0.0,
+        "n": 754,
+        "width": 0.017174999999999954
+      },
+      "full_prior": {
+        "high": 0.3775374999999998,
+        "low": 0.0,
+        "median": 0.0035,
+        "n": 2000,
+        "width": 0.3775374999999998
+      },
+      "lower_shift": 0.0,
+      "lower_tail_extended": false,
+      "median_moved_materially": false,
+      "median_shift": -0.0035,
+      "published": {
+        "high": 0.37799999999999995,
+        "low": 0.0,
+        "median": 0.004,
+        "point": 0.0
+      },
+      "reproduces_published": true,
+      "upper_ratio": 0.04549216965202123,
+      "upper_tail_collapsed": true,
+      "width_ratio": 0.04549216965202123
+    },
+    "PersisterNrf2/SDT": {
+      "admissible_only": {
+        "high": 1.0,
+        "low": 0.3238875,
+        "median": 0.998,
+        "n": 754,
+        "width": 0.6761125
+      },
+      "full_prior": {
+        "high": 1.0,
+        "low": 0.5264875,
+        "median": 1.0,
+        "n": 2000,
+        "width": 0.4735125
+      },
+      "lower_shift": -0.2026,
+      "lower_tail_extended": true,
+      "median_moved_materially": false,
+      "median_shift": -0.0020000000000000018,
+      "published": {
+        "high": 1.0,
+        "low": 0.526,
+        "median": 1.0,
+        "point": 0.995
+      },
+      "reproduces_published": true,
+      "upper_ratio": 1.0,
+      "upper_tail_collapsed": false,
+      "width_ratio": 1.4278662126131834
+    }
+  },
+  "conditions_reproduced": [
+    "Persister/RSL3",
+    "Persister/SDT",
+    "PersisterNrf2/RSL3",
+    "PersisterNrf2/SDT",
+    "Glycolytic/RSL3",
+    "Glycolytic/SDT",
+    "OXPHOS/RSL3",
+    "OXPHOS/SDT"
+  ],
+  "conditions_unmoved": [
+    "Persister/SDT",
+    "Glycolytic/RSL3"
+  ],
+  "design": {
+    "baseline_viability_max": 0.02,
+    "n_cells_per_draw": 2000,
+    "n_draws": 2000,
+    "n_parameters": 11,
+    "quantiles": [
+      0.025,
+      0.5,
+      0.975
+    ],
+    "rng_seed": 20250605,
+    "sim_seed": 42,
+    "treated_conditions": [
+      "Persister/RSL3",
+      "Persister/SDT",
+      "PersisterNrf2/RSL3",
+      "PersisterNrf2/SDT",
+      "Glycolytic/RSL3",
+      "Glycolytic/SDT",
+      "OXPHOS/RSL3",
+      "OXPHOS/SDT"
+    ],
+    "untreated_conditions": [
+      "Glycolytic/Control",
+      "Persister/Control",
+      "PersisterNrf2/Control"
+    ]
+  },
+  "lower_tails_extended": [
+    "PersisterNrf2/SDT",
+    "Glycolytic/SDT",
+    "OXPHOS/SDT"
+  ],
+  "medians_moved": [
+    "Persister/RSL3",
+    "Glycolytic/SDT"
+  ],
+  "published_claims": [
+    {
+      "basis": "full prior: Persister/RSL3 widest at 0.981, next 0.965 (margin 0.015); admissible: Glycolytic/SDT widest at 0.992, next 0.887",
+      "claim": "The RSL3 death rates carry the widest intervals",
+      "condition": "Persister/RSL3",
+      "property": "still_the_widest",
+      "survives": false
+    },
+    {
+      "basis": "admissible width 0.068 against a 0.25 bar (was 0.751)",
+      "claim": "OXPHOS x RSL3 stays low-but-wide",
+      "condition": "OXPHOS/RSL3",
+      "property": "still_wide",
+      "survives": false
+    },
+    {
+      "basis": "admissible upper end 0.0000",
+      "claim": "The Glycolytic x RSL3 floor (~0% across the entire prior) is the robust exception",
+      "condition": "Glycolytic/RSL3",
+      "property": "still_a_floor",
+      "survives": true
+    },
+    {
+      "basis": "admissible lower end 0.9634 against the 0.98 the claim quotes about itself",
+      "claim": "Persister x SDT sits >98% across the entire prior",
+      "condition": "Persister/SDT",
+      "property": "still_above_its_quoted_floor",
+      "survives": false
+    },
+    {
+      "basis": "admissible width 0.992 against a 0.25 bar (was 0.965)",
+      "claim": "the Glycolytic x SDT interval is WIDE",
+      "condition": "Glycolytic/SDT",
+      "property": "still_wide",
+      "survives": true
+    }
+  ],
+  "question": "what the published prior-predictive intervals say once the prior is restricted to draws the model itself calls viable",
+  "reproduces_published": true,
+  "upper_tails_collapsed": [
+    "PersisterNrf2/RSL3",
+    "OXPHOS/RSL3"
+  ],
+  "verdict": "conditioning_changes_what_the_intervals_say"
+}
