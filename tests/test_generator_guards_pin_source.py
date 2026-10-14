@@ -71,6 +71,10 @@ IN_SCOPE = {
     # artifact's numbers: a guard reading only this page's own file cannot see
     # the reproduction stop reproducing
     "test_intervals_under_admissibility.py",
+    # #938: same shape across three reports at once, and its measurement half
+    # never runs in CI (compiled binaries), so only a source assertion can say
+    # that the page measures the PUBLISHED observables rather than a local copy
+    "test_headline_intervals_under_admissibility.py",
     "test_ingest_sensitivity.py",
     "test_untagged_partner.py",
     "test_modality_ratio.py",
@@ -193,6 +197,11 @@ SUPERSEDED = {
     "atlas_landscape.py": "analysis/atlas-modality-ratio.md",
     "atlas_thesis_position.py": "analysis/atlas-thesis-rank.md",
     "atlas_coverage.py": "analysis/atlas-taxonomy-reach.md",
+    # #938: all three of this generator's reports sweep a prior most of which
+    # the model's own viability constraint rejects, and the design cannot notice
+    # (treated arms only). The pointer has to live here, because those reports
+    # are regenerated and a hand-written note in them would be erased.
+    "headline_uncertainty.py": "analysis/headline-intervals-under-admissibility.md",
 }
 
 

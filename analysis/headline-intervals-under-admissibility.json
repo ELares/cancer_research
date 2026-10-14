@@ -1,0 +1,903 @@
+{
+  "agreement": {
+    "agrees": true,
+    "bar": 3.0,
+    "max_abs_z": 1.4176585307724654,
+    "sibling_draws": 2000,
+    "sibling_fraction": 0.377
+  },
+  "all_reproduce": true,
+  "bliss_decomposition": {
+    "admissible_min_denominator": 0.005,
+    "denominator_clears_floor": true,
+    "denominator_ratio": 0.3739030355344555,
+    "floor": 0.001,
+    "identity_max_error": 2.220446049250313e-16,
+    "min_single_arm_kill_on_line": 1.0,
+    "n_at_or_below_line": 6,
+    "n_at_or_below_line_admissible": 0,
+    "n_on_line": 2,
+    "no_synergy_line": 1.0,
+    "numerator_ratio": 0.7403375068045727,
+    "parts": {
+      "bliss_prediction": {
+        "admissible_only": {
+          "max": 0.97245,
+          "mean": 0.32969299999999996,
+          "median": 0.249504,
+          "min": 0.005,
+          "n": 125,
+          "p2_5": 0.013,
+          "p97_5": 0.9281285999999999
+        },
+        "full": {
+          "max": 1.0,
+          "mean": 0.5868202166666666,
+          "median": 0.667296,
+          "min": 0.005,
+          "n": 300,
+          "p2_5": 0.01994055,
+          "p97_5": 0.997912975
+        }
+      },
+      "bliss_rate_combo": {
+        "admissible_only": {
+          "max": 1.0,
+          "mean": 0.6088400000000002,
+          "median": 0.68,
+          "min": 0.034,
+          "n": 125,
+          "p2_5": 0.05,
+          "p97_5": 0.998
+        },
+        "full": {
+          "max": 1.0,
+          "mean": 0.78352,
+          "median": 0.9185000000000001,
+          "min": 0.034,
+          "n": 300,
+          "p2_5": 0.084,
+          "p97_5": 1.0
+        }
+      },
+      "bliss_rate_fsp1i": {
+        "admissible_only": {
+          "max": 0.063,
+          "mean": 0.01448,
+          "median": 0.008,
+          "min": 0.0,
+          "n": 125,
+          "p2_5": 0.0,
+          "p97_5": 0.05769999999999998
+        },
+        "full": {
+          "max": 0.979,
+          "mean": 0.20549333333333333,
+          "median": 0.087,
+          "min": 0.0,
+          "n": 300,
+          "p2_5": 0.0,
+          "p97_5": 0.8746249999999999
+        }
+      },
+      "bliss_rate_rsl3": {
+        "admissible_only": {
+          "max": 0.971,
+          "mean": 0.321176,
+          "median": 0.232,
+          "min": 0.005,
+          "n": 125,
+          "p2_5": 0.0112,
+          "p97_5": 0.9271999999999999
+        },
+        "full": {
+          "max": 1.0,
+          "mean": 0.54388,
+          "median": 0.571,
+          "min": 0.005,
+          "n": 300,
+          "p2_5": 0.016475,
+          "p97_5": 0.9856749999999999
+        }
+      }
+    },
+    "ratio_follows_denominator": true,
+    "sub_additive_corner_is_wholly_inadmissible": true
+  },
+  "constraint": {
+    "baseline_max": 0.02,
+    "controls": [
+      "Glycolytic/Control",
+      "Persister/Control",
+      "PersisterNrf2/Control"
+    ],
+    "n_cells": 2000,
+    "seed": 332,
+    "sim_seed": 42
+  },
+  "data_conditioned_headlines": 0,
+  "families": {
+    "bliss": {
+      "draws": 300,
+      "fraction": 0.4166666666666667,
+      "n_admissible": 125,
+      "usable": true,
+      "z_against_sibling": 1.4176585307724654
+    },
+    "penetration": {
+      "draws": 300,
+      "fraction": 0.4166666666666667,
+      "n_admissible": 125,
+      "usable": true,
+      "z_against_sibling": 1.4176585307724654
+    },
+    "tme": {
+      "draws": 100,
+      "fraction": 0.36,
+      "n_admissible": 36,
+      "usable": false,
+      "z_against_sibling": -0.3507795147259083
+    }
+  },
+  "material_fraction": 0.1,
+  "n_material": 4,
+  "n_reportable": 6,
+  "observables": [
+    {
+      "admissible_only": {
+        "max": 7.8,
+        "mean": 2.8427840160000004,
+        "median": 2.529429,
+        "min": 1.027302,
+        "n": 125,
+        "p2_5": 1.0753186000000001,
+        "p97_5": 6.352854399999998
+      },
+      "column": "bliss_synergy",
+      "family": "bliss",
+      "full": {
+        "max": 7.8,
+        "mean": 1.915962683333333,
+        "median": 1.3484815,
+        "min": 0.953345,
+        "n": 300,
+        "p2_5": 1.000118275,
+        "p97_5": 5.242083174999999
+      },
+      "interval_quotable": true,
+      "label": "Bliss synergy (RSL3 + FSP1i)",
+      "n_admissible": 125,
+      "n_admissible_floor": 100,
+      "n_failed": 0,
+      "n_full": 300,
+      "n_undefined": 0,
+      "n_undefined_admissible": 0,
+      "point": {
+        "admissible_median_above_point": true,
+        "crossed": true,
+        "full_median_above_point": false,
+        "inside_admissible_interval": true,
+        "value": 1.992
+      },
+      "published": {
+        "high": 5.242,
+        "low": 1.0,
+        "max": 7.8,
+        "median": 1.348,
+        "min": 0.953,
+        "point": 1.992
+      },
+      "published_key": "synergy",
+      "published_width": 4.242,
+      "reportable": true,
+      "reproduces": true,
+      "reproduction": {
+        "high": {
+          "deviation": 8.317499999943578e-05,
+          "published": 5.242,
+          "recomputed": 5.242083174999999,
+          "reproduces": true
+        },
+        "low": {
+          "deviation": 0.00011827499999994551,
+          "published": 1.0,
+          "recomputed": 1.000118275,
+          "reproduces": true
+        },
+        "max": {
+          "deviation": 0.0,
+          "published": 7.8,
+          "recomputed": 7.8,
+          "reproduces": true
+        },
+        "median": {
+          "deviation": 0.0004815000000000236,
+          "published": 1.348,
+          "recomputed": 1.3484815,
+          "reproduces": true
+        },
+        "min": {
+          "deviation": 0.0003450000000000397,
+          "published": 0.953,
+          "recomputed": 0.953345,
+          "reproduces": true
+        }
+      },
+      "shifts": {
+        "high": {
+          "admissible": 6.352854399999998,
+          "delta": 1.1107712249999988,
+          "full": 5.242083174999999,
+          "material": true,
+          "quotable": true
+        },
+        "low": {
+          "admissible": 1.0753186000000001,
+          "delta": 0.07520032500000018,
+          "full": 1.000118275,
+          "material": false,
+          "quotable": true
+        },
+        "median": {
+          "admissible": 2.529429,
+          "delta": 1.1809474999999998,
+          "full": 1.3484815,
+          "material": true,
+          "quotable": true
+        }
+      },
+      "sign_preserved": true
+    },
+    {
+      "admissible_only": {
+        "max": 0.999755,
+        "mean": 0.7347981666666666,
+        "median": 0.9135475,
+        "min": 0.04114,
+        "n": 36,
+        "p2_5": 0.08273575000000001,
+        "p97_5": 0.99945575
+      },
+      "column": "tme_hypoxia_gap",
+      "family": "tme",
+      "full": {
+        "max": 0.999829,
+        "mean": 0.84658397,
+        "median": 0.959566,
+        "min": 0.04114,
+        "n": 100,
+        "p2_5": 0.162520075,
+        "p97_5": 0.9994676
+      },
+      "interval_quotable": false,
+      "label": "Hypoxia kill-collapse gap (SDT minus RSL3)",
+      "n_admissible": 36,
+      "n_admissible_floor": 100,
+      "n_failed": 0,
+      "n_full": 100,
+      "n_undefined": 0,
+      "n_undefined_admissible": 0,
+      "point": {
+        "admissible_median_above_point": true,
+        "crossed": false,
+        "full_median_above_point": true,
+        "inside_admissible_interval": null,
+        "value": 0.866
+      },
+      "published": {
+        "high": 0.999,
+        "low": 0.163,
+        "max": 1.0,
+        "median": 0.96,
+        "min": 0.041,
+        "point": 0.866
+      },
+      "published_key": "hypoxia",
+      "published_width": 0.836,
+      "reportable": true,
+      "reproduces": true,
+      "reproduction": {
+        "high": {
+          "deviation": 0.00046760000000001245,
+          "published": 0.999,
+          "recomputed": 0.9994676,
+          "reproduces": true
+        },
+        "low": {
+          "deviation": 0.00047992499999999216,
+          "published": 0.163,
+          "recomputed": 0.162520075,
+          "reproduces": true
+        },
+        "max": {
+          "deviation": 0.00017100000000003224,
+          "published": 1.0,
+          "recomputed": 0.999829,
+          "reproduces": true
+        },
+        "median": {
+          "deviation": 0.00043399999999993444,
+          "published": 0.96,
+          "recomputed": 0.959566,
+          "reproduces": true
+        },
+        "min": {
+          "deviation": 0.00014000000000000123,
+          "published": 0.041,
+          "recomputed": 0.04114,
+          "reproduces": true
+        }
+      },
+      "shifts": {
+        "high": {
+          "admissible": 0.99945575,
+          "delta": -1.1850000000035443e-05,
+          "full": 0.9994676,
+          "material": false,
+          "quotable": false
+        },
+        "low": {
+          "admissible": 0.08273575000000001,
+          "delta": -0.079784325,
+          "full": 0.162520075,
+          "material": false,
+          "quotable": false
+        },
+        "median": {
+          "admissible": 0.9135475,
+          "delta": -0.04601850000000007,
+          "full": 0.959566,
+          "material": false,
+          "quotable": true
+        }
+      },
+      "sign_preserved": true
+    },
+    {
+      "admissible_only": {
+        "max": 0.140548,
+        "mean": 0.03825697222222221,
+        "median": 0.0327625,
+        "min": 0.002273,
+        "n": 36,
+        "p2_5": 0.006508,
+        "p97_5": 0.095346375
+      },
+      "column": "tme_immune",
+      "family": "tme",
+      "full": {
+        "max": 0.25,
+        "mean": 0.05286913999999999,
+        "median": 0.0417185,
+        "min": 0.002273,
+        "n": 100,
+        "p2_5": 0.009336425,
+        "p97_5": 0.17058192499999994
+      },
+      "interval_quotable": false,
+      "label": "SDT immune kill fraction (final counts)",
+      "n_admissible": 36,
+      "n_admissible_floor": 100,
+      "n_failed": 0,
+      "n_full": 100,
+      "n_undefined": 0,
+      "n_undefined_admissible": 0,
+      "point": {
+        "admissible_median_above_point": true,
+        "crossed": false,
+        "full_median_above_point": true,
+        "inside_admissible_interval": null,
+        "value": 0.027
+      },
+      "published": {
+        "high": 0.171,
+        "low": 0.009,
+        "max": 0.25,
+        "median": 0.042,
+        "min": 0.002,
+        "point": 0.027
+      },
+      "published_key": "immune",
+      "published_width": 0.162,
+      "reportable": true,
+      "reproduces": true,
+      "reproduction": {
+        "high": {
+          "deviation": 0.00041807500000007325,
+          "published": 0.171,
+          "recomputed": 0.17058192499999994,
+          "reproduces": true
+        },
+        "low": {
+          "deviation": 0.0003364250000000013,
+          "published": 0.009,
+          "recomputed": 0.009336425,
+          "reproduces": true
+        },
+        "max": {
+          "deviation": 0.0,
+          "published": 0.25,
+          "recomputed": 0.25,
+          "reproduces": true
+        },
+        "median": {
+          "deviation": 0.00028150000000000397,
+          "published": 0.042,
+          "recomputed": 0.0417185,
+          "reproduces": true
+        },
+        "min": {
+          "deviation": 0.0002729999999999998,
+          "published": 0.002,
+          "recomputed": 0.002273,
+          "reproduces": true
+        }
+      },
+      "shifts": {
+        "high": {
+          "admissible": 0.095346375,
+          "delta": -0.07523554999999994,
+          "full": 0.17058192499999994,
+          "material": true,
+          "quotable": false
+        },
+        "low": {
+          "admissible": 0.006508,
+          "delta": -0.0028284250000000007,
+          "full": 0.009336425,
+          "material": false,
+          "quotable": false
+        },
+        "median": {
+          "admissible": 0.0327625,
+          "delta": -0.008955999999999999,
+          "full": 0.0417185,
+          "material": false,
+          "quotable": true
+        }
+      },
+      "sign_preserved": true
+    },
+    {
+      "admissible_only": {
+        "max": 0.657,
+        "mean": 0.09187200000000001,
+        "median": 0.053,
+        "min": 0.0,
+        "n": 125,
+        "p2_5": 0.001,
+        "p97_5": 0.4222999999999997
+      },
+      "column": "pen_well_vascularized",
+      "family": "penetration",
+      "full": {
+        "max": 1.0,
+        "mean": 0.3195133333333333,
+        "median": 0.2305,
+        "min": 0.0,
+        "n": 300,
+        "p2_5": 0.0019500000000000012,
+        "p97_5": 0.9263499999999997
+      },
+      "interval_quotable": true,
+      "label": "Vessel-wall RSL3 kill: well-vascularized",
+      "n_admissible": 125,
+      "n_admissible_floor": 100,
+      "n_failed": 0,
+      "n_full": 300,
+      "n_undefined": 0,
+      "n_undefined_admissible": 0,
+      "point": {
+        "admissible_median_above_point": false,
+        "crossed": true,
+        "full_median_above_point": true,
+        "inside_admissible_interval": true,
+        "value": 0.121
+      },
+      "published": {
+        "high": 0.926,
+        "low": 0.002,
+        "max": 1.0,
+        "median": 0.231,
+        "min": 0.0,
+        "point": 0.121
+      },
+      "published_key": "well_vascularized",
+      "published_width": 0.924,
+      "reportable": true,
+      "reproduces": true,
+      "reproduction": {
+        "high": {
+          "deviation": 0.0003499999999996284,
+          "published": 0.926,
+          "recomputed": 0.9263499999999997,
+          "reproduces": true
+        },
+        "low": {
+          "deviation": 4.999999999999883e-05,
+          "published": 0.002,
+          "recomputed": 0.0019500000000000012,
+          "reproduces": true
+        },
+        "max": {
+          "deviation": 0.0,
+          "published": 1.0,
+          "recomputed": 1.0,
+          "reproduces": true
+        },
+        "median": {
+          "deviation": 0.0005000000000000004,
+          "published": 0.231,
+          "recomputed": 0.2305,
+          "reproduces": true
+        },
+        "min": {
+          "deviation": 0.0,
+          "published": 0.0,
+          "recomputed": 0.0,
+          "reproduces": true
+        }
+      },
+      "shifts": {
+        "high": {
+          "admissible": 0.4222999999999997,
+          "delta": -0.50405,
+          "full": 0.9263499999999997,
+          "material": true,
+          "quotable": true
+        },
+        "low": {
+          "admissible": 0.001,
+          "delta": -0.0009500000000000012,
+          "full": 0.0019500000000000012,
+          "material": false,
+          "quotable": true
+        },
+        "median": {
+          "admissible": 0.053,
+          "delta": -0.17750000000000002,
+          "full": 0.2305,
+          "material": true,
+          "quotable": true
+        }
+      },
+      "sign_preserved": true
+    },
+    {
+      "admissible_only": {
+        "max": 0.096,
+        "mean": 0.013512,
+        "median": 0.009,
+        "min": 0.0,
+        "n": 125,
+        "p2_5": 0.0,
+        "p97_5": 0.051699999999999975
+      },
+      "column": "pen_poorly_vascularized",
+      "family": "penetration",
+      "full": {
+        "max": 0.975,
+        "mean": 0.1786333333333333,
+        "median": 0.076,
+        "min": 0.0,
+        "n": 300,
+        "p2_5": 0.0,
+        "p97_5": 0.8258749999999996
+      },
+      "interval_quotable": true,
+      "label": "Vessel-wall RSL3 kill: poorly-vascularized",
+      "n_admissible": 125,
+      "n_admissible_floor": 100,
+      "n_failed": 0,
+      "n_full": 300,
+      "n_undefined": 0,
+      "n_undefined_admissible": 0,
+      "point": {
+        "admissible_median_above_point": false,
+        "crossed": true,
+        "full_median_above_point": true,
+        "inside_admissible_interval": true,
+        "value": 0.026
+      },
+      "published": {
+        "high": 0.826,
+        "low": 0.0,
+        "max": 0.975,
+        "median": 0.076,
+        "min": 0.0,
+        "point": 0.026
+      },
+      "published_key": "poorly_vascularized",
+      "published_width": 0.826,
+      "reportable": true,
+      "reproduces": true,
+      "reproduction": {
+        "high": {
+          "deviation": 0.0001250000000003748,
+          "published": 0.826,
+          "recomputed": 0.8258749999999996,
+          "reproduces": true
+        },
+        "low": {
+          "deviation": 0.0,
+          "published": 0.0,
+          "recomputed": 0.0,
+          "reproduces": true
+        },
+        "max": {
+          "deviation": 0.0,
+          "published": 0.975,
+          "recomputed": 0.975,
+          "reproduces": true
+        },
+        "median": {
+          "deviation": 0.0,
+          "published": 0.076,
+          "recomputed": 0.076,
+          "reproduces": true
+        },
+        "min": {
+          "deviation": 0.0,
+          "published": 0.0,
+          "recomputed": 0.0,
+          "reproduces": true
+        }
+      },
+      "shifts": {
+        "high": {
+          "admissible": 0.051699999999999975,
+          "delta": -0.7741749999999996,
+          "full": 0.8258749999999996,
+          "material": true,
+          "quotable": true
+        },
+        "low": {
+          "admissible": 0.0,
+          "delta": 0.0,
+          "full": 0.0,
+          "material": false,
+          "quotable": true
+        },
+        "median": {
+          "admissible": 0.009,
+          "delta": -0.067,
+          "full": 0.076,
+          "material": false,
+          "quotable": true
+        }
+      },
+      "sign_preserved": true
+    },
+    {
+      "admissible_only": {
+        "max": 0.029,
+        "mean": 0.006736000000000001,
+        "median": 0.004,
+        "min": 0.0,
+        "n": 125,
+        "p2_5": 0.0,
+        "p97_5": 0.02489999999999999
+      },
+      "column": "pen_cns_bbb",
+      "family": "penetration",
+      "full": {
+        "max": 0.962,
+        "mean": 0.14178666666666667,
+        "median": 0.043,
+        "min": 0.0,
+        "n": 300,
+        "p2_5": 0.0,
+        "p97_5": 0.7703999999999996
+      },
+      "interval_quotable": true,
+      "label": "Vessel-wall RSL3 kill: CNS / BBB",
+      "n_admissible": 125,
+      "n_admissible_floor": 100,
+      "n_failed": 0,
+      "n_full": 300,
+      "n_undefined": 0,
+      "n_undefined_admissible": 0,
+      "point": {
+        "admissible_median_above_point": false,
+        "crossed": true,
+        "full_median_above_point": true,
+        "inside_admissible_interval": true,
+        "value": 0.018
+      },
+      "published": {
+        "high": 0.77,
+        "low": 0.0,
+        "max": 0.962,
+        "median": 0.043,
+        "min": 0.0,
+        "point": 0.018
+      },
+      "published_key": "cns_bbb",
+      "published_width": 0.77,
+      "reportable": true,
+      "reproduces": true,
+      "reproduction": {
+        "high": {
+          "deviation": 0.0003999999999996229,
+          "published": 0.77,
+          "recomputed": 0.7703999999999996,
+          "reproduces": true
+        },
+        "low": {
+          "deviation": 0.0,
+          "published": 0.0,
+          "recomputed": 0.0,
+          "reproduces": true
+        },
+        "max": {
+          "deviation": 0.0,
+          "published": 0.962,
+          "recomputed": 0.962,
+          "reproduces": true
+        },
+        "median": {
+          "deviation": 0.0,
+          "published": 0.043,
+          "recomputed": 0.043,
+          "reproduces": true
+        },
+        "min": {
+          "deviation": 0.0,
+          "published": 0.0,
+          "recomputed": 0.0,
+          "reproduces": true
+        }
+      },
+      "shifts": {
+        "high": {
+          "admissible": 0.02489999999999999,
+          "delta": -0.7454999999999996,
+          "full": 0.7703999999999996,
+          "material": true,
+          "quotable": true
+        },
+        "low": {
+          "admissible": 0.0,
+          "delta": 0.0,
+          "full": 0.0,
+          "material": false,
+          "quotable": true
+        },
+        "median": {
+          "admissible": 0.004,
+          "delta": -0.03899999999999999,
+          "full": 0.043,
+          "material": false,
+          "quotable": true
+        }
+      },
+      "sign_preserved": true
+    }
+  ],
+  "ordering": {
+    "admissible_only": {
+      "fraction": 1.0,
+      "n": 125,
+      "preserved": 125
+    },
+    "full": {
+      "fraction": 1.0,
+      "n": 300,
+      "preserved": 300
+    },
+    "published": {
+      "fraction": 1.0,
+      "n": 300
+    },
+    "reproduces_published": true,
+    "structural": true
+  },
+  "selection": {
+    "drug_parameters": [
+      "sdt_ros",
+      "rsl3_gpx4_inhib"
+    ],
+    "drug_parameters_untouched": true,
+    "max_drug_shift": 0.01255803432515551,
+    "per_parameter": {
+      "death_threshold": {
+        "admissible_mean_fraction": 0.5065895376218668,
+        "full_mean_fraction": 0.4774458709117778,
+        "is_drug_parameter": false,
+        "shift": 0.029143666710088945,
+        "strongly_selected": false
+      },
+      "fenton_rate": {
+        "admissible_mean_fraction": 0.45374349445866663,
+        "full_mean_fraction": 0.4974884778855555,
+        "is_drug_parameter": false,
+        "shift": -0.04374498342688887,
+        "strongly_selected": false
+      },
+      "fsp1_rate": {
+        "admissible_mean_fraction": 0.5143532146686668,
+        "full_mean_fraction": 0.49451180084444446,
+        "is_drug_parameter": false,
+        "shift": 0.01984141382422233,
+        "strongly_selected": false
+      },
+      "gpx4_degradation_by_ros": {
+        "admissible_mean_fraction": 0.5171773055520001,
+        "full_mean_fraction": 0.49496145477222225,
+        "is_drug_parameter": false,
+        "shift": 0.02221585077977789,
+        "strongly_selected": false
+      },
+      "gpx4_rate": {
+        "admissible_mean_fraction": 0.5948732129902222,
+        "full_mean_fraction": 0.4908722930029631,
+        "is_drug_parameter": false,
+        "shift": 0.10400091998725913,
+        "strongly_selected": true
+      },
+      "gsh_scav_efficiency": {
+        "admissible_mean_fraction": 0.28447519116159997,
+        "full_mean_fraction": 0.48497423528844436,
+        "is_drug_parameter": false,
+        "shift": -0.20049904412684438,
+        "strongly_selected": true
+      },
+      "lp_propagation": {
+        "admissible_mean_fraction": 0.38633695358026654,
+        "full_mean_fraction": 0.49690251312022204,
+        "is_drug_parameter": false,
+        "shift": -0.1105655595399555,
+        "strongly_selected": true
+      },
+      "lp_rate": {
+        "admissible_mean_fraction": 0.4152330042631112,
+        "full_mean_fraction": 0.4789934155062963,
+        "is_drug_parameter": false,
+        "shift": -0.0637604112431851,
+        "strongly_selected": false
+      },
+      "nrf2_gsh_rate": {
+        "admissible_mean_fraction": 0.5827886857663997,
+        "full_mean_fraction": 0.5198952439199997,
+        "is_drug_parameter": false,
+        "shift": 0.0628934418464,
+        "strongly_selected": false
+      },
+      "rsl3_gpx4_inhib": {
+        "admissible_mean_fraction": 0.48078512784000005,
+        "full_mean_fraction": 0.48738520108070177,
+        "is_drug_parameter": true,
+        "shift": -0.00660007324070172,
+        "strongly_selected": false
+      },
+      "sdt_ros": {
+        "admissible_mean_fraction": 0.5023885461322666,
+        "full_mean_fraction": 0.48983051180711107,
+        "is_drug_parameter": true,
+        "shift": 0.01255803432515551,
+        "strongly_selected": false
+      }
+    },
+    "strongly_selected": [
+      "gpx4_rate",
+      "gsh_scav_efficiency",
+      "lp_propagation"
+    ]
+  },
+  "sign_flips": [],
+  "subadditive_citations": {
+    "README.md": true,
+    "article/drafts/v1.md": true
+  },
+  "tolerance": 0.001,
+  "verdict": true,
+  "withheld_tails": [
+    "Hypoxia kill-collapse gap (SDT minus RSL3)",
+    "SDT immune kill fraction (final counts)"
+  ],
+  "worst_untreated": {
+    "max": 0.959,
+    "median": 0.03275,
+    "n_over_half": 23
+  }
+}
