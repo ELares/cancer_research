@@ -62,6 +62,9 @@ GENERATORS = [
     # enrolled from the start: a page whose subject is a placeholder's bound
     # must not hand-write a bound of its own
     REPO_ROOT / "scripts" / "acsl4_slope_bound.py",
+    # enrolled from the start: a page correcting another page's published
+    # figures must not hand-write any of its own
+    REPO_ROOT / "scripts" / "intervals_under_admissibility.py",
     # enrolled with the analysis it supports: a page whose subject is a
     # sentence outliving the measurement beside it has no business
     # hand-writing its own figures

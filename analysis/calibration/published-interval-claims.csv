@@ -1,0 +1,12 @@
+claim,condition,property
+"# Conclusions quoted VERBATIM from analysis/uncertainty-intervals-report.md,",,
+# so scripts/intervals_under_admissibility.py scores the sentence that is,,
+# actually published rather than a paraphrase. They live here rather than in,,
+# that generator because a quotation is DATA: a quoted claim legitimately,,
+"# contains the figures its author wrote, and a generator may not.",,
+# A guard asserts every claim is still present in that report verbatim.,,
+The RSL3 death rates carry the widest intervals,Persister/RSL3,still_the_widest
+OXPHOS x RSL3 stays low-but-wide,OXPHOS/RSL3,still_wide
+The Glycolytic x RSL3 floor (~0% across the entire prior) is the robust exception,Glycolytic/RSL3,still_a_floor
+Persister x SDT sits >98% across the entire prior,Persister/SDT,still_above_its_quoted_floor
+the Glycolytic x SDT interval is WIDE,Glycolytic/SDT,still_wide

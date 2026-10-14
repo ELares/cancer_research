@@ -1,0 +1,10 @@
+{
+  "n_cells": 2000,
+  "sim_seed": 42,
+  "untreated": {
+    "Glycolytic/Control": 0.0,
+    "Persister/Control": 0.0145,
+    "PersisterNrf2/Control": 0.0
+  },
+  "worst": 0.0145
+}

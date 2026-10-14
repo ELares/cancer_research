@@ -67,6 +67,10 @@ IN_SCOPE = {
     # requirements: a guard reading only the artifact cannot see the derivation
     # change, and a sweep caught exactly that four times in this file
     "test_acsl4_slope_bound.py",
+    # enrolled because its load-bearing property is a REPRODUCTION of another
+    # artifact's numbers: a guard reading only this page's own file cannot see
+    # the reproduction stop reproducing
+    "test_intervals_under_admissibility.py",
     "test_ingest_sensitivity.py",
     "test_untagged_partner.py",
     "test_modality_ratio.py",

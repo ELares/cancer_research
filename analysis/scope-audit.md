@@ -6,7 +6,7 @@
 
 | | ferroptosis / physical-ROS | other therapy | method |
 |---|--:|--:|--:|
-| committed analyses (158) | 25 | **1** | 132 |
+| committed analyses (159) | 26 | **1** | 132 |
 
 | preregistered predictions | **10 of 29** |
 |---|--:|
@@ -48,7 +48,7 @@ Note also that method analyses -- the largest bucket -- are about the INSTRUMENT
 
 - `radioligand-audit`
 
-**ferroptosis-or-physical** (25):
+**ferroptosis-or-physical** (26):
 
 - `arm-parity`
 - `atlas-discovery-gpx4`
@@ -61,6 +61,7 @@ Note also that method analyses -- the largest bucket -- are about the INSTRUMENT
 - `immune-2d-measurement-report`
 - `immune-2d-replication`
 - `immune-measurement-report`
+- `intervals-under-admissibility`
 - `key-findings`
 - `modality-calibration`
 - `modality-coverage`
