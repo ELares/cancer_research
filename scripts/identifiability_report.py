@@ -44,6 +44,8 @@ PENETRATION_AXIS = (REPO_ROOT / "analysis" / "calibration"
                     / "penetration-access-vs-depth.json")
 IMMUNE_PER_DEATH = (REPO_ROOT / "analysis" / "calibration"
                     / "icd-damp-per-death.json")
+ADMISSIBILITY = (REPO_ROOT / "analysis"
+                 / "headline-intervals-under-admissibility.json")
 OUT_MD = REPO_ROOT / "analysis" / "identifiability-report.md"
 OUT_JSON = REPO_ROOT / "analysis" / "identifiability-report.json"
 
@@ -118,11 +120,109 @@ HEADLINES = [
 ]
 
 
+def _bliss_admissibility() -> dict:
+    """What the model's own viability constraint does to the sub-additive corner.
+
+    THE ROW'S DIRECTION CLAUSE RESTS ON A SET OF DRAWS, so whether the model
+    accepts those draws is part of the claim rather than a footnote. (#936)
+    measured that the prior these intervals sweep is mostly inadmissible against
+    the manuscript's own untreated-viability constraint, and (#938) measured the
+    Bliss family in particular: not one draw at or below the no-synergy line
+    survives it.
+
+    WHY THIS IS A SEPARATE QUESTION FROM THE ONE (#938) ASKED. That page tested
+    whether conditioning moves a verdict and answered on the SIGN criterion --
+    these verdicts are direction claims, so a sign change is what would move
+    one, and no conditioned median changes sign. That remains true and is not
+    withdrawn here. But this row's stated basis is not a median sign; it is the
+    presence of draws in the lower tail, which the same conditioning removes
+    entirely. A verdict can survive the test applied to it while its stated
+    reason does not.
+
+    THE REPRODUCTION GATE IS LOAD-BEARING AND IS CHECKED, not assumed.
+    Conditioning a re-run would say nothing about what is published, so the
+    clause is WITHHELD unless the admissibility page reproduces the published
+    range -- and its `min` endpoint specifically, because that is the endpoint
+    the claim rests on. A page reproducing the median and missing the minimum
+    would reproduce everything except the number in question.
+
+    A MISSING ARTIFACT RAISES AND A NON-REPRODUCING ONE DOES NOT, which is the
+    distinction worth keeping: "I cannot see the measurement" is a broken
+    checkout, while "the measurement does not license the comparison" is a
+    state to report. Failing open on the first would silently republish the
+    unqualified row, which is the defect this derivation exists to remove.
+    """
+    if not ADMISSIBILITY.exists():
+        raise ValueError(
+            f"{ADMISSIBILITY.name} is missing; the Bliss row would publish its "
+            "unqualified direction clause without being able to see whether the "
+            "draws that clause rests on are ones the model accepts")
+    d = json.loads(ADMISSIBILITY.read_text(encoding="utf-8"))
+    dec = d.get("bliss_decomposition")
+    if not isinstance(dec, dict):
+        raise ValueError("admissibility artifact has no `bliss_decomposition`")
+    row = next((o for o in d.get("observables", [])
+                if o.get("column") == "bliss_synergy"), None)
+    if row is None:
+        raise ValueError("admissibility artifact has no `bliss_synergy` observable")
+    for key in ("n_at_or_below_line", "n_at_or_below_line_admissible", "n_on_line",
+                "min_single_arm_kill_on_line", "no_synergy_line",
+                "numerator_ratio", "denominator_ratio"):
+        if dec.get(key) is None:
+            raise ValueError(
+                f"admissibility artifact is missing `bliss_decomposition.{key}`; "
+                "the conditional clause would be built from a partial measurement")
+    for key in ("reproduces", "n_admissible", "n_full", "admissible_only",
+                # The sibling page WITHHOLDS a family's tails when too few
+                # draws survive the constraint to support one, and a minimum is
+                # the most tail-sensitive statistic there is. Quoting it anyway
+                # would hand this row a bound that page refuses to publish --
+                # the defect (#938) hit in its own conditioning note, so the
+                # flag is read rather than assumed.
+                "interval_quotable"):
+        if row.get(key) is None:
+            raise ValueError(
+                f"admissibility artifact's bliss observable is missing {key!r}")
+    repro = row.get("reproduction") or {}
+    min_leg = repro.get("min") or {}
+    if "reproduces" not in min_leg:
+        raise ValueError(
+            "admissibility artifact does not report whether it reproduces the "
+            "published sampled MINIMUM, which is the endpoint this row's "
+            "direction clause rests on")
+    return {
+        "reproduces": bool(row["reproduces"]) and bool(min_leg["reproduces"]),
+        "reproduces_minimum": bool(min_leg["reproduces"]),
+        "n_at_or_below_line": int(dec["n_at_or_below_line"]),
+        "n_at_or_below_line_admissible": int(dec["n_at_or_below_line_admissible"]),
+        "n_on_line": int(dec["n_on_line"]),
+        "min_single_arm_kill_on_line": float(dec["min_single_arm_kill_on_line"]),
+        "no_synergy_line": float(dec["no_synergy_line"]),
+        "numerator_ratio": float(dec["numerator_ratio"]),
+        # The corner's mechanism, measured across EVERY draw in it rather than
+        # only the ones exactly on the line -- see the note on the clause below.
+        "corner_min_worst_untreated": dec.get("corner_min_worst_untreated"),
+        "baseline_max": float(
+            (d.get("constraint") or {}).get("baseline_max") or 0.0) or None,
+        "denominator_ratio": float(dec["denominator_ratio"]),
+        "interval_quotable": bool(row["interval_quotable"]),
+        "admissible_min": float(row["admissible_only"]["min"]),
+        "n_admissible": int(row["n_admissible"]),
+        "n_full": int(row["n_full"]),
+    }
+
+
 def _bliss_verdict() -> dict:
     """Read the reported precision and sampled range, not a rounded headline.
 
     A ratio of one is Bliss independence, not synergy. A positive combination
     benefit over either single agent is also a different comparison.
+
+    AND READ WHETHER THE MODEL ACCEPTS THE DRAWS THE DIRECTION CLAUSE USES --
+    see `_bliss_admissibility`. The branch below used to turn on the published
+    sampled minimum ALONE, so the row's direction clause rested on a corner of
+    the prior that the model's own viability constraint rejects entirely, and
+    nothing in the derivation could notice.
     """
     source = BLISS_UNCERTAINTY.read_text(encoding="utf-8")
     rows = {}
@@ -162,6 +262,100 @@ def _bliss_verdict() -> dict:
             "the sampled minimum is reported as the additive null of 1.000; "
             "that precision does not establish whether every sampled ratio exceeds the null. "
         )
+
+    adm = _bliss_admissibility()
+    # The two pages must AGREE about whether the published range reaches the
+    # line before one is used to qualify the other. They are independent
+    # computations of the same quantity, so an agreement being relied on is
+    # checked rather than assumed -- and the reproduction gate is what makes
+    # the check meaningful, since a page that does not reproduce the minimum is
+    # entitled to disagree about it.
+    if adm["reproduces_minimum"]:
+        reaches_line = minimum <= adm["no_synergy_line"]
+        if reaches_line != (adm["n_at_or_below_line"] > 0):
+            raise ValueError(
+                "the published sampled minimum and the admissibility page "
+                "disagree about whether any draw reaches the no-synergy line, "
+                "while that page claims to reproduce the minimum")
+    # THE CONDITION HAS FOUR PARTS AND EACH CAN FAIL ON ITS OWN: the published
+    # range must reach the line (else there is no corner to qualify), the page
+    # must reproduce what is published (else the comparison is with a re-run),
+    # that page must be willing to quote this family's interval (else the
+    # admissible minimum is a bound it withholds), and every draw in the corner
+    # must be inadmissible (if one survives, the counterexample survives the
+    # model's own constraint and the unqualified verdict stands). The count is
+    # stated because it went stale here once already -- it read THREE until the
+    # quotability gate was added, one edit earlier.
+    corner_entirely_inadmissible = (adm["n_at_or_below_line"] > 0
+                                    and adm["n_at_or_below_line_admissible"] == 0)
+    conditional = (not uniformly_supra_additive
+                   and adm["reproduces"]
+                   and adm["interval_quotable"]
+                   and corner_entirely_inadmissible)
+    if conditional:
+        # EXPLAINING THE DRAWS ON THE LINE WOULD READ AS EXPLAINING THE CORNER.
+        # The saturation clause covers only those, so the margin by which the
+        # WHOLE corner fails is carried too where the sibling measures it -- a
+        # self-review finding, since the first version explained two of six and
+        # read as accounting for all six.
+        if adm["corner_min_worst_untreated"] and adm["baseline_max"]:
+            margin = (
+                f" -- and the rest of the corner is no nearer the constraint "
+                f"than those draws are, measured rather than entailed, since a "
+                f"low-kill pair admits a sub-additive ratio too: the LEAST "
+                f"inadmissible draw in the corner still kills "
+                f"{adm['corner_min_worst_untreated'] * 100:.2f}% of its untreated "
+                f"population, "
+                f"{adm['corner_min_worst_untreated'] / adm['baseline_max']:.1f}x "
+                f"the limit, so the whole corner fails by a wide margin and not "
+                f"at its boundary")
+        else:
+            margin = (
+                " -- the margin by which the rest of the corner fails is not "
+                "reported by the sibling page, so only the draws on the line are "
+                "accounted for here")
+        admissibility = (
+            f"NONE of the {adm['n_at_or_below_line']} draws at or below that "
+            f"additive null is admissible under the model's own untreated-viability "
+            f"constraint, and the admissible minimum is {adm['admissible_min']:.3f} "
+            f"over the {adm['n_admissible']} of {adm['n_full']} draws that survive it "
+            f"(#938), so the direction is uniform ONLY once that constraint is "
+            f"imposed. Three things stop that being a robustness result. "
+            f"Conditioning removes draws without adding data, so the admissible "
+            f"subset is not a posterior and this is not a data-conditioned claim. "
+            f"The {adm['n_on_line']} draws sitting exactly on the line have a "
+            f"single-agent kill of at least "
+            f"{adm['min_single_arm_kill_on_line']:.3f}, so both arms saturate, the "
+            f"independence prediction is driven to its own ceiling and the ratio is "
+            f"1 by arithmetic rather than by biology{margin}. "
+            f"And the admissible median rises because the independence "
+            f"BASELINE collapses to {adm['denominator_ratio']:.3f} of its full-prior "
+            f"median while the combination kill falls only to "
+            f"{adm['numerator_ratio']:.3f}, so the rise is a mechanism and not more "
+            f"synergy. "
+        )
+    elif not uniformly_supra_additive and not adm["reproduces"]:
+        admissibility = (
+            "whether those draws are admissible is NOT reported here: the "
+            "admissibility page (#938) does not reproduce the published range, so "
+            "conditioning it would describe a re-run rather than what is published. "
+        )
+    elif (not uniformly_supra_additive and corner_entirely_inadmissible
+          and not adm["interval_quotable"]):
+        # INERT on the Bliss family as measured -- that family clears the
+        # sibling's admissible-draw floor and its interval IS quotable, which a
+        # guard asserts rather than assumes, so this branch exists only as a
+        # fixture. An inert gate is a recorded defect class here precisely
+        # because nothing on real data exercises it.
+        admissibility = (
+            f"none of those draws is admissible, but the admissibility page "
+            f"(#938) WITHHOLDS this family's interval -- too few draws survive "
+            f"the constraint to support one -- so the admissible minimum is a "
+            f"figure that page declines to quote and this row does not rest a "
+            f"direction claim on it. "
+        )
+    else:
+        admissibility = ""
     return {
         "prior_predictive": (
             f"point {point:.3f}x, 95% prior-predictive [{lower:.3f}, {upper:.3f}], "
@@ -169,9 +363,11 @@ def _bliss_verdict() -> dict:
             "nonlinearity and/or interactions (Morris sigma > mu* for every active parameter)"
         ),
         "verdict": ("direction_robust_magnitude_not" if uniformly_supra_additive
-                    else "direction_and_magnitude_uncertain"),
+                    else "direction_robust_only_under_admissibility_magnitude_not"
+                    if conditional else "direction_and_magnitude_uncertain"),
         "rationale": (
-            direction + "A bound rounded to 1.000 cannot establish strict exclusion of the null; "
+            direction + admissibility
+            + "A bound rounded to 1.000 cannot establish strict exclusion of the null; "
             "outperforming a single agent is not equivalent to exceeding Bliss independence. "
             "The magnitude is not point-estimable or data-conditioned"
         ),
@@ -433,6 +629,12 @@ def build() -> dict:
         "rationale": immune_base["rationale"] + _immune_per_cell_clause(),
         "source": immune_base["source"] + "; calibration/icd-damp-per-death.md (#928)",
     }
+    # The Bliss row now consults a third artifact, so it must appear in the
+    # SOURCE line like the hypoxia and penetration rows' own additions do: the
+    # figures are cited inline, and a reader traces them through Source.
+    bliss = {**bliss, "source": (
+        next(h for h in HEADLINES if h["key"] == "bliss_synergy")["source"]
+        + "; headline-intervals-under-admissibility.md (#938)")}
     derived = {"bliss_synergy": bliss, "hypoxia_kill_collapse": hypoxia,
                "penetration_gap": penetration,
                "immune_amplification_ratio": immune}
@@ -446,11 +648,27 @@ def build() -> dict:
             "row would have been published instead")
     headlines = [{**h, **derived[h["key"]]} if h["key"] in derived else dict(h)
                  for h in HEADLINES]
-    bliss_summary = (
-        "Bliss supra-additivity holds across the sampled ensemble, with an uncalibrated magnitude. "
-        if bliss["verdict"] == "direction_robust_magnitude_not" else
-        "Uniform Bliss supra-additivity is not established by the reported ensemble, and its magnitude is uncalibrated. "
-    )
+    # DERIVED in THREE states, not two. This was a two-way branch on the old
+    # label, so the moment the Bliss row gained a conditional state (#940) a
+    # static summary would have reported the unqualified sentence beside a row
+    # that qualifies it -- the exact defect the hypoxia and penetration clauses
+    # below were split and derived to remove.
+    if bliss["verdict"] == "direction_robust_magnitude_not":
+        bliss_summary = (
+            "Bliss supra-additivity holds across the sampled ensemble, with an "
+            "uncalibrated magnitude. ")
+    elif bliss["verdict"] == "direction_robust_only_under_admissibility_magnitude_not":
+        bliss_summary = (
+            "Uniform Bliss supra-additivity is not established by the reported "
+            "ensemble -- but every sub-additive draw that conclusion rests on is "
+            "inadmissible under the model's own untreated-viability constraint, so "
+            "the direction is uniform once that constraint is imposed and is not "
+            "robust over the prior as published; conditioning adds no data and the "
+            "magnitude stays uncalibrated. ")
+    else:
+        bliss_summary = (
+            "Uniform Bliss supra-additivity is not established by the reported "
+            "ensemble, and its magnitude is uncalibrated. ")
     # DERIVED, because a static sentence here contradicted the row it
     # summarises the moment the hypoxia verdict started tracking the measured
     # form axis: the row said `direction_and_magnitude_uncertain` while this
