@@ -65,6 +65,11 @@ GENERATORS = [
     # enrolled from the start: a page correcting another page's published
     # figures must not hand-write any of its own
     REPO_ROOT / "scripts" / "intervals_under_admissibility.py",
+    # enrolled from the start (#938): same rule, now correcting three published
+    # reports at once, so a hand-written figure here could contradict any of
+    # them. Its confidence label is derived from the published quantiles for
+    # exactly the reason the #930 entry below records.
+    REPO_ROOT / "scripts" / "headline_intervals_under_admissibility.py",
     # enrolled with the analysis it supports: a page whose subject is a
     # sentence outliving the measurement beside it has no business
     # hand-writing its own figures

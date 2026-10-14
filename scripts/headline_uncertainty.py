@@ -90,6 +90,85 @@ DEFAULT_TME_SAMPLES = 100
 DEFAULT_PEN_SAMPLES = 300
 
 
+# ---------------------------------------------------------------------------
+# The qualification these reports' own figures need, DERIVED from the sibling
+# that measures it (#938) rather than written here. These intervals sweep a
+# uniform prior that the model's own baseline-viability constraint rejects most
+# of, and this design CANNOT notice: its conditions are treated arms only, so no
+# untreated death rate is computed anywhere in it. A hand-written note would be
+# a second copy of that page's conclusions, free to go stale the moment it is
+# re-measured.
+# ---------------------------------------------------------------------------
+ADMISSIBILITY_JSON = REPO / "analysis" / "headline-intervals-under-admissibility.json"
+
+
+def conditioning_note(family):
+    """Markdown lines qualifying `family`'s figures, or none if unmeasured."""
+    if not ADMISSIBILITY_JSON.exists():
+        return []
+    d = json.loads(ADMISSIBILITY_JSON.read_text())
+    fam = d.get("families", {}).get(family)
+    obs = [o for o in d.get("observables", []) if o["family"] == family]
+    if not fam or not obs:
+        return []
+
+    # Only quantiles that page will itself quote. A family whose conditioned
+    # sample is too thin has its TAILS withheld there, and surfacing one here
+    # would publish a bound its own source refuses -- which is exactly what the
+    # first version of this note did for the sim-tme report.
+    moved = []
+    for o in obs:
+        parts = [
+            f"{q} {o['shifts'][q]['full']:.3f} -> {o['shifts'][q]['admissible']:.3f}"
+            for q in ("low", "median", "high")
+            if o["shifts"].get(q, {}).get("material")
+            and o["shifts"][q].get("quotable", True)
+        ]
+        if parts:
+            moved.append(f"- **{o['label']}**: " + "; ".join(parts))
+
+    share = 100.0 * fam["fraction"]
+    lines = ["## Conditioned on the model's own viability constraint\n"]
+    lines.append(
+        "Every interval above is computed over the FULL uniform prior. "
+        "`analysis/headline-intervals-under-admissibility.md` (#938) measures how "
+        "much of that prior the manuscript's own untreated-viability constraint "
+        f"admits: {fam['n_admissible']} of {fam['draws']} draws here "
+        f"({share:.1f}%). The rest kill a material share of the UNTREATED "
+        "population, and this design cannot see that -- its conditions are "
+        "treated arms only, so no untreated death rate is computed anywhere in "
+        "it.\n"
+    )
+    if moved:
+        lines.append(
+            "Quantiles above that move materially once those draws are removed:\n"
+        )
+        lines.extend(moved)
+        lines.append("")
+    elif any(not o.get("interval_quotable", True) for o in obs):
+        # Saying "nothing moves" here would be the opposite of the truth: the
+        # tails move a great deal and simply cannot be QUOTED, because what is
+        # left after conditioning is too thin to rest a tail on.
+        lines.append(
+            "No MEDIAN above moves materially once those draws are removed -- "
+            "and the 95% bounds above cannot be restated at all for this "
+            "headline family, because conditioning leaves too few draws to rest "
+            "a tail on. That is a limit of this family's draw count, not a "
+            "finding that the bounds survive.\n"
+        )
+    else:
+        lines.append(
+            "No quantile above moves materially once those draws are removed.\n"
+        )
+    lines.append(
+        "Conditioning is not inference: it removes draws the model itself "
+        "declares invalid and adds no data. See that page for the direction of "
+        "each correction, the circularity falsifier it has to pass, and what it "
+        "does not claim.\n"
+    )
+    return lines
+
+
 def sample_prior(n_samples, seed=SEED):
     """n_samples joint-uniform draws over the 11 PRCC parameter ranges (one row
     per draw, columns in PARAM_NAMES order). Deterministic given (n_samples, seed)."""
@@ -262,6 +341,7 @@ def write_tme_report(hyp_stats, imm_stats, default_obs, n_failed, n_samples):
         "runs sim-tissue-pk). The data-conditioned posterior (ABC) for all of these is "
         "blocked on #330.\n"
     )
+    lines.extend(conditioning_note("tme"))
     TME_REPORT.write_text("\n".join(lines), encoding="utf-8")
 
 
@@ -423,6 +503,7 @@ def write_penetration_report(per_tissue_stats, default_obs, n_failed, ordering, 
         "sweeping the transport parameters' own (currently undocumented) ranges, are the "
         "open extensions.\n"
     )
+    lines.extend(conditioning_note("penetration"))
     PEN_REPORT.write_text("\n".join(lines), encoding="utf-8")
 
 
@@ -481,6 +562,7 @@ def write_report(stats, default_synergy, n_failed, n_undefined, n_samples):
         "kill-switch intervals are in `analysis/uncertainty-intervals-report.md`. The "
         "data-conditioned posterior (ABC) for all of these is blocked on #330.\n"
     )
+    lines.extend(conditioning_note("bliss"))
     REPORT.write_text("\n".join(lines), encoding="utf-8")
 
 

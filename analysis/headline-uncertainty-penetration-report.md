@@ -22,3 +22,15 @@ Per-draw ordering preserved (well >= poorly >= CNS): **100.0%** of 300 valid dra
 ## Scope
 
 Completes the prior-predictive propagation of #332's headline claims over the 11 PRCC biochem rate constants (single-cell kill switch, Bliss synergy, the two sim-tme headlines, and now penetration). The remaining piece is the data-conditioned ABC posterior, blocked on the external GDSC/DepMap/PRISM drug-response data (#330); turning these uniform priors into a posterior, and sweeping the transport parameters' own (currently undocumented) ranges, are the open extensions.
+
+## Conditioned on the model's own viability constraint
+
+Every interval above is computed over the FULL uniform prior. `analysis/headline-intervals-under-admissibility.md` (#938) measures how much of that prior the manuscript's own untreated-viability constraint admits: 125 of 300 draws here (41.7%). The rest kill a material share of the UNTREATED population, and this design cannot see that -- its conditions are treated arms only, so no untreated death rate is computed anywhere in it.
+
+Quantiles above that move materially once those draws are removed:
+
+- **Vessel-wall RSL3 kill, well-vascularized**: median 0.231 -> 0.053; high 0.926 -> 0.422
+- **Vessel-wall RSL3 kill, poorly-vascularized**: high 0.826 -> 0.052
+- **Vessel-wall RSL3 kill, CNS / BBB**: high 0.770 -> 0.025
+
+Conditioning is not inference: it removes draws the model itself declares invalid and adds no data. See that page for the direction of each correction, the circularity falsifier it has to pass, and what it does not claim.

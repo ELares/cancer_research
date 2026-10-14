@@ -22,3 +22,13 @@ The headline Bliss synergy is reported in the manuscript as a point estimate (~1
 ## Scope
 
 Bliss is the first headline propagated because `sim-combo-mech` is the cheapest binary. The costlier `sim-tme` headlines (hypoxia kill-collapse, the immune ratio) are the next extension of this prior-predictive harness; the single-cell kill-switch intervals are in `analysis/uncertainty-intervals-report.md`. The data-conditioned posterior (ABC) for all of these is blocked on #330.
+
+## Conditioned on the model's own viability constraint
+
+Every interval above is computed over the FULL uniform prior. `analysis/headline-intervals-under-admissibility.md` (#938) measures how much of that prior the manuscript's own untreated-viability constraint admits: 125 of 300 draws here (41.7%). The rest kill a material share of the UNTREATED population, and this design cannot see that -- its conditions are treated arms only, so no untreated death rate is computed anywhere in it.
+
+Quantiles above that move materially once those draws are removed:
+
+- **Bliss synergy, RSL3 + FSP1i**: median 1.348 -> 2.529; high 5.242 -> 6.353
+
+Conditioning is not inference: it removes draws the model itself declares invalid and adds no data. See that page for the direction of each correction, the circularity falsifier it has to pass, and what it does not claim.

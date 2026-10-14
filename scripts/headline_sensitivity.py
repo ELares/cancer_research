@@ -157,6 +157,21 @@ def _default_binary(name="sim-combo-mech"):
     return None
 
 
+def read_bliss_row(workdir):
+    """The whole RSL3 + FSP1i row from a completed sim-combo-mech run in `workdir`.
+
+    `synergy_score` is a RATIO (`rate_combo / bliss_prediction`), so a consumer
+    asking whether a change in the ratio came from the numerator or from a
+    collapsing denominator needs the row, not just the score. One reader for
+    both, so the score can never come from a different row than its parts."""
+    csv_path = Path(workdir) / "output" / "combo-mech" / "combo_synergy.csv"
+    with csv_path.open() as fh:
+        for row in csv.DictReader(fh):
+            if {row["drug_a"], row["drug_b"]} == {"RSL3", "FSP1i"}:
+                return row
+    raise RuntimeError("RSL3+FSP1i row not found in combo_synergy.csv")
+
+
 def read_bliss_synergy(workdir):
     """Read the RSL3 + FSP1i `synergy_score` from a completed sim-combo-mech run
     in `workdir`. Shared by the override path (`run_bliss`) and the no-override
@@ -165,16 +180,14 @@ def read_bliss_synergy(workdir):
     Returns `float(...)`, which may be NaN: sim-combo-mech emits NaN when the
     Bliss baseline `<= 0.001` (both single agents kill ~0%, an undefined ratio);
     callers must decide how to treat a non-finite value."""
-    csv_path = Path(workdir) / "output" / "combo-mech" / "combo_synergy.csv"
-    with csv_path.open() as fh:
-        for row in csv.DictReader(fh):
-            if {row["drug_a"], row["drug_b"]} == {"RSL3", "FSP1i"}:
-                return float(row["synergy_score"])
-    raise RuntimeError("RSL3+FSP1i row not found in combo_synergy.csv")
+    return float(read_bliss_row(workdir)["synergy_score"])
 
 
-def run_bliss(params_row, binary):
-    """RSL3 + FSP1i `synergy_score` from sim-combo-mech (the ~1.99x Bliss headline)."""
+def run_bliss_row(params_row, binary):
+    """Run sim-combo-mech under one prior draw and return the whole RSL3 + FSP1i
+    row (the score plus the single-agent rates and the Bliss denominator it is a
+    ratio of). `run_bliss` is the score-only caller, so there is exactly ONE
+    invocation path and the two cannot drift."""
     with tempfile.TemporaryDirectory(prefix="ferro_morris_") as workdir:
         overrides = {n: float(v) for n, v in zip(PARAM_NAMES, params_row)}
         env = dict(os.environ, FERRO_PARAM_OVERRIDES=json.dumps(overrides))
@@ -183,7 +196,12 @@ def run_bliss(params_row, binary):
         )
         if proc.returncode != 0:
             raise RuntimeError(f"sim-combo-mech failed ({proc.returncode}): {proc.stderr[-400:]}")
-        return read_bliss_synergy(workdir)
+        return read_bliss_row(workdir)
+
+
+def run_bliss(params_row, binary):
+    """RSL3 + FSP1i `synergy_score` from sim-combo-mech (the ~1.99x Bliss headline)."""
+    return float(run_bliss_row(params_row, binary)["synergy_score"])
 
 
 # Reference O2 gradient for the hypoxia headline (lambda = 120 um, the lambda the
