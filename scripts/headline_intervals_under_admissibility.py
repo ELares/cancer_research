@@ -165,27 +165,57 @@ MATERIAL_FRACTION = 0.10
 # model rejects -- and these are handwritten interpretation rather than
 # generated prose, so this page NAMES them instead of editing them. Checked, so
 # the note cannot outlive the sentences it points at.
+# ONE ENTRY PER SENTENCE, not per file. This registry's job is stated in the
+# paragraph it renders -- "the naming is checked against their current text so it
+# cannot outlive the sentences it points at" -- and it points at SENTENCES while
+# it was keyed on FILES, one representative phrase each. Measured (#942): the
+# manuscript carries FIVE sentences resting on this corner and the registry
+# verified one of them, the unverified set including `v1.md`'s opening summary,
+# which is the most prominent statement of the claim anywhere here.
+#
+# (#938) named two files and (#940) found a third by a repo-wide search, so both
+# of those rounds were about WHICH FILES and neither noticed that the question
+# was the wrong one. The reason the choice went unnoticed is mechanical and is
+# fixed below: `load` keyed the result dict on the PATH, so several entries for
+# one file collapsed into one and a per-sentence registry could not have worked.
+#
+# EVERY sentence carrying the concept is registered, with no classifier deciding
+# which of them "draws a conclusion" -- a keyword rule cannot measure that, and
+# this repository has that measurement on record. Two of the seven below report
+# the range rather than concluding from it; that reading is a JUDGEMENT stated
+# here and is deliberately not computed.
 SUBADDITIVE_CITATIONS = (
-    ("README.md", "some draws are sub-additive"),
-    ("article/drafts/v1.md", "some draws are sub-additive"),
-    # (#940): the registry shipped naming two sites and a repo-wide search found
-    # a third. Both of the others were found by reading the manuscript and the
-    # front door, which is where a reader lands -- and that is exactly why a
-    # protocol document was missed. The registry is the thing that has to be
-    # complete, because its whole job is to stop the naming outliving the
-    # sentences it points at.
-    ("analysis/p1-wetlab-protocol.md", "some draws are sub-additive"),
+    ("README.md",
+     "some draws are sub-additive, so synergy is not guaranteed"),
+    ("analysis/p1-wetlab-protocol.md",
+     "some draws are sub-additive, so supra-additivity is not guaranteed"),
+    # the book's opening summary
+    ("article/drafts/v1.md",
+     "includes additivity and some sub-additive draws"),
+    # Chapter 5's restatement of the identifiability verdict
+    ("article/drafts/v1.md",
+     "includes sub-additive draws, so its supra-additive direction"),
+    # Section 7.3's own statement of what the interval does not establish
+    ("article/drafts/v1.md",
+     "the full range includes sub-additive draws"),
+    # reports the range, with its minimum (judged descriptive)
+    ("article/drafts/v1.md",
+     "and some sub-additive draws (minimum"),
+    ("article/drafts/v1.md",
+     "The lower bound rounds to additivity and some draws are sub-additive"),
 )
 
 # Spelled out so the prose naming these sites cannot carry a stale count. The
 # first version wrote "Two sites" by hand beside a registry of two, which is the
-# derived-number-handwritten-prose defect: adding the third would have left a
-# document saying two while listing three.
-_COUNT_WORDS = {1: "One", 2: "Two", 3: "Three", 4: "Four"}
+# derived-number-handwritten-prose defect. (#940) then derived the count and
+# derived it from the WRONG QUANTITY: it counted the FILES and the sentence it
+# renders says sites.
+_COUNT_WORDS = {1: "One", 2: "Two", 3: "Three", 4: "Four", 5: "Five",
+                6: "Six", 7: "Seven", 8: "Eight"}
 
 
-def _counted(n: int) -> str:
-    """"<word> site(s) draw(s)", with the agreement computed.
+def _counted(n: int, noun: str = "sentence", cap: bool = False) -> str:
+    """"<word> <noun>(s)", with the plural computed.
 
     The number word and the noun are kept APART deliberately: a literal
     pairing a spelled count with the noun is what
@@ -194,7 +224,9 @@ def _counted(n: int) -> str:
     registry it describes, which is exactly how the first version shipped.
     """
     word = _COUNT_WORDS.get(n, str(n))
-    return f"{word} site{'' if n == 1 else 's'} {'draws' if n == 1 else 'draw'}"
+    if not cap:
+        word = word.lower() if word[0].isalpha() else word
+    return f"{word} {noun}{'' if n == 1 else 's'}"
 
 # A Bliss ratio equals this when the combination kill exactly matches the
 # independence prediction, because the engine computes `rate_combo /
@@ -781,6 +813,11 @@ def assemble(raw) -> dict:
     }
 
 
+def _flat(text: str) -> str:
+    """Collapse runs of whitespace, so a wrapped sentence still matches."""
+    return re.sub(r"\s+", " ", text)
+
+
 def _phrase_present(path, phrase) -> bool:
     """Does `path` still carry `phrase`?
 
@@ -788,7 +825,11 @@ def _phrase_present(path, phrase) -> bool:
     read is unreachable from any test that doctors the loaded inputs, and
     hard-coding it to True survived a mutation sweep for exactly that reason.
     """
-    return phrase in (REPO / path).read_text()
+    # WHITESPACE-INSENSITIVE, because the documents are wrapped and a sentence
+    # does not stop being present when a line break falls inside it. The raw
+    # comparison is why (#940)'s fragments had to stop mid-clause, which is how a
+    # registry ends up keyed on a phrase short enough to be ambiguous.
+    return _flat(phrase) in _flat((REPO / path).read_text())
 
 
 def load() -> dict:
@@ -802,7 +843,11 @@ def load() -> dict:
         # Both of these gate the verdict, so they belong in the INPUTS rather
         # than being read inside `assemble`: a check whose input a guard cannot
         # doctor is a check nothing can drive.
-        "subadditive_citations": {path: _phrase_present(path, phrase)
+        # KEYED ON THE SITE, not the path. Keyed on the path, several entries
+        # for one file collapsed into one -- which is why the registry was
+        # file-granular without the choice ever being made (#942).
+        "subadditive_citations": {f"{path} :: {phrase}":
+                                  _phrase_present(path, phrase)
                                   for path, phrase in SUBADDITIVE_CITATIONS},
         "sibling": json.loads(SINGLE_CELL_JSON.read_text()),
         "identifiability": json.loads(IDENTIFIABILITY_JSON.read_text()),
@@ -1119,13 +1164,23 @@ def render(d) -> str:
              f"published conclusion, and conflating them would read as this "
              f"page having found more synergy.\n")
 
-    still = [p for p, present in sorted(d["subadditive_citations"].items()) if present]
+    still = [k for k, present in sorted(d["subadditive_citations"].items())
+             if present]
     if still and dec["sub_additive_corner_is_wholly_inadmissible"]:
-        counted = _counted(len(still))
-        L.append(f"**{counted} a conclusion from those sub-additive draws, "
-                 f"and they are NOT edited here**: "
-                 + ", ".join(f"`{p}`" for p in still)
-                 + " each say the interval reaches the additive null and that "
+        # SENTENCES AND FILES ARE DIFFERENT COUNTS and the earlier version of
+        # this paragraph reported the second under the first's name, which is
+        # how four of the manuscript's five such sentences went unnamed (#942).
+        files = sorted({k.split(" :: ", 1)[0] for k in still})
+        per_file = {f: sum(1 for k in still if k.startswith(f + " :: "))
+                    for f in files}
+        L.append(f"**{_counted(len(still), cap=True)} across "
+                 f"{_counted(len(files), 'file')} draw a conclusion from those "
+                 f"sub-additive draws, and they are NOT edited here**: "
+                 + ", ".join(
+                     f"`{f}`" + (f" ({_counted(per_file[f])})"
+                                 if per_file[f] > 1 else "")
+                     for f in files)
+                 + ". Each says the interval reaches the additive null and that "
                    "some draws fall below it, so synergy is not guaranteed. "
                    "That is TRUE of the full prior they cite and this page does "
                    "not contradict it -- but every one of those draws is "
@@ -1133,7 +1188,9 @@ def render(d) -> str:
                    "rejects. They are handwritten interpretation rather than "
                    "generated prose, so they are named here rather than "
                    "rewritten, and the naming is checked against their current "
-                   "text so it cannot outlive the sentences it points at.\n")
+                   "text SENTENCE BY SENTENCE so it cannot outlive the "
+                   "sentences it points at -- which is what this registry says "
+                   "it does and what, keyed on files, it did not do.\n")
 
     L.append("## The ordering check, registered in advance as NOT evidence\n")
     L.append(f"The penetration report's load-bearing claim is a within-draw "
