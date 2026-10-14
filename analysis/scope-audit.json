@@ -4,6 +4,7 @@
    "arm-parity",
    "atlas-discovery-gpx4",
    "deep-pattern-analysis",
+   "depmap-ferroptosis-join",
    "depth-reach-comparison",
    "distilled-hypotheses-final",
    "engine-selectivity",
@@ -186,7 +187,7 @@
   "top_mechanism": "immunotherapy",
   "top_n": 2297
  },
- "n_analyses": 157,
+ "n_analyses": 158,
  "n_predictions": 29,
  "n_predictions_ferroptosis": 10,
  "n_therapy_subject": 1,

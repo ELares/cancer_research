@@ -286,6 +286,26 @@ calibration_data:
         per-cell-line logistic fits) of the public CTRPv2 release. The raw 45 MB
         CTRPResponseCurves.csv is not committed; regenerate with
         scripts/fetch_calibration_data.py. Used as the #330 calibration target.
+    - name: "DepMap cell-line expression x CTRPv2 sensitivity (derived)"
+      file: "analysis/calibration/depmap_ctrpv2_gene_correlations.csv.gz; analysis/calibration/depmap_ctrpv2_panel.csv; analysis/calibration/depmap_ctrpv2_join_provenance.json"
+      source: "DepMap 24Q4 Public, via the figshare release article (NOT the portal download API, which serves a bot-verification page)"
+      upstream_file: "OmicsExpressionProteinCodingGenesTPMLogp1.csv (md5 71794802b750ce77c422dad0720a40af); Model.csv (md5 675210d17675f3517b0ce39a3c274f16)"
+      url: "https://doi.org/10.25452/figshare.plus.27993248"
+      primary_refs:
+        - "Tsherniak et al. 2017 Cell, PMID 28753430 (Cancer Dependency Map)"
+        - "Seashore-Ludlow et al. 2015 Cancer Discov, PMID 26181016 (CTRPv2, the sensitivity half)"
+      license: "CC BY 4.0 (figshare release article)"
+      redistributable: true
+      attribution: "DepMap 24Q4 Public, Broad Institute, CC BY 4.0"
+      note: >
+        Committed files are small DERIVATIVES, never the matrix: a per-gene rank
+        correlation against ferroptosis-inducer sensitivity for every
+        protein-coding gene (pooled and ranked within Oncotree lineage), a
+        per-line panel for the declared candidate genes, and provenance. The
+        507 MB expression matrix is not committed and CI never downloads it;
+        regenerate with scripts/fetch_depmap_ctrpv2_join.py. Used by #932 to run
+        the cell-line join that calibration-feasibility.md had recorded as
+        access-blocked.
     - name: "Ferroptosis-inducer pharmacokinetics (transcribed summary)"
       file: "analysis/calibration/pk_measured_data.csv"
       source: "Published PK tables: IKE (Zhang 2019, Cell Chem Biol) + sorafenib popPK (Jain 2011, Br J Clin Pharmacol)"

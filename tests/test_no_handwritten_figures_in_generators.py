@@ -56,6 +56,9 @@ GENERATORS = [
     REPO_ROOT / "scripts" / "atlas_combination_gaps.py",
     REPO_ROOT / "scripts" / "atlas_variant_drug_map.py",
     REPO_ROOT / "scripts" / "manuscript_vs_census.py",
+    # enrolled from the start: a page reporting an enrichment against a
+    # measured null must not carry a single figure a reader cannot regenerate
+    REPO_ROOT / "scripts" / "depmap_ferroptosis_join.py",
     # enrolled with the analysis it supports: a page whose subject is a
     # sentence outliving the measurement beside it has no business
     # hand-writing its own figures

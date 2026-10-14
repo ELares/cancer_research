@@ -59,6 +59,10 @@ IN_SCOPE = {
     "test_census_findings.py",
     "test_taxonomy_reach.py",
     "test_scope_audit.py",
+    # enrolled because the page's whole claim is a COMPARISON against a
+    # measured expectation: a guard reading only the committed artifact could
+    # not notice the expectation stopping being measured
+    "test_depmap_ferroptosis_join.py",
     "test_ingest_sensitivity.py",
     "test_untagged_partner.py",
     "test_modality_ratio.py",

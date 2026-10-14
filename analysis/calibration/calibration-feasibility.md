@@ -66,7 +66,7 @@ The `status_from_zscore` bridge is untouched by either: it maps a scale.
 | gene | calibration status | reason |
 |---|---|---|
 | HMOX1 | **data-blocked** | Unanchored at BOTH cuts: 14.9% at z<-1 and 1.91% at z<-2, exceeding expectation in only 11/32 types. Neither cut of this route carries information about it. |
-| TP53 | **weak anchor available** | The one gene here with a real signal: 4.27% at z<-2 against a 2.28% expectation, exceeding it in 31/32 types (p=2e-08), with the widest inter-cancer spread. Consistent with real deletion. CTRPv2 also carries 828 cell lines x 5 ferroptosis inducers for a sensitivity join if a cell-line expression source can be obtained. |
+| TP53 | **weak anchor available** | The one gene here with a real signal: 4.27% at z<-2 against a 2.28% expectation, exceeding it in 31/32 types (p=2e-08), with the widest inter-cancer spread. Consistent with real deletion. The cell-line sensitivity join this row used to name as conditional has since been run (#932): the expression source was obtainable and TP53 does not clear the rule there either. |
 | TFRC | **data-blocked** | Unanchored at both cuts (2.07% at z<-2, 13/32 types). Note that the engine models NCOA4 release of iron from intracellular ferritin (`ferritinophagy_release`), NOT transferrin-receptor import across the membrane, so this is a genuine uncovered axis rather than a duplicate. |
 | KEAP1 | **data-blocked** | Unanchored at both cuts, and the only gene BELOW expectation at z<-1 by more than two points (1.49% at z<-2). Much of its effect is already carried by `nrf2_gsh_rate`, the pathway it regulates, though the KEAP1 sensor itself is not separately modelled. |
 
@@ -76,21 +76,41 @@ in the deep tail, not what ferroptosis sensitivity to give them. The honest
 outcome is a data-blocked row, which is what #444 did for ACSL4 before #462
 found a partial anchor.
 
-## What would change the answer
+## What changed the answer: the join was not blocked
 
-A cell-line expression matrix joinable to the committed CTRPv2 curves would
-make all four testable at once: correlate expression against ferroptosis-
-inducer EC50 across 828 lines. The DepMap download catalogue served that until
-recently and now returns HTML rather than the documented CSV, so that join is
-blocked on access, not on method.
+This section used to say that a cell-line expression matrix joinable to the
+committed CTRPv2 curves would make all four testable at once, and that the
+join was blocked on ACCESS because the DepMap download catalogue had begun
+returning HTML rather than the documented CSV. The first half was right. The
+second was a statement about ONE DOOR: that portal API does still serve a
+verification page, and DepMap also publishes every public release on figshare
+under CC BY, served without a gate. The join has been run (#932).
+
+Source: DepMap 24Q4 Public, 10.25452/figshare.plus.27993248.v1, joined on `ModelID`, which the
+committed curves already carry, over 781 cell lines. The
+report is `analysis/depmap-ferroptosis-join.md` and its headline verdict
+is `panel_beats_its_own_null`. Per gap gene:
+
+| gene | second route |
+|---|---|
+| HMOX1 | `route_tried_does_not_anchor` |
+| TP53 | `route_tried_does_not_anchor` |
+| TFRC | `route_tried_does_not_anchor` |
+| KEAP1 | `route_tried_does_not_anchor` |
+
+So the four verdicts above stand, and their REASON changes: it is no
+longer that a route could not be tried. Both routes have now been tried
+and neither anchors these genes. That is a stronger negative than the one
+this page used to carry, and it is the one to cite.
 
 ## Limits
 
-* **Scope of the negative.** Two routes were tried: cBioPortal expression
-  prevalence (measured above) and the DepMap cell-line join (access-blocked).
-  The data-blocked verdicts mean "neither route tried anchors this gene", not
-  "no dataset anywhere could". A targeted knockdown or overexpression
-  dose-response search per gene has not been run.
+* **Scope of the negative.** Two routes have been tried: cBioPortal
+  expression prevalence (measured above) and the DepMap cell-line join
+  (#932, run; see the section above). The data-blocked verdicts mean
+  "neither route anchors this gene", not "no dataset anywhere could". A
+  targeted knockdown or overexpression dose-response search per gene has
+  not been run.
 * Bulk tumour mRNA, which #462 already found does not rank the ACSL4-low
   refractory phenotype the cell-line literature reports. The same caveat
   applies here with more force.
