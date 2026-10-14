@@ -34,6 +34,17 @@ The `crossing bracketed` column is there because the first run of this analysis 
 | Persister | n/a | n/a | n/a | no usable window |
 | PersisterNrf2 | 0.57 | 3.33 | yes | effect floor above, baseline-viability constraint below |
 
+**And the data tightens the lower end, which is more than supplying a direction.** The bridge documents its range as z -2 to +1, but real lines reach further out, and the admissibility ceiling applies to whatever z a line actually has. Requiring EVERY OBSERVED line to stay admissible is therefore a stronger requirement than requiring it at the documented top:
+
+| phenotype | observed top z | slope at least | shipped above it | tighter than the documented bound by |
+|---|--:|--:|---|--:|
+| Glycolytic | -- | -- | -- | -- |
+| OXPHOS | -- | -- | -- | -- |
+| Persister | -- | -- | -- | -- |
+| PersisterNrf2 | +2.78 | 1.59 | yes | 2.78x |
+
+At the shipped slope the most ACSL4-high line maps to a boost of 1.388 (ML162), 1.298 (ML210), against a ceiling of 1.75 -- so **no observed line is inadmissible there**. That is a statement about the shipped value, not an argument for it.
+
 Verdict: `slope_bounded_not_fitted`.
 
 ## What the cell lines say, and why it does not fit the slope

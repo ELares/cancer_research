@@ -13,13 +13,17 @@
       "expression_mean": 4.533346224899598,
       "expression_sd": 1.2040170898477316,
       "n_lines": 747,
-      "usable": true
+      "usable": true,
+      "z_observed_high": 2.7763233622565506,
+      "z_observed_low": -3.6401362255197527
     },
     "ML210": {
       "expression_mean": 4.532431346549193,
       "expression_sd": 1.2002874673488868,
       "n_lines": 681,
-      "usable": true
+      "usable": true,
+      "z_observed_high": 2.596252762959999,
+      "z_observed_low": -3.6506849115300457
     }
   },
   "compounds_agreeing_in_direction": [
@@ -749,6 +753,36 @@
       "usable": true,
       "z_high": 2.0,
       "z_low": -2.0
+    }
+  },
+  "observed_range_bound": {
+    "Glycolytic": {
+      "usable": false
+    },
+    "OXPHOS": {
+      "usable": false
+    },
+    "Persister": {
+      "usable": false
+    },
+    "PersisterNrf2": {
+      "per_compound": {
+        "ML162": {
+          "admissible_at_shipped_slope": true,
+          "boost_at_shipped_slope": 1.3881616811282753,
+          "z_observed_high": 2.7763233622565506
+        },
+        "ML210": {
+          "admissible_at_shipped_slope": true,
+          "boost_at_shipped_slope": 1.2981263814799995,
+          "z_observed_high": 2.596252762959999
+        }
+      },
+      "shipped_above_it": true,
+      "slope_low": 1.5864704927180289,
+      "tightening_factor": 2.7763233622565506,
+      "usable": true,
+      "z_observed_high": 2.7763233622565506
     }
   },
   "phenotypes_usable": [

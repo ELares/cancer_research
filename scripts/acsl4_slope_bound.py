@@ -180,8 +180,10 @@ def measure_cell_lines() -> dict:
                  "mean_sensitivity": 1.0 - statistics.mean(v)}
                 for key, v in sorted(binned.items())
                 if len(v) >= MIN_LINES_PER_BIN]
+        zs = sorted((e - mean) / sd if sd else 0.0 for e, _ in pairs)
         out[compound] = {"n_lines": len(pairs), "expression_mean": mean,
                          "expression_sd": sd, "bins": bins,
+                         "z_observed_low": zs[0], "z_observed_high": zs[-1],
                          "usable": len(bins) >= 2}
     return out
 
@@ -262,6 +264,42 @@ def _sampling_resolution(engine) -> dict:
             "floor_clears_resolution": EFFECT_FLOOR > worst}
 
 
+def _observed_bound(window, lines) -> dict:
+    """The bound the DATA tightens, as opposed to the one the bridge's own
+    documented range gives.
+
+    The bridge documents z from its floor to its top, but real lines reach
+    further out than that, and the admissibility ceiling applies to whatever z a
+    line actually has. So requiring EVERY OBSERVED line to stay admissible is a
+    stronger requirement than requiring it at the documented top, and it is the
+    one the committed join can impose. Reported beside the documented-range
+    bound, never instead of it: they answer different questions.
+    """
+    ceiling = window["boost_admissible_to"]
+    highs = [leg.get("z_observed_high") for leg in lines.values()
+             if leg.get("z_observed_high") is not None]
+    if not window["usable_for_calibration"] or not ceiling or not highs:
+        return {"usable": False}
+    z_max = max(highs)
+    slope_low = z_max / ceiling
+    inadmissible = {}
+    for compound, leg in lines.items():
+        high = leg.get("z_observed_high")
+        if high is None:
+            continue
+        inadmissible[compound] = {
+            "z_observed_high": high,
+            "boost_at_shipped_slope": high / SHIPPED_SLOPE,
+            "admissible_at_shipped_slope": high / SHIPPED_SLOPE <= ceiling,
+        }
+    return {"usable": True, "z_observed_high": z_max,
+            "slope_low": slope_low,
+            "shipped_above_it": SHIPPED_SLOPE >= slope_low,
+            "tightening_factor": (slope_low / (BRIDGE_Z_HIGH / ceiling)
+                                  if ceiling else None),
+            "per_compound": inadmissible}
+
+
 def _measured_shape(leg) -> dict:
     """Does the measured relation rise, and is it a threshold or a slope?
 
@@ -313,11 +351,13 @@ def assemble(raw) -> dict:
     measured = {c: _measured_shape(lines[c]) for c in sorted(lines)}
     shapes = {p: _engine_shape(engine[p]) for p in sorted(engine)}
 
+    observed = {p: _observed_bound(windows[p], lines) for p in sorted(windows)}
     agreeing = [c for c in sorted(measured)
                 if measured[c].get("usable") and measured[c]["direction_matches_engine"]]
     monotone = [c for c in sorted(measured)
                 if measured[c].get("usable") and measured[c]["monotone"]]
-    bounded = [p for p in usable if bounds[p]["shipped_inside"]]
+    bounded = [p for p in usable if bounds[p]["shipped_inside"]
+               and observed[p].get("shipped_above_it")]
     return {
         "question": ("what can be said about the ACSL4 bridge's slope now that "
                      "the parameter it writes can be driven at all"),
@@ -333,6 +373,7 @@ def assemble(raw) -> dict:
         "windows": windows,
         "slope_bounds": bounds,
         "measured_shape": measured,
+        "observed_range_bound": observed,
         "engine_shape": shapes,
         "phenotypes_usable": usable,
         "compounds_agreeing_in_direction": agreeing,
@@ -438,6 +479,45 @@ def render(d) -> str:
         L.append(f"| {p} | {_num(s['slope_low'], 2)} | {_num(s['slope_high'], 2)} "
                  f"| {_yesno(s.get('shipped_inside'))} | {s['basis']} |")
     L.append("")
+    L.append("**And the data tightens the lower end, which is more than "
+             "supplying a direction.** The bridge documents its range as z "
+             f"{b['z_low']:+.0f} to {b['z_high']:+.0f}, but real lines reach "
+             "further out, and the admissibility ceiling applies to whatever z "
+             "a line actually has. Requiring EVERY OBSERVED line to stay "
+             "admissible is therefore a stronger requirement than requiring it "
+             "at the documented top:\n")
+    L.append("| phenotype | observed top z | slope at least | shipped above it "
+             "| tighter than the documented bound by |")
+    L.append("|---|--:|--:|---|--:|")
+    for p in sorted(d["observed_range_bound"]):
+        o = d["observed_range_bound"][p]
+        if not o.get("usable"):
+            L.append(f"| {p} | -- | -- | -- | -- |")
+            continue
+        L.append(f"| {p} | {o['z_observed_high']:+.2f} | "
+                 f"{_num(o['slope_low'], 2)} | "
+                 f"{_yesno(o['shipped_above_it'])} | "
+                 f"{_num(o['tightening_factor'], 2)}x |")
+    L.append("")
+    for p in sorted(d["observed_range_bound"]):
+        o = d["observed_range_bound"][p]
+        if not o.get("usable"):
+            continue
+        rows = o["per_compound"]
+        bad = [c for c in sorted(rows) if not rows[c]["admissible_at_shipped_slope"]]
+        L.append(f"At the shipped slope the most ACSL4-high line maps to a boost "
+                 f"of "
+                 + ", ".join(f"{_num(rows[c]['boost_at_shipped_slope'], 3)} ({c})"
+                             for c in sorted(rows))
+                 + f", against a ceiling of "
+                   f"{_num(d['windows'][p]['boost_admissible_to'], 2)} -- so "
+                 + ("**no observed line is inadmissible there**"
+                    if not bad else
+                    f"**{len(bad)} compound's top line is NOT admissible there** "
+                    f"({', '.join(bad)})")
+                 + ". That is a statement about the shipped value, not an "
+                   "argument for it.\n")
+        break
     L.append(f"Verdict: `{d['verdict']}`.\n")
 
     L.append("## What the cell lines say, and why it does not fit the slope\n")

@@ -328,6 +328,90 @@ def test_the_bound_inverts_the_boost_window_and_flips_its_order(raw):
         assert checked > 0, "no usable window, so the inversion is untested"
 
 
+def test_the_observed_range_tightens_the_bound_and_is_derived(raw, committed):
+    """The data's contribution beyond direction.
+
+    The bridge documents a z range; real lines reach further, and the
+    admissibility ceiling applies to the z a line actually has. So this bound
+    must be STRICTLY tighter than the documented-range one, and it must move
+    when the observed range moves -- a constant would not.
+    """
+    usable = [p for p, o in committed["observed_range_bound"].items()
+              if o.get("usable")]
+    assert usable, "no phenotype carries an observed-range bound"
+    for p in usable:
+        o, s_doc = committed["observed_range_bound"][p], committed["slope_bounds"][p]
+        assert o["slope_low"] > s_doc["slope_low"], (
+            f"{p}: the observed range does not tighten the bound, so it adds "
+            "nothing over the documented one")
+        assert o["tightening_factor"] == pytest.approx(
+            o["slope_low"] / s_doc["slope_low"])
+        assert o["z_observed_high"] > committed["bridge"]["z_high"], (
+            f"{p}: the observed top z is inside the documented range, so this "
+            "bound cannot be tighter and the guard above is accidental")
+    # Derived: halve the observed z range and the bound must follow.
+    d = _doctor(raw)
+    for leg in d["cell_lines"].values():
+        if leg.get("z_observed_high") is not None:
+            leg["z_observed_high"] = leg["z_observed_high"] / 2.0
+    after = M.assemble(d)["observed_range_bound"]
+    for p in usable:
+        assert after[p]["slope_low"] == pytest.approx(
+            committed["observed_range_bound"][p]["slope_low"] / 2.0), p
+
+
+def test_the_verdict_requires_the_observed_range_bound_too(raw):
+    """Push the observed range out until the shipped slope falls below the
+    tightened bound, and the verdict must stop claiming it is bounded."""
+    d = _doctor(raw)
+    for leg in d["cell_lines"].values():
+        if leg.get("z_observed_high") is not None:
+            leg["z_observed_high"] = 100.0
+    after = M.assemble(d)
+    for p, o in after["observed_range_bound"].items():
+        if not o.get("usable"):
+            continue
+        assert o["shipped_above_it"] is False, p
+    assert after["verdict"] == "slope_not_bounded_by_this_route"
+
+
+def test_an_inadmissible_top_line_is_reported_as_such(raw, committed):
+    """As measured no observed line is inadmissible at the shipped slope, so the
+    guard drives the case where one is."""
+    for p, o in committed["observed_range_bound"].items():
+        if not o.get("usable"):
+            continue
+        for c, row in o["per_compound"].items():
+            assert row["admissible_at_shipped_slope"] is True, (p, c)
+            assert row["boost_at_shipped_slope"] == pytest.approx(
+                row["z_observed_high"] / M.SHIPPED_SLOPE)
+    d = _doctor(raw)
+    for leg in d["cell_lines"].values():
+        if leg.get("z_observed_high") is not None:
+            leg["z_observed_high"] = 50.0
+    after = M.assemble(d)["observed_range_bound"]
+    for p, o in after.items():
+        if not o.get("usable"):
+            continue
+        for c, row in o["per_compound"].items():
+            assert row["admissible_at_shipped_slope"] is False, (p, c)
+
+
+def test_the_measured_leg_carries_its_observed_z_range(raw, committed):
+    """Driven as well as read: a sweep that stopped carrying the range was
+    caught only by the freshness guard, which is the wrong guard to rely on for
+    a field this page's tightened bound is computed from."""
+    for source in (committed, M.assemble(raw)):
+        for c, leg in source["cell_lines"].items():
+            assert leg["z_observed_low"] is not None, c
+            assert leg["z_observed_high"] is not None, c
+            assert leg["z_observed_low"] < 0.0 < leg["z_observed_high"], c
+            assert leg["z_observed_low"] > -10.0 and leg["z_observed_high"] < 10.0, c
+    # And the live measurement must carry it too, since that is where it is read.
+    for c, leg in M.measure_cell_lines().items():
+        assert leg.get("z_observed_high") is not None, c
+
+
 def test_a_phenotype_without_a_window_gets_no_bound_rather_than_a_wide_one(raw):
     """Driven, for the same reason: dropping the `usable` gate, or widening it
     to ignore the bridge range, left this guard green when it read the file."""
