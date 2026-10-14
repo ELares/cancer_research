@@ -63,6 +63,10 @@ IN_SCOPE = {
     # measured expectation: a guard reading only the committed artifact could
     # not notice the expectation stopping being measured
     "test_depmap_ferroptosis_join.py",
+    # enrolled because its whole claim is a BOUND derived from two measured
+    # requirements: a guard reading only the artifact cannot see the derivation
+    # change, and a sweep caught exactly that four times in this file
+    "test_acsl4_slope_bound.py",
     "test_ingest_sensitivity.py",
     "test_untagged_partner.py",
     "test_modality_ratio.py",

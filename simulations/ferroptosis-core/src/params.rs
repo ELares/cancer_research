@@ -1137,6 +1137,13 @@ where
             "gsh_max" => params.gsh_max = val,
             "gpx4_nrf2_target_multiplier" => params.gpx4_nrf2_target_multiplier = val,
             "death_threshold" => params.death_threshold = val,
+            // The ACSL4-status PUFA boost (#444/#462). It is the one field with
+            // a documented bridge from measured expression -- `acsl4::status_from_zscore`
+            // maps a within-cohort mRNA z-score onto it -- and it was reachable
+            // only from sim-tme-3d's hard-coded `Overrides.acsl4_status`, so the
+            // slope of that bridge could not be swept from Python at all and its
+            // `/2` placeholder could not be calibrated (#934).
+            "acsl4_status_boost" => params.acsl4_status_boost = val,
             other => return Err(other.to_string()),
         }
     }
@@ -1237,6 +1244,44 @@ mod tests {
         let err =
             apply_param_overrides(&mut Params::default(), [("not_a_param", 1.0)]).unwrap_err();
         assert_eq!(err, "not_a_param");
+    }
+
+    #[test]
+    fn acsl4_status_boost_is_drivable_and_adding_it_cannot_move_an_undriven_run() {
+        // WHY THIS FIELD. `acsl4::status_from_zscore` maps a within-cohort ACSL4
+        // mRNA z-score onto this boost, which makes it the only parameter here
+        // with a documented bridge from measured expression -- and it was absent
+        // from the table above, so neither the env hook nor the Python binding
+        // could set it and the bridge's slope was not calibratable (#934).
+        let mut p = Params::default();
+        assert_eq!(p.acsl4_status_boost, 0.0, "the default must stay inert");
+        apply_param_overrides(&mut p, [("acsl4_status_boost", -1.0)]).unwrap();
+        assert_eq!(p.acsl4_status_boost, -1.0, "the ACSL4-null floor");
+        // The whole range the bridge spans, so a sweep cannot hit a name error
+        // part-way through.
+        for z in [-2.0f64, -1.0, 0.0, 1.0] {
+            let boost = crate::acsl4::pufa_boost_from_status(crate::acsl4::status_from_zscore(z));
+            apply_param_overrides(&mut Params::default(), [("acsl4_status_boost", boost)]).unwrap();
+        }
+        // AND THE BYTE-IDENTITY CLAIM IS A PROPERTY OF THE MATCH, not merely a
+        // measurement: this function only ever consults keys it is HANDED, so an
+        // added arm is unreachable when nothing is supplied. Asserted here so
+        // the argument is checked rather than trusted, alongside the production
+        // matrix SHA which measures the same thing the expensive way.
+        let mut untouched = Params::default();
+        let before = serde_json::to_string(&untouched).unwrap();
+        apply_param_overrides(&mut untouched, Vec::<(String, f64)>::new()).unwrap();
+        assert_eq!(serde_json::to_string(&untouched).unwrap(), before);
+        // And driving it moves THAT field and nothing else.
+        let baseline = Params::default();
+        let mut driven = Params::default();
+        apply_param_overrides(&mut driven, [("acsl4_status_boost", 0.5)]).unwrap();
+        driven.acsl4_status_boost = baseline.acsl4_status_boost;
+        assert_eq!(
+            serde_json::to_string(&driven).unwrap(),
+            serde_json::to_string(&baseline).unwrap(),
+            "the new arm touched a field other than its own"
+        );
     }
 
     #[test]

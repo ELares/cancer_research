@@ -6,7 +6,7 @@ The aggregate code-size comparison is reported in `analysis/modality-module-dept
 
 | arm | engine lines | pub fns | rust tests | calibration | book words | figures | predictions | spatial |
 |---|--:|--:|--:|---|--:|--:|--:|---|
-| Ferroptosis induction | 3,833 | 184 | 276 | -- | 5,556 | 7 | 7 | by default |
+| Ferroptosis induction | 3,834 | 184 | 277 | -- | 5,556 | 7 | 7 | by default |
 | Sonodynamic therapy | 63 | 8 | 10 | PARTLY REFUTED | 1,144 | 7 | 4 | by default |
 | Photodynamic therapy | 249 | 9 | 59 | DIRECTIONAL | 1,144 | 4 | 2 | by default |
 | Ionizing radiation | 263 | 23 | 33 | ADMISSIBLE | 2,598 | 3 | 2 | on demand |
@@ -23,21 +23,21 @@ The aggregate code-size comparison is reported in `analysis/modality-module-dept
 
 TWO TIERS, and collapsing them would flatter the engine. 3 arms act on selecting the `Treatment` alone; the rest of the expressive column needs its own `Overrides` field, which is how every one of the engine's ~30 ferroptosis realism layers ships and is required here -- the production matrix carries a committed byte-identity SHA, so an arm acting by default would move it. `on demand` is a wired arm, not a half-wired one. A THIRD tier, `as modifier`, is narrower and is not rounded up: the arm ACTS, but selecting its `Treatment` does nothing -- the effect reaches the run through another layer. `analysis/modality-coverage.md` already draws that line between a TREATMENT and a MODIFIER and this column draws it too.
 
-**3,833 lines of production code carry the ferroptosis arm.** No other arm reaches a tenth of it, and the table's own worst row is the one to read first: an arm with no module of its own has no engine column to shrink.
+**3,834 lines of production code carry the ferroptosis arm.** No other arm reaches a tenth of it, and the table's own worst row is the one to read first: an arm with no module of its own has no engine column to shrink.
 
 ## What each arm is short, on the axis the criticism was about
 
 | arm | lines | share of ferroptosis | lines short of parity |
 |---|--:|--:|--:|
-| Sonodynamic therapy | 63 | 0.016x | 3,770 |
-| Photodynamic therapy | 249 | 0.065x | 3,584 |
-| Ionizing radiation | 263 | 0.069x | 3,570 |
-| Checkpoint blockade | 122 | 0.032x | 3,711 |
-| Adoptive cell therapy (CAR-T) | 166 | 0.043x | 3,667 |
-| Oncolytic virus | 165 | 0.043x | 3,668 |
-| Thermal and electrical ablation | 129 | 0.034x | 3,704 |
-| Cytotoxic chemotherapy | 282 | 0.074x | 3,551 |
-| Antibody-drug conjugate | 123 | 0.032x | 3,710 |
+| Sonodynamic therapy | 63 | 0.016x | 3,771 |
+| Photodynamic therapy | 249 | 0.065x | 3,585 |
+| Ionizing radiation | 263 | 0.069x | 3,571 |
+| Checkpoint blockade | 122 | 0.032x | 3,712 |
+| Adoptive cell therapy (CAR-T) | 166 | 0.043x | 3,668 |
+| Oncolytic virus | 165 | 0.043x | 3,669 |
+| Thermal and electrical ablation | 129 | 0.034x | 3,705 |
+| Cytotoxic chemotherapy | 282 | 0.074x | 3,552 |
+| Antibody-drug conjugate | 123 | 0.032x | 3,711 |
 
 Shared machinery -- 5 modules, 868 lines -- is credited to NO arm, so every row above is a lower bound. It is not divided up because dividing it would be a judgement about how much of the immune model belongs to checkpoint blockade rather than to CAR-T, and no such split is measurable from the code.
 

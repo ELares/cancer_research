@@ -59,6 +59,9 @@ GENERATORS = [
     # enrolled from the start: a page reporting an enrichment against a
     # measured null must not carry a single figure a reader cannot regenerate
     REPO_ROOT / "scripts" / "depmap_ferroptosis_join.py",
+    # enrolled from the start: a page whose subject is a placeholder's bound
+    # must not hand-write a bound of its own
+    REPO_ROOT / "scripts" / "acsl4_slope_bound.py",
     # enrolled with the analysis it supports: a page whose subject is a
     # sentence outliving the measurement beside it has no business
     # hand-writing its own figures
