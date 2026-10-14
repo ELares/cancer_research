@@ -1,0 +1,866 @@
+{
+  "bridge": {
+    "boost_at_z_high": 0.5,
+    "boost_at_z_low": -1.0,
+    "gene": "ACSL4",
+    "parameter": "acsl4_status_boost",
+    "shipped_slope": 2.0,
+    "z_high": 1.0,
+    "z_low": -2.0
+  },
+  "cell_lines": {
+    "ML162": {
+      "expression_mean": 4.533346224899598,
+      "expression_sd": 1.2040170898477316,
+      "n_lines": 747,
+      "usable": true,
+      "z_observed_high": 2.7763233622565506,
+      "z_observed_low": -3.6401362255197527
+    },
+    "ML210": {
+      "expression_mean": 4.532431346549193,
+      "expression_sd": 1.2002874673488868,
+      "n_lines": 681,
+      "usable": true,
+      "z_observed_high": 2.596252762959999,
+      "z_observed_low": -3.6506849115300457
+    }
+  },
+  "compounds_agreeing_in_direction": [
+    "ML162",
+    "ML210"
+  ],
+  "compounds_monotone": [],
+  "constraints": {
+    "baseline_viability_max": 0.02,
+    "effect_floor": 0.01,
+    "n_cells": 4000,
+    "seed": 42
+  },
+  "engine": {
+    "Glycolytic": [
+      {
+        "boost": 0.0,
+        "treated_ci_high": 0.000959478516832434,
+        "treated_ci_low": 0.0,
+        "treated_kill": 0.0,
+        "untreated_kill": 0.0
+      },
+      {
+        "boost": 0.05,
+        "treated_ci_high": 0.000959478516832434,
+        "treated_ci_low": 0.0,
+        "treated_kill": 0.0,
+        "untreated_kill": 0.0
+      },
+      {
+        "boost": 0.1,
+        "treated_ci_high": 0.000959478516832434,
+        "treated_ci_low": 0.0,
+        "treated_kill": 0.0,
+        "untreated_kill": 0.0
+      },
+      {
+        "boost": 0.15,
+        "treated_ci_high": 0.000959478516832434,
+        "treated_ci_low": 0.0,
+        "treated_kill": 0.0,
+        "untreated_kill": 0.0
+      },
+      {
+        "boost": 0.2,
+        "treated_ci_high": 0.000959478516832434,
+        "treated_ci_low": 0.0,
+        "treated_kill": 0.0,
+        "untreated_kill": 0.0
+      },
+      {
+        "boost": 0.25,
+        "treated_ci_high": 0.000959478516832434,
+        "treated_ci_low": 0.0,
+        "treated_kill": 0.0,
+        "untreated_kill": 0.0
+      },
+      {
+        "boost": 0.3,
+        "treated_ci_high": 0.000959478516832434,
+        "treated_ci_low": 0.0,
+        "treated_kill": 0.0,
+        "untreated_kill": 0.0
+      },
+      {
+        "boost": 0.4,
+        "treated_ci_high": 0.000959478516832434,
+        "treated_ci_low": 0.0,
+        "treated_kill": 0.0,
+        "untreated_kill": 0.0
+      },
+      {
+        "boost": 0.5,
+        "treated_ci_high": 0.000959478516832434,
+        "treated_ci_low": 0.0,
+        "treated_kill": 0.0,
+        "untreated_kill": 0.0
+      },
+      {
+        "boost": 0.6,
+        "treated_ci_high": 0.000959478516832434,
+        "treated_ci_low": 0.0,
+        "treated_kill": 0.0,
+        "untreated_kill": 0.0
+      },
+      {
+        "boost": 0.75,
+        "treated_ci_high": 0.000959478516832434,
+        "treated_ci_low": 0.0,
+        "treated_kill": 0.0,
+        "untreated_kill": 0.0
+      },
+      {
+        "boost": 0.9,
+        "treated_ci_high": 0.000959478516832434,
+        "treated_ci_low": 0.0,
+        "treated_kill": 0.0,
+        "untreated_kill": 0.0
+      },
+      {
+        "boost": 1.0,
+        "treated_ci_high": 0.000959478516832434,
+        "treated_ci_low": 0.0,
+        "treated_kill": 0.0,
+        "untreated_kill": 0.0
+      },
+      {
+        "boost": 1.25,
+        "treated_ci_high": 0.000959478516832434,
+        "treated_ci_low": 0.0,
+        "treated_kill": 0.0,
+        "untreated_kill": 0.0
+      },
+      {
+        "boost": 1.5,
+        "treated_ci_high": 0.000959478516832434,
+        "treated_ci_low": 0.0,
+        "treated_kill": 0.0,
+        "untreated_kill": 0.0
+      },
+      {
+        "boost": 1.75,
+        "treated_ci_high": 0.0018213931638308867,
+        "treated_ci_low": 0.000137125874484715,
+        "treated_kill": 0.0005,
+        "untreated_kill": 0.0
+      },
+      {
+        "boost": 2.0,
+        "treated_ci_high": 0.0032689703616226393,
+        "treated_ci_low": 0.0006876297196592976,
+        "treated_kill": 0.0015,
+        "untreated_kill": 0.0
+      },
+      {
+        "boost": 3.0,
+        "treated_ci_high": 0.050538535167631064,
+        "treated_ci_low": 0.03783698897897852,
+        "treated_kill": 0.04375,
+        "untreated_kill": 0.0
+      },
+      {
+        "boost": 4.0,
+        "treated_ci_high": 0.2991905751156341,
+        "treated_ci_low": 0.2712220006466037,
+        "treated_kill": 0.285,
+        "untreated_kill": 0.0015
+      }
+    ],
+    "OXPHOS": [
+      {
+        "boost": 0.0,
+        "treated_ci_high": 0.015589053522620806,
+        "treated_ci_low": 0.008847877249066063,
+        "treated_kill": 0.01175,
+        "untreated_kill": 0.0
+      },
+      {
+        "boost": 0.05,
+        "treated_ci_high": 0.024268875467423276,
+        "treated_ci_low": 0.01565318338725269,
+        "treated_kill": 0.0195,
+        "untreated_kill": 0.00125
+      },
+      {
+        "boost": 0.1,
+        "treated_ci_high": 0.03249490711443489,
+        "treated_ci_low": 0.022412759562488588,
+        "treated_kill": 0.027,
+        "untreated_kill": 0.002
+      },
+      {
+        "boost": 0.15,
+        "treated_ci_high": 0.04920294306445332,
+        "treated_ci_low": 0.03667497977844836,
+        "treated_kill": 0.0425,
+        "untreated_kill": 0.00275
+      },
+      {
+        "boost": 0.2,
+        "treated_ci_high": 0.06779053646668895,
+        "treated_ci_low": 0.05305380462812358,
+        "treated_kill": 0.06,
+        "untreated_kill": 0.0055
+      },
+      {
+        "boost": 0.25,
+        "treated_ci_high": 0.08619760795605891,
+        "treated_ci_low": 0.06961315139066448,
+        "treated_kill": 0.0775,
+        "untreated_kill": 0.009
+      },
+      {
+        "boost": 0.3,
+        "treated_ci_high": 0.11618058003358941,
+        "treated_ci_low": 0.09707500929841612,
+        "treated_kill": 0.10625,
+        "untreated_kill": 0.0125
+      },
+      {
+        "boost": 0.4,
+        "treated_ci_high": 0.18452141937826846,
+        "treated_ci_low": 0.16110703905025672,
+        "treated_kill": 0.1725,
+        "untreated_kill": 0.02325
+      },
+      {
+        "boost": 0.5,
+        "treated_ci_high": 0.25500761163000285,
+        "treated_ci_low": 0.22848843876319938,
+        "treated_kill": 0.2415,
+        "untreated_kill": 0.03825
+      },
+      {
+        "boost": 0.6,
+        "treated_ci_high": 0.3310841463231589,
+        "treated_ci_low": 0.30226798229251856,
+        "treated_kill": 0.3165,
+        "untreated_kill": 0.066
+      },
+      {
+        "boost": 0.75,
+        "treated_ci_high": 0.4451516488957921,
+        "treated_ci_low": 0.41448315783582274,
+        "treated_kill": 0.42975,
+        "untreated_kill": 0.1165
+      },
+      {
+        "boost": 0.9,
+        "treated_ci_high": 0.553904847756462,
+        "treated_ci_low": 0.5230212723977418,
+        "treated_kill": 0.5385,
+        "untreated_kill": 0.183
+      },
+      {
+        "boost": 1.0,
+        "treated_ci_high": 0.6274830453993683,
+        "treated_ci_low": 0.5973010719343446,
+        "treated_kill": 0.6125,
+        "untreated_kill": 0.22775
+      },
+      {
+        "boost": 1.25,
+        "treated_ci_high": 0.7746971855847151,
+        "treated_ci_low": 0.7483005274117231,
+        "treated_kill": 0.76175,
+        "untreated_kill": 0.35125
+      },
+      {
+        "boost": 1.5,
+        "treated_ci_high": 0.8665389510460191,
+        "treated_ci_low": 0.8447779002499962,
+        "treated_kill": 0.856,
+        "untreated_kill": 0.469
+      },
+      {
+        "boost": 1.75,
+        "treated_ci_high": 0.9239641537738674,
+        "treated_ci_low": 0.9067380398393863,
+        "treated_kill": 0.91575,
+        "untreated_kill": 0.58225
+      },
+      {
+        "boost": 2.0,
+        "treated_ci_high": 0.9607667530227089,
+        "treated_ci_low": 0.9478606012662318,
+        "treated_kill": 0.95475,
+        "untreated_kill": 0.67175
+      },
+      {
+        "boost": 3.0,
+        "treated_ci_high": 0.997536322425666,
+        "treated_ci_low": 0.9935118748856361,
+        "treated_kill": 0.996,
+        "untreated_kill": 0.88
+      },
+      {
+        "boost": 4.0,
+        "treated_ci_high": 0.9999558686332625,
+        "treated_ci_low": 0.9985851325891636,
+        "treated_kill": 0.99975,
+        "untreated_kill": 0.955
+      }
+    ],
+    "Persister": [
+      {
+        "boost": 0.0,
+        "treated_ci_high": 0.43260374933619666,
+        "treated_ci_low": 0.402055044358339,
+        "treated_kill": 0.41725,
+        "untreated_kill": 0.01425
+      },
+      {
+        "boost": 0.05,
+        "treated_ci_high": 0.5087427915650234,
+        "treated_ci_low": 0.47777016139495376,
+        "treated_kill": 0.49325,
+        "untreated_kill": 0.0195
+      },
+      {
+        "boost": 0.1,
+        "treated_ci_high": 0.5927263688523198,
+        "treated_ci_low": 0.5621249119775712,
+        "treated_kill": 0.5775,
+        "untreated_kill": 0.02325
+      },
+      {
+        "boost": 0.15,
+        "treated_ci_high": 0.6621576324186189,
+        "treated_ci_low": 0.6325593214189154,
+        "treated_kill": 0.6475,
+        "untreated_kill": 0.028
+      },
+      {
+        "boost": 0.2,
+        "treated_ci_high": 0.7196696314958315,
+        "treated_ci_low": 0.6914355430944918,
+        "treated_kill": 0.70575,
+        "untreated_kill": 0.03325
+      },
+      {
+        "boost": 0.25,
+        "treated_ci_high": 0.7724918649722206,
+        "treated_ci_low": 0.7460101656775433,
+        "treated_kill": 0.7595,
+        "untreated_kill": 0.042
+      },
+      {
+        "boost": 0.3,
+        "treated_ci_high": 0.8228324285686052,
+        "treated_ci_low": 0.7985707757939252,
+        "treated_kill": 0.811,
+        "untreated_kill": 0.05225
+      },
+      {
+        "boost": 0.4,
+        "treated_ci_high": 0.8964423135788269,
+        "treated_ci_low": 0.8768150500491447,
+        "treated_kill": 0.887,
+        "untreated_kill": 0.07925
+      },
+      {
+        "boost": 0.5,
+        "treated_ci_high": 0.9422302740134811,
+        "treated_ci_low": 0.9269349796768747,
+        "treated_kill": 0.935,
+        "untreated_kill": 0.10975
+      },
+      {
+        "boost": 0.6,
+        "treated_ci_high": 0.9716440129130814,
+        "treated_ci_low": 0.9604607936307139,
+        "treated_kill": 0.9665,
+        "untreated_kill": 0.1455
+      },
+      {
+        "boost": 0.75,
+        "treated_ci_high": 0.9876699130014405,
+        "treated_ci_low": 0.9799008320550072,
+        "treated_kill": 0.98425,
+        "untreated_kill": 0.2085
+      },
+      {
+        "boost": 0.9,
+        "treated_ci_high": 0.9959646625597556,
+        "treated_ci_low": 0.991087372665614,
+        "treated_kill": 0.994,
+        "untreated_kill": 0.276
+      },
+      {
+        "boost": 1.0,
+        "treated_ci_high": 0.9977261042181147,
+        "treated_ci_low": 0.993821613353929,
+        "treated_kill": 0.99625,
+        "untreated_kill": 0.336
+      },
+      {
+        "boost": 1.25,
+        "treated_ci_high": 0.9999558686332625,
+        "treated_ci_low": 0.9985851325891636,
+        "treated_kill": 0.99975,
+        "untreated_kill": 0.45675
+      },
+      {
+        "boost": 1.5,
+        "treated_ci_high": 0.9999999999999999,
+        "treated_ci_low": 0.9990405214831674,
+        "treated_kill": 1.0,
+        "untreated_kill": 0.57825
+      },
+      {
+        "boost": 1.75,
+        "treated_ci_high": 0.9999999999999999,
+        "treated_ci_low": 0.9990405214831674,
+        "treated_kill": 1.0,
+        "untreated_kill": 0.67675
+      },
+      {
+        "boost": 2.0,
+        "treated_ci_high": 0.9999999999999999,
+        "treated_ci_low": 0.9990405214831674,
+        "treated_kill": 1.0,
+        "untreated_kill": 0.75775
+      },
+      {
+        "boost": 3.0,
+        "treated_ci_high": 0.9999999999999999,
+        "treated_ci_low": 0.9990405214831674,
+        "treated_kill": 1.0,
+        "untreated_kill": 0.94475
+      },
+      {
+        "boost": 4.0,
+        "treated_ci_high": 0.9999999999999999,
+        "treated_ci_low": 0.9990405214831674,
+        "treated_kill": 1.0,
+        "untreated_kill": 0.9885
+      }
+    ],
+    "PersisterNrf2": [
+      {
+        "boost": 0.0,
+        "treated_ci_high": 0.000959478516832434,
+        "treated_ci_low": 0.0,
+        "treated_kill": 0.0,
+        "untreated_kill": 0.0
+      },
+      {
+        "boost": 0.05,
+        "treated_ci_high": 0.0018213931638308867,
+        "treated_ci_low": 0.000137125874484715,
+        "treated_kill": 0.0005,
+        "untreated_kill": 0.0
+      },
+      {
+        "boost": 0.1,
+        "treated_ci_high": 0.0036081654309853438,
+        "treated_ci_low": 0.000847954911038176,
+        "treated_kill": 0.00175,
+        "untreated_kill": 0.0
+      },
+      {
+        "boost": 0.15,
+        "treated_ci_high": 0.005236746185106675,
+        "treated_ci_low": 0.0017169754606247635,
+        "treated_kill": 0.003,
+        "untreated_kill": 0.0
+      },
+      {
+        "boost": 0.2,
+        "treated_ci_high": 0.006488125114363915,
+        "treated_ci_low": 0.0024636775743338587,
+        "treated_kill": 0.004,
+        "untreated_kill": 0.0
+      },
+      {
+        "boost": 0.25,
+        "treated_ci_high": 0.010686473024335471,
+        "treated_ci_low": 0.005258613314744474,
+        "treated_kill": 0.0075,
+        "untreated_kill": 0.0
+      },
+      {
+        "boost": 0.3,
+        "treated_ci_high": 0.01501934038096668,
+        "treated_ci_low": 0.008418549869237022,
+        "treated_kill": 0.01125,
+        "untreated_kill": 0.0
+      },
+      {
+        "boost": 0.4,
+        "treated_ci_high": 0.02675038209613566,
+        "treated_ci_low": 0.017667359105214556,
+        "treated_kill": 0.02175,
+        "untreated_kill": 0.0
+      },
+      {
+        "boost": 0.5,
+        "treated_ci_high": 0.04169467187633073,
+        "treated_ci_low": 0.03019668366580659,
+        "treated_kill": 0.0355,
+        "untreated_kill": 0.0
+      },
+      {
+        "boost": 0.6,
+        "treated_ci_high": 0.07280161334891189,
+        "treated_ci_low": 0.05753361269999074,
+        "treated_kill": 0.06475,
+        "untreated_kill": 0.0
+      },
+      {
+        "boost": 0.75,
+        "treated_ci_high": 0.14258576313796642,
+        "treated_ci_low": 0.12162089278968062,
+        "treated_kill": 0.13175,
+        "untreated_kill": 0.00025
+      },
+      {
+        "boost": 0.9,
+        "treated_ci_high": 0.24457064232098252,
+        "treated_ci_low": 0.21844507738181485,
+        "treated_kill": 0.23125,
+        "untreated_kill": 0.0005
+      },
+      {
+        "boost": 1.0,
+        "treated_ci_high": 0.3343702994817101,
+        "treated_ci_low": 0.30547559252360784,
+        "treated_kill": 0.31975,
+        "untreated_kill": 0.00075
+      },
+      {
+        "boost": 1.25,
+        "treated_ci_high": 0.5436859034973315,
+        "treated_ci_low": 0.5127598859664674,
+        "treated_kill": 0.52825,
+        "untreated_kill": 0.003
+      },
+      {
+        "boost": 1.5,
+        "treated_ci_high": 0.7270553401250701,
+        "treated_ci_low": 0.6990354422875009,
+        "treated_kill": 0.71325,
+        "untreated_kill": 0.0085
+      },
+      {
+        "boost": 1.75,
+        "treated_ci_high": 0.8568534980501481,
+        "treated_ci_low": 0.8344825428162037,
+        "treated_kill": 0.846,
+        "untreated_kill": 0.01425
+      },
+      {
+        "boost": 2.0,
+        "treated_ci_high": 0.9320490759436962,
+        "treated_ci_low": 0.9156368065347714,
+        "treated_kill": 0.92425,
+        "untreated_kill": 0.02375
+      },
+      {
+        "boost": 3.0,
+        "treated_ci_high": 0.9982830245393751,
+        "treated_ci_low": 0.9947632538148933,
+        "treated_kill": 0.997,
+        "untreated_kill": 0.108
+      },
+      {
+        "boost": 4.0,
+        "treated_ci_high": 0.9999558686332625,
+        "treated_ci_low": 0.9985851325891636,
+        "treated_kill": 0.99975,
+        "untreated_kill": 0.297
+      }
+    ]
+  },
+  "engine_shape": {
+    "Glycolytic": {
+      "absolute_span": 0.0,
+      "flat_inside_bridge": true,
+      "kill_at_bridge_floor": 0.0,
+      "kill_at_bridge_top": 0.0,
+      "n_points": 9,
+      "usable": true
+    },
+    "OXPHOS": {
+      "absolute_span": 0.22974999999999998,
+      "flat_inside_bridge": false,
+      "kill_at_bridge_floor": 0.01175,
+      "kill_at_bridge_top": 0.2415,
+      "n_points": 9,
+      "usable": true
+    },
+    "Persister": {
+      "absolute_span": 0.51775,
+      "flat_inside_bridge": false,
+      "kill_at_bridge_floor": 0.41725,
+      "kill_at_bridge_top": 0.935,
+      "n_points": 9,
+      "usable": true
+    },
+    "PersisterNrf2": {
+      "absolute_span": 0.0355,
+      "flat_inside_bridge": false,
+      "kill_at_bridge_floor": 0.0,
+      "kill_at_bridge_top": 0.0355,
+      "n_points": 9,
+      "usable": true
+    }
+  },
+  "measured_bins": {
+    "ML162": [
+      {
+        "mean_sensitivity": 0.314925275,
+        "mean_viability": 0.685074725,
+        "n_lines": 40,
+        "z": -2.0
+      },
+      {
+        "mean_sensitivity": 0.2761598095238096,
+        "mean_viability": 0.7238401904761904,
+        "n_lines": 21,
+        "z": -1.5
+      },
+      {
+        "mean_sensitivity": 0.35771649295774643,
+        "mean_viability": 0.6422835070422536,
+        "n_lines": 71,
+        "z": -1.0
+      },
+      {
+        "mean_sensitivity": 0.33611439814814814,
+        "mean_viability": 0.6638856018518519,
+        "n_lines": 108,
+        "z": -0.5
+      },
+      {
+        "mean_sensitivity": 0.3976290793650794,
+        "mean_viability": 0.6023709206349206,
+        "n_lines": 189,
+        "z": 0.0
+      },
+      {
+        "mean_sensitivity": 0.3706152832369942,
+        "mean_viability": 0.6293847167630058,
+        "n_lines": 173,
+        "z": 0.5
+      },
+      {
+        "mean_sensitivity": 0.4208035816326531,
+        "mean_viability": 0.5791964183673469,
+        "n_lines": 98,
+        "z": 1.0
+      },
+      {
+        "mean_sensitivity": 0.41242524999999997,
+        "mean_viability": 0.58757475,
+        "n_lines": 28,
+        "z": 1.5
+      },
+      {
+        "mean_sensitivity": 0.40775531578947366,
+        "mean_viability": 0.5922446842105263,
+        "n_lines": 19,
+        "z": 2.0
+      }
+    ],
+    "ML210": [
+      {
+        "mean_sensitivity": 0.25310967567567566,
+        "mean_viability": 0.7468903243243243,
+        "n_lines": 37,
+        "z": -2.0
+      },
+      {
+        "mean_sensitivity": 0.23114385000000004,
+        "mean_viability": 0.76885615,
+        "n_lines": 20,
+        "z": -1.5
+      },
+      {
+        "mean_sensitivity": 0.2925007540983606,
+        "mean_viability": 0.7074992459016394,
+        "n_lines": 61,
+        "z": -1.0
+      },
+      {
+        "mean_sensitivity": 0.29184341999999996,
+        "mean_viability": 0.70815658,
+        "n_lines": 100,
+        "z": -0.5
+      },
+      {
+        "mean_sensitivity": 0.36883563068181824,
+        "mean_viability": 0.6311643693181818,
+        "n_lines": 176,
+        "z": 0.0
+      },
+      {
+        "mean_sensitivity": 0.32419847712418304,
+        "mean_viability": 0.675801522875817,
+        "n_lines": 153,
+        "z": 0.5
+      },
+      {
+        "mean_sensitivity": 0.4005099891304348,
+        "mean_viability": 0.5994900108695652,
+        "n_lines": 92,
+        "z": 1.0
+      },
+      {
+        "mean_sensitivity": 0.4062030740740741,
+        "mean_viability": 0.5937969259259259,
+        "n_lines": 27,
+        "z": 1.5
+      },
+      {
+        "mean_sensitivity": 0.42735960000000006,
+        "mean_viability": 0.5726403999999999,
+        "n_lines": 15,
+        "z": 2.0
+      }
+    ]
+  },
+  "measured_shape": {
+    "ML162": {
+      "absolute_span": 0.09283004078947366,
+      "direction_matches_engine": true,
+      "fold_change": 1.2947684678197826,
+      "monotone": false,
+      "sensitivity_high": 0.40775531578947366,
+      "sensitivity_low": 0.314925275,
+      "steps_rising": 3,
+      "steps_total": 8,
+      "usable": true,
+      "z_high": 2.0,
+      "z_low": -2.0
+    },
+    "ML210": {
+      "absolute_span": 0.1742499243243244,
+      "direction_matches_engine": true,
+      "fold_change": 1.6884364410770336,
+      "monotone": false,
+      "sensitivity_high": 0.42735960000000006,
+      "sensitivity_low": 0.25310967567567566,
+      "steps_rising": 5,
+      "steps_total": 8,
+      "usable": true,
+      "z_high": 2.0,
+      "z_low": -2.0
+    }
+  },
+  "observed_range_bound": {
+    "Glycolytic": {
+      "usable": false
+    },
+    "OXPHOS": {
+      "usable": false
+    },
+    "Persister": {
+      "usable": false
+    },
+    "PersisterNrf2": {
+      "per_compound": {
+        "ML162": {
+          "admissible_at_shipped_slope": true,
+          "boost_at_shipped_slope": 1.3881616811282753,
+          "z_observed_high": 2.7763233622565506
+        },
+        "ML210": {
+          "admissible_at_shipped_slope": true,
+          "boost_at_shipped_slope": 1.2981263814799995,
+          "z_observed_high": 2.596252762959999
+        }
+      },
+      "shipped_above_it": true,
+      "slope_low": 1.5864704927180289,
+      "tightening_factor": 2.7763233622565506,
+      "usable": true,
+      "z_observed_high": 2.7763233622565506
+    }
+  },
+  "phenotypes_usable": [
+    "PersisterNrf2"
+  ],
+  "question": "what can be said about the ACSL4 bridge's slope now that the parameter it writes can be driven at all",
+  "sampling_resolution": {
+    "effect_floor": 0.01,
+    "floor_clears_resolution": true,
+    "n_points": 28,
+    "usable": true,
+    "worst_half_width": 0.00504107377597315
+  },
+  "slope_bounds": {
+    "Glycolytic": {
+      "basis": "no usable window",
+      "shipped_inside": null,
+      "slope_high": null,
+      "slope_low": null
+    },
+    "OXPHOS": {
+      "basis": "no usable window",
+      "shipped_inside": null,
+      "slope_high": null,
+      "slope_low": null
+    },
+    "Persister": {
+      "basis": "no usable window",
+      "shipped_inside": null,
+      "slope_high": null,
+      "slope_low": null
+    },
+    "PersisterNrf2": {
+      "basis": "effect floor above, baseline-viability constraint below",
+      "shipped_inside": true,
+      "shipped_slope": 2.0,
+      "slope_high": 3.3333333333333335,
+      "slope_low": 0.5714285714285714,
+      "width": 2.761904761904762
+    }
+  },
+  "verdict": "slope_bounded_not_fitted",
+  "windows": {
+    "Glycolytic": {
+      "admissibility_crossing_bracketed": false,
+      "admissible_inside_bridge": true,
+      "boost_admissible_to": 4.0,
+      "boost_responsive_from": 3.0,
+      "responsive_inside_bridge": false,
+      "usable_for_calibration": false,
+      "window_exists": true
+    },
+    "OXPHOS": {
+      "admissibility_crossing_bracketed": true,
+      "admissible_inside_bridge": false,
+      "boost_admissible_to": 0.3,
+      "boost_responsive_from": 0.0,
+      "responsive_inside_bridge": true,
+      "usable_for_calibration": false,
+      "window_exists": true
+    },
+    "Persister": {
+      "admissibility_crossing_bracketed": true,
+      "admissible_inside_bridge": false,
+      "boost_admissible_to": 0.05,
+      "boost_responsive_from": 0.0,
+      "responsive_inside_bridge": true,
+      "usable_for_calibration": false,
+      "window_exists": true
+    },
+    "PersisterNrf2": {
+      "admissibility_crossing_bracketed": true,
+      "admissible_inside_bridge": true,
+      "boost_admissible_to": 1.75,
+      "boost_responsive_from": 0.3,
+      "responsive_inside_bridge": true,
+      "usable_for_calibration": true,
+      "window_exists": true
+    }
+  }
+}

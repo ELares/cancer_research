@@ -8,9 +8,9 @@
    "census": null,
    "trials": null,
    "modules": 26,
-   "code_lines": 3833,
+   "code_lines": 3834,
    "pub_fns": 184,
-   "rust_tests": 276,
+   "rust_tests": 277,
    "calibration": null,
    "spatial": "by default",
    "book_words": 5556,
@@ -79,7 +79,7 @@
    "parity_fns": 0.043,
    "parity_tests": 0.036,
    "parity_words": 0.206,
-   "lines_short_of_parity": 3770
+   "lines_short_of_parity": 3771
   },
   {
    "arm": "PDT",
@@ -111,9 +111,9 @@
    "book_words_shared": 2288,
    "parity_lines": 0.065,
    "parity_fns": 0.049,
-   "parity_tests": 0.214,
+   "parity_tests": 0.213,
    "parity_words": 0.206,
-   "lines_short_of_parity": 3584
+   "lines_short_of_parity": 3585
   },
   {
    "arm": "Radiation",
@@ -145,9 +145,9 @@
    "book_words_shared": 0,
    "parity_lines": 0.069,
    "parity_fns": 0.125,
-   "parity_tests": 0.12,
+   "parity_tests": 0.119,
    "parity_words": 0.468,
-   "lines_short_of_parity": 3570
+   "lines_short_of_parity": 3571
   },
   {
    "arm": "Immunotherapy",
@@ -183,7 +183,7 @@
    "parity_fns": 0.038,
    "parity_tests": 0.036,
    "parity_words": 0.861,
-   "lines_short_of_parity": 3711
+   "lines_short_of_parity": 3712
   },
   {
    "arm": "AdoptiveCell",
@@ -217,7 +217,7 @@
    "parity_fns": 0.071,
    "parity_tests": 0.058,
    "parity_words": 0.337,
-   "lines_short_of_parity": 3667
+   "lines_short_of_parity": 3668
   },
   {
    "arm": "OncolyticVirus",
@@ -252,7 +252,7 @@
    "parity_fns": 0.06,
    "parity_tests": 0.051,
    "parity_words": 0.36,
-   "lines_short_of_parity": 3668
+   "lines_short_of_parity": 3669
   },
   {
    "arm": "Ablation",
@@ -286,7 +286,7 @@
    "parity_fns": 0.049,
    "parity_tests": 0.036,
    "parity_words": 0.357,
-   "lines_short_of_parity": 3704
+   "lines_short_of_parity": 3705
   },
   {
    "arm": "Chemotherapy",
@@ -320,7 +320,7 @@
    "parity_fns": 0.103,
    "parity_tests": 0.054,
    "parity_words": 0.413,
-   "lines_short_of_parity": 3551
+   "lines_short_of_parity": 3552
   },
   {
    "arm": "AntibodyDrugConjugate",
@@ -356,7 +356,7 @@
    "parity_fns": 0.071,
    "parity_tests": 0.04,
    "parity_words": 0.336,
-   "lines_short_of_parity": 3710
+   "lines_short_of_parity": 3711
   }
  ],
  "shared_modules": 5,

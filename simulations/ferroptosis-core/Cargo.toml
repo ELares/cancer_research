@@ -1,6 +1,6 @@
 [package]
 name = "ferroptosis-core"
-version = "0.70.0"
+version = "0.71.0"
 edition = "2021"
 description = "Embeddable cancer-therapy simulation engine: ferroptosis biochemistry plus radiation, ablation, oncolytic, ADC and adoptive-cell layers for cancer simulation"
 license = "MIT"
