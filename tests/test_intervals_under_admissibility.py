@@ -51,7 +51,8 @@ def committed():
 
 
 def _doctor(raw):
-    return {"rows": [dict(r) for r in raw["rows"]], "published": raw["published"]}
+    return {"rows": [dict(r) for r in raw["rows"]], "published": raw["published"],
+            "default": copy.deepcopy(raw["default"])}
 
 
 # ---------------------------------------------------------------- freshness
@@ -387,6 +388,108 @@ def test_the_material_shift_bar_is_declared_and_binds(committed):
     assert any(s >= M.MATERIAL_SHIFT for s in shifts)
     assert any(s < M.MATERIAL_SHIFT for s in shifts), (
         "every median moved, so the bar separates nothing")
+
+
+# ------------------------------------------- what the restriction selects
+
+def test_the_selection_is_measured_per_parameter(raw, committed):
+    """"Admissibility keeps the strong-defence draws" is a claim about the
+    PARAMETERS, so it has to be one."""
+    for source in (committed, M.assemble(raw)):
+        sel = source["selection"]["per_parameter"]
+        assert len(sel) == len(M.PARAMS)
+        for name, entry in sel.items():
+            assert entry["shift"] == pytest.approx(
+                entry["admissible_mean_fraction"] - entry["full_mean_fraction"]), name
+            assert 0.0 <= entry["full_mean_fraction"] <= 1.0, name
+            assert 0.0 <= entry["admissible_mean_fraction"] <= 1.0, name
+            assert entry["strongly_selected"] == (
+                abs(entry["shift"]) >= M.STRONG_SELECTION), name
+    # The full-prior mean of a uniform draw sits near the middle of its range,
+    # which is what makes the admissible shift readable at all.
+    for name, entry in committed["selection"]["per_parameter"].items():
+        assert abs(entry["full_mean_fraction"] - 0.5) < 0.05, name
+
+
+def test_the_selection_actually_discriminates(committed):
+    """A bar that flags everything or nothing separates nothing."""
+    sel = committed["selection"]
+    assert 0.0 < M.STRONG_SELECTION < 1.0
+    flags = [e["strongly_selected"]
+             for e in sel["per_parameter"].values()]
+    assert any(flags), "no parameter is strongly selected"
+    assert not all(flags), "every parameter is strongly selected"
+    assert sel["strongly_selected"] == sorted(sel["strongly_selected"])
+
+
+def test_the_drug_parameters_are_the_falsifier_and_are_untouched(committed):
+    """THE circularity check. If conditioning pushed the drug parameters down,
+    the kill reduction would be partly an artifact of keeping weaker-drug draws
+    and the whole comparison would be circular."""
+    sel = committed["selection"]
+    assert set(sel["drug_parameters"]) == set(M.DRUG_PARAMETERS)
+    assert sel["drug_parameters_untouched"] is True
+    for name in M.DRUG_PARAMETERS:
+        e = sel["per_parameter"][name]
+        assert e["is_drug_parameter"] is True, name
+        assert not e["strongly_selected"], name
+    assert sel["max_drug_shift"] < M.STRONG_SELECTION
+    md = M.render(committed)
+    assert "drug parameters are the falsifier" in md
+    assert "would be circular" in md
+
+
+def test_a_drug_parameter_that_were_selected_would_be_reported(raw):
+    """Driven, because as measured they are untouched: make admissibility track
+    a drug parameter and the flag must flip."""
+    d = _doctor(raw)
+    name = M.DRUG_PARAMETERS[0]
+    lo, hi = next((p[1], p[2]) for p in M.PARAMS if p[0] == name)
+    midpoint = (lo + hi) / 2.0
+    label = M._label(M.CONTROL_CONDITIONS[0])
+    for row in d["rows"]:
+        # Admissible only where this drug parameter is in its lower half.
+        row[label] = "0.000000" if float(row[name]) < midpoint else "0.900000"
+        for other in M.CONTROL_CONDITIONS[1:]:
+            row[M._label(other)] = "0.000000"
+    after = M.assemble(d)["selection"]
+    assert after["per_parameter"][name]["strongly_selected"] is True, name
+    assert after["drug_parameters_untouched"] is False
+
+
+# ------------------------------------------------- the default's own headroom
+
+def test_the_default_headroom_is_measured_not_typed(raw, committed):
+    """The figure that explains how much of the prior fails. A constant here
+    would be a number nobody could regenerate."""
+    assert M.DEFAULT_JSON.exists()
+    stored = json.loads(M.DEFAULT_JSON.read_text())
+    assert stored["n_cells"] == M.N_CELLS and stored["sim_seed"] == M.SIM_SEED
+    assert set(stored["untreated"]) == {M._label(c) for c in M.CONTROL_CONDITIONS}
+    assert stored["worst"] == pytest.approx(max(stored["untreated"].values()))
+    adm = committed["admissibility"]
+    assert adm["default_worst_untreated"] == pytest.approx(stored["worst"])
+    assert adm["default_headroom"] == pytest.approx(
+        M.BASELINE_MAX - stored["worst"])
+    # The default must itself be admissible, or the prior's centre is outside
+    # the constraint and this page's framing is wrong.
+    assert adm["default_worst_untreated"] < M.BASELINE_MAX
+    src = SCRIPT.read_text()
+    assert not re.search(r"^DEFAULT_WORST[A-Z_]*\s*=", src, re.M)
+
+
+def test_the_headroom_follows_the_measurement(raw):
+    d = _doctor(raw)
+    d["default"]["worst"] = M.BASELINE_MAX / 4.0
+    after = M.assemble(d)["admissibility"]
+    assert after["default_worst_untreated"] == pytest.approx(M.BASELINE_MAX / 4.0)
+    assert after["default_headroom"] == pytest.approx(M.BASELINE_MAX * 0.75)
+
+
+def test_the_page_explains_the_fraction_by_the_headroom(committed):
+    md = M.render(committed)
+    assert "the default's own headroom" in md
+    assert "fairer way to describe" in md
 
 
 # ------------------------------------------------------------- the refusals

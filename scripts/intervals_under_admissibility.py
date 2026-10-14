@@ -74,6 +74,7 @@ from uncertainty_intervals import (  # noqa: E402
 from headline_at_fitted import BASELINE_MAX  # noqa: E402
 
 DRAWS_CSV_GZ = REPO / "analysis" / "calibration" / "admissibility-draws.csv.gz"
+DEFAULT_JSON = REPO / "analysis" / "calibration" / "admissibility-default.json"
 OUT_JSON = REPO / "analysis" / "intervals-under-admissibility.json"
 OUT_MD = REPO / "analysis" / "intervals-under-admissibility.md"
 
@@ -140,6 +141,16 @@ def quoted_floor(fragment) -> float:
 # An interval narrower than this is not "wide".
 WIDE_INTERVAL = 0.25
 
+# A parameter whose admissible mean moves by more than this fraction of its own
+# range is one the truncation strongly selects on.
+STRONG_SELECTION = 0.10
+
+# The parameters that set the DRUG, as opposed to the cell's defences. If
+# conditioning selected on these, the kill reduction it produces would be partly
+# an artifact of keeping weaker-drug draws, and the whole comparison would be
+# circular. Named here so the check is explicit rather than implied.
+DRUG_PARAMETERS = ("sdt_ros", "rsl3_gpx4_inhib")
+
 
 def _label(condition) -> str:
     return f"{condition[0]}/{condition[1]}"
@@ -173,14 +184,25 @@ def measure() -> None:
                             + [f"{v:.6f}" for v in rates])
             if (i + 1) % 500 == 0:
                 print(f"  {i + 1} of {N_SAMPLES} draws", flush=True)
-    print(f"wrote {DRAWS_CSV_GZ.relative_to(REPO)}")
+    # The default point's own untreated rates, measured rather than typed: the
+    # headroom they leave is what explains how much of the prior fails, and a
+    # constant here would be a figure nobody could regenerate.
+    defaults = {_label(c): U._fc().sim_batch(c[0], c[1], n=N_CELLS,
+                                            seed=SIM_SEED)["death_rate"]
+                for c in CONTROL_CONDITIONS}
+    DEFAULT_JSON.write_text(json.dumps(
+        {"n_cells": N_CELLS, "sim_seed": SIM_SEED, "untreated": defaults,
+         "worst": max(defaults.values())}, indent=2, sort_keys=True) + "\n")
+    print(f"wrote {DRAWS_CSV_GZ.relative_to(REPO)} and "
+          f"{DEFAULT_JSON.relative_to(REPO)}")
 
 
 def load() -> dict:
     """Read the committed per-draw results. No extension, no network."""
     with gzip.open(DRAWS_CSV_GZ, "rt") as fh:
         rows = list(csv.DictReader(fh))
-    return {"rows": rows, "published": PUBLISHED_MD.read_text()}
+    return {"rows": rows, "published": PUBLISHED_MD.read_text(),
+            "default": json.loads(DEFAULT_JSON.read_text())}
 
 
 def parse_published(text) -> dict:
@@ -200,6 +222,45 @@ def parse_published(text) -> dict:
     return out
 
 
+def _selection(rows, admissible) -> dict:
+    """What the truncation actually selects, per parameter.
+
+    "Admissibility keeps the draws whose defences are strong" is a claim about
+    the parameters, so it is measured rather than asserted: each parameter's
+    mean in the admissible subset against its mean in the full prior, both
+    expressed as a fraction of its own range so they are comparable across
+    parameters with different units.
+
+    THE DRUG PARAMETERS ARE THE FALSIFIER. If conditioning pushed them down,
+    the kill reduction it produces would be partly an artifact of keeping
+    weaker-drug draws and the comparison would be circular. They must be
+    essentially untouched.
+    """
+    out = {}
+    for name, lo, hi in PARAMS:
+        span = hi - lo
+        if span <= 0:
+            continue
+        full = [float(r[name]) for r in rows]
+        adm = [float(r[name]) for r, ok in zip(rows, admissible) if ok]
+        if not adm:
+            continue
+        f = (sum(full) / len(full) - lo) / span
+        a = (sum(adm) / len(adm) - lo) / span
+        out[name] = {"full_mean_fraction": f, "admissible_mean_fraction": a,
+                     "shift": a - f,
+                     "strongly_selected": abs(a - f) >= STRONG_SELECTION,
+                     "is_drug_parameter": name in DRUG_PARAMETERS}
+    drug = [n for n in DRUG_PARAMETERS if n in out]
+    return {"per_parameter": out,
+            "strongly_selected": sorted(n for n in out if out[n]["strongly_selected"]),
+            "drug_parameters": drug,
+            "max_drug_shift": (max(abs(out[n]["shift"]) for n in drug)
+                               if drug else None),
+            "drug_parameters_untouched": all(
+                not out[n]["strongly_selected"] for n in drug) if drug else None}
+
+
 def _quantiles(values):
     """The published method, not a hand-rolled index: `np.quantile`'s default
     interpolation is what produced the numbers this page compares against."""
@@ -213,6 +274,7 @@ def _quantiles(values):
 
 def assemble(raw) -> dict:
     rows, published = raw["rows"], parse_published(raw["published"])
+    default_worst = raw["default"]["worst"]
     treated = [_label(c) for c in CONDITIONS]
     untreated = [_label(c) for c in CONTROL_CONDITIONS]
 
@@ -309,8 +371,10 @@ def assemble(raw) -> dict:
     survived = [c["claim"] for c in claims if c["survives"] is True]
     refuted = [c["claim"] for c in claims if c["survives"] is False]
 
+    selection = _selection(rows, admissible)
     worst_sorted = sorted(worst)
     return {
+        "selection": selection,
         "published_claims": claims,
         "claims_survived": survived,
         "claims_refuted": refuted,
@@ -324,6 +388,8 @@ def assemble(raw) -> dict:
                    "treated_conditions": treated,
                    "untreated_conditions": untreated},
         "admissibility": {
+            "default_worst_untreated": default_worst,
+            "default_headroom": BASELINE_MAX - default_worst,
             "n_admissible": n_adm, "n_draws": len(rows),
             "fraction": n_adm / len(rows) if rows else None,
             "worst_untreated_median": worst_sorted[len(worst_sorted) // 2],
@@ -393,6 +459,43 @@ def render(d) -> str:
              f"{_pct(adm['worst_untreated_max'])}; "
              f"{adm['n_draws_untreated_over_half']} draws kill more than half "
              f"the untreated population.\n")
+
+    L.append("**Why so much of it fails is the default's own headroom, not a "
+             "careless prior.** At the default parameters the worst untreated "
+             f"death rate is {_pct(adm['default_worst_untreated'], 2)} against "
+             f"the {_pct(g['baseline_viability_max'], 0)} limit, leaving "
+             f"{_pct(adm['default_headroom'], 2)} of room. The prior is centred "
+             f"on a point that close to the constraint, so any draw raising "
+             f"peroxidation at all tips it. That is a statement about where the "
+             f"default sits, and it is the fairer way to describe the "
+             f"situation than calling the ranges badly chosen.\n")
+
+    L.append("## What the restriction actually selects, and the falsifier\n")
+    sel = d["selection"]
+    L.append("\"Admissibility keeps the draws whose defences are strong\" is a "
+             "claim about the parameters, so here it is as one. Each mean is "
+             "expressed as a fraction of that parameter's own range, so they are "
+             "comparable across different units:\n")
+    L.append("| parameter | full prior | admissible | shift | strongly selected |")
+    L.append("|---|--:|--:|--:|---|")
+    for name in sorted(sel["per_parameter"]):
+        e = sel["per_parameter"][name]
+        drug = " (drug)" if e["is_drug_parameter"] else ""
+        L.append(f"| `{name}`{drug} | {e['full_mean_fraction']:.3f} | "
+                 f"{e['admissible_mean_fraction']:.3f} | {e['shift']:+.3f} | "
+                 f"{_yesno(e['strongly_selected'])} |")
+    L.append("")
+    shift = sel["max_drug_shift"]
+    drug_shift_txt = "n/a" if shift is None else f"{shift:.3f}"
+    L.append(f"**And the drug parameters are the falsifier.** If conditioning "
+             f"pushed `{'`, `'.join(sel['drug_parameters'])}` down, the kill "
+             f"reduction it produces would be partly an artifact of keeping "
+             f"weaker-drug draws and the whole comparison would be circular. "
+             f"Largest drug-parameter shift: "
+             f"{drug_shift_txt}, against a {STRONG_SELECTION:.2f} bar -- untouched: "
+             f"**{_yesno(sel['drug_parameters_untouched'])}**. So the kill falls "
+             f"because the defences selected are stronger, not because the drug "
+             f"selected is weaker.\n")
 
     L.append("## The full-prior half reproduces what is published\n")
     L.append("Without this the comparison would be against a re-run rather than "

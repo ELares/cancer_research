@@ -12,6 +12,28 @@
 
 **754 of 2000 draws (37.7%).** Across the whole prior the worst untreated death rate has median 4.1%, 90th percentile 47.4% and maximum 96.5%; 179 draws kill more than half the untreated population.
 
+**Why so much of it fails is the default's own headroom, not a careless prior.** At the default parameters the worst untreated death rate is 1.45% against the 2% limit, leaving 0.55% of room. The prior is centred on a point that close to the constraint, so any draw raising peroxidation at all tips it. That is a statement about where the default sits, and it is the fairer way to describe the situation than calling the ranges badly chosen.
+
+## What the restriction actually selects, and the falsifier
+
+"Admissibility keeps the draws whose defences are strong" is a claim about the parameters, so here it is as one. Each mean is expressed as a fraction of that parameter's own range, so they are comparable across different units:
+
+| parameter | full prior | admissible | shift | strongly selected |
+|---|--:|--:|--:|---|
+| `death_threshold` | 0.508 | 0.519 | +0.011 | no |
+| `fenton_rate` | 0.509 | 0.498 | -0.012 | no |
+| `fsp1_rate` | 0.494 | 0.521 | +0.028 | no |
+| `gpx4_degradation_by_ros` | 0.513 | 0.503 | -0.010 | no |
+| `gpx4_rate` | 0.496 | 0.612 | +0.116 | yes |
+| `gsh_scav_efficiency` | 0.506 | 0.309 | -0.197 | yes |
+| `lp_propagation` | 0.509 | 0.370 | -0.139 | yes |
+| `lp_rate` | 0.511 | 0.429 | -0.081 | no |
+| `nrf2_gsh_rate` | 0.502 | 0.571 | +0.069 | no |
+| `rsl3_gpx4_inhib` (drug) | 0.493 | 0.494 | +0.000 | no |
+| `sdt_ros` (drug) | 0.498 | 0.501 | +0.004 | no |
+
+**And the drug parameters are the falsifier.** If conditioning pushed `sdt_ros`, `rsl3_gpx4_inhib` down, the kill reduction it produces would be partly an artifact of keeping weaker-drug draws and the whole comparison would be circular. Largest drug-parameter shift: 0.004, against a 0.10 bar -- untouched: **yes**. So the kill falls because the defences selected are stronger, not because the drug selected is weaker.
+
 ## The full-prior half reproduces what is published
 
 Without this the comparison would be against a re-run rather than against the committed report. Same ranges, same draw count, same seeds, all imported from that generator:

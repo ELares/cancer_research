@@ -1,5 +1,7 @@
 {
   "admissibility": {
+    "default_headroom": 0.0055,
+    "default_worst_untreated": 0.0145,
     "fraction": 0.377,
     "n_admissible": 754,
     "n_draws": 2000,
@@ -350,6 +352,98 @@
   ],
   "question": "what the published prior-predictive intervals say once the prior is restricted to draws the model itself calls viable",
   "reproduces_published": true,
+  "selection": {
+    "drug_parameters": [
+      "sdt_ros",
+      "rsl3_gpx4_inhib"
+    ],
+    "drug_parameters_untouched": true,
+    "max_drug_shift": 0.0035320440116327068,
+    "per_parameter": {
+      "death_threshold": {
+        "admissible_mean_fraction": 0.5194102463668435,
+        "full_mean_fraction": 0.5081126233344667,
+        "is_drug_parameter": false,
+        "shift": 0.011297623032376802,
+        "strongly_selected": false
+      },
+      "fenton_rate": {
+        "admissible_mean_fraction": 0.4975037762935456,
+        "full_mean_fraction": 0.5092659057206668,
+        "is_drug_parameter": false,
+        "shift": -0.011762129427121182,
+        "strongly_selected": false
+      },
+      "fsp1_rate": {
+        "admissible_mean_fraction": 0.5213439493603006,
+        "full_mean_fraction": 0.49363122934820836,
+        "is_drug_parameter": false,
+        "shift": 0.02771272001209224,
+        "strongly_selected": false
+      },
+      "gpx4_degradation_by_ros": {
+        "admissible_mean_fraction": 0.503053082801061,
+        "full_mean_fraction": 0.513035075975,
+        "is_drug_parameter": false,
+        "shift": -0.009981993173938997,
+        "strongly_selected": false
+      },
+      "gpx4_rate": {
+        "admissible_mean_fraction": 0.6121066722882406,
+        "full_mean_fraction": 0.49628006662911117,
+        "is_drug_parameter": false,
+        "shift": 0.11582660565912939,
+        "strongly_selected": true
+      },
+      "gsh_scav_efficiency": {
+        "admissible_mean_fraction": 0.30913289203483646,
+        "full_mean_fraction": 0.5062679336162668,
+        "is_drug_parameter": false,
+        "shift": -0.1971350415814303,
+        "strongly_selected": true
+      },
+      "lp_propagation": {
+        "admissible_mean_fraction": 0.3698868550684349,
+        "full_mean_fraction": 0.5093016713807665,
+        "is_drug_parameter": false,
+        "shift": -0.13941481631233166,
+        "strongly_selected": true
+      },
+      "lp_rate": {
+        "admissible_mean_fraction": 0.42941472599543173,
+        "full_mean_fraction": 0.5106544940013332,
+        "is_drug_parameter": false,
+        "shift": -0.08123976800590149,
+        "strongly_selected": false
+      },
+      "nrf2_gsh_rate": {
+        "admissible_mean_fraction": 0.5709826061969938,
+        "full_mean_fraction": 0.5023286136029333,
+        "is_drug_parameter": false,
+        "shift": 0.06865399259406046,
+        "strongly_selected": false
+      },
+      "rsl3_gpx4_inhib": {
+        "admissible_mean_fraction": 0.49371407401437906,
+        "full_mean_fraction": 0.4932547721010525,
+        "is_drug_parameter": true,
+        "shift": 0.00045930191332654857,
+        "strongly_selected": false
+      },
+      "sdt_ros": {
+        "admissible_mean_fraction": 0.501379979006366,
+        "full_mean_fraction": 0.4978479349947333,
+        "is_drug_parameter": true,
+        "shift": 0.0035320440116327068,
+        "strongly_selected": false
+      }
+    },
+    "strongly_selected": [
+      "gpx4_rate",
+      "gsh_scav_efficiency",
+      "lp_propagation"
+    ]
+  },
   "upper_tails_collapsed": [
     "PersisterNrf2/RSL3",
     "OXPHOS/RSL3"
