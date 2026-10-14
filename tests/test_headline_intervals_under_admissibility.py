@@ -1094,3 +1094,133 @@ def test_no_observable_label_contains_a_comma():
     was on the first pass."""
     bad = [label for _, _, label, _ in M.OBSERVABLES if "," in label]
     assert not bad, f"these labels would break every inline list: {bad}"
+
+
+# --- #940: the registry naming the sites, and the count that describes it ----
+
+
+def test_the_named_site_count_is_derived_not_written():
+    """The prose shipped saying "Two sites" beside a registry of two.
+
+    That is the derived-number-handwritten-prose shape: adding the third site
+    found in #940 would have left a document saying two while listing three.
+    The expected words come from a list written HERE, not from the generator's
+    own map, or the guard would compare the code to itself.
+    """
+    # Written HERE, not imported: a guard taking its expectation from the code
+    # it guards compares that code to itself. The last entry sits OUTSIDE the
+    # generator's word map, so the numeric fallback is exercised too.
+    words = {1: "One site draws", 2: "Two sites draw", 3: "Three sites draw",
+             4: "Four sites draw", 9: "9 sites draw"}
+    raw = M.load()
+    for n, expected in sorted(words.items()):
+        doctored = dict(raw)
+        doctored["subadditive_citations"] = {
+            f"site-{i}.md": True for i in range(n)}
+        md = M.render(M.assemble(doctored))
+        assert f"{expected} a conclusion" in md, (
+            f"with {n} named site(s) the page does not say {expected!r}")
+        for other in words.values():
+            if other != expected:
+                assert f"{other} a conclusion" not in md
+
+
+def test_every_handwritten_site_resting_on_the_corner_is_registered():
+    """THE GUARD THAT WOULD HAVE CAUGHT THE INCOMPLETE REGISTRY.
+
+    #938 named two sites, both found by reading the manuscript and the front
+    door -- which is why a protocol document was missed. The registry's whole
+    job is to stop the naming outliving the sentences it points at, so its
+    completeness is scanned rather than remembered: every tracked Markdown file
+    carrying the shared phrase must be in it.
+    """
+    import subprocess
+    phrases = {phrase for _, phrase in M.SUBADDITIVE_CITATIONS}
+    assert len(phrases) == 1, (
+        "the registry now uses several phrases, so a single-phrase scan can no "
+        "longer establish its completeness")
+    phrase = phrases.pop()
+    tracked = subprocess.run(
+        ["git", "ls-files", "*.md"], cwd=M.REPO, capture_output=True,
+        text=True, check=True).stdout.split()
+    found = set()
+    for rel in tracked:
+        path = M.REPO / rel
+        try:
+            if phrase in path.read_text(encoding="utf-8", errors="ignore"):
+                found.add(rel)
+        except OSError:
+            continue
+    assert found, f"the scan found no file containing {phrase!r}, so it is broken"
+    registered = {path for path, _ in M.SUBADDITIVE_CITATIONS}
+    assert found == registered, (
+        "the registry and the repository disagree about which handwritten sites "
+        f"rest on the sub-additive corner.\n  unregistered: {sorted(found - registered)}"
+        f"\n  registered but absent: {sorted(registered - found)}")
+
+
+def test_the_identifiability_report_is_not_treated_as_a_handwritten_site():
+    """It draws the same conclusion and is GENERATED, so it is fixed at its
+    generator (#940) rather than named. Naming it would record a defect the
+    repository no longer has, and rewriting its prose would be erased on the
+    next regeneration."""
+    registered = {path for path, _ in M.SUBADDITIVE_CITATIONS}
+    assert "analysis/identifiability-report.md" not in registered
+    src = (M.REPO / "scripts" / "identifiability_report.py").read_text()
+    assert "headline-intervals-under-admissibility.json" in src, (
+        "the identifiability generator no longer reads this page's artifact, so "
+        "its Bliss row is back to resting on the inadmissible corner")
+
+
+def test_the_corner_mechanism_is_measured_across_every_draw():
+    """Explaining the draws ON the line reads as explaining the whole corner.
+
+    The saturation note covers only the on-line draws, so the corner's own
+    figures are MINIMA over every draw at or below the line -- floors each one
+    clears rather than means a single draw could carry. Checked by recomputing
+    them from the stored rows and by moving one.
+    """
+    raw = M.load()
+    d = M.assemble(raw)
+    dec = d["bliss_decomposition"]
+    rows = raw["rows"][:M.FAMILY_SAMPLES["bliss"]]
+    corner = [r for r in rows
+              if r[M.BLISS_COLUMN] not in ("", M.FAILED)
+              and float(r[M.BLISS_COLUMN]) <= dec["no_synergy_line"]]
+    assert len(corner) == dec["n_at_or_below_line"] > 0
+
+    def arms(r):
+        return max(float(r["bliss_rate_rsl3"]), float(r["bliss_rate_fsp1i"]))
+
+    def untreated(r):
+        return max(float(r[c]) for c in M.CONTROL_COLUMNS)
+
+    # Each reported figure is the floor, and EVERY corner draw clears it.
+    assert dec["corner_min_larger_single_arm"] == min(arms(r) for r in corner)
+    assert dec["corner_min_worst_untreated"] == min(untreated(r) for r in corner)
+    assert all(arms(r) >= dec["corner_min_larger_single_arm"] for r in corner)
+    assert all(untreated(r) >= dec["corner_min_worst_untreated"] for r in corner)
+    # And the floor is a real margin rather than the constraint's boundary,
+    # which is the claim the page makes about it.
+    assert dec["corner_min_worst_untreated"] > d["constraint"]["baseline_max"]
+
+
+def test_the_corner_margin_is_read_from_the_rows_not_carried(monkeypatch):
+    """Move the least inadmissible corner draw and the page must follow it."""
+    raw = M.load()
+    before = M.assemble(raw)["bliss_decomposition"]["corner_min_worst_untreated"]
+    doctored = _doctor(raw)
+    rows = doctored["rows"][:M.FAMILY_SAMPLES["bliss"]]
+    corner = [r for r in rows
+              if r[M.BLISS_COLUMN] not in ("", M.FAILED)
+              and float(r[M.BLISS_COLUMN]) <= 1.0]
+    assert corner, "no corner draw to move"
+    target = min(corner, key=lambda r: max(float(r[c]) for c in M.CONTROL_COLUMNS))
+    raised = min(1.0, max(float(target[c]) for c in M.CONTROL_COLUMNS) + 0.1)
+    for c in M.CONTROL_COLUMNS:
+        target[c] = str(raised)
+    after = M.assemble(doctored)["bliss_decomposition"]["corner_min_worst_untreated"]
+    assert after != before, (
+        "raising the least inadmissible corner draw's untreated death left the "
+        "reported floor unchanged, so it is not read from the rows")
+    assert M.render(M.assemble(doctored)) != M.render(M.assemble(raw))

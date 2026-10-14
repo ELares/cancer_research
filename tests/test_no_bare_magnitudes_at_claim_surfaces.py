@@ -83,7 +83,13 @@ def test_the_premise_still_holds():
                     # #926: robust, but entailed rather than measured. Weaker
                     # than direction_robust_magnitude_not, so the premise that
                     # nothing is point-estimable still holds.
-                    "direction_robust_by_construction_magnitude_not")
+                    "direction_robust_by_construction_magnitude_not",
+                    # #940: robust only once the model's own untreated-viability
+                    # constraint removes the sub-additive corner. Conditioning
+                    # removes draws without adding data, so this is further from
+                    # point-estimable than the unconditional label, not closer,
+                    # and the premise below still holds.
+                    "direction_robust_only_under_admissibility_magnitude_not")
                for x in v), (
         f"a headline now carries a verdict this guard does not know about: {set(v)}. "
         "If something became point-estimable, the surfaces below may legitimately "

@@ -6,6 +6,7 @@ headline is point-estimable, that zero headlines are data-conditioned in the
 production regime) and that the committed report is not stale.
 """
 
+import json
 import sys
 import pytest
 from pathlib import Path
@@ -53,7 +54,12 @@ def test_no_headline_is_point_estimable():
                # #926: robust, but entailed by a monotone dose-response at
                # three fixed concentrations rather than measured. Still not
                # point-estimable, which is what this guard is about.
-               "direction_robust_by_construction_magnitude_not"}
+               "direction_robust_by_construction_magnitude_not",
+               # #940: robust only once the model's own untreated-viability
+               # constraint removes the sub-additive corner. Conditioning adds
+               # no data, so this is further from point-estimable than the
+               # unconditional label above it, not closer.
+               "direction_robust_only_under_admissibility_magnitude_not"}
     for h in r["headlines"]:
         assert h["verdict"] in allowed, f"{h['key']} claims {h['verdict']}"
     # At least the single-cell kill rate and the immune ratio are directional-only.
@@ -62,21 +68,72 @@ def test_no_headline_is_point_estimable():
     assert by_key["immune_amplification_ratio"]["verdict"] == "directional_only"
 
 
+def _published(source, minimum, lower):
+    source.write_text(
+        "| default point estimate (no perturbation) | 1.992 |\n"
+        "| prior-predictive median | 1.348 |\n"
+        f"| 95% prior-predictive interval | [{lower:.3f}, 5.242] |\n"
+        f"| full range (min, max) | [{minimum:.3f}, 7.800] |\n"
+    )
+
+
+def _admissibility(path, *, at_or_below, admissible_corner, reproduces=True,
+                   admissible_min=1.027, drop=None):
+    """An admissibility artifact with a chosen corner, for #940's second input.
+
+    Written field by field rather than copied from the committed artifact, so a
+    fixture cannot pass by echoing the real measurement.
+    """
+    doc = {
+        "bliss_decomposition": {
+            "n_at_or_below_line": at_or_below,
+            "n_at_or_below_line_admissible": admissible_corner,
+            "n_on_line": 2,
+            "min_single_arm_kill_on_line": 1.0,
+            "no_synergy_line": 1.0,
+            "numerator_ratio": 0.740,
+            "denominator_ratio": 0.374,
+            "corner_min_worst_untreated": 0.2975,
+        },
+        "constraint": {"baseline_max": 0.02},
+        "observables": [{
+            "column": "bliss_synergy",
+            "reproduces": reproduces,
+            "reproduction": {"min": {"reproduces": reproduces}},
+            "n_admissible": 125,
+            "n_full": 300,
+            "interval_quotable": True,
+            "admissible_only": {"min": admissible_min},
+        }],
+    }
+    if drop:
+        section, key = drop
+        target = (doc["observables"][0] if section == "observable"
+                  else doc["bliss_decomposition"])
+        assert key in target, f"the fixture cannot drop absent key {key!r}"
+        target.pop(key)
+    path.write_text(json.dumps(doc))
+    return path
+
+
 def test_bliss_verdict_tracks_the_sampled_range_not_a_rounded_null(tmp_path, monkeypatch):
-    """Exercise both sides of the inference, including an exactly additive draw."""
+    """Exercise both sides of the inference, including an exactly additive draw.
+
+    #940 added a SECOND input, so each fixture now sets both. Doctoring only
+    the published range would leave the two pages disagreeing about the same
+    quantity, which the derivation refuses rather than silently resolving.
+    """
     source = tmp_path / "uncertainty.md"
+    adm = tmp_path / "admissibility.json"
     monkeypatch.setattr(ir, "BLISS_UNCERTAINTY", source)
-    for minimum, lower, expected in (
-        (0.953, 1.000, "direction_and_magnitude_uncertain"),
-        (1.000, 1.100, "direction_and_magnitude_uncertain"),
-        (1.050, 1.100, "direction_robust_magnitude_not"),
+    monkeypatch.setattr(ir, "ADMISSIBILITY", adm)
+    for minimum, lower, at_or_below, expected in (
+        (0.953, 1.000, 6, "direction_robust_only_under_admissibility_magnitude_not"),
+        (1.000, 1.100, 6, "direction_robust_only_under_admissibility_magnitude_not"),
+        (1.050, 1.100, 0, "direction_robust_magnitude_not"),
     ):
-        source.write_text(
-            "| default point estimate (no perturbation) | 1.992 |\n"
-            "| prior-predictive median | 1.348 |\n"
-            f"| 95% prior-predictive interval | [{lower:.3f}, 5.242] |\n"
-            f"| full range (min, max) | [{minimum:.3f}, 7.800] |\n"
-        )
+        _published(source, minimum, lower)
+        _admissibility(adm, at_or_below=at_or_below, admissible_corner=0)
         report = ir.build()
         bliss = next(h for h in report["headlines"] if h["key"] == "bliss_synergy")
         assert bliss["verdict"] == expected
@@ -396,3 +453,365 @@ def test_missing_per_death_evidence_cannot_reuse_a_hardcoded_clause(
     _per_death_artifact(tmp_path, monkeypatch, drop="ratio_max")
     with pytest.raises(ValueError, match="missing 'ratio_max'"):
         ir._immune_per_cell_clause()
+
+
+# --- #940: the Bliss row's direction clause, and the draws it rests on -------
+#
+# The row used to branch on the published sampled minimum ALONE, so its clause
+# rested on a corner of the prior the model's own untreated-viability constraint
+# rejects entirely, and nothing in the derivation could see that. These guards
+# drive each part of the condition separately, because a verdict built from an
+# AND of several conditions needs a fixture per condition -- each leaving the
+# others true -- or removing one of them changes nothing a test can observe.
+
+
+def test_the_bliss_row_is_conditional_on_the_committed_measurement():
+    """On the real artifacts, the row must name the condition and not drop it."""
+    bliss = next(h for h in ir.build()["headlines"] if h["key"] == "bliss_synergy")
+    assert bliss["verdict"] == "direction_robust_only_under_admissibility_magnitude_not"
+    r = bliss["rationale"]
+    # The three restraints, each of which is why this is not a robustness result.
+    assert "not a posterior" in r, "the conditioning is being read as inference"
+    # NOT a bare "saturate" substring: the clause separately calls a saturated
+    # arm the easiest way to fail the constraint, and "saturated" contains it, so
+    # a sweep showed the bare check passing with the mechanism clause removed.
+    assert "both arms saturate" in r, "the corner's cause is missing"
+    assert "1 by arithmetic" in r, "the cause is stated without its consequence"
+    assert "not more synergy" in r, "the median rise is being read as synergy"
+    # And the measured figures, from the artifact rather than from this file.
+    adm = ir._bliss_admissibility()
+    assert f"{adm['admissible_min']:.3f}" in r
+    assert f"{adm['n_admissible']} of {adm['n_full']}" in r
+    assert str(adm["n_at_or_below_line"]) in r
+
+
+def test_a_surviving_subadditive_draw_leaves_the_verdict_unqualified(tmp_path, monkeypatch):
+    """THE FALSIFIER. If one sub-additive draw is admissible, the counterexample
+    survives the model's own constraint and the row may not qualify itself.
+
+    None is admissible as measured, so this case exists only as a fixture --
+    which is exactly why it has to be driven rather than reasoned about.
+    """
+    source = tmp_path / "uncertainty.md"
+    adm = tmp_path / "admissibility.json"
+    monkeypatch.setattr(ir, "BLISS_UNCERTAINTY", source)
+    monkeypatch.setattr(ir, "ADMISSIBILITY", adm)
+    _published(source, 0.953, 1.000)
+
+    _admissibility(adm, at_or_below=6, admissible_corner=0)
+    wholly = ir.build()
+    _admissibility(adm, at_or_below=6, admissible_corner=1, admissible_min=0.953)
+    survives = ir.build()
+
+    def row(r):
+        return next(h for h in r["headlines"] if h["key"] == "bliss_synergy")
+    assert row(wholly)["verdict"] == "direction_robust_only_under_admissibility_magnitude_not"
+    assert row(survives)["verdict"] == "direction_and_magnitude_uncertain"
+    # The ONLY thing that changed is the corner's admissibility: the published
+    # range is byte-identical across the two runs, so the clause cannot be
+    # coming from the published numbers.
+    assert row(wholly)["prior_predictive"] == row(survives)["prior_predictive"]
+    assert "inadmissible under the model" not in row(survives)["rationale"]
+
+
+def test_a_page_that_does_not_reproduce_cannot_qualify_what_is_published(tmp_path, monkeypatch):
+    """Conditioning a re-run would describe a re-run. The clause is withheld,
+    and the row says WHY rather than silently reverting to the old sentence."""
+    source = tmp_path / "uncertainty.md"
+    adm = tmp_path / "admissibility.json"
+    monkeypatch.setattr(ir, "BLISS_UNCERTAINTY", source)
+    monkeypatch.setattr(ir, "ADMISSIBILITY", adm)
+    _published(source, 0.953, 1.000)
+    _admissibility(adm, at_or_below=6, admissible_corner=0, reproduces=False)
+    bliss = next(h for h in ir.build()["headlines"] if h["key"] == "bliss_synergy")
+    assert bliss["verdict"] == "direction_and_magnitude_uncertain"
+    assert "does not reproduce the published range" in bliss["rationale"]
+    assert "NOT reported here" in bliss["rationale"]
+    assert "admissible minimum" not in bliss["rationale"]
+
+
+def test_the_two_pages_must_agree_about_reaching_the_additive_null(tmp_path, monkeypatch):
+    """An agreement being relied on is checked, not assumed.
+
+    A published minimum above the line beside a page claiming to reproduce that
+    minimum while counting draws below it is a contradiction, and resolving it
+    silently would pick one of two numbers for the reader.
+    """
+    source = tmp_path / "uncertainty.md"
+    adm = tmp_path / "admissibility.json"
+    monkeypatch.setattr(ir, "BLISS_UNCERTAINTY", source)
+    monkeypatch.setattr(ir, "ADMISSIBILITY", adm)
+    _published(source, 1.050, 1.100)
+    _admissibility(adm, at_or_below=6, admissible_corner=0)
+    with pytest.raises(ValueError, match="disagree about whether any draw reaches"):
+        ir.build()
+    # The same disagreement is tolerated when the page does NOT claim to
+    # reproduce the minimum, because then it is entitled to differ.
+    _admissibility(adm, at_or_below=6, admissible_corner=0, reproduces=False)
+    assert ir.build()["headlines"]
+
+
+def test_a_missing_admissibility_artifact_raises_rather_than_republishing(tmp_path, monkeypatch):
+    """Failing open here would quietly restore the unqualified row, which is the
+    defect the derivation exists to remove."""
+    source = tmp_path / "uncertainty.md"
+    _published(source, 0.953, 1.000)
+    monkeypatch.setattr(ir, "BLISS_UNCERTAINTY", source)
+    monkeypatch.setattr(ir, "ADMISSIBILITY", tmp_path / "absent.json")
+    with pytest.raises(ValueError, match="is missing; the Bliss row"):
+        ir.build()
+
+
+@pytest.mark.parametrize("drop", [
+    ("decomposition", "n_at_or_below_line_admissible"),
+    ("decomposition", "min_single_arm_kill_on_line"),
+    ("decomposition", "denominator_ratio"),
+    ("observable", "admissible_only"),
+    ("observable", "n_admissible"),
+])
+def test_a_partial_admissibility_artifact_raises(tmp_path, monkeypatch, drop):
+    """A clause built from a half-present measurement is worse than none."""
+    source = tmp_path / "uncertainty.md"
+    adm = tmp_path / "admissibility.json"
+    _published(source, 0.953, 1.000)
+    monkeypatch.setattr(ir, "BLISS_UNCERTAINTY", source)
+    monkeypatch.setattr(ir, "ADMISSIBILITY", adm)
+    _admissibility(adm, at_or_below=6, admissible_corner=0, drop=drop)
+    with pytest.raises(ValueError, match="missing"):
+        ir.build()
+
+
+def test_the_minimum_reproduction_leg_is_read_and_not_assumed(tmp_path, monkeypatch):
+    """The endpoint the claim rests on is the one that must be reproduced.
+
+    A page reproducing the median and missing the minimum reproduces everything
+    except the number in question, so the overall flag alone is not enough.
+    """
+    source = tmp_path / "uncertainty.md"
+    adm = tmp_path / "admissibility.json"
+    _published(source, 0.953, 1.000)
+    monkeypatch.setattr(ir, "BLISS_UNCERTAINTY", source)
+    monkeypatch.setattr(ir, "ADMISSIBILITY", adm)
+    doc = json.loads(_admissibility(adm, at_or_below=6,
+                                    admissible_corner=0).read_text())
+    doc["observables"][0]["reproduction"]["min"]["reproduces"] = False
+    adm.write_text(json.dumps(doc))
+    bliss = next(h for h in ir.build()["headlines"] if h["key"] == "bliss_synergy")
+    assert bliss["verdict"] == "direction_and_magnitude_uncertain", (
+        "the row qualified itself on a page that did not reproduce the endpoint "
+        "its own clause rests on")
+    doc["observables"][0].pop("reproduction")
+    adm.write_text(json.dumps(doc))
+    with pytest.raises(ValueError, match="published sampled MINIMUM"):
+        ir.build()
+
+
+def test_the_overall_summary_cannot_contradict_the_bliss_row(tmp_path, monkeypatch):
+    """#925's defect, one row over: a static summary beside a derived verdict.
+
+    Drives every state the row can take and requires the paragraph to move with
+    it, so a two-way branch left behind a three-way verdict fails here.
+    """
+    source = tmp_path / "uncertainty.md"
+    adm = tmp_path / "admissibility.json"
+    monkeypatch.setattr(ir, "BLISS_UNCERTAINTY", source)
+    monkeypatch.setattr(ir, "ADMISSIBILITY", adm)
+    seen = {}
+    for minimum, lower, at_or_below, corner in ((0.953, 1.000, 6, 0),
+                                                (0.953, 1.000, 6, 1),
+                                                (1.050, 1.100, 0, 0)):
+        _published(source, minimum, lower)
+        _admissibility(adm, at_or_below=at_or_below, admissible_corner=corner,
+                       admissible_min=0.953 if corner else 1.027)
+        r = ir.build()
+        bliss = next(h for h in r["headlines"] if h["key"] == "bliss_synergy")
+        seen[bliss["verdict"]] = r["overall"]
+    assert len(seen) == 3, f"only {len(seen)} verdict states reachable: {sorted(seen)}"
+    assert len(set(seen.values())) == 3, (
+        "two different Bliss verdicts produced the same overall paragraph, so "
+        "the summary is not tracking the row")
+    conditional = seen["direction_robust_only_under_admissibility_magnitude_not"]
+    assert "inadmissible" in conditional and "conditioning adds no data" in conditional
+    assert "inadmissible" not in seen["direction_and_magnitude_uncertain"]
+    assert "not established" not in seen["direction_robust_magnitude_not"]
+
+
+def test_the_conditional_state_does_not_move_the_data_conditioned_count(tmp_path, monkeypatch):
+    """Conditioning removes draws. It does not add data, and the headline count
+    of data-conditioned outputs must stay where it is."""
+    source = tmp_path / "uncertainty.md"
+    adm = tmp_path / "admissibility.json"
+    monkeypatch.setattr(ir, "BLISS_UNCERTAINTY", source)
+    monkeypatch.setattr(ir, "ADMISSIBILITY", adm)
+    _published(source, 0.953, 1.000)
+    _admissibility(adm, at_or_below=6, admissible_corner=0)
+    r = ir.build()
+    bliss = next(h for h in r["headlines"] if h["key"] == "bliss_synergy")
+    assert bliss["verdict"] == "direction_robust_only_under_admissibility_magnitude_not"
+    assert r["data_constrained_in_production"] == 0
+    assert "this is not a data-conditioned claim" in bliss["rationale"]
+
+
+def test_the_row_never_claims_unconditional_robustness_below_the_null():
+    """THE REGISTERED RESTRAINT (#940 P3), as a property of the source.
+
+    The unconditional label may be produced only by the published range clearing
+    the null. An edit routing the admissibility leg into that branch instead of
+    its own would read as this work having found robustness, which conditioning
+    cannot establish.
+    """
+    import ast
+    src = (REPO_ROOT / "scripts" / "identifiability_report.py").read_text()
+    fn = next(n for n in ast.walk(ast.parse(src))
+              if isinstance(n, ast.FunctionDef) and n.name == "_bliss_verdict")
+    ret = next(n for n in ast.walk(fn) if isinstance(n, ast.Return))
+    verdict = next(v for k, v in zip(ret.value.keys, ret.value.values)
+                   if getattr(k, "value", None) == "verdict")
+    names = {n.id for n in ast.walk(verdict) if isinstance(n, ast.Name)}
+    assert "uniformly_supra_additive" in names and "conditional" in names, (
+        "the verdict no longer consults both the published range and the "
+        "admissibility condition")
+    # The unconditional label and the conditional one must sit on DIFFERENT
+    # tests, which an inline conditional expression makes checkable: the
+    # unconditional string may not be reachable from the `conditional` branch.
+    strings = [c.value for c in ast.walk(verdict)
+               if isinstance(c, ast.Constant) and isinstance(c.value, str)]
+    assert strings.count("direction_robust_magnitude_not") == 1
+    assert strings.count("direction_robust_only_under_admissibility_magnitude_not") == 1
+    assert isinstance(verdict, ast.IfExp)
+    assert {n.id for n in ast.walk(verdict.test) if isinstance(n, ast.Name)} == {
+        "uniformly_supra_additive"}, (
+        "the unconditional robustness label is no longer gated on the published "
+        "range alone")
+
+
+def test_the_rationale_figures_are_read_not_typed(tmp_path, monkeypatch):
+    """A literal that happens to EQUAL the true value is invisible to equality.
+
+    That shape is on record in this repo, so every figure in the conditional
+    clause is driven at a DOCTORED artifact holding values the real one does not
+    have. An echo of the committed measurement then fails instead of passing.
+    """
+    source = tmp_path / "uncertainty.md"
+    adm = tmp_path / "admissibility.json"
+    monkeypatch.setattr(ir, "BLISS_UNCERTAINTY", source)
+    monkeypatch.setattr(ir, "ADMISSIBILITY", adm)
+    _published(source, 0.953, 1.000)
+    doc = {
+        "bliss_decomposition": {
+            "n_at_or_below_line": 17,
+            "n_at_or_below_line_admissible": 0,
+            "n_on_line": 9,
+            "min_single_arm_kill_on_line": 0.831,
+            "no_synergy_line": 1.0,
+            "numerator_ratio": 0.611,
+            "denominator_ratio": 0.222,
+            "corner_min_worst_untreated": 0.345,
+        },
+        "constraint": {"baseline_max": 0.05},
+        "observables": [{
+            "column": "bliss_synergy",
+            "reproduces": True,
+            "reproduction": {"min": {"reproduces": True}},
+            "n_admissible": 44,
+            "n_full": 191,
+            "interval_quotable": True,
+            "admissible_only": {"min": 1.413},
+        }],
+    }
+    adm.write_text(json.dumps(doc))
+    r = next(h for h in ir.build()["headlines"] if h["key"] == "bliss_synergy")["rationale"]
+    real = json.loads(
+        (REPO_ROOT / "analysis"
+         / "headline-intervals-under-admissibility.json").read_text())
+    live = next(o for o in real["observables"] if o["column"] == "bliss_synergy")
+    for label, shown in (("corner size", "17"), ("on-line count", "9"),
+                         ("saturated arm", "0.831"), ("admissible minimum", "1.413"),
+                         ("admissible of full", "44 of 191"),
+                         ("denominator ratio", "0.222"),
+                         ("numerator ratio", "0.611"),
+                         # the corner margin: 0.345 untreated against a 0.05
+                         # limit is 6.9x, and both the share and the multiple
+                         # must be read from the artifact
+                         ("corner untreated share", "34.50%"),
+                         ("corner margin", "6.9x")):
+        assert shown in r, f"the {label} is not read from the artifact"
+    # And the committed values must be ABSENT, so the clause cannot be carrying
+    # both a read and a leftover literal.
+    for stale in (f"{live['admissible_only']['min']:.3f}",
+                  f"{live['n_admissible']} of {live['n_full']}"):
+        assert stale not in r, (
+            f"the committed figure {stale!r} survives in a clause built from a "
+            "doctored artifact, so it is typed rather than read")
+
+
+def test_a_withheld_interval_cannot_supply_the_bound_this_row_rests_on(tmp_path, monkeypatch):
+    """The sibling page refuses a family's interval when too few draws survive,
+    and a MINIMUM is the most tail-sensitive statistic there is.
+
+    INERT ON REAL DATA, which is why it is driven here: the Bliss family clears
+    that page's admissible-draw floor, asserted below rather than assumed, so
+    nothing in the committed artifacts exercises this branch. An inert gate that
+    only a fixture can reach is a recorded defect class in this repository.
+    """
+    live = next(o for o in json.loads(
+        (REPO_ROOT / "analysis"
+         / "headline-intervals-under-admissibility.json").read_text())["observables"]
+        if o["column"] == "bliss_synergy")
+    assert live["interval_quotable"] is True, (
+        "the Bliss family's interval is now withheld, so this branch is no "
+        "longer inert and the row's own clause must be re-read")
+
+    source = tmp_path / "uncertainty.md"
+    adm = tmp_path / "admissibility.json"
+    monkeypatch.setattr(ir, "BLISS_UNCERTAINTY", source)
+    monkeypatch.setattr(ir, "ADMISSIBILITY", adm)
+    _published(source, 0.953, 1.000)
+    doc = json.loads(_admissibility(adm, at_or_below=6,
+                                    admissible_corner=0).read_text())
+    doc["observables"][0]["interval_quotable"] = False
+    adm.write_text(json.dumps(doc))
+    bliss = next(h for h in ir.build()["headlines"] if h["key"] == "bliss_synergy")
+    assert bliss["verdict"] == "direction_and_magnitude_uncertain", (
+        "a direction claim was rested on a bound the sibling page withholds")
+    assert "WITHHOLDS this family's interval" in bliss["rationale"]
+    assert f"{doc['observables'][0]['admissible_only']['min']:.3f}" not in (
+        bliss["rationale"]), "the withheld minimum is quoted anyway"
+    # The corner fact is a COUNT of draws rather than a tail statistic, so it
+    # survives the withholding and is still reported.
+    assert "none of those draws is admissible" in bliss["rationale"]
+    doc["observables"][0].pop("interval_quotable")
+    adm.write_text(json.dumps(doc))
+    with pytest.raises(ValueError, match="interval_quotable"):
+        ir.build()
+
+
+def test_without_the_corner_margin_the_row_says_so_rather_than_implying_it(tmp_path, monkeypatch):
+    """The saturation clause accounts for the draws ON the line only.
+
+    If the sibling page stops reporting how far the rest of the corner fails,
+    the row must say that only those draws are accounted for -- not keep a
+    sentence that reads as covering the whole corner.
+    """
+    source = tmp_path / "uncertainty.md"
+    adm = tmp_path / "admissibility.json"
+    monkeypatch.setattr(ir, "BLISS_UNCERTAINTY", source)
+    monkeypatch.setattr(ir, "ADMISSIBILITY", adm)
+    _published(source, 0.953, 1.000)
+    doc = json.loads(_admissibility(adm, at_or_below=6,
+                                    admissible_corner=0).read_text())
+    doc["bliss_decomposition"].pop("corner_min_worst_untreated")
+    adm.write_text(json.dumps(doc))
+    bliss = next(h for h in ir.build()["headlines"] if h["key"] == "bliss_synergy")
+    r = bliss["rationale"]
+    assert bliss["verdict"] == "direction_robust_only_under_admissibility_magnitude_not"
+    assert "only the draws on the line are accounted for" in r
+    assert "x the limit" not in r, "a margin is quoted with nothing to compute it from"
+    # The same when the constraint itself is unavailable, since a multiple of a
+    # missing limit is not a number.
+    doc["bliss_decomposition"]["corner_min_worst_untreated"] = 0.2975
+    doc.pop("constraint")
+    adm.write_text(json.dumps(doc))
+    r2 = next(h for h in ir.build()["headlines"]
+              if h["key"] == "bliss_synergy")["rationale"]
+    assert "only the draws on the line are accounted for" in r2

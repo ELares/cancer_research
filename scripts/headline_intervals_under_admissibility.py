@@ -168,7 +168,33 @@ MATERIAL_FRACTION = 0.10
 SUBADDITIVE_CITATIONS = (
     ("README.md", "some draws are sub-additive"),
     ("article/drafts/v1.md", "some draws are sub-additive"),
+    # (#940): the registry shipped naming two sites and a repo-wide search found
+    # a third. Both of the others were found by reading the manuscript and the
+    # front door, which is where a reader lands -- and that is exactly why a
+    # protocol document was missed. The registry is the thing that has to be
+    # complete, because its whole job is to stop the naming outliving the
+    # sentences it points at.
+    ("analysis/p1-wetlab-protocol.md", "some draws are sub-additive"),
 )
+
+# Spelled out so the prose naming these sites cannot carry a stale count. The
+# first version wrote "Two sites" by hand beside a registry of two, which is the
+# derived-number-handwritten-prose defect: adding the third would have left a
+# document saying two while listing three.
+_COUNT_WORDS = {1: "One", 2: "Two", 3: "Three", 4: "Four"}
+
+
+def _counted(n: int) -> str:
+    """"<word> site(s) draw(s)", with the agreement computed.
+
+    The number word and the noun are kept APART deliberately: a literal
+    pairing a spelled count with the noun is what
+    `tests/test_no_handwritten_figures_in_generators.py` flags, and it is right
+    to -- such a phrase in a generator is a sentence that can outlive the
+    registry it describes, which is exactly how the first version shipped.
+    """
+    word = _COUNT_WORDS.get(n, str(n))
+    return f"{word} site{'' if n == 1 else 's'} {'draws' if n == 1 else 'draw'}"
 
 # A Bliss ratio equals this when the combination kill exactly matches the
 # independence prediction, because the engine computes `rate_combo /
@@ -660,6 +686,29 @@ def assemble(raw) -> dict:
     # Reported as the weakest single-arm kill among the on-line draws rather
     # than classified against a saturation threshold nobody measured.
     decomposition["min_single_arm_kill_on_line"] = min(saturated) if saturated else None
+
+    # EXPLAINING TWO OF SIX READS AS EXPLAINING ALL SIX. The saturation note
+    # above covers only the draws sitting exactly on the line, so the corner's
+    # own mechanism is measured across EVERY draw in it: this ratio can reach
+    # the line only when the independence prediction is already high, which
+    # needs both single arms killing hard, which in this model is the same
+    # strong-peroxidation regime that kills the untreated control. Reported as
+    # MINIMA over the corner, so each figure is a floor every corner draw
+    # clears rather than a mean one draw could carry.
+    def _corner_min(cols, combine):
+        vals = []
+        for i in at_or_below:
+            try:
+                vals.append(combine([float(rows[i][c]) for c in cols]))
+            except (ValueError, KeyError):
+                continue
+        return min(vals) if vals else None
+
+    decomposition["corner_min_worst_untreated"] = _corner_min(CONTROL_COLUMNS, max)
+    decomposition["corner_min_larger_single_arm"] = _corner_min(
+        ("bliss_rate_rsl3", "bliss_rate_fsp1i"), max)
+    decomposition["corner_min_independence_prediction"] = _corner_min(
+        ("bliss_prediction",), max)
     decomposition["sub_additive_corner_is_wholly_inadmissible"] = (
         len(at_or_below) > 0
         and decomposition["n_at_or_below_line_admissible"] == 0)
@@ -1033,6 +1082,27 @@ def render(d) -> str:
                  f"arm is also the easiest way to fail the untreated "
                  f"constraint, which is why these are the first draws "
                  f"conditioning removes.\n")
+    if (dec["corner_min_worst_untreated"] is not None
+            and dec["corner_min_larger_single_arm"] is not None
+            and dec["corner_min_independence_prediction"] is not None):
+        L.append(f"THAT EXPLAINS THE DRAWS ON THE LINE AND NOT THE WHOLE "
+                 f"CORNER, so the corner is measured across every draw in it, "
+                 f"and it goes for ONE reason rather than two: this ratio can "
+                 f"reach the line only where the independence prediction is "
+                 f"already high, and every draw at or below it has an arm "
+                 f"killing at least "
+                 f"{_num(dec['corner_min_larger_single_arm'])} against an "
+                 f"independence prediction of at least "
+                 f"{_num(dec['corner_min_independence_prediction'])}. The same "
+                 f"strong-peroxidation regime is what kills the untreated "
+                 f"control: the LEAST inadmissible draw in the corner still "
+                 f"kills {_pct(dec['corner_min_worst_untreated'], 2)} of its "
+                 f"untreated population, "
+                 f"{dec['corner_min_worst_untreated'] / d['constraint']['baseline_max']:.1f}x "
+                 f"the limit, so the corner fails by a wide margin and not at "
+                 f"its boundary. Each figure is a MINIMUM over the corner, so "
+                 f"it is a floor every draw in it clears rather than a mean one "
+                 f"draw could carry.\n")
     L.append(f"The two Bliss movements are therefore NOT one finding: the "
              f"MEDIAN rises because the denominator falls faster than the "
              f"numerator, and the LOWER BOUND rises because the sub-additive "
@@ -1042,7 +1112,8 @@ def render(d) -> str:
 
     still = [p for p, present in sorted(d["subadditive_citations"].items()) if present]
     if still and dec["sub_additive_corner_is_wholly_inadmissible"]:
-        L.append(f"**Two sites draw a conclusion from those sub-additive draws, "
+        counted = _counted(len(still))
+        L.append(f"**{counted} a conclusion from those sub-additive draws, "
                  f"and they are NOT edited here**: "
                  + ", ".join(f"`{p}`" for p in still)
                  + " each say the interval reaches the additive null and that "
