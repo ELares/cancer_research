@@ -277,12 +277,15 @@ def _bliss_verdict() -> dict:
                 "the published sampled minimum and the admissibility page "
                 "disagree about whether any draw reaches the no-synergy line, "
                 "while that page claims to reproduce the minimum")
-    # THE CONDITION HAS THREE PARTS AND EACH CAN FAIL ON ITS OWN: the published
+    # THE CONDITION HAS FOUR PARTS AND EACH CAN FAIL ON ITS OWN: the published
     # range must reach the line (else there is no corner to qualify), the page
     # must reproduce what is published (else the comparison is with a re-run),
-    # and every draw in that corner must be inadmissible (if one survives, the
-    # counterexample survives the model's own constraint and the unqualified
-    # verdict stands).
+    # that page must be willing to quote this family's interval (else the
+    # admissible minimum is a bound it withholds), and every draw in the corner
+    # must be inadmissible (if one survives, the counterexample survives the
+    # model's own constraint and the unqualified verdict stands). The count is
+    # stated because it went stale here once already -- it read THREE until the
+    # quotability gate was added, one edit earlier.
     corner_entirely_inadmissible = (adm["n_at_or_below_line"] > 0
                                     and adm["n_at_or_below_line_admissible"] == 0)
     conditional = (not uniformly_supra_additive
@@ -297,14 +300,15 @@ def _bliss_verdict() -> dict:
         # read as accounting for all six.
         if adm["corner_min_worst_untreated"] and adm["baseline_max"]:
             margin = (
-                f" -- and the whole corner goes for that one regime rather than "
-                f"only those draws, since the LEAST inadmissible draw in it still "
-                f"kills "
+                f" -- and the rest of the corner is no nearer the constraint "
+                f"than those draws are, measured rather than entailed, since a "
+                f"low-kill pair admits a sub-additive ratio too: the LEAST "
+                f"inadmissible draw in the corner still kills "
                 f"{adm['corner_min_worst_untreated'] * 100:.2f}% of its untreated "
                 f"population, "
                 f"{adm['corner_min_worst_untreated'] / adm['baseline_max']:.1f}x "
-                f"the limit, so the corner fails by a wide margin and not at its "
-                f"boundary")
+                f"the limit, so the whole corner fails by a wide margin and not "
+                f"at its boundary")
         else:
             margin = (
                 " -- the margin by which the rest of the corner fails is not "
@@ -625,6 +629,12 @@ def build() -> dict:
         "rationale": immune_base["rationale"] + _immune_per_cell_clause(),
         "source": immune_base["source"] + "; calibration/icd-damp-per-death.md (#928)",
     }
+    # The Bliss row now consults a third artifact, so it must appear in the
+    # SOURCE line like the hypoxia and penetration rows' own additions do: the
+    # figures are cited inline, and a reader traces them through Source.
+    bliss = {**bliss, "source": (
+        next(h for h in HEADLINES if h["key"] == "bliss_synergy")["source"]
+        + "; headline-intervals-under-admissibility.md (#938)")}
     derived = {"bliss_synergy": bliss, "hypoxia_kill_collapse": hypoxia,
                "penetration_gap": penetration,
                "immune_amplification_ratio": immune}

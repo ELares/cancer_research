@@ -1198,6 +1198,8 @@ def test_the_corner_mechanism_is_measured_across_every_draw():
     # Each reported figure is the floor, and EVERY corner draw clears it.
     assert dec["corner_min_larger_single_arm"] == min(arms(r) for r in corner)
     assert dec["corner_min_worst_untreated"] == min(untreated(r) for r in corner)
+    assert dec["corner_min_independence_prediction"] == min(
+        float(r["bliss_prediction"]) for r in corner)
     assert all(arms(r) >= dec["corner_min_larger_single_arm"] for r in corner)
     assert all(untreated(r) >= dec["corner_min_worst_untreated"] for r in corner)
     # And the floor is a real margin rather than the constraint's boundary,
@@ -1224,3 +1226,37 @@ def test_the_corner_margin_is_read_from_the_rows_not_carried(monkeypatch):
         "raising the least inadmissible corner draw's untreated death left the "
         "reported floor unchanged, so it is not read from the rows")
     assert M.render(M.assemble(doctored)) != M.render(M.assemble(raw))
+
+    # AND THE SAME FOR THE INDEPENDENCE FLOOR, which an equality check against
+    # a recomputation CANNOT pin: a literal equal to the true value satisfies
+    # it, and a sweep showed exactly that surviving. Only moving the row does.
+    base = M.assemble(raw)["bliss_decomposition"]["corner_min_independence_prediction"]
+    again = _doctor(raw)
+    rows2 = again["rows"][:M.FAMILY_SAMPLES["bliss"]]
+    corner2 = [r for r in rows2
+               if r[M.BLISS_COLUMN] not in ("", M.FAILED)
+               and float(r[M.BLISS_COLUMN]) <= 1.0]
+    lowest = min(corner2, key=lambda r: float(r["bliss_prediction"]))
+    lowest["bliss_prediction"] = str(float(lowest["bliss_prediction"]) - 0.2)
+    moved = M.assemble(again)["bliss_decomposition"]["corner_min_independence_prediction"]
+    assert moved != base, (
+        "lowering the corner's weakest independence prediction left the "
+        "reported floor unchanged, so it is a literal rather than a read")
+
+
+def test_the_corner_co_occurrence_is_not_published_as_a_necessity():
+    """A ratio at or below the line does NOT require strong arms.
+
+    Where both arms are weak the independence prediction is small too, so a
+    combination below it undercuts the line just as well -- the corner's
+    position in this prior is a measurement, and a first draft of the page said
+    the ratio "can reach the line only where the independence prediction is
+    already high", which is false. The page must carry the counter-case.
+    """
+    md = M.render(M.assemble(M.load()))
+    assert "MEASURED, NOT ENTAILED" in md
+    assert "where both arms are weak" in md, (
+        "the page states the corner's position without naming the case that "
+        "shows it is not forced")
+    for forced in ("can reach the line only", "must sit", "necessarily"):
+        assert forced not in md, f"the page asserts {forced!r} about the corner"

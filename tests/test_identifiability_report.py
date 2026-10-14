@@ -815,3 +815,29 @@ def test_without_the_corner_margin_the_row_says_so_rather_than_implying_it(tmp_p
     r2 = next(h for h in ir.build()["headlines"]
               if h["key"] == "bliss_synergy")["rationale"]
     assert "only the draws on the line are accounted for" in r2
+
+
+def test_the_corner_margin_is_offered_as_measured_not_entailed():
+    """The same restraint as the sibling page's, at the row that quotes it."""
+    r = next(h for h in ir.build()["headlines"]
+             if h["key"] == "bliss_synergy")["rationale"]
+    assert "measured rather than entailed" in r
+    assert "a low-kill pair admits a sub-additive ratio too" in r, (
+        "the margin is quoted without the case that shows the corner's "
+        "position is not forced")
+
+
+def test_the_bliss_row_cites_every_artifact_it_derives_from():
+    """Source is the line a reader traces the figures through.
+
+    The row cites (#938) inline for the admissible minimum; citing it there and
+    not in Source leaves the one field meant for provenance incomplete, which
+    the hypoxia and penetration rows do not do.
+    """
+    bliss = next(h for h in ir.build()["headlines"] if h["key"] == "bliss_synergy")
+    assert "headline-intervals-under-admissibility.md" in bliss["source"], (
+        "the row derives from the admissibility artifact and does not cite it")
+    # The published report it has always read must stay cited too, so the new
+    # entry cannot have replaced the old ones.
+    assert "headline-uncertainty-report.md" in bliss["source"]
+    assert "headline-sensitivity-report.md" in bliss["source"]
