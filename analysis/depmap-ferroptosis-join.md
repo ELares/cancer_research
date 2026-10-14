@@ -231,3 +231,5 @@ The rule fires for **5 of the 19 panel genes**: AIFM2, ALOX15B, GCLC, SLC3A2, SL
 
 **A correlation does not say which way the mechanism runs.** A gene can track sensitivity because it causes it, because it marks a lineage that has it, or because it rides a growth-rate axis. Ranking within lineage removes one of those three.
 
+**And a general drug-sensitivity axis cannot be separated here, because the cohort contains nothing but ferroptosis inducers.** The readouts share a large component -- the table above puts pairwise agreement as high as 0.875 -- and for inducers of one death mode that shared component IS the quantity of interest, so it cannot be treated as a nuisance. But a line that is fragile to EVERYTHING would produce the same pattern, and telling the two apart needs a non-ferroptosis comparator screened on the same lines, which the committed cohort does not contain. That is the single most likely alternative explanation for every figure on this page, and it is open.
+

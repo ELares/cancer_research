@@ -714,6 +714,45 @@ def test_the_permutation_p_has_a_floor_rather_than_reaching_zero(committed):
     assert seen > 0
 
 
+def test_the_enrichment_null_is_the_no_effect_value(committed):
+    """FINDING: `ENRICHMENT_NULL` gates the gene-level condition and nothing
+    bounded it. At zero the condition is satisfied by any positive ratio, so the
+    verdict would consult it and learn nothing."""
+    assert M.ENRICHMENT_NULL == 1.0, (
+        "a ratio threshold other than 1.0 is not the no-effect value")
+    assert committed["gene_level_enrichment"]["ratio"] > M.ENRICHMENT_NULL
+
+
+def test_the_permutation_count_gives_the_quoted_p_resolution(committed):
+    """FINDING: nothing bounded `N_PERMUTATIONS`, and the report quotes its p
+    values. At a handful of shuffles the smallest reportable p is large enough
+    that every row would read as unremarkable, and the existing floor guard
+    would still pass because it computes the floor from the same constant."""
+    assert M.N_PERMUTATIONS >= 1000, (
+        f"{M.N_PERMUTATIONS} shuffles cannot resolve a p value this report "
+        "quotes to four places")
+    floor = 1.0 / (M.N_PERMUTATIONS + 1)
+    assert floor < 0.01, "the smallest reportable p is not small enough to quote"
+    # Non-vacuity: some row must actually sit at the floor, or the resolution
+    # is not being used.
+    at_floor = sum(1 for info in committed["candidates"].values()
+                   if info.get("present")
+                   for cc in info["compounds"].values()
+                   if cc["permutation_p"] is not None
+                   and cc["permutation_p"] == pytest.approx(floor))
+    assert at_floor > 0, "no row reaches the floor, so the shuffle count is idle"
+
+
+def test_the_report_names_the_general_sensitivity_confound(committed):
+    """FINDING: the most likely alternative explanation was not on the page.
+    Every compound here is a ferroptosis inducer, so a line that is fragile to
+    everything produces the same pattern and the cohort cannot tell them apart."""
+    md = M.render(committed)
+    assert "general drug-sensitivity axis cannot be separated" in md
+    assert "non-ferroptosis comparator" in md
+    assert "it is open" in md
+
+
 def test_the_permutation_null_is_seeded_and_reproducible(raw):
     first = M.assemble(raw)
     second = M.assemble(raw)

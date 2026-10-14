@@ -854,6 +854,17 @@ def render(d) -> str:
              "gene can track sensitivity because it causes it, because it marks "
              "a lineage that has it, or because it rides a growth-rate axis. "
              "Ranking within lineage removes one of those three.\n")
+    L.append(f"**And a general drug-sensitivity axis cannot be separated here, "
+             f"because the cohort contains nothing but ferroptosis inducers.** "
+             f"The readouts share a large component -- the table above puts "
+             f"pairwise agreement as high as {_num(agree['max_rho'])} -- and for "
+             f"inducers of one death mode that shared component IS the quantity of "
+             f"interest, so it cannot be treated as a nuisance. But a line that "
+             f"is fragile to EVERYTHING would produce the same pattern, and "
+             f"telling the two apart needs a non-ferroptosis comparator screened "
+             f"on the same lines, which the committed cohort does not contain. "
+             f"That is the single most likely alternative explanation for every "
+             f"figure on this page, and it is open.\n")
     return "\n".join(L) + "\n"
 
 
