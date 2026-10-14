@@ -889,9 +889,13 @@
   },
   "sign_flips": [],
   "subadditive_citations": {
-    "README.md": true,
-    "analysis/p1-wetlab-protocol.md": true,
-    "article/drafts/v1.md": true
+    "README.md :: some draws are sub-additive, so synergy is not guaranteed": true,
+    "analysis/p1-wetlab-protocol.md :: some draws are sub-additive, so supra-additivity is not guaranteed": true,
+    "article/drafts/v1.md :: The lower bound rounds to additivity and some draws are sub-additive": true,
+    "article/drafts/v1.md :: and some sub-additive draws (minimum": true,
+    "article/drafts/v1.md :: includes additivity and some sub-additive draws": true,
+    "article/drafts/v1.md :: includes sub-additive draws, so its supra-additive direction": true,
+    "article/drafts/v1.md :: the full range includes sub-additive draws": true
   },
   "tolerance": 0.001,
   "verdict": true,

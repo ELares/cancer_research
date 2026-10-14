@@ -25,6 +25,7 @@ import ast
 import importlib.util
 import json
 import math
+import re
 import sys
 from pathlib import Path
 
@@ -1044,8 +1045,14 @@ def test_the_uncorrected_citation_sites_are_checked_not_remembered(built, raw):
         "re-read it and update the note rather than leaving the pointer")
     md = M.render(built)
     assert "NOT edited here" in md
-    for path in built["subadditive_citations"]:
+    for key in built["subadditive_citations"]:
+        path, phrase = key.split(" :: ", 1)
         assert path in md
+        # The FILE appears in the prose; the sentence does not and must not --
+        # quoting seven sentences would reproduce the manuscript here. What is
+        # checked is that the registry's own key carries both halves, so a
+        # sentence cannot be dropped by collapsing entries onto a path.
+        assert phrase, f"{key}: registry key carries no sentence fragment"
 
     d = _doctor(raw)
     d["subadditive_citations"] = {k: False for k in raw["subadditive_citations"]}
@@ -1081,9 +1088,9 @@ def test_load_reports_a_missing_citation_as_missing(monkeypatch):
     there, and requiring it to say so, is what closes it.
     """
     path = M.SUBADDITIVE_CITATIONS[0][0]
-    monkeypatch.setattr(M, "SUBADDITIVE_CITATIONS",
-                        ((path, "a sentence this file does not contain"),))
-    assert M.load()["subadditive_citations"] == {path: False}, (
+    absent = "a sentence this file does not contain"
+    monkeypatch.setattr(M, "SUBADDITIVE_CITATIONS", ((path, absent),))
+    assert M.load()["subadditive_citations"] == {f"{path} :: {absent}": False}, (
         "the loader reports a citation present when its phrase is absent, so "
         "the page's note about those sites is not checked at all")
 
@@ -1110,53 +1117,146 @@ def test_the_named_site_count_is_derived_not_written():
     # Written HERE, not imported: a guard taking its expectation from the code
     # it guards compares that code to itself. The last entry sits OUTSIDE the
     # generator's word map, so the numeric fallback is exercised too.
-    words = {1: "One site draws", 2: "Two sites draw", 3: "Three sites draw",
-             4: "Four sites draw", 9: "9 sites draw"}
+    words = {1: "One", 2: "Two", 3: "Three", 4: "Four", 5: "Five", 6: "Six",
+             7: "Seven", 9: "9"}
     raw = M.load()
-    for n, expected in sorted(words.items()):
+
+    # ONE SENTENCE PER FILE: the two counts agree, which is the case that
+    # CANNOT distinguish counting sentences from counting files.
+    for n in sorted(words):
         doctored = dict(raw)
         doctored["subadditive_citations"] = {
-            f"site-{i}.md": True for i in range(n)}
+            f"site-{i}.md :: sentence {i}": True for i in range(n)}
         md = M.render(M.assemble(doctored))
-        assert f"{expected} a conclusion" in md, (
-            f"with {n} named site(s) the page does not say {expected!r}")
-        for other in words.values():
-            if other != expected:
-                assert f"{other} a conclusion" not in md
+        assert f"{words[n]} sentence{'' if n == 1 else 's'} across " in md, (
+            f"with {n} site(s) the page does not say {words[n]!r}")
+
+    # AND THE DISCRIMINATING CASE, which is the whole of #942: several
+    # sentences in ONE file. Counting files reports one where there are five.
+    doctored = dict(raw)
+    doctored["subadditive_citations"] = {
+        f"one-file.md :: sentence {i}": True for i in range(5)}
+    md = M.render(M.assemble(doctored))
+    assert "Five sentences across one file" in md, (
+        "five sentences in a single file are not reported as five; the page is "
+        "counting files and calling them sites, which is the defect #942 fixed")
+    assert "(five sentences)" in md, (
+        "the per-file breakdown is missing, so a reader cannot see that one "
+        "file carries several of the named sentences")
+    for wrong in ("One sentence across", "Five sentences across five files"):
+        assert wrong not in md
 
 
-def test_every_handwritten_site_resting_on_the_corner_is_registered():
-    """THE GUARD THAT WOULD HAVE CAUGHT THE INCOMPLETE REGISTRY.
+def _generated_markdown() -> set:
+    """Committed Markdown some generator OWNS, derived from its `OUT_MD`.
 
-    #938 named two sites, both found by reading the manuscript and the front
-    door -- which is why a protocol document was missed. The registry's whole
-    job is to stop the naming outliving the sentences it points at, so its
-    completeness is scanned rather than remembered: every tracked Markdown file
-    carrying the shared phrase must be in it.
+    The exclusion list is where a site can hide, so it is not hand-written: the
+    freshness gate already keys generators on a module-level `OUT_MD`, and the
+    basenames those assignments name are exactly the pages a scan over
+    HANDWRITTEN prose must skip.
+    """
+    import ast
+    out = set()
+    for f in sorted((M.REPO / "scripts").glob("*.py")):
+        try:
+            tree = ast.parse(f.read_text(encoding="utf-8"))
+        except SyntaxError:
+            continue
+        for node in tree.body:
+            if not isinstance(node, ast.Assign):
+                continue
+            if not any(isinstance(t, ast.Name) and t.id in ("OUT_MD", "OUT_JSON")
+                       for t in node.targets):
+                continue
+            for c in ast.walk(node.value):
+                if (isinstance(c, ast.Constant) and isinstance(c.value, str)
+                        and c.value.endswith(".md")):
+                    out.add(Path(c.value).name)
+    return out
+
+
+_SENTENCE = re.compile(r"[^.!?]*sub-?additive[^.!?]*[.!?]")
+_DECIMAL = re.compile(r"(?<=\d)\.(?=\d)")
+
+
+def _sentences(flat_text: str) -> list:
+    """Statements carrying the concept, split without breaking inside a figure.
+
+    The naive pattern treats the point in `0.953` as a sentence end, which is
+    how two of the registered statements came back as mid-number fragments. The
+    decimal is masked, the split runs, and the mask is lifted.
+    """
+    masked = _DECIMAL.sub("\x00", flat_text)
+    return [m.group(0).replace("\x00", ".").strip()
+            for m in _SENTENCE.finditer(masked)]
+
+
+# Repo NOTES rather than prose making the claim: these describe the work on it.
+# Kept short and separate from the derived generated-page set above, because an
+# exclusion nobody can justify is how a site goes unnamed.
+_SCAN_EXEMPT = {"CLAUDE.md"}
+
+
+def test_every_handwritten_sentence_resting_on_the_corner_is_registered():
+    """THE GUARD #940 WROTE, AT THE GRANULARITY THE REGISTRY CLAIMS.
+
+    #938 named two files and #940 found a third by a repo-wide scan, so both
+    rounds were about WHICH FILES while the paragraph they render says the
+    naming is checked sentence by sentence. Measured, the manuscript carries
+    five such sentences and the registry verified one (#942).
+
+    PHRASE-INDEPENDENT, because #940's version asserted the registry used a
+    single phrase and scanned for it -- which cannot see a second sentence in
+    the same file worded differently, and four of them were.
+
+    NO CLASSIFIER decides which sentences "draw a conclusion": a keyword rule
+    cannot measure that distinction, so every sentence carrying the concept
+    must be registered and the conclusion-versus-descriptive reading lives in
+    the registry's comments as a judgement.
     """
     import subprocess
-    phrases = {phrase for _, phrase in M.SUBADDITIVE_CITATIONS}
-    assert len(phrases) == 1, (
-        "the registry now uses several phrases, so a single-phrase scan can no "
-        "longer establish its completeness")
-    phrase = phrases.pop()
     tracked = subprocess.run(
         ["git", "ls-files", "*.md"], cwd=M.REPO, capture_output=True,
         text=True, check=True).stdout.split()
-    found = set()
+    skip_names = _generated_markdown() | _SCAN_EXEMPT
+    assert "headline-intervals-under-admissibility.md" in skip_names, (
+        "the generated-page derivation no longer finds this page's own artifact, "
+        "so the scan would flag the paragraph that does the naming")
+    found = []
+    naive_total = 0
     for rel in tracked:
-        path = M.REPO / rel
-        try:
-            if phrase in path.read_text(encoding="utf-8", errors="ignore"):
-                found.add(rel)
-        except OSError:
+        if Path(rel).name in skip_names or rel.startswith(("corpus/", "news/")):
             continue
-    assert found, f"the scan found no file containing {phrase!r}, so it is broken"
-    registered = {path for path, _ in M.SUBADDITIVE_CITATIONS}
-    assert found == registered, (
-        "the registry and the repository disagree about which handwritten sites "
-        f"rest on the sub-additive corner.\n  unregistered: {sorted(found - registered)}"
-        f"\n  registered but absent: {sorted(registered - found)}")
+        text = M._flat((M.REPO / rel).read_text(encoding="utf-8", errors="ignore"))
+        found += [(rel, s) for s in _sentences(text)]
+        naive_total += len(_SENTENCE.findall(text))
+    assert found, "the sentence scan found nothing, so it is broken"
+    # THE PUBLISHED COUNT MUST NOT DEPEND ON THE SPLITTING RULE. The naive
+    # pattern breaks at the decimal point in figures like 0.953, so two of the
+    # registered statements came back as mid-number fragments. The decimal-safe
+    # split fixes the boundaries; the fact that it does not move the COUNT is
+    # what makes seven a measurement rather than an artifact of a regex.
+    assert len(found) == naive_total, (
+        f"{len(found)} statements under the decimal-safe split against "
+        f"{naive_total} under the naive one, so the count this page publishes "
+        "is an artifact of where the splitter happens to break")
+
+    registered = M.SUBADDITIVE_CITATIONS
+    unmatched = [(rel, s) for rel, s in found
+                 if not any(r == rel and M._flat(ph) in s
+                            for r, ph in registered)]
+    assert not unmatched, (
+        "handwritten sentences rest on the sub-additive corner and no registry "
+        "entry names them:\n  "
+        + "\n  ".join(f"{rel}: {s[:140]}" for rel, s in unmatched))
+    # And no registry entry may point at a sentence the scan cannot find, or
+    # the registry drifts away from the documents in the other direction.
+    stale = [(r, ph) for r, ph in registered
+             if not any(rel == r and M._flat(ph) in s for rel, s in found)]
+    assert not stale, f"registry entries match no scanned sentence: {stale}"
+    assert len(registered) == len(found), (
+        f"{len(registered)} registered against {len(found)} scanned sentences; "
+        "a single entry is covering several, so one of them is unverified")
 
 
 def test_the_identifiability_report_is_not_treated_as_a_handwritten_site():
@@ -1260,3 +1360,96 @@ def test_the_corner_co_occurrence_is_not_published_as_a_necessity():
         "shows it is not forced")
     for forced in ("can reach the line only", "must sit", "necessarily"):
         assert forced not in md, f"the page asserts {forced!r} about the corner"
+
+
+def test_a_registry_entry_per_sentence_does_not_collapse_onto_its_path():
+    """The mechanical reason the registry was file-granular (#942).
+
+    `load` keyed its result on the PATH, so several entries for one file became
+    one and a per-sentence registry could not have worked. Driven at a fixture
+    with two entries for one path, because the real registry has five for the
+    manuscript and a passing guard there would not say which property held.
+    """
+    raw = M.load()
+    assert len(raw["subadditive_citations"]) == len(M.SUBADDITIVE_CITATIONS), (
+        "entries collapsed: the loader reports fewer sites than are registered, "
+        "so a registered sentence is not being checked at all")
+    paths = [p for p, _ in M.SUBADDITIVE_CITATIONS]
+    assert len(set(paths)) < len(paths), (
+        "no file carries two registered sentences any more, so this guard can "
+        "no longer tell a per-sentence registry from a per-file one")
+
+
+def test_the_phrase_check_ignores_line_wrapping_but_not_absence(monkeypatch):
+    """A sentence does not stop being present when a line break falls inside it.
+
+    The raw comparison is why #940's fragments had to stop mid-clause, which is
+    how a registry ends up keyed on a phrase short enough to be ambiguous. Both
+    answers are driven: a wrapped match must be FOUND and an absent phrase must
+    still be reported absent.
+    """
+    path, phrase = M.SUBADDITIVE_CITATIONS[0]
+    rewrapped = phrase.replace(" ", "\n", 1)
+    assert "\n" in rewrapped and rewrapped != phrase
+    assert M._phrase_present(path, rewrapped), (
+        "a fragment differing from the document only in whitespace is reported "
+        "absent, so the registry must avoid line boundaries it cannot see")
+    assert not M._phrase_present(path, "a sentence no document here contains"), (
+        "whitespace flattening has made the check accept anything")
+    # And flattening must not join words across the break: a phrase whose words
+    # are adjacent only once the newline is DELETED is genuinely not there.
+    joined = phrase.replace(" ", "", 1)
+    assert not M._phrase_present(path, joined), (
+        "whitespace is being removed rather than collapsed, which would match "
+        "text the document does not contain")
+
+
+def test_the_scan_exemptions_are_derived_except_for_named_notes():
+    """An exclusion list is where a site hides, so it is mostly not a list.
+
+    The generated pages come from the `OUT_MD` assignments the freshness gate
+    already keys on. What is hand-listed is checked here to be small and to be
+    repo NOTES rather than prose making the claim.
+    """
+    generated = _generated_markdown()
+    assert len(generated) > 50, (
+        f"only {len(generated)} generated pages derived; the OUT_MD parse has "
+        "stopped working and the scan would flag generated prose")
+    assert "identifiability-report.md" in generated
+    assert "headline-intervals-under-admissibility.md" in generated
+    assert not (_SCAN_EXEMPT & generated), (
+        "a hand-listed exemption is already covered by the derivation, so the "
+        "list is claiming to exclude something it does not decide")
+
+    # THE HAND-LIST'S COST IS MEASURED RATHER THAN PINNED. A first version
+    # asserted `_SCAN_EXEMPT == {"CLAUDE.md"}`, which the vacuity gate correctly
+    # flagged: a bound sitting beside the thing it bounds, in one file, is
+    # edited together with it and is decoration. These are run-time reads.
+    import subprocess
+    tracked = set(subprocess.run(
+        ["git", "ls-files", "*.md"], cwd=M.REPO, capture_output=True,
+        text=True, check=True).stdout.split())
+    registered_files = {p for p, _ in M.SUBADDITIVE_CITATIONS}
+    for name in _SCAN_EXEMPT:
+        matches = [t for t in tracked if Path(t).name == name]
+        assert matches, (
+            f"{name} is exempted from the scan and is not a tracked file, so "
+            "the exemption excludes nothing and only obscures the rule")
+        assert any(_sentences(M._flat((M.REPO / t).read_text(
+            encoding="utf-8", errors="ignore"))) for t in matches), (
+            f"{name} is exempted and carries no statement the scan would find, "
+            "so it is dead weight in a list whose every entry is a place a "
+            "handwritten site can go unnamed")
+        assert not (set(matches) & registered_files), (
+            f"{name} is both exempted and registered, so a file the rule names "
+            "is also a file the rule skips")
+    # A BOUND THAT DOES NOT DRIFT WITH MY OWN PROSE. The first version compared
+    # the statements the exemptions hide against the number registered -- but
+    # the exempted file is this repository's working notes, which grow every
+    # time a cycle is written up, so that margin shrank for a benign reason and
+    # the guard would have failed on an unrelated edit. Both sides here are
+    # measured and neither moves when the notes are extended.
+    assert len(_SCAN_EXEMPT) < len(registered_files), (
+        f"{len(_SCAN_EXEMPT)} files are exempted against "
+        f"{len(registered_files)} the registry names, so the exception is as "
+        "large as the rule")
