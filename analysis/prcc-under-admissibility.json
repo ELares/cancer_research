@@ -1,0 +1,862 @@
+{
+  "admissibility": {
+    "fraction": 0.4205,
+    "max_worst_untreated": 0.92,
+    "median_worst_untreated": 0.034,
+    "n_admissible": 841,
+    "n_draws": 2000,
+    "published_control_mean": 0.1464375,
+    "published_control_ranking": [
+      "gsh_scav_efficiency",
+      "lp_propagation",
+      "gpx4_rate",
+      "lp_rate",
+      "nrf2_gsh_rate",
+      "fenton_rate",
+      "death_threshold",
+      "fsp1_rate",
+      "gpx4_degradation_by_ros",
+      "sdt_ros",
+      "rsl3_gpx4_inhib"
+    ]
+  },
+  "circularity_clear": true,
+  "conditioned_floor": {
+    "bound": false,
+    "floor": 100,
+    "n_admissible": 841
+  },
+  "design": {
+    "baseline_max": 0.02,
+    "conditions": [
+      "Persister/SDT",
+      "Persister/RSL3",
+      "Glycolytic/SDT",
+      "Glycolytic/RSL3",
+      "Persister/Control",
+      "PersisterNrf2/SDT"
+    ],
+    "draw_seed_offset": 100,
+    "n_cells": 1000,
+    "n_samples": 2000,
+    "parameters": [
+      "fenton_rate",
+      "gsh_scav_efficiency",
+      "lp_rate",
+      "lp_propagation",
+      "gpx4_rate",
+      "fsp1_rate",
+      "nrf2_gsh_rate",
+      "gpx4_degradation_by_ros",
+      "death_threshold",
+      "sdt_ros",
+      "rsl3_gpx4_inhib"
+    ],
+    "seed": 42,
+    "untreated_arms": [
+      "Glycolytic/Control",
+      "Persister/Control",
+      "PersisterNrf2/Control"
+    ]
+  },
+  "escalation": {
+    "admissible": {
+      "flags": [
+        {
+          "condition": "Persister/SDT",
+          "divergence": 0.291,
+          "parameter": "sdt_ros"
+        },
+        {
+          "condition": "PersisterNrf2/SDT",
+          "divergence": 0.265,
+          "parameter": "sdt_ros"
+        }
+      ],
+      "n_flags": 2,
+      "warranted": false,
+      "withheld": false
+    },
+    "full": {
+      "flags": [
+        {
+          "condition": "Persister/SDT",
+          "divergence": 0.296,
+          "parameter": "sdt_ros"
+        },
+        {
+          "condition": "PersisterNrf2/SDT",
+          "divergence": 0.336,
+          "parameter": "sdt_ros"
+        }
+      ],
+      "n_flags": 2,
+      "warranted": false,
+      "withheld": false
+    },
+    "published": {
+      "flags": [
+        {
+          "condition": "Persister/SDT",
+          "divergence": 0.296,
+          "parameter": "sdt_ros"
+        },
+        {
+          "condition": "PersisterNrf2/SDT",
+          "divergence": 0.336,
+          "parameter": "sdt_ros"
+        }
+      ],
+      "n_flags": 2,
+      "warranted": false,
+      "withheld": false
+    },
+    "reproduces": true,
+    "survives_conditioning": true
+  },
+  "manuscript": {
+    "rsl3": {
+      "above": 0.4,
+      "condition": "Persister/RSL3",
+      "count_above": 5,
+      "named": [
+        [
+          "lp_propagation",
+          0.92
+        ],
+        [
+          "gpx4_rate",
+          -0.87
+        ],
+        [
+          "lp_rate",
+          0.8
+        ]
+      ],
+      "sentence": "For Persister \u00d7 RSL3, the LP cascade parameters dominate: lp_propagation (PRCC = +0.92), gpx4_rate (\u22120.87), and lp_rate (+0.80) \u2014 the death outcome is a balance between LP accumulation and enzymatic repair, with five parameters showing |PRCC| > 0.4"
+    },
+    "sdt": {
+      "condition": "Persister/SDT",
+      "dominant": "sdt_ros",
+      "dominant_quoted": 0.63,
+      "others_below": 0.16,
+      "sentence": "For Persister \u00d7 SDT, a single parameter dominates: sdt_ros (+0.63, exogenous ROS dose); all other parameters have |PRCC| < 0.16"
+    }
+  },
+  "per_condition": {
+    "Glycolytic/RSL3": {
+      "admissible": {
+        "coefficients": null,
+        "mean": 0.0,
+        "ranking": null,
+        "std": 0.0
+      },
+      "conditioned_on": false,
+      "degenerate_under_conditioning": true,
+      "full": {
+        "coefficients": {
+          "death_threshold": -0.016725460982931997,
+          "fenton_rate": -0.010267001477633384,
+          "fsp1_rate": -0.05221608552969582,
+          "gpx4_degradation_by_ros": -0.018587602007742732,
+          "gpx4_rate": -0.061785268715530986,
+          "gsh_scav_efficiency": -0.033533368854309714,
+          "lp_propagation": 0.0432505017576638,
+          "lp_rate": 0.05508598684315322,
+          "nrf2_gsh_rate": -0.036933826096271744,
+          "rsl3_gpx4_inhib": 0.041479334431252526,
+          "sdt_ros": -0.010860461281339155
+        },
+        "deaths": 4,
+        "mean": 2e-06,
+        "ranking": [
+          "gpx4_rate",
+          "lp_rate",
+          "fsp1_rate",
+          "lp_propagation",
+          "rsl3_gpx4_inhib",
+          "nrf2_gsh_rate",
+          "gsh_scav_efficiency",
+          "gpx4_degradation_by_ros",
+          "death_threshold",
+          "sdt_ros",
+          "fenton_rate"
+        ],
+        "std": 5.4735728733616044e-05
+      },
+      "published_mean": 2e-06,
+      "withheld_for_too_few_draws": false
+    },
+    "Glycolytic/SDT": {
+      "admissible": {
+        "coefficients": {
+          "death_threshold": -0.5001114521229153,
+          "fenton_rate": -0.009939606253826318,
+          "fsp1_rate": -0.5808394271586872,
+          "gpx4_degradation_by_ros": 0.16787119261098155,
+          "gpx4_rate": -0.20571344023874072,
+          "gsh_scav_efficiency": 0.23960793424439625,
+          "lp_propagation": 0.5680344813753391,
+          "lp_rate": 0.8486976630288965,
+          "nrf2_gsh_rate": -0.18485314132900826,
+          "rsl3_gpx4_inhib": -0.029562444906713715,
+          "sdt_ros": 0.9393898024132123
+        },
+        "mean": 0.7071950059453032,
+        "ranking": [
+          "sdt_ros",
+          "lp_rate",
+          "fsp1_rate",
+          "lp_propagation",
+          "death_threshold",
+          "gsh_scav_efficiency",
+          "gpx4_rate",
+          "nrf2_gsh_rate",
+          "gpx4_degradation_by_ros",
+          "rsl3_gpx4_inhib",
+          "fenton_rate"
+        ],
+        "std": 0.35311415665845225
+      },
+      "conditioned_on": false,
+      "degenerate_under_conditioning": false,
+      "full": {
+        "coefficients": {
+          "death_threshold": -0.35778601577321173,
+          "fenton_rate": 0.012788880294671297,
+          "fsp1_rate": -0.48563721500375273,
+          "gpx4_degradation_by_ros": 0.09723075131047604,
+          "gpx4_rate": -0.18586500062996061,
+          "gsh_scav_efficiency": 0.21777597269921362,
+          "lp_propagation": 0.510218108155174,
+          "lp_rate": 0.7555009972195523,
+          "nrf2_gsh_rate": -0.20696650683121295,
+          "rsl3_gpx4_inhib": -0.014982151410054963,
+          "sdt_ros": 0.901799781529604
+        },
+        "deaths": 1632245,
+        "mean": 0.8161225,
+        "ranking": [
+          "sdt_ros",
+          "lp_rate",
+          "lp_propagation",
+          "fsp1_rate",
+          "death_threshold",
+          "gsh_scav_efficiency",
+          "nrf2_gsh_rate",
+          "gpx4_rate",
+          "gpx4_degradation_by_ros",
+          "rsl3_gpx4_inhib",
+          "fenton_rate"
+        ],
+        "std": 0.2946154977148181
+      },
+      "published_mean": 0.8161225,
+      "withheld_for_too_few_draws": false
+    },
+    "Persister/Control": {
+      "admissible": {
+        "coefficients": {
+          "death_threshold": -0.1543813570075648,
+          "fenton_rate": 0.29992162241768294,
+          "fsp1_rate": -0.11103278448017115,
+          "gpx4_degradation_by_ros": -0.010186467503860106,
+          "gpx4_rate": -0.6660469106478795,
+          "gsh_scav_efficiency": 0.7924957066785693,
+          "lp_propagation": 0.7221921154458519,
+          "lp_rate": 0.5980180798843097,
+          "nrf2_gsh_rate": -0.4417204987808016,
+          "rsl3_gpx4_inhib": -0.04131491122975846,
+          "sdt_ros": -0.03000784916947008
+        },
+        "mean": 0.004563614744351962,
+        "ranking": [
+          "gsh_scav_efficiency",
+          "lp_propagation",
+          "gpx4_rate",
+          "lp_rate",
+          "nrf2_gsh_rate",
+          "fenton_rate",
+          "death_threshold",
+          "fsp1_rate",
+          "rsl3_gpx4_inhib",
+          "sdt_ros",
+          "gpx4_degradation_by_ros"
+        ],
+        "std": 0.005248050043986064
+      },
+      "conditioned_on": true,
+      "degenerate_under_conditioning": false,
+      "full": {
+        "coefficients": {
+          "death_threshold": -0.27409397533447516,
+          "fenton_rate": 0.31825034246173156,
+          "fsp1_rate": -0.21139408212558944,
+          "gpx4_degradation_by_ros": -0.01235306095586062,
+          "gpx4_rate": -0.8060884593924735,
+          "gsh_scav_efficiency": 0.9093154134755123,
+          "lp_propagation": 0.8321879014335,
+          "lp_rate": 0.7269608392697792,
+          "nrf2_gsh_rate": -0.7017309233811225,
+          "rsl3_gpx4_inhib": -0.00991515090486194,
+          "sdt_ros": -0.010871756902321176
+        },
+        "deaths": 292875,
+        "mean": 0.1464375,
+        "ranking": [
+          "gsh_scav_efficiency",
+          "lp_propagation",
+          "gpx4_rate",
+          "lp_rate",
+          "nrf2_gsh_rate",
+          "fenton_rate",
+          "death_threshold",
+          "fsp1_rate",
+          "gpx4_degradation_by_ros",
+          "sdt_ros",
+          "rsl3_gpx4_inhib"
+        ],
+        "std": 0.21118170871017689
+      },
+      "published_mean": 0.1464375,
+      "withheld_for_too_few_draws": false
+    },
+    "Persister/RSL3": {
+      "admissible": {
+        "coefficients": {
+          "death_threshold": -0.049161804265334556,
+          "fenton_rate": 0.29551077058861724,
+          "fsp1_rate": -0.3396260233095415,
+          "gpx4_degradation_by_ros": -0.02305893742117878,
+          "gpx4_rate": -0.8495334338593818,
+          "gsh_scav_efficiency": 0.27639328109647465,
+          "lp_propagation": 0.9299734504655617,
+          "lp_rate": 0.8315203144764842,
+          "nrf2_gsh_rate": -0.2632652990924292,
+          "rsl3_gpx4_inhib": 0.7176446911992543,
+          "sdt_ros": 0.018215927103612098
+        },
+        "mean": 0.2802128418549346,
+        "ranking": [
+          "lp_propagation",
+          "gpx4_rate",
+          "lp_rate",
+          "rsl3_gpx4_inhib",
+          "fsp1_rate",
+          "fenton_rate",
+          "gsh_scav_efficiency",
+          "nrf2_gsh_rate",
+          "death_threshold",
+          "gpx4_degradation_by_ros",
+          "sdt_ros"
+        ],
+        "std": 0.2629053190393852
+      },
+      "conditioned_on": false,
+      "degenerate_under_conditioning": false,
+      "full": {
+        "coefficients": {
+          "death_threshold": -0.1484325496910473,
+          "fenton_rate": 0.3105388239590157,
+          "fsp1_rate": -0.38561446229504204,
+          "gpx4_degradation_by_ros": 0.020508438147114574,
+          "gpx4_rate": -0.8725958821278995,
+          "gsh_scav_efficiency": 0.3789018708203909,
+          "lp_propagation": 0.9168003851055423,
+          "lp_rate": 0.7953609820350326,
+          "nrf2_gsh_rate": -0.43922542231145123,
+          "rsl3_gpx4_inhib": 0.6137463078890243,
+          "sdt_ros": -0.009392188361437842
+        },
+        "deaths": 1043424,
+        "mean": 0.521712,
+        "ranking": [
+          "lp_propagation",
+          "gpx4_rate",
+          "lp_rate",
+          "rsl3_gpx4_inhib",
+          "nrf2_gsh_rate",
+          "fsp1_rate",
+          "gsh_scav_efficiency",
+          "fenton_rate",
+          "death_threshold",
+          "gpx4_degradation_by_ros",
+          "sdt_ros"
+        ],
+        "std": 0.32728746700110595
+      },
+      "published_mean": 0.521712,
+      "withheld_for_too_few_draws": false
+    },
+    "Persister/SDT": {
+      "admissible": {
+        "coefficients": {
+          "death_threshold": -0.057894798492631794,
+          "fenton_rate": 0.04405670439672763,
+          "fsp1_rate": -0.02438397493008364,
+          "gpx4_degradation_by_ros": -0.03589710347968794,
+          "gpx4_rate": -0.1129819538788087,
+          "gsh_scav_efficiency": 0.197569344382826,
+          "lp_propagation": 0.1670507795200122,
+          "lp_rate": 0.18554324716860057,
+          "nrf2_gsh_rate": -0.07354279310387836,
+          "rsl3_gpx4_inhib": -0.00867919881672822,
+          "sdt_ros": 0.7302127785331388
+        },
+        "mean": 0.9959262782401903,
+        "ranking": [
+          "sdt_ros",
+          "gsh_scav_efficiency",
+          "lp_rate",
+          "lp_propagation",
+          "gpx4_rate",
+          "nrf2_gsh_rate",
+          "death_threshold",
+          "fenton_rate",
+          "gpx4_degradation_by_ros",
+          "fsp1_rate",
+          "rsl3_gpx4_inhib"
+        ],
+        "std": 0.014321492510972634
+      },
+      "conditioned_on": false,
+      "degenerate_under_conditioning": false,
+      "full": {
+        "coefficients": {
+          "death_threshold": -0.051910233642554114,
+          "fenton_rate": 0.028038975429878807,
+          "fsp1_rate": -0.02321154672911869,
+          "gpx4_degradation_by_ros": -0.008711396826249215,
+          "gpx4_rate": -0.10960994934375522,
+          "gsh_scav_efficiency": 0.1582472975306009,
+          "lp_propagation": 0.12479921805681773,
+          "lp_rate": 0.11844233150695954,
+          "nrf2_gsh_rate": -0.053964398985192716,
+          "rsl3_gpx4_inhib": 0.004402972131062364,
+          "sdt_ros": 0.629451040395026
+        },
+        "deaths": 1996007,
+        "mean": 0.9980035,
+        "ranking": [
+          "sdt_ros",
+          "gsh_scav_efficiency",
+          "lp_propagation",
+          "lp_rate",
+          "gpx4_rate",
+          "nrf2_gsh_rate",
+          "death_threshold",
+          "fenton_rate",
+          "fsp1_rate",
+          "gpx4_degradation_by_ros",
+          "rsl3_gpx4_inhib"
+        ],
+        "std": 0.009578647490642926
+      },
+      "published_mean": 0.9980035,
+      "withheld_for_too_few_draws": false
+    },
+    "PersisterNrf2/SDT": {
+      "admissible": {
+        "coefficients": {
+          "death_threshold": -0.22817788951414442,
+          "fenton_rate": 0.0164670784744219,
+          "fsp1_rate": -0.02617781662616507,
+          "gpx4_degradation_by_ros": 0.11249216291294695,
+          "gpx4_rate": -0.3404229782809319,
+          "gsh_scav_efficiency": 0.48011687008622217,
+          "lp_propagation": 0.34313883232355735,
+          "lp_rate": 0.5441657055737953,
+          "nrf2_gsh_rate": -0.3418976187398926,
+          "rsl3_gpx4_inhib": -0.01859602079143676,
+          "sdt_ros": 0.9287416834182909
+        },
+        "mean": 0.897781212841855,
+        "ranking": [
+          "sdt_ros",
+          "lp_rate",
+          "gsh_scav_efficiency",
+          "lp_propagation",
+          "nrf2_gsh_rate",
+          "gpx4_rate",
+          "death_threshold",
+          "gpx4_degradation_by_ros",
+          "fsp1_rate",
+          "rsl3_gpx4_inhib",
+          "fenton_rate"
+        ],
+        "std": 0.20421192083852482
+      },
+      "conditioned_on": false,
+      "degenerate_under_conditioning": false,
+      "full": {
+        "coefficients": {
+          "death_threshold": -0.10010917891997101,
+          "fenton_rate": 0.006905592968331278,
+          "fsp1_rate": -0.013809552507505322,
+          "gpx4_degradation_by_ros": 0.05161168028596966,
+          "gpx4_rate": -0.22832243037232955,
+          "gsh_scav_efficiency": 0.3526955928461308,
+          "lp_propagation": 0.24076605008604204,
+          "lp_rate": 0.2869455066586857,
+          "nrf2_gsh_rate": -0.26075148813560434,
+          "rsl3_gpx4_inhib": -0.010265935526713402,
+          "sdt_ros": 0.8467046167124141
+        },
+        "deaths": 1896978,
+        "mean": 0.9484889999999999,
+        "ranking": [
+          "sdt_ros",
+          "gsh_scav_efficiency",
+          "lp_rate",
+          "nrf2_gsh_rate",
+          "lp_propagation",
+          "gpx4_rate",
+          "death_threshold",
+          "gpx4_degradation_by_ros",
+          "fsp1_rate",
+          "rsl3_gpx4_inhib",
+          "fenton_rate"
+        ],
+        "std": 0.14447932336151081
+      },
+      "published_mean": 0.9484889999999999,
+      "withheld_for_too_few_draws": false
+    }
+  },
+  "reproduction": {
+    "max_coefficient_deviation": 3.3306690738754696e-16,
+    "n_coefficients": 66,
+    "reproduces": true,
+    "tolerance": 1e-12
+  },
+  "resolution": {
+    "band": {
+      "1000": {
+        "counts": [
+          785,
+          909,
+          843
+        ],
+        "high": 0.4545,
+        "low": 0.3925,
+        "mean_fraction": 0.42283333333333334,
+        "spread_draws": 124
+      },
+      "2000": {
+        "counts": [
+          774,
+          883,
+          850
+        ],
+        "high": 0.4415,
+        "low": 0.387,
+        "mean_fraction": 0.41783333333333333,
+        "spread_draws": 109
+      },
+      "8000": {
+        "counts": [
+          770,
+          803,
+          781
+        ],
+        "high": 0.4015,
+        "low": 0.385,
+        "mean_fraction": 0.3923333333333333,
+        "spread_draws": 33
+      }
+    },
+    "conventions": [
+      "worst_untreated_n1000_seed42",
+      "worst_untreated_n1000_seed7",
+      "worst_untreated_n1000_seed1234",
+      "worst_untreated_n2000_seed42",
+      "worst_untreated_n2000_seed7",
+      "worst_untreated_n2000_seed1234",
+      "worst_untreated_n8000_seed42",
+      "worst_untreated_n8000_seed7",
+      "worst_untreated_n8000_seed1234"
+    ],
+    "falls_with_cell_count": true
+  },
+  "scored": {
+    "rsl3_count": {
+      "admissible": 4,
+      "bound": 0.4,
+      "claimed": 5,
+      "full": 5,
+      "holds_admissible": false,
+      "holds_full": true,
+      "named": [
+        "lp_propagation",
+        "gpx4_rate",
+        "lp_rate"
+      ],
+      "named_still_top": true
+    },
+    "sdt_bound": {
+      "bound": 0.16,
+      "breaches_admissible": [
+        [
+          "gsh_scav_efficiency",
+          0.197569344382826
+        ],
+        [
+          "lp_rate",
+          0.18554324716860057
+        ],
+        [
+          "lp_propagation",
+          0.1670507795200122
+        ]
+      ],
+      "breaches_full": [],
+      "dominant": "sdt_ros",
+      "dominant_admissible": 0.7302127785331388,
+      "dominant_full": 0.629451040395026,
+      "holds_admissible": false,
+      "holds_full": true,
+      "still_dominant_admissible": true
+    }
+  },
+  "selection": {
+    "death_threshold": {
+      "admissible_mean_fraction": 0.5266054325519492,
+      "drug": false,
+      "full_mean_fraction": 0.49999355911706106,
+      "shift": 0.02661187343488819,
+      "strongly_selected": false
+    },
+    "fenton_rate": {
+      "admissible_mean_fraction": 0.4761604981697979,
+      "drug": false,
+      "full_mean_fraction": 0.49999931846457507,
+      "shift": -0.023838820294777185,
+      "strongly_selected": false
+    },
+    "fsp1_rate": {
+      "admissible_mean_fraction": 0.5229009928469908,
+      "drug": false,
+      "full_mean_fraction": 0.49999234860733466,
+      "shift": 0.022908644239656106,
+      "strongly_selected": false
+    },
+    "gpx4_degradation_by_ros": {
+      "admissible_mean_fraction": 0.5053858026653151,
+      "drug": false,
+      "full_mean_fraction": 0.4999974215203916,
+      "shift": 0.00538838114492346,
+      "strongly_selected": false
+    },
+    "gpx4_rate": {
+      "admissible_mean_fraction": 0.603247608270189,
+      "drug": false,
+      "full_mean_fraction": 0.500000657261089,
+      "shift": 0.10324695100909997,
+      "strongly_selected": true
+    },
+    "gsh_scav_efficiency": {
+      "admissible_mean_fraction": 0.32005961863117566,
+      "drug": false,
+      "full_mean_fraction": 0.49999708137351595,
+      "shift": -0.1799374627423403,
+      "strongly_selected": true
+    },
+    "lp_propagation": {
+      "admissible_mean_fraction": 0.384235518872302,
+      "drug": false,
+      "full_mean_fraction": 0.4999987773523895,
+      "shift": -0.1157632584800875,
+      "strongly_selected": true
+    },
+    "lp_rate": {
+      "admissible_mean_fraction": 0.414439982279926,
+      "drug": false,
+      "full_mean_fraction": 0.5000037445461274,
+      "shift": -0.08556376226620138,
+      "strongly_selected": false
+    },
+    "nrf2_gsh_rate": {
+      "admissible_mean_fraction": 0.5723506069560808,
+      "drug": false,
+      "full_mean_fraction": 0.5000060846906387,
+      "shift": 0.07234452226544208,
+      "strongly_selected": false
+    },
+    "rsl3_gpx4_inhib": {
+      "admissible_mean_fraction": 0.4947848365008566,
+      "drug": true,
+      "full_mean_fraction": 0.49999575895003145,
+      "shift": -0.005210922449174871,
+      "strongly_selected": false
+    },
+    "sdt_ros": {
+      "admissible_mean_fraction": 0.5016304007980055,
+      "drug": true,
+      "full_mean_fraction": 0.4999981690374946,
+      "shift": 0.0016322317605108605,
+      "strongly_selected": false
+    }
+  },
+  "sobol_design": {
+    "a_admissible_fraction": 0.40673828125,
+    "b_admissible_fraction": 0.396484375,
+    "control": [
+      {
+        "condition": "Glycolytic/Control",
+        "high": 0.0,
+        "identical": true,
+        "low": 0.0
+      },
+      {
+        "condition": "Persister/Control",
+        "high": 0.0415,
+        "identical": true,
+        "low": 0.0415
+      },
+      {
+        "condition": "PersisterNrf2/Control",
+        "high": 0.0,
+        "identical": true,
+        "low": 0.0
+      }
+    ],
+    "excluded": [
+      "sdt_ros"
+    ],
+    "n_base": 2048,
+    "n_cells": 2000,
+    "sdt_ros_inert": true,
+    "seed": 42,
+    "straddle": {
+      "death_threshold": {
+        "admissible_fraction": 0.40869140625,
+        "straddling": 60,
+        "straddling_fraction": 0.029296875
+      },
+      "fenton_rate": {
+        "admissible_fraction": 0.40234375,
+        "straddling": 83,
+        "straddling_fraction": 0.04052734375
+      },
+      "fsp1_rate": {
+        "admissible_fraction": 0.40625,
+        "straddling": 39,
+        "straddling_fraction": 0.01904296875
+      },
+      "gpx4_degradation_by_ros": {
+        "admissible_fraction": 0.40673828125,
+        "straddling": 0,
+        "straddling_fraction": 0.0
+      },
+      "gpx4_rate": {
+        "admissible_fraction": 0.39599609375,
+        "straddling": 328,
+        "straddling_fraction": 0.16015625
+      },
+      "gsh_scav_efficiency": {
+        "admissible_fraction": 0.4091796875,
+        "straddling": 633,
+        "straddling_fraction": 0.30908203125
+      },
+      "lp_propagation": {
+        "admissible_fraction": 0.38525390625,
+        "straddling": 382,
+        "straddling_fraction": 0.1865234375
+      },
+      "lp_rate": {
+        "admissible_fraction": 0.40966796875,
+        "straddling": 272,
+        "straddling_fraction": 0.1328125
+      },
+      "nrf2_gsh_rate": {
+        "admissible_fraction": 0.4033203125,
+        "straddling": 253,
+        "straddling_fraction": 0.12353515625
+      },
+      "rsl3_gpx4_inhib": {
+        "admissible_fraction": 0.40673828125,
+        "straddling": 0,
+        "straddling_fraction": 0.0
+      }
+    },
+    "straddle_max": 0.30908203125,
+    "straddle_min": 0.0
+  },
+  "stratification": {
+    "death_threshold": {
+      "admissible": 0.04848218830119699,
+      "full": 0.0004999374306666471,
+      "times_null": 1.033811368187289
+    },
+    "fenton_rate": {
+      "admissible": 0.04187130620149815,
+      "full": 0.0004998588366666445,
+      "times_null": 0.8928440292966516
+    },
+    "fsp1_rate": {
+      "admissible": 0.03990634587357206,
+      "full": 0.0004999953500001153,
+      "times_null": 0.8509441399511689
+    },
+    "gpx4_degradation_by_ros": {
+      "admissible": 0.022035292454451016,
+      "full": 0.0004997252600000834,
+      "times_null": 0.4698702067493231
+    },
+    "gpx4_rate": {
+      "admissible": 0.1641427638904691,
+      "full": 0.0004999463333333898,
+      "times_null": 3.5001030535467677
+    },
+    "gsh_scav_efficiency": {
+      "admissible": 0.2913448793708712,
+      "full": 0.0004999846400000063,
+      "times_null": 6.212501104231813
+    },
+    "lp_propagation": {
+      "admissible": 0.18108863844688883,
+      "full": 0.0004998178126666697,
+      "times_null": 3.8614489080586587
+    },
+    "lp_rate": {
+      "admissible": 0.13324081117223013,
+      "full": 0.0004998706366666772,
+      "times_null": 2.8411643558784365
+    },
+    "nrf2_gsh_rate": {
+      "admissible": 0.11653043470283625,
+      "full": 0.0004999759386667968,
+      "times_null": 2.4848401517516554
+    },
+    "rsl3_gpx4_inhib": {
+      "admissible": 0.015960317976331684,
+      "full": 0.0004998044368419996,
+      "times_null": 0.3403303097894256
+    },
+    "sdt_ros": {
+      "admissible": 0.01690690002716444,
+      "full": 0.0004999271159999985,
+      "times_null": 0.36051477999100645
+    }
+  },
+  "stratification_lost": [
+    "death_threshold",
+    "gpx4_rate",
+    "gsh_scav_efficiency",
+    "lp_propagation",
+    "lp_rate",
+    "nrf2_gsh_rate"
+  ],
+  "stratification_null": {
+    "admissible": 0.04689655172413793,
+    "coefficient": 1.36,
+    "full": 0.03041052449399714,
+    "level": 0.05
+  },
+  "thresholds": {
+    "degenerate_std": 1e-10,
+    "ks_coefficient": 1.36,
+    "ks_level": 0.05,
+    "strong_selection": 0.1
+  }
+}

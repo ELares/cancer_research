@@ -21,6 +21,7 @@
    "modality-tme",
    "osf-registration-package",
    "pathway-target-audit",
+   "prcc-under-admissibility",
    "principle-resistance-tradeoff",
    "resistant-state-design",
    "resistant-state-map",
@@ -189,7 +190,7 @@
   "top_mechanism": "immunotherapy",
   "top_n": 2297
  },
- "n_analyses": 160,
+ "n_analyses": 161,
  "n_predictions": 29,
  "n_predictions_ferroptosis": 10,
  "n_therapy_subject": 1,

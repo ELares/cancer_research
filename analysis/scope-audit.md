@@ -6,7 +6,7 @@
 
 | | ferroptosis / physical-ROS | other therapy | method |
 |---|--:|--:|--:|
-| committed analyses (160) | 26 | **1** | 133 |
+| committed analyses (161) | 27 | **1** | 133 |
 
 | preregistered predictions | **10 of 29** |
 |---|--:|
@@ -48,7 +48,7 @@ Note also that method analyses -- the largest bucket -- are about the INSTRUMENT
 
 - `radioligand-audit`
 
-**ferroptosis-or-physical** (26):
+**ferroptosis-or-physical** (27):
 
 - `arm-parity`
 - `atlas-discovery-gpx4`
@@ -70,6 +70,7 @@ Note also that method analyses -- the largest bucket -- are about the INSTRUMENT
 - `modality-tme`
 - `osf-registration-package`
 - `pathway-target-audit`
+- `prcc-under-admissibility`
 - `principle-resistance-tradeoff`
 - `resistant-state-design`
 - `resistant-state-map`

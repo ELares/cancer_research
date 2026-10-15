@@ -75,6 +75,11 @@ IN_SCOPE = {
     # never runs in CI (compiled binaries), so only a source assertion can say
     # that the page measures the PUBLISHED observables rather than a local copy
     "test_headline_intervals_under_admissibility.py",
+    # #944: its load-bearing property is a REPRODUCTION of a committed
+    # artifact's own coefficients, and its measurement half never runs in CI,
+    # so only a source assertion can say that the page derives from the
+    # published design rather than from a local restatement of it
+    "test_prcc_under_admissibility.py",
     "test_ingest_sensitivity.py",
     "test_untagged_partner.py",
     "test_modality_ratio.py",

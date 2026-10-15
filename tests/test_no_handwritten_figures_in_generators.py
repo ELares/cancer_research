@@ -84,6 +84,11 @@ GENERATORS = [
     # "95%" naming its own confidence interval -- which would have gone stale
     # the moment anyone changed the bootstrap quantiles. Derived now.
     REPO_ROOT / "scripts" / "trial_isoeffect_sweep.py",
+    # enrolled on arrival (#944): the page's subject is a published figure that
+    # outlived the constraint it was measured under, and it scores two figures
+    # PARSED from the manuscript -- so a figure hand-written here could
+    # contradict either the artifact it corrects or the sentence it quotes.
+    REPO_ROOT / "scripts" / "prcc_under_admissibility.py",
 ]
 
 
