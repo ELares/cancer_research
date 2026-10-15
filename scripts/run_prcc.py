@@ -24,12 +24,29 @@ from pathlib import Path
 import numpy as np
 from scipy.stats import rankdata
 
-try:
-    import ferroptosis_core as fc
-except ImportError:
-    print("ERROR: ferroptosis_core Python bindings not installed.")
-    print("Run: cd simulations && maturin develop -m ferroptosis-python/Cargo.toml --release")
-    raise SystemExit(1)
+# The compiled `ferroptosis_core` extension is imported LAZILY, so this module
+# can be IMPORTED without it while only `main` (which evaluates the model) needs
+# it -- the same arrangement `sobol_sensitivity.py` uses and for the same reason:
+# the Python CI does not build the extension, and a consumer that reads this
+# module's design constants (`PARAM_RANGES`, `CONDITIONS`, `compute_prcc`,
+# `latin_hypercube_sample`) must not be forced to restate them. Importing at
+# module scope exited the process, so `scripts/prcc_under_admissibility.py`
+# could not derive its page in CI at all. The failure message and exit status
+# are unchanged, and still fire from `main` when the extension is absent.
+_FC = None
+
+
+def _fc():
+    global _FC
+    if _FC is None:
+        try:
+            import ferroptosis_core
+        except ImportError:
+            print("ERROR: ferroptosis_core Python bindings not installed.")
+            print("Run: cd simulations && maturin develop -m ferroptosis-python/Cargo.toml --release")
+            raise SystemExit(1)
+        _FC = ferroptosis_core
+    return _FC
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 OUTPUT_FILE = PROJECT_ROOT / "analysis" / "prcc-results.json"
@@ -122,6 +139,7 @@ def main():
     print(f"PRCC Analysis: {args.samples} LHS samples × {len(CONDITIONS)} conditions × {args.cells} cells/condition")
     print(f"Parameters: {len(param_names)}, Seed: {args.seed}\n")
 
+    fc = _fc()
     X = latin_hypercube_sample(args.samples, ranges, seed=args.seed)
 
     all_results = {

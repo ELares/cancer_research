@@ -1,0 +1,22 @@
+{
+  "sdt_ros_inert_untreated": [
+    {
+      "condition": "Glycolytic/Control",
+      "low": 0.0,
+      "high": 0.0,
+      "identical": true
+    },
+    {
+      "condition": "Persister/Control",
+      "low": 0.0415,
+      "high": 0.0415,
+      "identical": true
+    },
+    {
+      "condition": "PersisterNrf2/Control",
+      "low": 0.0,
+      "high": 0.0,
+      "identical": true
+    }
+  ]
+}

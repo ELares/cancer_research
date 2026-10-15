@@ -131,6 +131,79 @@ def saltelli_indices(n_base=N_BASE):
     return sobol_indices(evaluate, lows, highs, n_base, RNG_SEED)
 
 
+CONDITIONED = REPO / "analysis" / "prcc-under-admissibility.json"
+
+
+def admissibility_note(non_identifiable):
+    """What #944 measured about THIS design, read from its artifact.
+
+    This report publishes a practical-identifiability verdict -- a parameter the
+    kill observable is insensitive to "cannot be constrained by kill-rate
+    calibration data and must not be presented as if it were" -- over a
+    Saltelli design nobody had checked against the model's own
+    baseline-viability constraint. Deriving the qualification from the sibling
+    artifact rather than writing it here is what stops the two pages drifting;
+    fail-open, because an absent artifact must not block regenerating this one.
+    """
+    if not CONDITIONED.exists():
+        return []
+    d = json.loads(CONDITIONED.read_text())
+    sd = d["sobol_design"]
+    straddle = sd["straddle"]
+    if not straddle:
+        return []
+    worst = max(straddle, key=lambda k: straddle[k]["straddling_fraction"])
+    zero = sorted(k for k, v in straddle.items() if v["straddling"] == 0)
+    out = [
+        "",
+        "## This design is not conditioned on the model being viable",
+        "",
+        f"`analysis/prcc-under-admissibility.md` (#944) judges every row of the "
+        f"A and B samples above against the manuscript's own untreated-viability "
+        f"constraint: **{100 * sd['a_admissible_fraction']:.1f}% and "
+        f"{100 * sd['b_admissible_fraction']:.1f}% of them are admissible**. The "
+        f"estimator does not consume rows, though -- Jansen's total effect "
+        f"differences each A row against the same row with one column swapped in "
+        f"from B -- so what matters is how many of those PAIRS straddle the "
+        f"constraint, one side a cell the model says is already dead untreated "
+        f"and the other not:",
+        "",
+    ]
+    for nm, v in sorted(straddle.items(),
+                        key=lambda kv: -kv[1]["straddling_fraction"]):
+        out.append(f"- `{nm}`: {v['straddling']} of {d['sobol_design']['n_base']} "
+                   f"pairs ({100 * v['straddling_fraction']:.1f}%)")
+    out += [
+        "",
+        f"**The indices above cannot be corrected for this by filtering.** "
+        f"Dropping straddling pairs would strip `{worst}` of "
+        f"{100 * straddle[worst]['straddling_fraction']:.1f}% of its pairs and "
+        + (", ".join(f"`{z}`" for z in zero) + " of none"
+           if zero else "others of far fewer")
+        + ", so the filtered estimator would compare a parameter stripped of its "
+          "largest moves against one left intact; and re-running Saltelli inside "
+          "the admissible region is not available either, because admissibility "
+          "is a constraint surface rather than a box and rejection sampling "
+          "breaks the column independence between A and B that the estimator "
+          "assumes. The design can be characterised and not conditioned.",
+        "",
+    ]
+    if worst in non_identifiable:
+        out += [
+            f"**`{worst}` is the case to read carefully.** It is flagged "
+            f"insensitive above, it is the highest-straddling parameter here, "
+            f"and the PRCC's own `Persister/Control` row ranks it first as a "
+            f"driver of untreated death. The insensitivity verdict SURVIVES "
+            f"conditioning -- #944 measures its coefficient on the inducer arm "
+            f"falling rather than rising -- so what does not carry over is the "
+            f"reading that the parameter does not matter: its influence lands "
+            f"on untreated viability rather than on treatment response, which "
+            f"is a thing the kill observable cannot see.",
+            "",
+        ]
+    return out
+
+
 def main():
     s1, st, var, ymean = saltelli_indices()
     names = [p[0] for p in PARAMS]
@@ -242,6 +315,8 @@ def main():
         "is, like for the PRCC, not in the screened set.",
         "",
     ]
+    lines += admissibility_note(set(non_ident))
+
     REPORT.write_text("\n".join(lines) + "\n")
     print(f"wrote {REPORT}")
 
