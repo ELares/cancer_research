@@ -355,3 +355,98 @@ def test_committed_artifacts_reconstruct_and_match_current_frozen_inputs():
     rebuilt = agreement.assemble(stored["snapshot"])
     assert stored == rebuilt
     assert agreement.OUT_MD.read_text() == agreement.render(rebuilt)
+
+
+# ---------------------------------------------------------------------------
+# #955: the commit-SHA provenance field is gone, and the gate is no weaker
+# ---------------------------------------------------------------------------
+
+def test_the_unsatisfiable_commit_field_is_gone_in_both_directions():
+    """Retired wording absent AND the replacement present, not just one.
+
+    `input_last_changed_commit` held `git log -1 -- <inputs>`, which at
+    generation time can only name the commit BEFORE the change it is being
+    generated for -- so it went stale the moment that change merged and took
+    the equality gate below red with nothing else moved. A correction verified
+    only by its replacement cannot tell a fix from a fix shipped beside a
+    re-added original, so both halves are asserted.
+    """
+    provenance = agreement.load_snapshot()["provenance"]
+    assert "input_last_changed_commit" not in provenance
+    assert "input_last_changed_commit" not in agreement.OUT_MD.read_text()
+    assert "input_last_changed_commit" not in agreement.OUT_JSON.read_text()
+
+    # The replacement is not a new field: it is the content hashes that were
+    # always there and always carried the guarantee.
+    for key in ("index_sha256", "descriptor_map_sha256", "map_semantics_sha256",
+                "article_frontmatter_manifest_sha256"):
+        assert provenance.get(key), f"{key} must still pin its input"
+
+    source = (REPO / "scripts" / "paired_partner_agreement.py").read_text()
+    assert "_input_revision" not in source, "the dead helper must go with it"
+    # Structural, not textual. A first version asserted the word "git" was
+    # absent and failed on the COMMENT explaining why git is not consulted --
+    # it tested the explanation rather than the code. `subprocess` was the
+    # only shell-out route, so its absence is the checkable property:
+    # committed-ness is not a precondition of this generator, which is exactly
+    # why a commit SHA cannot be recorded here correctly.
+    assert "subprocess" not in source, (
+        "this generator must not shell out; if it needs committed-ness it has "
+        "to REFUSE to run on a dirty input, the way proposal_correlated_study "
+        "does, rather than record a SHA it cannot know yet")
+
+
+@pytest.mark.parametrize("target", ["index", "articles", "map"])
+def test_every_input_still_moves_the_snapshot_without_the_commit_field(
+        corpus_files, target):
+    """The guarantee the removed field appeared to provide, measured.
+
+    Dropping a provenance field is only safe if staleness is still caught, so
+    each input is doctored in turn and the snapshot must differ -- which is
+    what makes the equality assertion in the freshness gate bite.
+    """
+    index, articles, mapping = corpus_files
+    before = agreement.load_snapshot(index, articles, mapping)
+
+    if target == "index":
+        # A BYTE change that is semantically identical -- the same row with
+        # its keys in the other order. Two stronger-looking edits both test
+        # the wrong thing: renaming a PMID breaks the index/article join, and
+        # changing the mechanism list trips the index/frontmatter consistency
+        # check, so each raises instead of producing a snapshot and would
+        # exercise the loader's validation rather than the freshness hashes.
+        # Key order is the cleanest isolation, and it demonstrates more: the
+        # hash catches a change the records themselves cannot show.
+        index.write_text(index.read_text().replace(
+            '{"pmid": "303", "mechanisms": ["nanoparticle"]}',
+            '{"mechanisms": ["nanoparticle"], "pmid": "303"}'))
+    elif target == "articles":
+        path = articles / "303.md"
+        path.write_text(path.read_text().replace("mesh_terms: []",
+                                                 "mesh_terms:\n- Nanoparticles"))
+    else:
+        mapping.write_text(mapping.read_text().replace(
+            "Nanoparticles", "Nanotubes, Carbon"))
+
+    after = agreement.load_snapshot(index, articles, mapping)
+    assert before != after, f"a changed {target} left the snapshot identical"
+    assert before["provenance"] != after["provenance"], (
+        f"a changed {target} did not move any provenance hash, so the "
+        "freshness gate could not see it")
+
+
+def test_a_changed_input_is_caught_by_a_hash_and_not_by_luck(corpus_files):
+    """Name WHICH hash moves, so the gate does not rest on an incidental field."""
+    index, articles, mapping = corpus_files
+    before = agreement.load_snapshot(index, articles, mapping)
+    mapping.write_text(mapping.read_text().replace("Nanoparticles",
+                                                   "Nanotubes, Carbon"))
+    after = agreement.load_snapshot(index, articles, mapping)
+    assert before["provenance"]["descriptor_map_sha256"] \
+        != after["provenance"]["descriptor_map_sha256"]
+    assert before["provenance"]["map_semantics_sha256"] \
+        != after["provenance"]["map_semantics_sha256"]
+    assert before["provenance"]["index_sha256"] \
+        == after["provenance"]["index_sha256"], (
+        "only the changed input's hash should move, or the hashes are not "
+        "telling us which input went stale")

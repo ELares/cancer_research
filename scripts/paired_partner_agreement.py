@@ -15,7 +15,6 @@ import json
 import math
 import os
 import re
-import subprocess
 import sys
 import tempfile
 from collections import Counter
@@ -113,18 +112,6 @@ def _frontmatter(path: Path) -> tuple[dict, str]:
     if not isinstance(data, dict):
         raise InputError(f"{path.name}: frontmatter must be a mapping")
     return data, sha256(raw)
-
-
-def _input_revision(paths: list[Path]) -> str | None:
-    """Pin the last commit touching these inputs, unaffected by report commits."""
-    try:
-        relative = [str(p.resolve().relative_to(REPO)) for p in paths]
-        result = subprocess.run(
-            ["git", "log", "-1", "--format=%H", "--", *relative],
-            cwd=REPO, capture_output=True, text=True, check=True)
-        return result.stdout.strip() or None
-    except (OSError, ValueError, subprocess.CalledProcessError):
-        return None
 
 
 def load_snapshot(index_path=INDEX, article_dir=ARTICLES, map_path=MAP) -> dict:
@@ -229,7 +216,24 @@ def _load_snapshot(index_path: Path, article_dir: Path, map_path: Path) -> dict:
             "index_sha256": sha256(index_bytes),
             "descriptor_map_path": "analysis/mesh-mechanism-map.yaml",
             "descriptor_map_sha256": sha256(map_bytes),
-            "input_last_changed_commit": _input_revision([index_path, article_dir, map_path]),
+            # `input_last_changed_commit` was REMOVED here (#955). It held
+            # `git log -1 -- <inputs>`, which at generation time can only name
+            # the commit BEFORE the change being generated for, so the moment
+            # that change merged the field was stale and the equality gate
+            # below went red on main with nothing else moved -- unsatisfiable
+            # at commit time by construction. It was also redundant: the
+            # content hashes in this block pin every input exactly, and catch
+            # an UNCOMMITTED edit, which a commit SHA cannot. The sibling that
+            # does use git for provenance (`proposal_correlated_study`) gets
+            # it right by making committed-ness a PRECONDITION -- it refuses
+            # to run until the sources are committed -- and still records
+            # content hashes rather than the SHA.
+            #
+            # Nothing is lost by not recording it: `git log -1 -- <inputs>`
+            # answers the same question on demand, and answers it about the
+            # CURRENT history rather than about whatever history existed when
+            # the artifact was last written, which is the version a reader
+            # actually wants.
             "map_semantics_sha256": sha256(json.dumps(
                 {k: descriptors[k] for k in universe}, sort_keys=True,
                 separators=(",", ":")).encode("utf-8")),
@@ -655,7 +659,7 @@ def render(result: dict) -> str:
     lines += ["", "PMID hashes sort string identifiers lexicographically, join them "
               "with newlines and append a final newline.", ""]
     for key in ("index_sha256", "descriptor_map_sha256", "map_semantics_sha256",
-                "article_frontmatter_manifest_sha256", "input_last_changed_commit"):
+                "article_frontmatter_manifest_sha256"):
         if key in provenance:
             lines.append(f"- {key}: `{provenance[key]}`")
     lines.append("")
