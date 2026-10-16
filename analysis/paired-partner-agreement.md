@@ -127,4 +127,3 @@ PMID hashes sort string identifiers lexicographically, join them with newlines a
 - descriptor_map_sha256: `3ea608e868e158d7b3b48e0dfc3232fde8cff721c7d3704ab67272cc31bf3f76`
 - map_semantics_sha256: `880aa93f066c9c6021413674e4734244baa49aaa6e21d8fabcdba8b15372c63e`
 - article_frontmatter_manifest_sha256: `16e62fa30fbcf5c2bd69ea761fe4b6b392838cf3504f8f0c945580256ffb50fc`
-- input_last_changed_commit: `7dcbd4d475a499563ae831a23a61141a799db206`
