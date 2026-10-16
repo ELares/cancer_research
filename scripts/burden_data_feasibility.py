@@ -92,7 +92,11 @@ def probe(url: str) -> dict:
             head = r.read(400)
             status = r.status
     except urllib.error.HTTPError as e:
-        return {"url": url, "status": e.code, "kind": "http-error", "usable": False}
+        # An HTTPError IS the response and the `with` never bound, so take the
+        # status and release the socket rather than returning with it open.
+        code = e.code
+        e.close()
+        return {"url": url, "status": code, "kind": "http-error", "usable": False}
     except Exception as e:
         return {"url": url, "status": None, "kind": type(e).__name__,
                 "usable": False}
