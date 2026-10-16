@@ -439,11 +439,27 @@ def _get(url: str, tries: int = 4, timeout: int = 120,
             # WHICH statuses count is the caller's decision: applied to the
             # SEARCH endpoint a 403 would make an empty page look like the end
             # of a slice, retiring a whole source-year with seen=0.
-            if e.code in refuse:
+            #
+            # AN HTTPError IS THE RESPONSE, NOT A REPORT ABOUT ONE. `urlopen`
+            # RAISES it, so the `with` above never bound and its `__exit__`
+            # never ran: `e` subclasses `addinfourl` and wraps a live socket.
+            # Read everything the retry logic needs, release it, and keep only
+            # the TEXT. Retaining `e` in `last` held the socket past the end of
+            # the loop (it is interpolated into the give-up message below, so
+            # the string was all that was ever wanted), and the scheduled path
+            # below sleeps for HOURS -- previously while still holding it.
+            # Headers survive `close()`, but read them first anyway so the
+            # ordering does not become load-bearing.
+            try:
+                code = e.code
+                reason = str(e)
+                wait = _retry_after(e)
+                long_wait = _long_retry_after(e)
+            finally:
+                e.close()
+            if code in refuse:
                 return None
-            last = e
-            wait = _retry_after(e)
-            long_wait = _long_retry_after(e)
+            last = reason
             if long_wait is not None and scheduled < MAX_SCHEDULED_RETURNS:
                 scheduled += 1
                 print(f"  server asked for {long_wait / 3600:.1f}h "

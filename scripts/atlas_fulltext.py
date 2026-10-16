@@ -169,7 +169,13 @@ def download(url: str, dest: Path) -> Path:
                         break
                     fh.write(chunk)
     except urllib.error.HTTPError as e:
-        if e.code != 416:  # 416 = already complete
+        # An HTTPError IS the response -- `urlopen` raises it, so the `with`
+        # above never bound and never closed anything. Release it before
+        # branching, on BOTH paths: the swallowed 416 falls through to the
+        # return below, where nothing else ever would.
+        code = e.code
+        e.close()
+        if code != 416:  # 416 = already complete
             raise
     return dest
 

@@ -56,7 +56,11 @@ def biorxiv_fulltext_status() -> dict:
             return {"metadata_api": "ok", "fulltext": f"HTTP {r.status}",
                     "bytes": len(r.read()), "reachable": True}
     except urllib.error.HTTPError as e:
-        return {"metadata_api": "ok", "fulltext": f"HTTP {e.code}",
+        # An HTTPError IS the response and the `with` never bound, so take the
+        # status and release the socket rather than returning with it open.
+        code = e.code
+        e.close()
+        return {"metadata_api": "ok", "fulltext": f"HTTP {code}",
                 "reachable": False}
     except Exception as e:  # noqa: BLE001
         return {"metadata_api": "ok", "fulltext": type(e).__name__,

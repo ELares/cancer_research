@@ -154,7 +154,12 @@ def download_resumable(name: str, dest: Path, quiet: bool = False) -> Path:
                     if not quiet and pos % (200 << 20) < (1 << 20):
                         print(f"    {pos / (1 << 30):.1f} GB", flush=True)
     except urllib.error.HTTPError as e:
-        if e.code != 416:
+        # An HTTPError IS the response, and the `with` above never bound, so
+        # nothing closed it. Release it on both paths -- the swallowed 416
+        # falls through to the return below.
+        code = e.code
+        e.close()
+        if code != 416:
             raise
     return dest
 
