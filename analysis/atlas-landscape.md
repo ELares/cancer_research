@@ -229,20 +229,25 @@ physical modalities are. The manuscript's own thesis rests on SDT, so this
 narrows the claim to the mechanism it actually cares about rather than
 weakening it.
 
-## What MeSH cannot see
+## What this map cannot measure
 
-Not every mechanism has a MeSH concept, and reporting those as zero would
-manufacture exactly the false gap this analysis exists to test for. They are
-excluded rather than counted:
+Not every mechanism has a MeSH leaf this map can use as a reference, and
+reporting those as zero would manufacture exactly the false gap this
+analysis exists to test for. They are excluded rather than counted -- and
+the reason is NOT uniformly that MeSH has no descriptor, which is a claim
+about MeSH derived from this file: each row carries the verdict
+`analysis/descriptor-absence-audit.md` checks against the census's whole
+descriptor vocabulary, and for the `name-exact-leaky` rows a descriptor
+exists and a volume count is available.
 
-* `ttfields` -- No TTFields-specific MeSH descriptor (only over-broad Electric Stimulation Therapy); ~38% of its tagger-positives also have empty MeSH.
-* `cold-atmospheric-plasma` -- 'Plasma Gases' (D058626) EXISTS and carries 474 census records with 9 ferroptosis intersections, so the earlier 'no descriptor (n~2)' note here was wrong -- see analysis/atlas-thesis-rank.md. It is still not used for ...
-* `bioelectric` -- Only cell-physiology descriptors (Membrane Potentials / Ion Channels), not the cancer-therapy thesis; pool thin and confounded.
-* `electrolysis` -- Bucket-confounded: ~18/19 of its MeSH-pool carry 'Electrochemotherapy', which the tagger buckets as electrochemical-therapy (a taxonomy-boundary artifact, not a recall miss).
-* `radioligand-therapy` -- Descriptors ('Radioimmunotherapy'/'Radiopharmaceuticals') bleed to immunotherapy/ADC; tiny pool (n~18). Scaffold.
-* `targeted-protein-degradation` -- Only the broad housekeeping 'Proteolysis'; no PROTAC descriptor; tiny pool (n~11). Scaffold.
-* `cuproptosis` -- No cuproptosis MeSH term (only 'Copper', the ion, n~6); 0 frozen-index tags. Scaffold.
-* `disulfidptosis` -- Descriptor exists but n=1; 0 frozen-index tags. Scaffold.
+* `ttfields` -- `absent` -- No TTFields-specific MeSH descriptor, and none that contains it: an alternating intermediate-frequency field disrupting mitosis is not therapeutic electrostimulation, so `Electric Stimulation Therapy` (945 census ...
+* `cold-atmospheric-plasma` -- `over-broad` -- 'Plasma Gases' (D058626) EXISTS and carries 474 census records with 9 ferroptosis intersections, so the earlier 'no descriptor (n~2)' note here was wrong -- see analysis/atlas-thesis-rank.md. It is still not used for ...
+* `bioelectric` -- `absent` -- Only cell-physiology descriptors, carried by any paper measuring them and silent on cancer therapy, so they resemble the mechanism's vocabulary without containing the therapeutic claim. Absent under both arms; pool thin ...
+* `cuproptosis` -- `over-broad` -- No cuproptosis MeSH descriptor exists -- absent under both arms of the whole-vocabulary scan -- but 'Copper' (D003300) does and carries 6,526 census records, which CONTAINS the copper-ionophore literature while meaning ...
+* `disulfidptosis` -- `name-exact-leaky` -- 'Disulfidptosis' (D000098560) EXISTS and carries 99 census records (2 in 2024, 87 in 2025, 10 in 2026), so a census volume count IS available and the earlier note's 'n=1' was a 4,830-record FROZEN-CORPUS figure carried ...
+* `electrolysis` -- `name-exact-leaky` -- 'Electrolysis' (D004572) EXISTS and carries 85 census records, against the ~19 the earlier frozen-corpus note measured. Bucket-confounded as a recall reference -- most of its frozen-corpus pool also carries ...
+* `radioligand-therapy` -- `over-broad` -- 'Radiopharmaceuticals' (D019275) contains the mechanism and carries 31,784 census records, so it over-counts by orders of magnitude; 'Radioimmunotherapy' is antibody-specific and bleeds to immunotherapy/ADC. No ...
+* `targeted-protein-degradation` -- `name-exact-leaky` -- 'Proteolysis Targeting Chimera' (D000094243) EXISTS and carries 241 census records (2022-2026, 49 as major topic, including one Phase III, one Phase I and one randomised trial), so this mechanism's census volume and ...
 
 ## Limits
 

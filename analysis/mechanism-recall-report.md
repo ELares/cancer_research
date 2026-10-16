@@ -85,22 +85,27 @@ is shown for completeness and is expected near 100% by construction.
 | oncolytic-virus | independent-descriptor pool n=0 < N_MIN=30 (all discriminative descriptors are keyword-tautological) | 0 | 271 | 91.1% |
 | phagocytosis-checkpoint | independent-descriptor pool n=0 < N_MIN=30 (all discriminative descriptors are keyword-tautological) | 0 | 18 | 94.4% |
 
-## Not MeSH-measurable
+## Not usable as a MeSH recall reference
 
-No discriminative descriptor exists (term too new, only over-broad context
-descriptors, taxonomy-bucket-confounded, or an empty/tiny pool). These are a
-limitation of the MeSH reference, not measured tagger misses.
+None of these can serve as an INDEPENDENT reference label, which is the
+only thing this page decides. The reasons differ and are reported apart, across 3 verdicts (absent, name-exact-leaky, over-broad): `absent` means no descriptor names or contains the mechanism;
+`over-broad` means one contains it while meaning far more;
+`name-exact-leaky` means one names it exactly, so a census VOLUME count
+IS available and only the recall comparison is near-tautological.
+Collapsing the three into "MeSH has no descriptor" is what
+`analysis/descriptor-absence-audit.md` corrects. These are limitations of
+the MeSH reference, not measured tagger misses, and never a 0% recall.
 
-| Mechanism | Reason |
-|---|---|
-| bioelectric | Only cell-physiology descriptors (Membrane Potentials / Ion Channels), not the cancer-therapy thesis; pool thin and confounded. |
-| cold-atmospheric-plasma | 'Plasma Gases' (D058626) EXISTS and carries 474 census records with 9 ferroptosis intersections, so the earlier 'no descriptor (n~2)' note here was wrong -- see analysis/atlas-thesis-rank.md. It is still not used for recall: D058626 sits under Inorganic Chemicals > Gases as a SUBSTANCE, its scope note spans surface modification, decontamination, dentistry and argon plasma coagulation, and ~23% of its records are not cold atmospheric plasma. Unmeasurable here for BREADTH, which is a different reason from absence. |
-| cuproptosis | No cuproptosis MeSH term (only 'Copper', the ion, n~6); 0 frozen-index tags. Scaffold. |
-| disulfidptosis | Descriptor exists but n=1; 0 frozen-index tags. Scaffold. |
-| electrolysis | Bucket-confounded: ~18/19 of its MeSH-pool carry 'Electrochemotherapy', which the tagger buckets as electrochemical-therapy (a taxonomy-boundary artifact, not a recall miss). |
-| radioligand-therapy | Descriptors ('Radioimmunotherapy'/'Radiopharmaceuticals') bleed to immunotherapy/ADC; tiny pool (n~18). Scaffold. |
-| targeted-protein-degradation | Only the broad housekeeping 'Proteolysis'; no PROTAC descriptor; tiny pool (n~11). Scaffold. |
-| ttfields | No TTFields-specific MeSH descriptor (only over-broad Electric Stimulation Therapy); ~38% of its tagger-positives also have empty MeSH. |
+| Mechanism | Verdict | Reason |
+|---|---|---|
+| bioelectric | `absent` | Only cell-physiology descriptors, carried by any paper measuring them and silent on cancer therapy, so they resemble the mechanism's vocabulary without containing the therapeutic claim. Absent under both arms; pool thin and confounded. |
+| cold-atmospheric-plasma | `over-broad` | 'Plasma Gases' (D058626) EXISTS and carries 474 census records with 9 ferroptosis intersections, so the earlier 'no descriptor (n~2)' note here was wrong -- see analysis/atlas-thesis-rank.md. It is still not used for recall: D058626 sits under Inorganic Chemicals > Gases as a SUBSTANCE, its scope note spans surface modification, decontamination, dentistry and argon plasma coagulation, and ~23% of its records are not cold atmospheric plasma. Unmeasurable here for BREADTH, which is a different reason from absence. |
+| cuproptosis | `over-broad` | No cuproptosis MeSH descriptor exists -- absent under both arms of the whole-vocabulary scan -- but 'Copper' (D003300) does and carries 6,526 census records, which CONTAINS the copper-ionophore literature while meaning the element. Over-broad rather than absent, and the earlier note quoting 'n~6' was a frozen-corpus figure. |
+| disulfidptosis | `name-exact-leaky` | 'Disulfidptosis' (D000098560) EXISTS and carries 99 census records (2 in 2024, 87 in 2025, 10 in 2026), so a census volume count IS available and the earlier note's 'n=1' was a 4,830-record FROZEN-CORPUS figure carried as a reason a census-scale measurement is impossible -- this project's own 213-fold non-uniform-capture caveat, unapplied to its own unmeasurability verdict. Still unusable as a RECALL reference: the descriptor's own string trips the mechanism's keywords, so agreement would be near-tautological. |
+| electrolysis | `name-exact-leaky` | 'Electrolysis' (D004572) EXISTS and carries 85 census records, against the ~19 the earlier frozen-corpus note measured. Bucket-confounded as a recall reference -- most of its frozen-corpus pool also carries 'Electrochemotherapy', which the tagger buckets as electrochemical-therapy (a taxonomy-boundary artifact, not a recall miss) -- and leaky besides, since the descriptor name is the keyword. |
+| radioligand-therapy | `over-broad` | 'Radiopharmaceuticals' (D019275) contains the mechanism and carries 31,784 census records, so it over-counts by orders of magnitude; 'Radioimmunotherapy' is antibody-specific and bleeds to immunotherapy/ADC. No descriptor names radioligand therapy itself under either arm. Scaffold. |
+| targeted-protein-degradation | `name-exact-leaky` | 'Proteolysis Targeting Chimera' (D000094243) EXISTS and carries 241 census records (2022-2026, 49 as major topic, including one Phase III, one Phase I and one randomised trial), so this mechanism's census volume and trial share ARE measurable and the earlier note reading 'no PROTAC descriptor; tiny pool (n~11)' was false against the census it sits beside -- the same defect analysis/atlas-thesis-rank.md recorded for cold atmospheric plasma, and not an expiry, since the descriptor has carried census records since 2022. The broad housekeeping 'Proteolysis' (5,288 records) contains it. Still unusable as a RECALL reference: the leaf's own string is the keyword. |
+| ttfields | `absent` | No TTFields-specific MeSH descriptor, and none that contains it: an alternating intermediate-frequency field disrupting mitosis is not therapeutic electrostimulation, so `Electric Stimulation Therapy` (945 census records) resembles it rather than covering it, and a count of that descriptor would be a count of something else. Confirmed absent under both arms of the whole-vocabulary scan. ~38% of its tagger-positives also have empty MeSH. |
 
 ## Interpretation
 

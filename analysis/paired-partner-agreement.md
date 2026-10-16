@@ -124,7 +124,7 @@ The first command validates the complete index/file/frontmatter PMID join and fr
 PMID hashes sort string identifiers lexicographically, join them with newlines and append a final newline.
 
 - index_sha256: `3d95a430854f952cbdba297d0ef16b66e51daab5006d74eee60f7ad68e1de8ae`
-- descriptor_map_sha256: `235a74ced75496fb6fb745d03f057710c3fd0a244bf4efc0684d694007b98d97`
+- descriptor_map_sha256: `3ea608e868e158d7b3b48e0dfc3232fde8cff721c7d3704ab67272cc31bf3f76`
 - map_semantics_sha256: `880aa93f066c9c6021413674e4734244baa49aaa6e21d8fabcdba8b15372c63e`
 - article_frontmatter_manifest_sha256: `16e62fa30fbcf5c2bd69ea761fe4b6b392838cf3504f8f0c945580256ffb50fc`
 - input_last_changed_commit: `8a2f0ec0f05918996913e1e9dc9b51503dd7ce54`

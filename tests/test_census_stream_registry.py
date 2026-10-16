@@ -173,9 +173,24 @@ REGISTRY = {
         "can supply neither axis. Every record it holds would land in the "
         "unassigned bucket and depress the assignability rate without "
         "carrying any information about site."),
+    "descriptor_absence_audit.py": (
+        {"records"},
+        "records/ ALONE, and the restriction is the whole instrument rather "
+        "than a default. The question is whether MeSH NAMES a mechanism, so "
+        "the population has to be the records MeSH indexed: records_unindexed "
+        "carries no descriptors at all, so every article in it would enter the "
+        "descriptor vocabulary as nothing and enter the per-candidate pools as "
+        "nothing, which cannot change an absence verdict but would inflate the "
+        "scanned-record denominator the page quotes beside it. The text-arm "
+        "side of the two-way agreement is deliberately on the same stream for "
+        "the same reason: comparing a descriptor pool from records/ against a "
+        "keyword pool that also read records_unindexed would make the "
+        "descriptor arm look worse by construction, and the point of that "
+        "table is the agreement rather than either count."),
     "census_unnamed_modalities.py": (
         {"records"},
-        "Sizes modalities MeSH cannot name, so the selection is a keyword "
+        "Sizes modalities this project\'s descriptor map cannot name, so the "
+        "selection is a keyword "
         "match rather than a descriptor -- which means records_unindexed is "
         "technically readable and is deliberately excluded anyway. Trial "
         "status comes from publication types that stream does not carry, so "

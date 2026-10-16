@@ -648,8 +648,24 @@ def test_the_report_counts_what_the_taxonomy_cannot_measure(d, md):
     for m in ("ttfields", "frequency-therapy"):
         assert m in d["taxonomy_without_a_row"], m
         assert f"`{m}`" in md
-    assert "cold-atmospheric-plasma HAS a descriptor" in md
     assert "counted elsewhere in this repository" in md
+    # THE PARAGRAPH USED TO HAND-WRITE ONE EXCEPTION ("cold-atmospheric-plasma
+    # HAS a descriptor") beside a sentence saying the rest "cannot be counted
+    # at census scale at all", which was false for three more of them (#952).
+    # The exception list is derived now, so the guard checks the derivation
+    # reached the page rather than pinning one example.
+    assert "descriptor-absence-audit.md" in md, (
+        "the per-mechanism verdicts must be derived, not hand-listed")
+    assert "cannot be counted at census scale at all" not in md, (
+        "the flattened claim is false for the mechanisms whose descriptor the "
+        "census carries")
+    import json
+    audit = REPO / "analysis" / "descriptor-absence-audit.json"
+    if audit.exists():
+        for mech in json.loads(audit.read_text())["refuted_absence"]:
+            assert f"`{mech}`" in md, (
+                f"{mech} has a name-exact census descriptor and must not be "
+                "swept into an absence claim here")
 
 
 def test_the_radiotherapy_figures_name_their_denominator(md):

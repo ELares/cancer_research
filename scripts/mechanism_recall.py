@@ -251,7 +251,17 @@ def build_results(classified: dict, acc: dict, mech_map: dict, n_records: int, n
         "total_independent_pool": tot_pool,
     }
 
-    unmeasurable = dict(mech_map.get("unmeasurable") or {})
+    # The map's unmeasurable entries carry a VERDICT as well as a reason
+    # (#952): three classes licensing different claims -- `absent`,
+    # `over-broad`, `name-exact-leaky` -- because collapsing them into "MeSH
+    # has no descriptor" put a false sentence in four generated pages and the
+    # manuscript. Published as a field so a consumer can read the class instead
+    # of flattening it, and the heading below is derived from the classes
+    # present rather than asserting one.
+    unmeasurable = {
+        mech: {"verdict": entry["verdict"], "reason": entry["reason"].strip()}
+        for mech, entry in (mech_map.get("unmeasurable") or {}).items()
+    }
     return {
         "n_min": N_MIN,
         "n_records_scanned": n_records,
@@ -355,17 +365,29 @@ def write_report(results: dict, path: Path) -> None:
 
     lines += [
         "",
-        "## Not MeSH-measurable",
+        "## Not usable as a MeSH recall reference",
         "",
-        "No discriminative descriptor exists (term too new, only over-broad context",
-        "descriptors, taxonomy-bucket-confounded, or an empty/tiny pool). These are a",
-        "limitation of the MeSH reference, not measured tagger misses.",
+    ]
+    classes = sorted({v["verdict"] for v in results["unmeasurable"].values()})
+    lines += [
+        "None of these can serve as an INDEPENDENT reference label, which is the",
+        "only thing this page decides. The reasons differ and are reported apart,"
+        f" across {len(classes)} verdict"
+        f"{'' if len(classes) == 1 else 's'} ({', '.join(classes)}):"
+        " `absent` means no descriptor names or contains the mechanism;",
+        "`over-broad` means one contains it while meaning far more;",
+        "`name-exact-leaky` means one names it exactly, so a census VOLUME count",
+        "IS available and only the recall comparison is near-tautological.",
+        "Collapsing the three into \"MeSH has no descriptor\" is what",
+        "`analysis/descriptor-absence-audit.md` corrects. These are limitations of",
+        "the MeSH reference, not measured tagger misses, and never a 0% recall.",
         "",
-        "| Mechanism | Reason |",
-        "|---|---|",
+        "| Mechanism | Verdict | Reason |",
+        "|---|---|---|",
     ]
     for mech in sorted(results["unmeasurable"]):
-        lines.append(f"| {mech} | {results['unmeasurable'][mech]} |")
+        entry = results["unmeasurable"][mech]
+        lines.append(f"| {mech} | `{entry['verdict']}` | {entry['reason']} |")
 
     lines += [
         "",

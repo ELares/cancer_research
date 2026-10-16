@@ -1,0 +1,17 @@
+path,phrase,retired,concerns
+article/drafts/v1.md,Three have no discriminative descriptor at all and none that contains them either,"Most have no discriminative descriptor at all: TTFields, electrolysis,",ttfields bioelectric frequency-therapy cold-atmospheric-plasma cuproptosis radioligand-therapy disulfidptosis electrolysis targeted-protein-degradation
+article/drafts/v1.md,Disulfidptosis was in that list and does not belong there,cuproptosis and disulfidptosis are not comparable to counts for modalities MeSH names directly,ttfields cold-atmospheric-plasma cuproptosis disulfidptosis
+article/drafts/v1.md,What they lack is a descriptor usable as an independent reference label,every one of these has a literature MeSH has no name for,ttfields cuproptosis disulfidptosis targeted-protein-degradation
+article/drafts/v1.md,"An earlier version of this sentence said *not measurable by descriptor*, which is one level better than a claim about the field and one level short of the truth",can find a modality authors name even where NLM cannot,ttfields radioligand-therapy disulfidptosis electrolysis targeted-protein-degradation
+analysis/modality-coverage.md,The rest carry no descriptor THIS MAP can use as a reference,so cannot be counted at census scale at all,bioelectric cold-atmospheric-plasma cuproptosis disulfidptosis electrolysis frequency-therapy radioligand-therapy targeted-protein-degradation ttfields
+analysis/census-translation-lag.md,this project's descriptor map names no usable MeSH leaf for,MeSH has no descriptor for `bioelectric`,bioelectric cold-atmospheric-plasma cuproptosis disulfidptosis electrolysis frequency-therapy radioligand-therapy targeted-protein-degradation ttfields
+analysis/census-modality-comparison.md,have no usable MeSH leaf in this project's descriptor map,"have no MeSH descriptor, so they are measurable only through",radioligand-therapy ttfields
+analysis/census-unnamed-modalities.md,because this project's descriptor map names no usable MeSH leaf for them,because MeSH has no descriptor for them. That is the right call,bioelectric cold-atmospheric-plasma cuproptosis disulfidptosis electrolysis frequency-therapy radioligand-therapy targeted-protein-degradation ttfields
+analysis/mechanism-recall-report.md,Not usable as a MeSH recall reference,No discriminative descriptor exists,bioelectric cold-atmospheric-plasma cuproptosis disulfidptosis electrolysis frequency-therapy radioligand-therapy targeted-protein-degradation ttfields
+analysis/atlas-landscape.md,the reason is NOT uniformly that MeSH has no descriptor,Not every mechanism has a MeSH concept,bioelectric cold-atmospheric-plasma cuproptosis disulfidptosis electrolysis frequency-therapy radioligand-therapy targeted-protein-degradation ttfields
+analysis/census-findings.md,MeSH has no descriptor for them: TTFields and bioelectric,,ttfields bioelectric
+analysis/census-mechanism-cancer-matrix.md,TTFields and bioelectric modulation are ABSENT rather than empty,,ttfields bioelectric
+analysis/manuscript-vs-census.md,**TTFields** has no MeSH descriptor,,ttfields
+analysis/census-external-check.md,have no MeSH descriptor at all and cannot be compared,,frequency-therapy
+article/drafts/v1.md,"A mechanism MeSH cannot express does not appear in this matrix at all, so TTFields and bioelectric modulation are absent rather than empty",,ttfields bioelectric
+scripts/atlas_thesis_rank.py,tumour-treating fields (no descriptor; `Electric Stimulation Therapy` is broader),,ttfields

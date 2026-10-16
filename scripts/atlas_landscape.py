@@ -477,19 +477,26 @@ def main() -> int:
         for r in sorted([x for x in rows if x.get("clinical_share") is not None],
                         key=lambda x: -x["clinical_share"])
     ] + _maturity_narrative(R) + [
-        "## What MeSH cannot see", "",
-        "Not every mechanism has a MeSH concept, and reporting those as zero would",
-        "manufacture exactly the false gap this analysis exists to test for. They are",
-        "excluded rather than counted:", "",
+        "## What this map cannot measure", "",
+        "Not every mechanism has a MeSH leaf this map can use as a reference, and",
+        "reporting those as zero would manufacture exactly the false gap this",
+        "analysis exists to test for. They are excluded rather than counted -- and",
+        "the reason is NOT uniformly that MeSH has no descriptor, which is a claim",
+        "about MeSH derived from this file: each row carries the verdict",
+        "`analysis/descriptor-absence-audit.md` checks against the census's whole",
+        "descriptor vocabulary, and for the `name-exact-leaky` rows a descriptor",
+        "exists and a volume count is available.", "",
     ]
     for k, v in (unmeasurable or {}).items():
+        verdict = "" if isinstance(v, str) else (v or {}).get("verdict", "")
         reason = v if isinstance(v, str) else (v or {}).get("reason", "")
         # Truncate on a WORD boundary. A hard 150-char slice shipped
         # "...the earlier note here was wr" and "...a taxonomy-boundary artif".
         reason = str(reason).strip()
         if len(reason) > 220:
             reason = reason[:220].rsplit(" ", 1)[0] + " ..."
-        L.append(f"* `{k}` -- {reason}")
+        label = f"`{verdict}` -- " if verdict else ""
+        L.append(f"* `{k}` -- {label}{reason}")
 
     L += [
         "", "## Limits", "",
