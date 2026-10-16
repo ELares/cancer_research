@@ -33,10 +33,17 @@ def d():
     return json.loads(JSON.read_text())
 
 
-def test_every_row_genuinely_lacks_a_descriptor(d):
+def test_every_row_lacks_a_USABLE_LEAF_IN_THE_MAP(d):
     """The list must be derived from the descriptor map, not curated.
 
-    A modality that acquires a descriptor should leave this table and become
+    THE NAME OF THIS GUARD USED TO OVER-CLAIM, which is the defect #952 is
+    about and it was sitting in the guard written to prevent the curated
+    version: it read `test_every_row_genuinely_lacks_a_descriptor` while
+    checking whether `analysis/mesh-mechanism-map.yaml` lists one. Those are
+    different statements, and for three of these rows the second is true while
+    the first is false -- the census carries a name-exact descriptor for them.
+
+    A modality that acquires a usable leaf should leave this table and become
     cross-checkable; one hand-maintained list would keep it here reporting a
     single-arm number when two are available.
     """
@@ -46,8 +53,31 @@ def test_every_row_genuinely_lacks_a_descriptor(d):
     has_descriptor = {k.lower() for k, v in mp.items() if v["descriptors"]}
     for r in d["rows"]:
         assert r["modality"] not in has_descriptor, (
-            f"{r['modality']} now has a MeSH descriptor, so it can be "
-            "cross-checked and does not belong in a single-arm table")
+            f"{r['modality']} now has a usable MeSH leaf in the map, so it can "
+            "be cross-checked and does not belong in a single-arm table")
+
+
+def test_a_row_whose_descriptor_the_census_carries_is_told_it_has_a_second_arm(d):
+    """The page's "BY CONSTRUCTION" is false for the rows with a name-exact leaf.
+
+    That justification is the page's reason for being single-armed, so where it
+    does not hold the page has to say so rather than carry it unqualified.
+    """
+    import json
+
+    audit = REPO / "analysis" / "descriptor-absence-audit.json"
+    if not audit.exists():
+        pytest.skip("descriptor audit not generated")
+    refuted = set(json.loads(audit.read_text())["refuted_absence"])
+    listed = {r["modality"] for r in d["rows"]}
+    md = MD.read_text()
+    for mech in sorted(refuted & listed):
+        assert f"`{mech}`" in md, (
+            f"{mech} has a name-exact census descriptor, so this page must "
+            "name it as having a second arm rather than resting on BY "
+            "CONSTRUCTION for it")
+    assert "BY CONSTRUCTION was too strong" in md, (
+        "the page must state where its own justification does not hold")
 
 
 def test_the_missing_cross_check_is_stated_as_structural(d):

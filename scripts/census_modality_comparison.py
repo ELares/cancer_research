@@ -16,7 +16,7 @@ disease do not reduce to anything in a bibliographic record, and no arrangement
 of counts will produce them.
 
 THE INSTRUMENT DIFFERS BY MODALITY AND THAT DECIDES THE DESIGN. Radioligand
-therapy -- the comparison the section turns on -- has no MeSH descriptor, so it
+therapy -- the comparison the section turns on -- has no usable leaf in the map, so it
 is measurable only through this project's keyword vocabulary, while
 immunotherapy and CAR-T have precise descriptors. Comparing a text-arm number
 against a descriptor-arm number is an instrument mismatch, and it would fall
@@ -42,6 +42,7 @@ from collections import Counter, defaultdict
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+from descriptor_absence_audit import absence_note  # noqa: E402
 from census_input import atlas_root, iter_census_records  # noqa: E402
 
 REPO = Path(__file__).resolve().parent.parent
@@ -248,7 +249,10 @@ def render(d: dict) -> str:
         L.append(
             f"**The instrument differs by modality, which decides the design.** "
             + ", ".join(f"`{m}`" for m in d["mesh_missing"])
-            + " have no MeSH descriptor, so they are measurable only through "
+            + " have no usable MeSH leaf in this project's descriptor map -- a "
+              "claim about that map and not about MeSH, which "
+              "`analysis/descriptor-absence-audit.md` separates -- so they are "
+              "measurable here only through "
               "this project's keyword vocabulary, while immunotherapy and CAR-T "
               "have precise descriptors. Comparing a text-arm number against a "
               "descriptor-arm number would be an instrument mismatch falling "
@@ -258,6 +262,7 @@ def render(d: dict) -> str:
               f"descriptor arm beside it as a check rather than as the "
               f"answer.\n"
         )
+        L += absence_note(d["mesh_missing"])
     L.append(f"## Evidence depth and regulatory maturity ({arm} arm)\n")
     L.append("| modality | articles | trials | trial share | phased | "
              "Ph I | Ph II | Ph III | Ph IV | late-phase share |")

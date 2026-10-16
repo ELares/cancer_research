@@ -87,9 +87,13 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import sys
 from pathlib import Path
 
 import yaml
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from descriptor_absence_audit import absence_note  # noqa: E402
 
 REPO = Path(__file__).resolve().parent.parent
 PROFILE = REPO / "analysis" / "census-mechanism-profile.json"
@@ -930,18 +934,20 @@ def render(d: dict) -> str:
           "and this project's own thesis deliberately sits on a thin "
           "literature.", "",
           f"**The taxonomy names {n_named} mechanisms and only {len(rows)} "
-          "have a row.** The rest carry no discriminative MeSH descriptor and "
-          "so cannot be counted at census scale at all: "
+          "have a row.** The rest carry no descriptor THIS MAP can use as a "
+          "reference: "
           + ", ".join(f"`{m}`" for m in d["taxonomy_without_a_row"])
           + f" ({n_norow}). Their absence from this table is a stronger "
           "statement than a zero, and it is not a statement about the engine — "
           "tumour-treating fields have FDA approval in two indications, are "
           "counted elsewhere in this repository from the frozen corpus, and "
-          "are simply unmeasurable through MeSH. The criterion is the "
-          "descriptor, not the mechanism's importance and not always its "
-          "existence: `analysis/mesh-mechanism-map.yaml` records that "
-          "cold-atmospheric-plasma HAS a descriptor and is excluded for "
-          "breadth.", "",
+          "have no MeSH descriptor at all. But the criterion is this map's "
+          "descriptor list, not MeSH's vocabulary, and the earlier version of "
+          "this sentence put every row beyond census counting altogether, "
+          "which is false for the rows whose descriptor the census "
+          "carries.", "",]
+    L += absence_note(d["taxonomy_without_a_row"])
+    L += [
           "**And a modality the taxonomy never names is invisible even from "
           "that count.** Radiotherapy is the worked example. Of the 88 "
           "articles in the frozen corpus whose TITLES are about it, 75 carry "

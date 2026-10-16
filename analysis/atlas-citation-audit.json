@@ -231,7 +231,7 @@
       ]
     }
   ],
-  "prose_checked": 166,
+  "prose_checked": 176,
   "prose_flagged": 1,
   "prose_rows": [
     {
@@ -308,6 +308,15 @@
       "status": "ok",
       "title": "Antibody tumor penetration: transport opposed by systemic and antigen-mediated clearance.",
       "journal": "Advanced drug delivery reviews"
+    },
+    {
+      "pmid": "20068163",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "Drug combination studies and their synergy quantification using the Chou-Talalay method.",
+      "journal": "Cancer research"
     },
     {
       "pmid": "20570523",
@@ -490,6 +499,15 @@
       "status": "ok",
       "title": "Mechanisms and therapeutic effectiveness of pulsed electromagnetic field therapy in oncology.",
       "journal": "Cancer medicine"
+    },
+    {
+      "pmid": "27869804",
+      "cited_in": [
+        "CLAUDE.md"
+      ],
+      "status": "ok",
+      "title": "Systemic depletion of L-cyst(e)ine with cyst(e)inase increases reactive oxygen species and suppresses tumor growth.",
+      "journal": "Nature medicine"
     },
     {
       "pmid": "28281173",
@@ -712,6 +730,24 @@
       "journal": "Nature reviews. Clinical oncology"
     },
     {
+      "pmid": "32241947",
+      "cited_in": [
+        "CLAUDE.md"
+      ],
+      "status": "ok",
+      "title": "Cysteine depletion induces pancreatic tumor ferroptosis in mice.",
+      "journal": "Science (New York, N.Y.)"
+    },
+    {
+      "pmid": "32307022",
+      "cited_in": [
+        "CLAUDE.md"
+      ],
+      "status": "ok",
+      "title": "Combined radiotherapy and concurrent tumor treating fields (TTFields) for glioblastoma: Dosimetric consequences on non-coplanar IMRT as initial results from a phase I trial.",
+      "journal": "Radiation oncology (London, England)"
+    },
+    {
       "pmid": "32478924",
       "cited_in": [
         "article/drafts/v1.md"
@@ -914,6 +950,15 @@
       "journal": "The New England journal of medicine"
     },
     {
+      "pmid": "34287957",
+      "cited_in": [
+        "CLAUDE.md"
+      ],
+      "status": "ok",
+      "title": "Kinetic analysis of cystine uptake and inhibition pattern of sulfasalazine in A549 cells.",
+      "journal": "Biopharmaceutics &amp; drug disposition"
+    },
+    {
       "pmid": "34373744",
       "cited_in": [
         "article/drafts/v1.md"
@@ -1011,6 +1056,15 @@
       "status": "ok",
       "title": "Tumor Treating Fields dually activate STING and AIM2 inflammasomes to induce adjuvant immunity in glioblastoma.",
       "journal": "The Journal of clinical investigation"
+    },
+    {
+      "pmid": "35205750",
+      "cited_in": [
+        "CLAUDE.md"
+      ],
+      "status": "ok",
+      "title": "PARP Inhibitors in Glioma: A Review of Therapeutic Opportunities.",
+      "journal": "Cancers"
     },
     {
       "pmid": "35303871",
@@ -1529,6 +1583,24 @@
       "journal": "Frontiers in immunology"
     },
     {
+      "pmid": "39696900",
+      "cited_in": [
+        "CLAUDE.md"
+      ],
+      "status": "ok",
+      "title": "Engineered Bacteria Manipulate Cysteine Metabolism to Boost Ferroptosis-Based Pancreatic Ductal Adenocarcinoma Therapy.",
+      "journal": "Advanced materials (Deerfield Beach, Fla.)"
+    },
+    {
+      "pmid": "39698701",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "Trends of mapping knowledge structure and themes of cancer sonodynamic therapy: a text-mining study.",
+      "journal": "Quantitative imaging in medicine and surgery"
+    },
+    {
       "pmid": "39791278",
       "cited_in": [
         "article/drafts/v1.md"
@@ -1674,6 +1746,15 @@
       "journal": "Cell reports"
     },
     {
+      "pmid": "41422256",
+      "cited_in": [
+        "CLAUDE.md"
+      ],
+      "status": "ok",
+      "title": "Transsulfuration metabolism is essential for ferroptosis resistance in quiescent endothelial cells.",
+      "journal": "Cell death &amp; disease"
+    },
+    {
       "pmid": "41494530",
       "cited_in": [
         "article/drafts/v1.md",
@@ -1700,6 +1781,15 @@
       "status": "ok",
       "title": "Enzymatic Remodelling of Tumour Microenvironment Enhances Anti-CEACAM5 CAR T-Cell Efficacy Against Colorectal Cancer.",
       "journal": "Advanced science (Weinheim, Baden-Wurttemberg, Germany)"
+    },
+    {
+      "pmid": "41704298",
+      "cited_in": [
+        "CLAUDE.md"
+      ],
+      "status": "ok",
+      "title": "Living bacterial reactor potently activates tumor immunogenic ferroptosis via cysteine depletion and photothermal therapy.",
+      "journal": "Materials today. Bio"
     },
     {
       "pmid": "41833681",

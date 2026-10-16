@@ -89,6 +89,7 @@ GENERATORS = [
     # PARSED from the manuscript -- so a figure hand-written here could
     # contradict either the artifact it corrects or the sentence it quotes.
     REPO_ROOT / "scripts" / "prcc_under_admissibility.py",
+    REPO_ROOT / "scripts" / "descriptor_absence_audit.py",
 ]
 
 

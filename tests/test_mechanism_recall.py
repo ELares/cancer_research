@@ -173,7 +173,10 @@ def _synthetic_results():
         "proxy": dict(indep_pool=200, indep_hit_lf=50, indep_hit_idx=50, leaky_pool=0, leaky_hit_lf=0),
         "leakyonly": dict(indep_pool=0, indep_hit_lf=0, indep_hit_idx=0, leaky_pool=50, leaky_hit_lf=48),
     }
-    m = {"unmeasurable": {"foo": "reason"}}
+    # The map's unmeasurable entries carry a VERDICT as well as a reason
+    # (#952), because collapsing the three classes into "MeSH has no
+    # descriptor" put a false sentence in four generated pages.
+    m = {"unmeasurable": {"foo": {"verdict": "absent", "reason": "reason"}}}
     return mr.build_results(classified, acc, m, n_records=500, n_with_mesh=400)
 
 
@@ -205,7 +208,8 @@ def test_build_results_aggregates_over_measurable_only():
 
 def test_build_results_passes_through_unmeasurable():
     r = _synthetic_results()
-    assert r["unmeasurable"] == {"foo": "reason"}
+    assert r["unmeasurable"] == {
+        "foo": {"verdict": "absent", "reason": "reason"}}
 
 
 # ---------------------------------------------------------------------------

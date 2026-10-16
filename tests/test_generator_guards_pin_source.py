@@ -80,6 +80,7 @@ IN_SCOPE = {
     # so only a source assertion can say that the page derives from the
     # published design rather than from a local restatement of it
     "test_prcc_under_admissibility.py",
+    "test_descriptor_absence_audit.py",
     "test_ingest_sensitivity.py",
     "test_untagged_partner.py",
     "test_modality_ratio.py",

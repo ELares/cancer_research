@@ -20,7 +20,7 @@ The GAP BETWEEN THE TWO FIRST-YEARS measures the observed ordering, per
 mechanism. Its sign alone does not establish the cause of a difference, and
 agreement between arms does not verify either arm's first match.
 
-The text arm also reaches three mechanisms MeSH cannot express at all --
+The text arm also reaches three mechanisms the descriptor map cannot reach --
 TTFields, bioelectric modulation, cold atmospheric plasma -- which are reported
 as *not measurable* everywhere else in this project. They are measurable here,
 on the text arm alone, and that is stated on every row rather than left for a
@@ -41,6 +41,7 @@ from collections import Counter, defaultdict
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+from descriptor_absence_audit import absence_note  # noqa: E402
 from census_input import atlas_root, iter_census_records  # noqa: E402
 
 REPO = Path(__file__).resolve().parent.parent
@@ -296,13 +297,17 @@ def render(d: dict) -> str:
     L.append("")
     if d["text_only"]:
         L.append(
-            "† measurable on the TEXT arm only -- MeSH has no descriptor for "
+            "† measurable on the TEXT arm only -- this project's descriptor "
+            "map names no usable MeSH leaf for "
             + ", ".join(f"`{m}`" for m in d["text_only"])
             + ", so these are reported as *not measurable* everywhere else in "
               "this project. Here they are measurable, on one arm, and that is "
               "marked on the row rather than left to be inferred from an empty "
-              "cell.\n"
+              "cell. The earlier version of this line said MeSH has no "
+              "descriptor for them, which is a claim about MeSH derived from a "
+              "handwritten file and is false for some of them.\n"
         )
+        L += absence_note(d["text_only"])
     L.append("## What the two arms disagree about\n")
     L.append(
         f"The **arm gap** is the MeSH start minus the text start, and it is NOT "

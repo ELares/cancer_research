@@ -34,7 +34,9 @@ Mechanisms are assessed on two arms where the relevant vocabulary is available. 
 | oncolytic-virus | 1954 | 2001 | 47 | 45 | 1954 | 2003 | 49 | 0 |
 | metabolic-targeting | 1951 | 2006 | 55 | 6 | 1946 | 1979 | 33 | -5 |
 
-† measurable on the TEXT arm only -- MeSH has no descriptor for `bioelectric`, `cold-atmospheric-plasma`, `cuproptosis`, `disulfidptosis`, `electrolysis`, `frequency-therapy`, `radioligand-therapy`, `targeted-protein-degradation`, `ttfields`, so these are reported as *not measurable* everywhere else in this project. Here they are measurable, on one arm, and that is marked on the row rather than left to be inferred from an empty cell.
+† measurable on the TEXT arm only -- this project's descriptor map names no usable MeSH leaf for `bioelectric`, `cold-atmospheric-plasma`, `cuproptosis`, `disulfidptosis`, `electrolysis`, `frequency-therapy`, `radioligand-therapy`, `targeted-protein-degradation`, `ttfields`, so these are reported as *not measurable* everywhere else in this project. Here they are measurable, on one arm, and that is marked on the row rather than left to be inferred from an empty cell. The earlier version of this line said MeSH has no descriptor for them, which is a claim about MeSH derived from a handwritten file and is false for some of them.
+
+Measured against the census's whole descriptor vocabulary in `analysis/descriptor-absence-audit.md`: no descriptor names or contains `bioelectric`, `frequency-therapy`, `ttfields`; a descriptor CONTAINS `cold-atmospheric-plasma`, `cuproptosis`, `radioligand-therapy` while meaning far more, so a count of it over-counts; the census carries a NAME-EXACT descriptor for `disulfidptosis`, `electrolysis`, `targeted-protein-degradation`, so these are volume-measurable at census scale and unusable only as a recall reference. Those 3 verdicts license different claims and collapsing them into "MeSH has no descriptor" is what that page corrects.
 
 ## What the two arms disagree about
 

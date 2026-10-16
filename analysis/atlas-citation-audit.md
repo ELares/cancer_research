@@ -50,7 +50,7 @@ chose as the claim's proxy. Reported for completeness, not as errors.
 * `alox` -> 27506793: Peroxidation of polyunsaturated fatty acids by lipoxygenases drives ferroptosis.
 * `system_xc` -> 22632970: Ferroptosis: an iron-dependent form of nonapoptotic cell death.
 
-## Prose citations: 1 of 166 flagged
+## Prose citations: 1 of 176 flagged
 
 The manuscript and repo guide cite PMIDs in running text with no entity
 pair to check against, so these are tested only for existing and for being

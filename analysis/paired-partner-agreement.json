@@ -23552,7 +23552,7 @@
         }
       ],
       "descriptor_map_path": "analysis/mesh-mechanism-map.yaml",
-      "descriptor_map_sha256": "235a74ced75496fb6fb745d03f057710c3fd0a244bf4efc0684d694007b98d97",
+      "descriptor_map_sha256": "3ea608e868e158d7b3b48e0dfc3232fde8cff721c7d3704ab67272cc31bf3f76",
       "frontmatter_manifest_hash_rule": "sorted PMID + TAB + frontmatter SHA-256 + newline",
       "index_path": "corpus/INDEX.jsonl",
       "index_sha256": "3d95a430854f952cbdba297d0ef16b66e51daab5006d74eee60f7ad68e1de8ae",
