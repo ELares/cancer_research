@@ -34,6 +34,7 @@ import os
 import sqlite3
 import subprocess
 import sys
+import zlib
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -93,7 +94,21 @@ def iter_records(shard_dir: Path, truncated: list | None = None):
                         continue  # a torn final line, not a reason to stop
                     n += 1
                     yield rec
-        except (EOFError, OSError) as e:
+        # TRUNCATION AND CORRUPTION ARE DIFFERENT DAMAGE, AND ONLY ONE OF
+        # THEM IS AN OSError. A clean truncation -- a process killed
+        # mid-shard -- ends the deflate stream early and raises EOFError. A
+        # TORN write, which is what an SMB mount vanishing under an open
+        # handle produces, leaves arbitrary bytes in the file: those raise
+        # UnicodeDecodeError (a ValueError) out of the text decoder, or
+        # zlib.error out of the decompressor, and NEITHER is an OSError. So
+        # the audit written to survive shard damage died on the first real
+        # corruption it met and took --repair down with it, leaving in place
+        # the very index rows it exists to drop. Measured on the #913
+        # recovery walk: UnicodeDecodeError after 832 of ~950 records in
+        # expanded-01009. The error TYPE is recorded, so a truncation and a
+        # torn write stay distinguishable in the report rather than both
+        # reading as "truncated".
+        except (EOFError, OSError, UnicodeDecodeError, zlib.error) as e:
             if truncated is not None:
                 truncated.append((Path(path).name, n, type(e).__name__))
 
@@ -173,7 +188,11 @@ def orphaned_index_rows(index: Path, shard_dir: Path) -> tuple[list, list]:
             (OWN_SOURCE_PREFIX + "%",))]
     finally:
         c.close()
-    return [r for r in rows if r not in keys], truncated
+    # The stored set is RETURNED rather than recomputed by the caller:
+    # --repair needs it for its own emptiness refusal, and re-deriving it
+    # meant a second full pass over every shard -- 51 GB over a network
+    # mount at the time of writing, for a set already in hand.
+    return [r for r in rows if r not in keys], truncated, keys
 
 
 def verify(shard_dir: Path, index: Path, sample: int = 500) -> dict:
@@ -194,7 +213,7 @@ def verify(shard_dir: Path, index: Path, sample: int = 500) -> dict:
             (OWN_SOURCE_PREFIX + "%", sample))]
         ctl_hits = sum(1 for k in ctl_keys if held_by_others(idx, k, None, None))
 
-        orphans, _ = orphaned_index_rows(index, shard_dir)
+        orphans, _, _ = orphaned_index_rows(index, shard_dir)
         return {
             "truncated_shards": truncated,
             "live_shard": live_shard(shard_dir),
@@ -237,11 +256,10 @@ def repair(index: Path, shard_dir: Path, force: bool = False,
     ignores `expand-*` provenance, those duplicates are invisible to it. The
     tool built to fix silent, audit-proof loss would have caused a bigger one.
     """
-    orphans, truncated = orphaned_index_rows(index, shard_dir)
+    orphans, truncated, stored = orphaned_index_rows(index, shard_dir)
     for name, n, err in truncated:
-        print(f"  truncated {name}: {n:,} records recovered ({err})")
+        print(f"  damaged {name}: {n:,} records recovered ({err})")
 
-    stored, _ = stored_keys(shard_dir)
     c = sqlite3.connect(f"file:{index}?mode=ro", uri=True)
     try:
         total = c.execute("SELECT COUNT(*) FROM held WHERE source LIKE ?",

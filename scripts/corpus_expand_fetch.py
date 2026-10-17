@@ -772,16 +772,27 @@ class Shards:
         self.dir = root / name
         self.dir.mkdir(parents=True, exist_ok=True)
         self.name, self.n, self.fh = name, 0, None
+        self.open_path: Path | None = None
         self.idx = self._resume()
 
     def _resume(self) -> int:
         existing = sorted(self.dir.glob(f"{self.name}-*.jsonl.gz"))
         return int(existing[-1].stem.split("-")[-1].split(".")[0]) + 1 if existing else 0
 
+    def path(self, idx: int) -> Path:
+        return self.dir / f"{self.name}-{idx:05d}.jsonl.gz"
+
     def write(self, obj) -> None:
         if self.fh is None:
-            self.fh = gzip.open(self.dir / f"{self.name}-{self.idx:05d}.jsonl.gz", "wt",
-                                encoding="utf-8")
+            # The path is remembered as the file is opened, so `close` syncs
+            # THE FILE THIS WROTE rather than re-deriving a name from the
+            # index. A durability call aimed at the wrong path raises
+            # FileNotFoundError, which is an OSError, which the tolerant
+            # handler below swallows -- so a one-character slip in `close`
+            # would have made the fsync a silent no-op. Measured: that exact
+            # mutation survived the first version of the guard.
+            self.open_path = self.path(self.idx)
+            self.fh = gzip.open(self.open_path, "wt", encoding="utf-8")
         self.fh.write(json.dumps(obj, ensure_ascii=False) + "\n")
         # Durable BEFORE the caller is allowed to index it. Ordering, not
         # speed, is what makes the index trustworthy.
@@ -792,9 +803,76 @@ class Shards:
             self.idx += 1
 
     def close(self) -> None:
+        """Finish a shard and make it DURABLE, not merely written.
+
+        The per-record flush above reaches the OS and deliberately stops
+        there, because an fsync per record across a network mount costs more
+        than the one-record window it closes. That trade is right for a
+        process kill -- the bytes are already the kernel's -- and it is WRONG
+        for a mount that disappears, because an SMB client holds written
+        bytes of its own and loses them with the connection. Measured: a
+        dropped mount left `expanded-01009` with 830 readable records and a
+        torn tail, and the records in that tail had already been indexed as
+        held.
+
+        fsync HERE cannot save the open shard's tail, and does not claim to.
+        What it does is bound the damage to ONE shard: once a shard is
+        closed it is on the server, so a later drop can no longer reach back
+        and truncate work that was finished minutes ago. One fsync per 4,000
+        records is free.
+        """
         if self.fh:
             self.fh.close()
-            self.fh = None
+            try:
+                fd = os.open(str(self.open_path), os.O_RDONLY)
+                try:
+                    os.fsync(fd)
+                finally:
+                    os.close(fd)
+            except OSError:
+                # Storage that has gone away mid-run is damage to REPORT, not
+                # a reason to abort a run holding days of work;
+                # `corpus_expand_verify.py` is what finds it. This can no
+                # longer hide a wrong-path bug, because the path is the one
+                # `write` opened rather than one recomputed here.
+                pass
+            self.fh = self.open_path = None
+
+
+def require_output_root(root: Path) -> None:
+    """Create the shard root, but REFUSE to invent the path that leads to it.
+
+    `root.mkdir(parents=True, exist_ok=True)` is the obvious line and it is
+    the dangerous one, because A MOUNT POINT IS JUST A DIRECTORY. With the
+    NAS unmounted, `~/nas` is an empty local directory, so `parents=True`
+    cheerfully creates `~/nas/cancer-atlas/expanded` ON THE BOOT DISK and the
+    crawl writes the expanded corpus -- 51 GB of it at the time of writing --
+    into a filesystem that had 16 GB free, silently, while the ledger (which
+    lives in the repo, NOT on the share) records every slice as walked. The
+    shards would then be invisible to every later run, which is the same
+    permanent-invisibility failure the write-then-index ordering exists to
+    prevent, arrived at from the other direction.
+
+    So the rule is that this process may create its OWN leaf and nothing
+    above it: the parent must already exist, which on a mounted share it does
+    and on an unmounted mount point it does not. That is the same canary the
+    login mount agent checks, and it costs one stat.
+
+    It is deliberately NOT a check for "is this a network mount": pointing
+    `FERRO_EXPAND_OUT` at a local directory is legitimate (every test does),
+    and a rule that refused local paths would be enforcing a storage
+    preference rather than catching a mistake.
+    """
+    if not root.parent.is_dir():
+        raise SystemExit(
+            f"REFUSING to run: {root.parent} does not exist, so {root} cannot "
+            f"be created without inventing the path to it.\n"
+            f"If that is a mount point, the share is not mounted -- mount it "
+            f"and re-run; the ledger is local, so every slice resumes from its "
+            f"own cursor.\n"
+            f"If the output really should live somewhere else, create the "
+            f"parent yourself or set FERRO_EXPAND_OUT.")
+    root.mkdir(exist_ok=True)
 
 
 def run(years, sources, limit_new=None, verbose=True) -> dict:
@@ -804,7 +882,7 @@ def run(years, sources, limit_new=None, verbose=True) -> dict:
     # storing metadata and calling it a crawl.
     deferred = consecutive_deferred = 0
     reopen_stale_slices(st, verbose=verbose)
-    OUT_ROOT.mkdir(parents=True, exist_ok=True)
+    require_output_root(OUT_ROOT)
     shards = Shards(OUT_ROOT, "expanded")
     totals = {"seen": 0, "new": 0, "fulltext": 0, "slices": 0, "deferred": 0,
               # Records stored WITHOUT full text because a retry also failed.

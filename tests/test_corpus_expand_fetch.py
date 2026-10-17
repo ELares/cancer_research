@@ -1894,3 +1894,163 @@ def test_an_empty_slice_is_not_called_unknown(tmp_path, monkeypatch, capsys):
     assert "RETIRED WITH NO TOTAL" not in out, (
         "an empty slice was reported as having unknown completeness")
     assert "RETIRED SHORT" not in out
+
+
+# --- The output root must not be invented (#960) ---------------------------
+#
+# `OUT_ROOT.mkdir(parents=True, exist_ok=True)` is the obvious line and it is
+# the dangerous one, because A MOUNT POINT IS JUST A DIRECTORY. With the NAS
+# unmounted `~/nas` is an empty LOCAL directory, so `parents=True` creates
+# `~/nas/cancer-atlas/expanded` on the boot disk and the crawl writes the
+# expanded corpus -- 51 GB of it, against 16 GB free -- into the wrong
+# filesystem, silently, while the ledger (which lives in the repo, not on the
+# share) records every slice as walked. Those shards are then invisible to
+# every later run: the same permanent-invisibility failure the write-then-
+# index ordering exists to prevent, reached from the other side.
+#
+# No behavioural test on a machine with the share mounted can catch that, and
+# the defect is ONE KEYWORD, which is why the structural guard below carries
+# as much weight as the two behavioural ones.
+
+
+def test_an_unmounted_output_root_is_refused_rather_than_created(tmp_path):
+    """The live failure. `parent` absent is what an unmounted mount point
+    looks like from inside this process."""
+    root = tmp_path / "nas" / "cancer-atlas" / "expanded"
+    with pytest.raises(SystemExit) as e:
+        fx.require_output_root(root)
+    assert not root.exists(), "the refusal must not leave a directory behind"
+    assert not root.parent.exists(), "and must not create the path to it either"
+    msg = str(e.value)
+    assert str(root.parent) in msg, "the message must name what is missing"
+    assert "FERRO_EXPAND_OUT" in msg, "and how to point it elsewhere"
+    assert "resume" in msg, (
+        "a refusal that reads as data loss would invite someone to force past "
+        "it; the ledger is local, so nothing is lost by stopping here")
+
+
+def test_an_existing_parent_lets_the_crawl_create_its_own_leaf(tmp_path):
+    """The normal case, and the one every test in this file relies on: the
+    parent exists, the leaf does not, and the crawl owns the leaf."""
+    root = tmp_path / "expanded"
+    fx.require_output_root(root)
+    assert root.is_dir()
+    fx.require_output_root(root)      # idempotent across resumed runs
+
+
+def test_the_crawl_never_creates_its_output_path_with_parents():
+    """STRUCTURAL. The behavioural guards above can only fail on a machine
+    where the share happens to be absent; this one fails anywhere, and it is
+    the reintroduction of `parents=True` that it exists to stop.
+
+    Scoped to the shard-writing path: `Shards.__init__` legitimately creates
+    its own subdirectory beneath a root this function has already vouched for.
+    """
+    src = (REPO / "scripts" / "corpus_expand_fetch.py").read_text()
+    tree = ast.parse(src)
+    offenders = []
+    for fn in ast.walk(tree):
+        if not isinstance(fn, ast.FunctionDef) or fn.name != "run":
+            continue
+        for node in ast.walk(fn):
+            if (isinstance(node, ast.Call)
+                    and isinstance(node.func, ast.Attribute)
+                    and node.func.attr == "mkdir"):
+                for kw in node.keywords:
+                    if kw.arg == "parents" and getattr(kw.value, "value", False):
+                        offenders.append(node.lineno)
+    assert not offenders, (
+        f"run() creates its output path with parents=True at line(s) "
+        f"{offenders}: on an unmounted share that writes the corpus to the "
+        "boot disk instead of refusing")
+    # And the refusal must actually be reached, or the above is vacuous.
+    run = next(n for n in ast.walk(tree)
+               if isinstance(n, ast.FunctionDef) and n.name == "run")
+    called = {n.func.id for n in ast.walk(run)
+              if isinstance(n, ast.Call) and isinstance(n.func, ast.Name)}
+    assert "require_output_root" in called, (
+        "run() must consult the refusal; a guard against parents=True is "
+        "worthless if nothing checks the path at all")
+
+
+# --- A closed shard is durable, not merely written (#960) ------------------
+
+
+def test_closing_a_shard_syncs_it_to_storage():
+    """STRUCTURAL, because an fsync has no observable effect to assert on.
+
+    The per-record flush reaches the OS and deliberately stops there: an
+    fsync per record across a network mount costs more than the one-record
+    window it closes. That trade is right for a process kill, where the bytes
+    are already the kernel's, and WRONG for a mount that disappears, because
+    an SMB client holds written bytes of its own and loses them with the
+    connection. Measured: a dropped mount left expanded-01009 with 830
+    readable records and a torn tail whose records were already indexed.
+
+    fsync here cannot save the OPEN shard's tail and does not claim to. It
+    bounds the damage to one shard, so a later drop cannot reach back and
+    truncate work finished minutes ago.
+    """
+    src = (REPO / "scripts" / "corpus_expand_fetch.py").read_text()
+    cls = next(n for n in ast.walk(ast.parse(src))
+               if isinstance(n, ast.ClassDef) and n.name == "Shards")
+    close = next(n for n in cls.body
+                 if isinstance(n, ast.FunctionDef) and n.name == "close")
+    syncs = [n for n in ast.walk(close)
+             if isinstance(n, ast.Call) and isinstance(n.func, ast.Attribute)
+             and n.func.attr == "fsync"]
+    assert syncs, "Shards.close must fsync the finished shard"
+
+
+def test_the_shard_filename_has_exactly_one_definition():
+    """write() and close() must name the same file. They were two copies of
+    one format string, so the fsync could have been sent to a path the writer
+    had stopped using -- an fsync on the wrong file succeeds silently, which
+    is the worst available outcome for a durability fix."""
+    src = (REPO / "scripts" / "corpus_expand_fetch.py").read_text()
+    # The INDEX-to-filename mapping, not every mention of the prefix: the
+    # sibling `glob(f"{self.name}-*.jsonl.gz")` in _resume enumerates shards
+    # rather than naming one, so it is a different operation and a first
+    # version of this guard wrongly flagged it.
+    assert src.count(":05d}.jsonl.gz") == 1, (
+        "the shard filename is built from its index in more than one place; a "
+        "durability call that disagrees with the writer about the path still "
+        "returns 0")
+
+
+def test_a_closed_shard_is_a_complete_readable_gzip(tmp_path):
+    """Behavioural companion: whatever close() now does, it must still leave a
+    shard a reader can finish without raising."""
+    s = fx.Shards(tmp_path, "t")
+    for i in range(5):
+        s.write({"pmid": str(i)})
+    s.close()
+    p = tmp_path / "t" / "t-00000.jsonl.gz"
+    with gzip.open(p, "rt", encoding="utf-8") as fh:
+        got = [json.loads(line)["pmid"] for line in fh]
+    assert got == ["0", "1", "2", "3", "4"]
+
+
+def test_close_syncs_the_shard_it_actually_wrote(tmp_path, monkeypatch):
+    """BEHAVIOURAL, and it exists because a structural "does it fsync?" guard
+    SURVIVED the mutation that matters.
+
+    Pointing the sync one index past the open shard still passed every other
+    guard: `os.open` on a path that does not exist raises FileNotFoundError,
+    an OSError, which the handler tolerates by design -- so the fsync became
+    a silent no-op while the code still plainly called fsync. Identity is
+    checked by inode, which is the only thing that distinguishes syncing the
+    right file from syncing successfully.
+    """
+    import os as _os
+    seen = []
+    real = _os.fsync
+    monkeypatch.setattr(_os, "fsync",
+                        lambda fd: (seen.append(_os.fstat(fd).st_ino), real(fd))[1])
+    s = fx.Shards(tmp_path, "t")
+    s.write({"pmid": "1"})
+    s.close()
+    p = tmp_path / "t" / "t-00000.jsonl.gz"
+    assert seen == [p.stat().st_ino], (
+        "close must fsync the shard it wrote; got "
+        f"{seen} against inode {p.stat().st_ino}")
