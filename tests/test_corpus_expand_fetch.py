@@ -1978,20 +1978,36 @@ def test_the_crawl_never_creates_its_output_path_with_parents():
     src = (REPO / "scripts" / "corpus_expand_fetch.py").read_text()
     tree = ast.parse(src)
     offenders = []
-    for fn in ast.walk(tree):
-        if not isinstance(fn, ast.FunctionDef) or fn.name != "run":
+    # EVERY function, not just `run`. Scoping this to `run` let the same flag
+    # back in through `Shards._wait_for_storage`, which recreates the shard
+    # directory on the way out of a storage drop -- a method this guard never
+    # walked.
+    #
+    # ONE exemption, and it is CHECKED rather than asserted: the progress
+    # ledger lives in the repository, not on the share, so creating its parent
+    # is both safe and necessary. The check below reads where STATE_DB is
+    # defined and fails if it ever moves onto externally-configured storage,
+    # because an exemption list is exactly where a real site hides.
+    local_only = "STATE_DB"
+    assert "STATE_DB = REPO /" in src, (
+        f"{local_only} is no longer defined relative to the repository, so "
+        "exempting it from the mount-safety rule is no longer justified")
+    for node in ast.walk(tree):
+        if not (isinstance(node, ast.Call)
+                and isinstance(node.func, ast.Attribute)
+                and node.func.attr == "mkdir"):
             continue
-        for node in ast.walk(fn):
-            if (isinstance(node, ast.Call)
-                    and isinstance(node.func, ast.Attribute)
-                    and node.func.attr == "mkdir"):
-                for kw in node.keywords:
-                    if kw.arg == "parents" and getattr(kw.value, "value", False):
-                        offenders.append(node.lineno)
+        if not any(kw.arg == "parents" and getattr(kw.value, "value", False)
+                   for kw in node.keywords):
+            continue
+        target = ast.get_source_segment(src, node.func.value) or ""
+        if target.startswith(local_only):
+            continue
+        offenders.append(f"{node.lineno} ({target}.mkdir)")
     assert not offenders, (
-        f"run() creates its output path with parents=True at line(s) "
-        f"{offenders}: on an unmounted share that writes the corpus to the "
-        "boot disk instead of refusing")
+        f"output paths are created with parents=True at line(s) {offenders}: "
+        "on an unmounted share that writes the corpus to the boot disk "
+        "instead of refusing")
     # And the refusal must actually be reached, or the above is vacuous.
     run = next(n for n in ast.walk(tree)
                if isinstance(n, ast.FunctionDef) and n.name == "run")

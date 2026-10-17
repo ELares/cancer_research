@@ -937,7 +937,11 @@ class Shards:
 
     def __init__(self, root: Path, name: str):
         self.dir = root / name
-        self.dir.mkdir(parents=True, exist_ok=True)
+        # Only our own leaf: `root` has already been vouched for by
+        # `require_output_root`, so there is nothing above this to create and
+        # `parents=True` would only serve to invent a path on an unmounted
+        # share (#960).
+        self.dir.mkdir(exist_ok=True)
         self.name, self.n, self.fh = name, 0, None
         self.open_path: Path | None = None
         self.idx = self._resume()
@@ -1013,7 +1017,13 @@ class Shards:
         self.fh = None
         self.open_path = None
         self.idx += 1
-        canary = self.dir.parent.parent        # the share, not the mount point
+        # THE SAME RULE `require_output_root` ENFORCES, and reusing it rather
+        # than inventing a second availability test: the PARENT must exist and
+        # this process creates only its own leaf. A first version tested a
+        # hand-picked `self.dir.parent.parent` as a canary and then called
+        # `mkdir(parents=True)` -- which is the flag #960 removed, in a method
+        # #960's structural guard does not walk, and it hard-coded a guess
+        # about how many levels sit between the shard directory and the mount.
         deadline = time.monotonic() + STORAGE_RETURN_TIMEOUT
         waited = 0.0
         print(f"  ! storage went away ({e}); waiting up to "
@@ -1022,12 +1032,12 @@ class Shards:
         while time.monotonic() < deadline:
             time.sleep(STORAGE_POLL)
             waited += STORAGE_POLL
-            if not canary.is_dir():
-                continue
+            if not self.dir.parent.is_dir():
+                continue          # the share is still away
             try:
-                self.dir.mkdir(parents=True, exist_ok=True)
+                self.dir.mkdir(exist_ok=True)
             except OSError:
-                continue          # mounted but not yet writable
+                continue          # back, but not yet writable
             print(f"  = storage returned after {waited / 60:.1f} min; "
                   f"continuing in a new shard", flush=True)
             return
