@@ -226,7 +226,7 @@ def test_an_index_row_with_no_stored_record_is_reported(tmp_path):
     ])
     sd = tmp_path / "shards"
     _shard_file(sd, "expanded-00000.jsonl.gz", [{"pmid": "111"}])
-    orphans, truncated = orphaned_index_rows(idx, sd)
+    orphans, truncated, _ = orphaned_index_rows(idx, sd)
     assert orphans == [("pmid", "222")], orphans
     assert truncated == []
 
@@ -556,3 +556,205 @@ def test_live_shard_survives_a_missing_pgrep(monkeypatch, tmp_path):
 
     monkeypatch.setattr(v.subprocess, "run", boom)
     assert v.live_shard(tmp_path) is None
+
+
+# --- Torn writes are not truncations (#960) --------------------------------
+#
+# The tolerance above was written for a shard the crawl is still appending to.
+# That shard's deflate stream simply ends, which raises EOFError, and a bad
+# header raises gzip.BadGzipFile, an OSError. Both were caught.
+#
+# A MOUNT THAT DISAPPEARS UNDER AN OPEN HANDLE PRODUCES NEITHER, because an
+# SMB client holds written bytes of its own and loses them with the
+# connection, leaving whatever was already in those blocks. Measured on the
+# #913 recovery walk, three distinct failures come out of that one cause and
+# only one of them is an OSError:
+#
+#   bytes that do not inflate          -> zlib.error        (bare Exception)
+#   bytes that inflate but are not text-> UnicodeDecodeError (a ValueError)
+#   a stream that just stops           -> EOFError
+#
+# So `except (EOFError, OSError)` let two of the three through: the audit
+# written to survive shard damage died on the first real corruption it met,
+# and took `--repair` with it, leaving in place the orphaned index rows that
+# repair exists to drop. expanded-01009 raised UnicodeDecodeError after 830
+# readable records.
+
+
+def _damaged(d: Path, name: str, records, tail: bytes) -> Path:
+    """A shard whose bytes INFLATE but whose decoded text is not UTF-8.
+
+    This is the real incident's shape and it is the one no amount of gzip
+    corruption reproduces: the compressed stream is perfectly valid, so the
+    decompressor is happy and the DECODER is what fails. Modelled by writing
+    the junk through the compressor rather than appending it to the file.
+    """
+    p = d / name
+    import io
+    buf = io.BytesIO()
+    with gzip.GzipFile(fileobj=buf, mode="wb") as gz:
+        for r in records:
+            gz.write((json.dumps(r) + "\n").encode())
+            gz.flush()          # per-record, exactly as the crawl writes
+        gz.write(tail)
+    p.write_bytes(buf.getvalue())
+    return p
+
+
+# The text decoder reads in blocks, so every record sharing a block with the
+# junk is lost with it and earlier blocks decode cleanly. That is why the real
+# shard recovered 830 of ~950 rather than 0 or all of them -- and why a
+# fixture has to span several blocks to show recovery at all. A 3-record
+# fixture puts everything in one block and recovers nothing, which looks like
+# the fix failing when it is the fixture being too small.
+_BLOCKS = [{"pmid": str(i), "pad": "x" * 200} for i in range(400)]
+
+
+def _direct_read_error(p: Path) -> tuple[int, str]:
+    """What a plain reader actually raises, so the guard's expectation is
+    DERIVED rather than a hardcoded guess about CPython's gzip layering.
+
+    The first version of this guard asserted UnicodeDecodeError for a fixture
+    that raises BadGzipFile, which tested my prediction instead of the fix.
+    """
+    n = 0
+    try:
+        with gzip.open(p, "rt", encoding="utf-8") as fh:
+            for _ in fh:
+                n += 1
+    except Exception as e:
+        return n, type(e).__name__
+    return n, ""
+
+
+def test_a_torn_tail_is_recorded_and_its_readable_prefix_recovered(tmp_path):
+    d = tmp_path / "shards"
+    d.mkdir()
+    # 0x89 is what the real incident left behind: inflates, is not UTF-8.
+    p = _damaged(d, "expanded-00000.jsonl.gz", _BLOCKS,
+                 b"\x89\x50\x4e\x47\xff\xfe")
+    direct_n, expected = _direct_read_error(p)
+    assert expected == "UnicodeDecodeError", (
+        f"this fixture must exercise the decoder arm, not another; got {expected}")
+    damage: list = []
+    got = [r["pmid"] for r in iter_records(d, damage)]
+    assert got == [str(i) for i in range(len(got))], (
+        "the recovered records must be the UNBROKEN PREFIX -- a reader that "
+        "resynchronised past the damage would silently skip records while "
+        "reporting a count")
+    assert 0 < len(got) < len(_BLOCKS), (
+        f"partial recovery is the whole point: got {len(got)} of {len(_BLOCKS)}")
+    assert len(got) == direct_n, (
+        "the audit must recover exactly what a plain reader does, no more")
+    assert len(damage) == 1 and damage[0][0] == "expanded-00000.jsonl.gz"
+    assert damage[0][2] == expected, (
+        "the recorded error type must be the one actually raised, so a torn "
+        "write stays distinguishable from a truncation in the report")
+
+
+def test_one_damaged_shard_does_not_hide_the_other_thousand(tmp_path):
+    """The regression that matters most. Before the fix the exception escaped
+    the generator, so every shard AFTER the damaged one went unread -- and
+    `stored_keys` builds the set `--repair` deletes against, so a crash part
+    way through would have made the remaining shards' records look orphaned."""
+    d = tmp_path / "shards"
+    d.mkdir()
+    _damaged(d, "expanded-00000.jsonl.gz", _BLOCKS, b"\x89\xff\xfe")
+    with gzip.open(d / "expanded-00001.jsonl.gz", "wt") as fh:
+        fh.write(json.dumps({"pmid": "LATER"}) + "\n")
+    damage: list = []
+    got = [r["pmid"] for r in iter_records(d, damage)]
+    assert "LATER" in got, (
+        "the shard AFTER the damaged one must still be read; before the fix "
+        "the exception escaped the generator and every later shard went "
+        "unread, which would make their records look orphaned to --repair")
+    assert [x[0] for x in damage] == ["expanded-00000.jsonl.gz"]
+
+
+def test_all_three_storage_failures_are_recorded_and_stay_distinct(tmp_path):
+    """One cause, three exception types, two of them outside OSError.
+
+    Collapsing them would make the report say less than it knows: a
+    truncated shard is a run still in progress or a killed process, while a
+    torn one is storage that went away mid-write. Every expectation here is
+    derived from a direct read of the same fixture.
+    """
+    d = tmp_path / "shards"
+    d.mkdir()
+    recs = [{"pmid": str(i), "pad": "x" * 40} for i in range(400)]
+
+    # (a) inflates, not text
+    a = _damaged(d, "expanded-00000.jsonl.gz", recs, b"\x89\xff\xfe")
+    # (b) does not inflate: corrupt the compressed bytes in place
+    b = d / "expanded-00001.jsonl.gz"
+    with gzip.open(b, "wt", encoding="utf-8") as fh:
+        for r in recs:
+            fh.write(json.dumps(r) + "\n")
+            fh.flush()
+    raw = bytearray(b.read_bytes())
+    for i in range(int(len(raw) * 0.85), int(len(raw) * 0.85) + 8):
+        raw[i] ^= 0xFF
+    b.write_bytes(bytes(raw))
+    # (c) stops early
+    c = d / "expanded-00002.jsonl.gz"
+    with gzip.open(c, "wt", encoding="utf-8") as fh:
+        for r in recs:
+            fh.write(json.dumps(r) + "\n")
+            fh.flush()
+    full = c.read_bytes()
+    c.write_bytes(full[:int(len(full) * 0.70)])
+
+    expected = {p.name: _direct_read_error(p)[1] for p in (a, b, c)}
+    assert len(set(expected.values())) == 3, (
+        f"the three fixtures must raise three different types; got {expected}")
+    assert not set(expected.values()) & {""}, "every fixture must actually fail"
+
+    damage: list = []
+    recovered = list(iter_records(d, damage))
+    assert len(damage) == 3, (
+        f"all three must be reported rather than raised; got {damage}")
+    assert {name: err for name, _, err in damage} == expected, (
+        "each shard's recorded type must be the one it actually raised")
+    assert len(recovered) >= 3, (
+        "the readable prefixes are the point of tolerating damage at all")
+    # NON-VACUITY, and the first version of this block WAS vacuous: it
+    # resolved each recorded name with `getattr(__builtins__, name)`, and
+    # inside an imported module `__builtins__` is a DICT, so every lookup
+    # returned None, fell through to `Exception`, and reported False -- even
+    # for OSError itself. `oserror_like` was always 0 and the assertion could
+    # not fail. Resolved against real types now.
+    import builtins
+    import zlib
+    types = {"error": zlib.error}
+    resolved = {n: types.get(n) or getattr(builtins, n) for n in expected.values()}
+    assert all(isinstance(t, type) for t in resolved.values()), resolved
+    # Self-check the resolver on a name whose answer is known, or a resolver
+    # that silently returned the wrong type would make the count meaningless.
+    assert issubclass(getattr(builtins, "OSError"), OSError)
+    not_oserror = [n for n, t in resolved.items() if not issubclass(t, OSError)]
+    assert len(not_oserror) >= 2, (
+        "at least two of the three fixtures must raise something OUTSIDE "
+        "OSError, or this guard would pass against the original handler and "
+        f"prove nothing; resolved {resolved}")
+
+
+def test_repair_does_not_read_every_shard_twice():
+    """STRUCTURAL, because the cost is invisible to any assertion about output.
+
+    `repair` printed `len(stored)` from a SECOND full `stored_keys` pass over
+    a corpus that is 51 GB on a network mount -- doubling the wall time of
+    the one tool that runs when storage is already known to be unreliable,
+    and widening the window in which a drop can interrupt it. The set is
+    returned by `orphaned_index_rows` now; this fails if the rescan returns.
+    """
+    import ast
+    src = (Path(__file__).resolve().parent.parent
+           / "scripts" / "corpus_expand_verify.py").read_text()
+    fn = next(n for n in ast.walk(ast.parse(src))
+              if isinstance(n, ast.FunctionDef) and n.name == "repair")
+    called = {n.func.id for n in ast.walk(fn)
+              if isinstance(n, ast.Call) and isinstance(n.func, ast.Name)}
+    assert "stored_keys" not in called, (
+        "repair must reuse the stored set from orphaned_index_rows rather "
+        "than rescanning every shard to print its size")
+    assert "orphaned_index_rows" in called

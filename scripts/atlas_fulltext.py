@@ -49,6 +49,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from atlas_baseline import atlas_root  # noqa: E402
+from storage_root import require_output_root  # noqa: E402
 
 BULK = "https://ftp.ncbi.nlm.nih.gov/pub/pmc/deprecated/oa_bulk"
 SUBSETS = {"comm": "oa_comm", "noncomm": "oa_noncomm"}
@@ -240,7 +241,10 @@ def main() -> None:
     pmc2pmid = load_pmcid_map(root)
     print(f"cancer articles with a PMC id: {len(pmc2pmid):,}")
 
-    ft.mkdir(parents=True, exist_ok=True)
+    # The SAME refusal the crawl uses (#960): this root defaults under a
+    # network mountpoint, and `parents=True` on an unmounted one writes
+    # the open-access full-text layer to the boot disk instead.
+    require_output_root(ft, "FERRO_ATLAS_FULLTEXT")
     pkgs = list_packages()
     todo = [(l, n) for l, n in pkgs
             if args.redo or not man["packages"].get(n, {}).get("done")]

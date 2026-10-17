@@ -46,6 +46,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from corpus_expand_fetch import (  # noqa: E402
     _RateLimit, Shards, TransientFetchError, _get, retry_page,
 )
+from storage_root import require_output_root  # noqa: E402
 from corpus_identity_index import connect as id_connect  # noqa: E402
 
 API = "https://clinicaltrials.gov/api/v2/studies"
@@ -117,7 +118,10 @@ def _record(study: dict) -> dict | None:
 def run(condition: str = "cancer", limit: int | None = None,
         verbose: bool = True) -> dict:
     ident = id_connect()
-    OUT_ROOT.mkdir(parents=True, exist_ok=True)
+    # The shared refusal (#960): this root defaults under a network
+    # mountpoint, and `parents=True` on an unmounted one writes the
+    # whole fetch to the boot disk instead of failing.
+    require_output_root(OUT_ROOT, "FERRO_TRIALS_OUT")
     shards = Shards(OUT_ROOT, "trials")
     limiter = _RateLimit(SLEEP)
     totals = {"seen": 0, "new": 0, "with_results": 0, "linked_pmids": 0}

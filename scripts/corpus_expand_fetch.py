@@ -64,6 +64,7 @@ import urllib.request
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+from storage_root import require_output_root  # noqa: E402
 from corpus_identity_index import (  # noqa: E402
     connect as id_connect, is_held, norm_doi, norm_pmcid, norm_pmid,
 )
@@ -772,16 +773,27 @@ class Shards:
         self.dir = root / name
         self.dir.mkdir(parents=True, exist_ok=True)
         self.name, self.n, self.fh = name, 0, None
+        self.open_path: Path | None = None
         self.idx = self._resume()
 
     def _resume(self) -> int:
         existing = sorted(self.dir.glob(f"{self.name}-*.jsonl.gz"))
         return int(existing[-1].stem.split("-")[-1].split(".")[0]) + 1 if existing else 0
 
+    def path(self, idx: int) -> Path:
+        return self.dir / f"{self.name}-{idx:05d}.jsonl.gz"
+
     def write(self, obj) -> None:
         if self.fh is None:
-            self.fh = gzip.open(self.dir / f"{self.name}-{self.idx:05d}.jsonl.gz", "wt",
-                                encoding="utf-8")
+            # The path is remembered as the file is opened, so `close` syncs
+            # THE FILE THIS WROTE rather than re-deriving a name from the
+            # index. A durability call aimed at the wrong path raises
+            # FileNotFoundError, which is an OSError, which the tolerant
+            # handler below swallows -- so a one-character slip in `close`
+            # would have made the fsync a silent no-op. Measured: that exact
+            # mutation survived the first version of the guard.
+            self.open_path = self.path(self.idx)
+            self.fh = gzip.open(self.open_path, "wt", encoding="utf-8")
         self.fh.write(json.dumps(obj, ensure_ascii=False) + "\n")
         # Durable BEFORE the caller is allowed to index it. Ordering, not
         # speed, is what makes the index trustworthy.
@@ -792,9 +804,40 @@ class Shards:
             self.idx += 1
 
     def close(self) -> None:
+        """Finish a shard and make it DURABLE, not merely written.
+
+        The per-record flush above reaches the OS and deliberately stops
+        there, because an fsync per record across a network mount costs more
+        than the one-record window it closes. That trade is right for a
+        process kill -- the bytes are already the kernel's -- and it is WRONG
+        for a mount that disappears, because an SMB client holds written
+        bytes of its own and loses them with the connection. Measured: a
+        dropped mount left `expanded-01009` with 830 readable records and a
+        torn tail, and the records in that tail had already been indexed as
+        held.
+
+        fsync HERE cannot save the open shard's tail, and does not claim to.
+        What it does is bound the damage to ONE shard: once a shard is
+        closed it is on the server, so a later drop can no longer reach back
+        and truncate work that was finished minutes ago. One fsync per 4,000
+        records is free.
+        """
         if self.fh:
             self.fh.close()
-            self.fh = None
+            try:
+                fd = os.open(str(self.open_path), os.O_RDONLY)
+                try:
+                    os.fsync(fd)
+                finally:
+                    os.close(fd)
+            except OSError:
+                # Storage that has gone away mid-run is damage to REPORT, not
+                # a reason to abort a run holding days of work;
+                # `corpus_expand_verify.py` is what finds it. This can no
+                # longer hide a wrong-path bug, because the path is the one
+                # `write` opened rather than one recomputed here.
+                pass
+            self.fh = self.open_path = None
 
 
 def run(years, sources, limit_new=None, verbose=True) -> dict:
@@ -804,7 +847,7 @@ def run(years, sources, limit_new=None, verbose=True) -> dict:
     # storing metadata and calling it a crawl.
     deferred = consecutive_deferred = 0
     reopen_stale_slices(st, verbose=verbose)
-    OUT_ROOT.mkdir(parents=True, exist_ok=True)
+    require_output_root(OUT_ROOT)
     shards = Shards(OUT_ROOT, "expanded")
     totals = {"seen": 0, "new": 0, "fulltext": 0, "slices": 0, "deferred": 0,
               # Records stored WITHOUT full text because a retry also failed.
