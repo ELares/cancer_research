@@ -7,8 +7,10 @@ and updating it in the same pass; the second by asking a source that refuses,
 rather than by this code deciding what is free.
 """
 import ast
+import errno
 import gzip
 import json
+import pathlib
 import sqlite3
 import sys
 import urllib.parse
@@ -1976,20 +1978,36 @@ def test_the_crawl_never_creates_its_output_path_with_parents():
     src = (REPO / "scripts" / "corpus_expand_fetch.py").read_text()
     tree = ast.parse(src)
     offenders = []
-    for fn in ast.walk(tree):
-        if not isinstance(fn, ast.FunctionDef) or fn.name != "run":
+    # EVERY function, not just `run`. Scoping this to `run` let the same flag
+    # back in through `Shards._wait_for_storage`, which recreates the shard
+    # directory on the way out of a storage drop -- a method this guard never
+    # walked.
+    #
+    # ONE exemption, and it is CHECKED rather than asserted: the progress
+    # ledger lives in the repository, not on the share, so creating its parent
+    # is both safe and necessary. The check below reads where STATE_DB is
+    # defined and fails if it ever moves onto externally-configured storage,
+    # because an exemption list is exactly where a real site hides.
+    local_only = "STATE_DB"
+    assert "STATE_DB = REPO /" in src, (
+        f"{local_only} is no longer defined relative to the repository, so "
+        "exempting it from the mount-safety rule is no longer justified")
+    for node in ast.walk(tree):
+        if not (isinstance(node, ast.Call)
+                and isinstance(node.func, ast.Attribute)
+                and node.func.attr == "mkdir"):
             continue
-        for node in ast.walk(fn):
-            if (isinstance(node, ast.Call)
-                    and isinstance(node.func, ast.Attribute)
-                    and node.func.attr == "mkdir"):
-                for kw in node.keywords:
-                    if kw.arg == "parents" and getattr(kw.value, "value", False):
-                        offenders.append(node.lineno)
+        if not any(kw.arg == "parents" and getattr(kw.value, "value", False)
+                   for kw in node.keywords):
+            continue
+        target = ast.get_source_segment(src, node.func.value) or ""
+        if target.startswith(local_only):
+            continue
+        offenders.append(f"{node.lineno} ({target}.mkdir)")
     assert not offenders, (
-        f"run() creates its output path with parents=True at line(s) "
-        f"{offenders}: on an unmounted share that writes the corpus to the "
-        "boot disk instead of refusing")
+        f"output paths are created with parents=True at line(s) {offenders}: "
+        "on an unmounted share that writes the corpus to the boot disk "
+        "instead of refusing")
     # And the refusal must actually be reached, or the above is vacuous.
     run = next(n for n in ast.walk(tree)
                if isinstance(n, ast.FunctionDef) and n.name == "run")
@@ -2447,3 +2465,181 @@ def test_a_control_that_would_cause_no_request_is_not_a_control(tmp_path):
     # The whole point: with no usable control the verdict is UNKNOWN, which the
     # caller treats as unsafe -- NOT "up".
     assert fx._service_is_up([{"pmcid": None}], None) is None
+
+
+# --- A vanished mount must not end the run (#966) --------------------------
+#
+# Two #913 passes died in Shards.write, 96 hours and 404 minutes in, both on a
+# flush to a network mount that had gone away (Errno 5, then Errno 6). Neither
+# failure said anything about the record: the bytes were fine and the
+# destination was not there.
+
+
+class _Flaky:
+    """A gzip handle whose flush fails for the first N calls, like a mount
+    that goes away and comes back."""
+
+    def __init__(self, fails, errno_):
+        self.fails, self.errno = fails, errno_
+        self.written, self.closed, self.flushes = [], False, 0
+
+    def write(self, s):
+        self.written.append(s)
+
+    def flush(self):
+        self.flushes += 1
+        if self.fails > 0:
+            self.fails -= 1
+            raise OSError(self.errno, "boom")
+
+    def close(self):
+        self.closed = True
+
+
+def _shards_with(monkeypatch, tmp_path, handles):
+    """A Shards whose opens hand back the given fakes in order."""
+    s = fx.Shards(tmp_path, "t")
+    seq = list(handles)
+    opened = []
+
+    def fake_open(path, *a, **k):
+        opened.append(pathlib.Path(path).name)
+        return seq.pop(0)
+
+    monkeypatch.setattr(fx.gzip, "open", fake_open)
+    monkeypatch.setattr(fx.time, "sleep", lambda *_: None)
+    monkeypatch.setattr(fx, "STORAGE_POLL", 0.0)
+    return s, opened
+
+
+@pytest.mark.parametrize("err", [errno.EIO, errno.ENXIO, errno.ENODEV,
+                                 errno.ESTALE, errno.ENOENT])
+def test_a_vanished_mount_is_survived_and_the_record_still_lands(
+        tmp_path, monkeypatch, err):
+    """Every errno a disappearing network mount produces. EIO and ENXIO are
+    the two that actually killed passes; the others are the same event with a
+    different server or a different moment."""
+    dead, live = _Flaky(1, err), _Flaky(0, err)
+    s, opened = _shards_with(monkeypatch, tmp_path, [dead, live])
+    s.write({"pmid": "1"})
+    assert live.written, f"the record must land after the storage returns: {opened}"
+    assert "1" in live.written[0]
+    assert len(opened) == 2, f"a fresh shard must be opened; opened {opened}"
+    assert opened[0] != opened[1], (
+        f"the retry must not reuse the damaged shard's name: {opened}")
+
+
+def test_the_dead_handle_is_discarded_rather_than_closed(tmp_path, monkeypatch):
+    """Closing it would FLUSH, and flushing is what just failed -- so closing
+    turns a recoverable drop into the same fatal error one line later."""
+    dead, live = _Flaky(1, errno.EIO), _Flaky(0, errno.EIO)
+    s, _ = _shards_with(monkeypatch, tmp_path, [dead, live])
+    s.write({"pmid": "1"})
+    assert not dead.closed, (
+        "the handle whose flush failed must not be closed; its flush would "
+        "raise again and re-kill the run")
+
+
+def test_a_write_error_that_is_not_a_lost_mount_propagates(tmp_path, monkeypatch):
+    """EACCES says the write is wrong, not that the destination left. Retrying
+    it would loop on a real problem and hide it."""
+    bad = _Flaky(1, errno.EACCES)
+    s, _ = _shards_with(monkeypatch, tmp_path, [bad])
+    with pytest.raises(OSError) as e:
+        s.write({"pmid": "1"})
+    assert e.value.errno == errno.EACCES
+
+
+def test_storage_that_never_returns_still_ends_the_run(tmp_path, monkeypatch):
+    """Bounded, not infinite. Giving up is safe rather than lossy -- the
+    ledger is local and every slice resumes from its own cursor -- while
+    waiting forever would hide a dead NAS behind a running process."""
+    dead = _Flaky(99, errno.EIO)
+    s, _ = _shards_with(monkeypatch, tmp_path, [dead])
+    monkeypatch.setattr(fx, "STORAGE_RETURN_TIMEOUT", 0.0)
+    with pytest.raises(OSError):
+        s.write({"pmid": "1"})
+
+
+def test_only_one_retry_is_attempted(tmp_path, monkeypatch):
+    """A second failure after the storage came back is not a blip."""
+    dead, also_dead = _Flaky(1, errno.EIO), _Flaky(1, errno.EIO)
+    s, _ = _shards_with(monkeypatch, tmp_path, [dead, also_dead])
+    with pytest.raises(OSError):
+        s.write({"pmid": "1"})
+
+
+def test_a_failed_write_never_reports_success_to_its_caller(
+        tmp_path, monkeypatch):
+    """THE INVARIANT THAT MAKES ALL OF THIS SAFE, asserted rather than assumed.
+
+    The identity index is trustworthy because the caller indexes a record only
+    after `write` RETURNS. So the property this change must preserve is that a
+    record whose bytes never landed makes `write` raise -- on the first
+    attempt and on the retry alike. If it ever returned after a failed write,
+    the row would claim an article whose bytes are gone, which is the
+    permanent-invisibility failure the ordering exists to prevent.
+    """
+    s, _ = _shards_with(monkeypatch, tmp_path, [_Flaky(99, errno.EIO)])
+    monkeypatch.setattr(fx, "STORAGE_RETURN_TIMEOUT", 0.0)
+    raised = False
+    try:
+        s.write({"pmid": "1"})
+    except OSError:
+        raised = True
+    assert raised, (
+        "write returned despite the record never reaching storage; the caller "
+        "would now index an article whose bytes do not exist")
+
+
+def test_the_classifier_is_a_function_so_it_can_be_mutated_and_caught():
+    """STRUCTURAL, for the reason `_should_abort` is a function: a condition
+    written inline can only be checked by grepping for it, and a grep passes
+    while the comparison sits behind `if False:`."""
+    assert fx._storage_vanished(OSError(errno.EIO, "x")) is True
+    assert fx._storage_vanished(OSError(errno.EACCES, "x")) is False
+    src = (REPO / "scripts" / "corpus_expand_fetch.py").read_text()
+    cls = next(n for n in ast.walk(ast.parse(src))
+               if isinstance(n, ast.ClassDef) and n.name == "Shards")
+    called = {n.func.id for n in ast.walk(cls)
+              if isinstance(n, ast.Call) and isinstance(n.func, ast.Name)}
+    assert "_storage_vanished" in called, (
+        "Shards must consult the classifier rather than testing errnos inline")
+
+
+def test_close_tolerates_a_lost_mount_but_not_a_real_error(tmp_path, monkeypatch):
+    """`close` has its own classifier and it was UNGUARDED -- the mutation that
+    made it swallow every error survived the whole sweep.
+
+    The two cases are not the same. A mount that went away between the last
+    write and the close leaves a damaged shard the audit reports by name, and
+    raising on the way out would discard a run's totals for nothing. Any other
+    error is a real problem and must not be hidden by a code path that exists
+    for storage loss.
+    """
+    class _Closes:
+        def __init__(self, err):
+            self.err = err
+
+        def write(self, s):
+            pass
+
+        def flush(self):
+            pass
+
+        def close(self):
+            raise OSError(self.err, "on close")
+
+    for err, should_raise in ((errno.EIO, False), (errno.EACCES, True)):
+        s = fx.Shards(tmp_path, f"t{err}")
+        monkeypatch.setattr(fx.gzip, "open", lambda *a, **k: _Closes(err))
+        s.write({"pmid": "1"})
+        if should_raise:
+            with pytest.raises(OSError) as e:
+                s.close()
+            assert e.value.errno == errno.EACCES, (
+                "a real close error must not be swallowed by the path that "
+                "exists for a lost mount")
+        else:
+            s.close()          # tolerated
+            assert s.fh is None

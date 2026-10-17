@@ -51,6 +51,7 @@ is visible as a slice, not lost in an average.
 from __future__ import annotations
 
 import argparse
+import errno
 import gzip
 import json
 import os
@@ -246,6 +247,34 @@ def _search_with_retry(src: str, year: int, cursor: str, verbose: bool = True):
     """The Europe PMC search, through the shared page retry."""
     return retry_page(search, src, year, cursor,
                       label=f"search {src} {year}", verbose=verbose)
+
+
+# Errnos that mean THE STORAGE WENT AWAY rather than the write being wrong.
+# A network mount vanishing under an open handle surfaces as EIO or ENXIO
+# (both observed: Errno 5 and Errno 6 killed two #913 passes), ENODEV when the
+# device is gone, ESTALE when the server returned as a different incarnation,
+# and ENOENT when the mount point emptied out. None of them says anything is
+# wrong with the record being written, so none of them should end a run that
+# may have days of work behind it.
+STORAGE_GONE = frozenset({errno.EIO, errno.ENXIO, errno.ENODEV,
+                          errno.ESTALE, errno.ENOENT})
+# How long to wait for the storage to come back before giving up. The login
+# mount agent re-checks every 300s, so half an hour covers several of its
+# attempts; past that this is not a blip and a human should look. Giving up is
+# safe rather than lossy: the ledger is local and every slice resumes from its
+# own cursor.
+STORAGE_RETURN_TIMEOUT = 1800.0
+STORAGE_POLL = 15.0
+
+
+def _storage_vanished(e: OSError) -> bool:
+    """Did the storage disappear, or is this write genuinely bad?
+
+    A function rather than an inline `in`, for the reason `_should_abort` is
+    one: a condition written inline can only be checked by grepping for it,
+    and a grep passes while the comparison sits behind `if False:`.
+    """
+    return e.errno in STORAGE_GONE
 
 
 # How many known-good articles to re-probe before calling the service down.
@@ -908,7 +937,11 @@ class Shards:
 
     def __init__(self, root: Path, name: str):
         self.dir = root / name
-        self.dir.mkdir(parents=True, exist_ok=True)
+        # Only our own leaf: `root` has already been vouched for by
+        # `require_output_root`, so there is nothing above this to create and
+        # `parents=True` would only serve to invent a path on an unmounted
+        # share (#960).
+        self.dir.mkdir(exist_ok=True)
         self.name, self.n, self.fh = name, 0, None
         self.open_path: Path | None = None
         self.idx = self._resume()
@@ -921,6 +954,32 @@ class Shards:
         return self.dir / f"{self.name}-{idx:05d}.jsonl.gz"
 
     def write(self, obj) -> None:
+        """Append a record, surviving the storage going away underneath.
+
+        TWO #913 PASSES DIED HERE, 96 hours and 404 minutes in, both on a
+        flush to a network mount that had vanished (Errno 5, then Errno 6).
+        Neither failure said anything about the record: the bytes were fine
+        and the destination was not there. A run that may hold days of work
+        must not end on that.
+
+        The ordering that makes the identity index trustworthy is unchanged
+        and is what makes this safe: `write` either RETURNS, after the bytes
+        reached storage, or RAISES -- and the caller indexes only after it
+        returns. So a record whose write failed is never claimed as held, on
+        the first attempt or the retry.
+        """
+        try:
+            self._append(obj)
+        except OSError as e:
+            if not _storage_vanished(e):
+                raise
+            self._wait_for_storage(e)
+            # ONCE. A second failure after the storage came back is not a
+            # blip, and retrying forever would hide a real problem behind an
+            # endless run.
+            self._append(obj)
+
+    def _append(self, obj) -> None:
         if self.fh is None:
             # The path is remembered as the file is opened, so `close` syncs
             # THE FILE THIS WROTE rather than re-deriving a name from the
@@ -939,6 +998,50 @@ class Shards:
         if self.n % SHARD_RECORDS == 0:
             self.close()
             self.idx += 1
+
+    def _wait_for_storage(self, e: OSError) -> None:
+        """Wait for the destination to come back, then start a FRESH shard.
+
+        The dead handle is DISCARDED rather than closed. Closing it would
+        flush, and flushing is what just failed -- so closing it raises again
+        and turns a recoverable drop into the same fatal error one line later.
+        Its shard keeps whatever bytes reached the server; that file is now
+        damaged and `corpus_expand_verify.py` reports it by name, which is the
+        right outcome: the damage is real and hiding it would be worse.
+
+        The index is bumped so the retry opens a NEW shard. Appending to the
+        one that was being written when the mount died would put good records
+        after a torn tail, where no reader can reach them -- the readable
+        prefix is all a damaged shard gives up.
+        """
+        self.fh = None
+        self.open_path = None
+        self.idx += 1
+        # THE SAME RULE `require_output_root` ENFORCES, and reusing it rather
+        # than inventing a second availability test: the PARENT must exist and
+        # this process creates only its own leaf. A first version tested a
+        # hand-picked `self.dir.parent.parent` as a canary and then called
+        # `mkdir(parents=True)` -- which is the flag #960 removed, in a method
+        # #960's structural guard does not walk, and it hard-coded a guess
+        # about how many levels sit between the shard directory and the mount.
+        deadline = time.monotonic() + STORAGE_RETURN_TIMEOUT
+        waited = 0.0
+        print(f"  ! storage went away ({e}); waiting up to "
+              f"{STORAGE_RETURN_TIMEOUT / 60:.0f} min for it to return",
+              flush=True)
+        while time.monotonic() < deadline:
+            time.sleep(STORAGE_POLL)
+            waited += STORAGE_POLL
+            if not self.dir.parent.is_dir():
+                continue          # the share is still away
+            try:
+                self.dir.mkdir(exist_ok=True)
+            except OSError:
+                continue          # back, but not yet writable
+            print(f"  = storage returned after {waited / 60:.1f} min; "
+                  f"continuing in a new shard", flush=True)
+            return
+        raise
 
     def close(self) -> None:
         """Finish a shard and make it DURABLE, not merely written.
@@ -960,7 +1063,16 @@ class Shards:
         records is free.
         """
         if self.fh:
-            self.fh.close()
+            try:
+                self.fh.close()
+            except OSError as e:
+                # The storage went away between the last write and here. The
+                # shard is damaged and the audit will say so; raising on the
+                # way out would discard a run's totals for nothing.
+                if not _storage_vanished(e):
+                    raise
+                self.fh = self.open_path = None
+                return
             try:
                 fd = os.open(str(self.open_path), os.O_RDONLY)
                 try:
