@@ -64,6 +64,7 @@ import urllib.request
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+from storage_root import require_output_root  # noqa: E402
 from corpus_identity_index import (  # noqa: E402
     connect as id_connect, is_held, norm_doi, norm_pmcid, norm_pmid,
 )
@@ -837,42 +838,6 @@ class Shards:
                 # `write` opened rather than one recomputed here.
                 pass
             self.fh = self.open_path = None
-
-
-def require_output_root(root: Path) -> None:
-    """Create the shard root, but REFUSE to invent the path that leads to it.
-
-    `root.mkdir(parents=True, exist_ok=True)` is the obvious line and it is
-    the dangerous one, because A MOUNT POINT IS JUST A DIRECTORY. With the
-    NAS unmounted, `~/nas` is an empty local directory, so `parents=True`
-    cheerfully creates `~/nas/cancer-atlas/expanded` ON THE BOOT DISK and the
-    crawl writes the expanded corpus -- 51 GB of it at the time of writing --
-    into a filesystem that had 16 GB free, silently, while the ledger (which
-    lives in the repo, NOT on the share) records every slice as walked. The
-    shards would then be invisible to every later run, which is the same
-    permanent-invisibility failure the write-then-index ordering exists to
-    prevent, arrived at from the other direction.
-
-    So the rule is that this process may create its OWN leaf and nothing
-    above it: the parent must already exist, which on a mounted share it does
-    and on an unmounted mount point it does not. That is the same canary the
-    login mount agent checks, and it costs one stat.
-
-    It is deliberately NOT a check for "is this a network mount": pointing
-    `FERRO_EXPAND_OUT` at a local directory is legitimate (every test does),
-    and a rule that refused local paths would be enforcing a storage
-    preference rather than catching a mistake.
-    """
-    if not root.parent.is_dir():
-        raise SystemExit(
-            f"REFUSING to run: {root.parent} does not exist, so {root} cannot "
-            f"be created without inventing the path to it.\n"
-            f"If that is a mount point, the share is not mounted -- mount it "
-            f"and re-run; the ledger is local, so every slice resumes from its "
-            f"own cursor.\n"
-            f"If the output really should live somewhere else, create the "
-            f"parent yourself or set FERRO_EXPAND_OUT.")
-    root.mkdir(exist_ok=True)
 
 
 def run(years, sources, limit_new=None, verbose=True) -> dict:

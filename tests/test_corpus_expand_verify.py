@@ -717,15 +717,25 @@ def test_all_three_storage_failures_are_recorded_and_stay_distinct(tmp_path):
         "each shard's recorded type must be the one it actually raised")
     assert len(recovered) >= 3, (
         "the readable prefixes are the point of tolerating damage at all")
-    # Only ONE of the three is an OSError, which is why the original handler
-    # caught one of them and died on two.
+    # NON-VACUITY, and the first version of this block WAS vacuous: it
+    # resolved each recorded name with `getattr(__builtins__, name)`, and
+    # inside an imported module `__builtins__` is a DICT, so every lookup
+    # returned None, fell through to `Exception`, and reported False -- even
+    # for OSError itself. `oserror_like` was always 0 and the assertion could
+    # not fail. Resolved against real types now.
+    import builtins
     import zlib
-    oserror_like = sum(1 for e in expected.values()
-                       if issubclass(getattr(__builtins__, e, None)
-                                     or {"error": zlib.error}.get(e, Exception), OSError))
-    assert oserror_like <= 1, (
-        "if every fixture were an OSError this guard would pass against the "
-        "original handler and prove nothing")
+    types = {"error": zlib.error}
+    resolved = {n: types.get(n) or getattr(builtins, n) for n in expected.values()}
+    assert all(isinstance(t, type) for t in resolved.values()), resolved
+    # Self-check the resolver on a name whose answer is known, or a resolver
+    # that silently returned the wrong type would make the count meaningless.
+    assert issubclass(getattr(builtins, "OSError"), OSError)
+    not_oserror = [n for n, t in resolved.items() if not issubclass(t, OSError)]
+    assert len(not_oserror) >= 2, (
+        "at least two of the three fixtures must raise something OUTSIDE "
+        "OSError, or this guard would pass against the original handler and "
+        f"prove nothing; resolved {resolved}")
 
 
 def test_repair_does_not_read_every_shard_twice():

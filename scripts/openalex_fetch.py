@@ -49,6 +49,7 @@ from corpus_expand_fetch import (  # noqa: E402
     _RateLimit, Shards, TransientFetchError, _get, norm_doi, norm_pmid,
     retry_page,
 )
+from storage_root import require_output_root  # noqa: E402
 from corpus_identity_index import connect as id_connect, is_held  # noqa: E402
 
 API = "https://api.openalex.org/works"
@@ -147,7 +148,10 @@ def run(limit: int | None = None, only_missing_pmid: bool = True,
     Fetching it here would spend requests to arrive at a worse copy.
     """
     ident = id_connect()
-    OUT_ROOT.mkdir(parents=True, exist_ok=True)
+    # The shared refusal (#960): this root defaults under a network
+    # mountpoint, and `parents=True` on an unmounted one writes the
+    # whole fetch to the boot disk instead of failing.
+    require_output_root(OUT_ROOT, "FERRO_OPENALEX_OUT")
     shards = Shards(OUT_ROOT, "openalex")
     limiter = _RateLimit(SLEEP)
     totals = {"seen": 0, "new": 0, "with_abstract": 0, "held_already": 0}
