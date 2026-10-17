@@ -1377,8 +1377,15 @@ def test_the_backoff_schedule_survived_the_loop_rewrite(monkeypatch):
 # whose fullTextXML returns HTTP 500 on three consecutive direct requests.
 # Deferring forever costs 2.9M search requests per pass on the MED slices.
 
-def _rerun(tmp_path, monkeypatch, pages, fail_ids):
-    """A SECOND run over the same state, which is what `retry_pass` keys on."""
+def _rerun(tmp_path, monkeypatch, pages, fail_ids, outage=False):
+    """A SECOND run over the same state, which is what `retry_pass` keys on.
+
+    `outage=True` fails EVERY full-text request including the breaker's control
+    probes, which is the only way to model a real outage now that the probe
+    exists. Without it, failing a chosen set of ids models PERMANENTLY BROKEN
+    DOCUMENTS -- a distinction the fixture could not previously express, which
+    is why a test named for an outage was actually driving broken documents.
+    """
     import corpus_identity_index as _ix
     monkeypatch.setattr(fx, "STATE_DB", tmp_path / "state.sqlite")
     monkeypatch.setattr(fx, "OUT_ROOT", tmp_path / "out")
@@ -1390,6 +1397,12 @@ def _rerun(tmp_path, monkeypatch, pages, fail_ids):
                         lambda s, y, c: seq.pop(0) if seq else {"resultList": {"result": []}})
 
     def ft(rec):
+        if outage:
+            raise fx.TransientFetchError("500 (the service is down)")
+        # A control record from the identity index carries only a pmcid; it is
+        # an article already proven fetchable, so it answers.
+        if rec.get("id") is None:
+            return "TEXT-control"
         if rec.get("id") in fail_ids:
             raise fx.TransientFetchError(f"500 on {rec['id']}")
         return f"TEXT-{rec['id']}"
@@ -1455,8 +1468,18 @@ def test_an_outage_during_a_retry_pass_raises_instead_of_retiring_the_slice(tmp_
 
     If a retry pass treats every failure as a permanently broken document,
     then an outage DURING that pass retires the whole slice as abstract-only
-    and there is no third chance -- the loss is permanent and silent. A long
-    run of consecutive failures is an outage, not a set of broken documents.
+    and there is no third chance -- the loss is permanent and silent.
+
+    WHY IT RAISES CHANGED WITH #964, and the behaviour it guards did not. A
+    long consecutive run is no longer read AS an outage -- on a retry pass that
+    premise is backwards, since the records being retried are the ones that
+    already failed. The run now re-probes an article it fetched successfully
+    and only stops if that fails too. This fixture is a retry-ONLY pass, so it
+    So this fixture now fails EVERY request, control probes included, which is
+    what an outage actually looks like -- and the run still refuses to retire
+    the slice. Before `outage=True` existed the fixture failed only a chosen
+    set of ids, which is permanently broken DOCUMENTS; the test was named for
+    an outage while driving the other case entirely.
     """
     # Pass one must defer MANY records without tripping its OWN abort, so the
     # failures alternate with successes and no consecutive run reaches the
@@ -1476,8 +1499,12 @@ def test_an_outage_during_a_retry_pass_raises_instead_of_retiring_the_slice(tmp_
     assert done1 == 0 and d1 == len(doomed), (
         f"pass one did not set up the retry state: deferred={d1} done={done1}")
 
-    with pytest.raises(RuntimeError, match="RETRY pass"):
-        _rerun(tmp_path, monkeypatch, [_page(ids, None)], doomed)
+    with pytest.raises(RuntimeError) as err:
+        _rerun(tmp_path, monkeypatch, [_page(ids, None)], doomed, outage=True)
+    assert "retry pass" in str(err.value), str(err.value)
+    assert "really is down" in str(err.value), (
+        "with every request failing -- the control probes included -- the "
+        f"reason must be a MEASURED outage: {err.value}")
 
     import sqlite3 as _s3
     c = _s3.connect(tmp_path / "state.sqlite")
@@ -2054,3 +2081,333 @@ def test_close_syncs_the_shard_it_actually_wrote(tmp_path, monkeypatch):
     assert seen == [p.stat().st_ino], (
         "close must fsync the shard it wrote; got "
         f"{seen} against inode {p.stat().st_ino}")
+
+
+# --- The breaker must measure the outage, not infer it (#964) --------------
+#
+# `run()` aborts after MAX_CONSECUTIVE_DEFERRALS consecutive full-text
+# failures, and the retry-pass site used to justify that with "a long run of
+# consecutive failures here is an outage, not a set of broken documents".
+#
+# ON A RETRY PASS THAT IS BACKWARDS. The records being retried are the ones
+# that already failed -- a population selected for failing -- so a long
+# consecutive run is the EXPECTED outcome of a set of permanently broken
+# documents.
+#
+# Measured when it stopped the #913 recovery walk at 426 minutes: five PMCIDs
+# the crawl had given up on returned HTTP 500 on a hand probe, five whose text
+# it had successfully stored returned HTTP 200 with real content, and the
+# search endpoint answered normally. Europe PMC serves 500 rather than 404 for
+# articles with no retrievable full text, so the run aborted on a permanent
+# condition it had diagnosed as transient.
+
+
+def test_the_service_is_up_when_a_control_still_answers(monkeypatch):
+    calls = []
+
+    def fake_ft(rec):
+        calls.append(rec["pmcid"])
+        return "TEXT"
+
+    monkeypatch.setattr(fx, "fetch_fulltext", fake_ft)
+    assert fx._service_is_up([{"pmcid": "PMC1"}, {"pmcid": "PMC2"}], None) is True
+    assert len(calls) == 1, "one success is enough; it must stop probing"
+    assert calls[0] == "PMC2", "it must probe the NEWEST success first"
+
+
+def test_the_service_is_down_when_no_control_answers(monkeypatch):
+    calls = []
+
+    def fake_ft(rec):
+        calls.append(rec["pmcid"])
+        raise fx.TransientFetchError("500")
+
+    monkeypatch.setattr(fx, "fetch_fulltext", fake_ft)
+    assert fx._service_is_up(
+        [{"pmcid": f"PMC{i}"} for i in range(1, 5)], None) is False
+    assert len(calls) == fx.ABORT_CONTROL_PROBES, (
+        f"it must try {fx.ABORT_CONTROL_PROBES} controls before concluding the "
+        f"service is down; tried {len(calls)}")
+
+
+def test_a_refusal_still_proves_the_service_answered(monkeypatch):
+    """`_get` returns None when the server REFUSES. A 404 is an answer, so a
+    control that has since been withdrawn still shows the service is up --
+    the question is reachability, not whether one article survives."""
+    monkeypatch.setattr(fx, "fetch_fulltext", lambda rec: None)
+    assert fx._service_is_up([{"pmcid": "PMC1"}], None) is True
+
+
+def test_no_control_is_a_THIRD_state_and_aborts(monkeypatch):
+    """A run that begins on a retry pass can hit the breaker having fetched no
+    text at all. "Unknown" must not collapse into "up" -- that would retire a
+    slice without its text during a real outage, which is permanent."""
+    monkeypatch.setattr(fx, "fetch_fulltext",
+                        lambda *a, **k: pytest.fail("must not probe with no control"))
+    assert fx._service_is_up([], None) is None
+    with pytest.raises(RuntimeError) as e:
+        fx._abort_unless_documents_are_broken(100, [], None, Exception("x"),
+                                              "a retry pass")
+    assert "UNKNOWN" in str(e.value), (
+        "the message must distinguish 'no control to check' from 'the controls "
+        f"failed'; got {e.value}")
+
+
+def test_broken_documents_do_not_abort_the_run(monkeypatch):
+    """The regression that matters: this is what stopped the #913 walk."""
+    monkeypatch.setattr(fx, "fetch_fulltext", lambda rec: "TEXT")
+    # Returns rather than raising == the caller carries on.
+    assert fx._abort_unless_documents_are_broken(
+        100, [{"pmcid": "PMC1"}], None, Exception("500"), "a retry pass") is None
+
+
+def test_a_real_outage_still_aborts(monkeypatch):
+    """The guard the breaker exists for is NOT weakened: with the service
+    genuinely unreachable it still stops, because retiring a slice without
+    its text cannot be undone."""
+    monkeypatch.setattr(fx, "fetch_fulltext",
+                        lambda rec: (_ for _ in ()).throw(fx.TransientFetchError("500")))
+    with pytest.raises(RuntimeError) as e:
+        fx._abort_unless_documents_are_broken(
+            100, [{"pmcid": "PMC1"}], None, Exception("500"), "a retry pass")
+    msg = str(e.value)
+    assert "really is down" in msg and "permanent" in msg, msg
+
+
+def test_both_breaker_sites_consult_the_same_decision():
+    """STRUCTURAL. The two sites make the same judgement call, and the retry
+    site is the one that fired -- fixing it alone would leave the first-pass
+    site inferring an outage from the same bad premise."""
+    src = (REPO / "scripts" / "corpus_expand_fetch.py").read_text()
+    run = next(n for n in ast.walk(ast.parse(src))
+               if isinstance(n, ast.FunctionDef) and n.name == "run")
+    calls = [n for n in ast.walk(run)
+             if isinstance(n, ast.Call) and isinstance(n.func, ast.Name)]
+    aborts = [n for n in calls if n.func.id == "_should_abort"]
+    guards = [n for n in calls if n.func.id == "_abort_unless_documents_are_broken"]
+    assert len(aborts) == 2, f"expected both breaker sites; found {len(aborts)}"
+    assert len(guards) == len(aborts), (
+        f"{len(aborts)} breaker sites but {len(guards)} consult the probe -- a "
+        "site that still infers an outage from the failures themselves")
+    # And no site may raise an outage RuntimeError on its own again.
+    raises = [n for n in ast.walk(run) if isinstance(n, ast.Raise)
+              and isinstance(n.exc, ast.Call)
+              and getattr(n.exc.func, "id", "") == "RuntimeError"]
+    for r in raises:
+        seg = ast.get_source_segment(src, r) or ""
+        assert "looks down" not in seg, (
+            "an outage verdict is being asserted inline again rather than measured")
+
+
+def test_the_rest_base_url_has_one_definition():
+    """The probe must ask the same host the fetcher does. Three call sites
+    spelling out one URL is how a check ends up answering about somewhere
+    else."""
+    src = (REPO / "scripts" / "corpus_expand_fetch.py").read_text()
+    assert src.count("europepmc/webservices/rest") == 1, (
+        "the Europe PMC base URL is spelled out more than once")
+
+
+def test_the_control_buffer_is_bounded_and_actually_filled():
+    """A run stores millions of records; the controls are the newest few.
+
+    The first version checked `"if pmcid:" in src`, which SURVIVED the mutation
+    that stopped recording controls altogether -- that substring appears
+    elsewhere in the file, so the guard passed by matching a different site.
+    The same over-broad-text-scan shape as a `pgrep` pattern matching its own
+    command line. AST now, over the statement that does the recording.
+    """
+    import ast as _ast
+    src = (REPO / "scripts" / "corpus_expand_fetch.py").read_text()
+    tree = _ast.parse(src)
+    appends = [n for n in _ast.walk(tree)
+               if isinstance(n, _ast.Call) and isinstance(n.func, _ast.Attribute)
+               and n.func.attr == "append"
+               and getattr(n.func.value, "id", "") == "recent_ok"]
+    assert appends, "nothing records a control, so the probe can never run"
+    # Not sitting behind a constant-false test, which is how the mutation hid.
+    guards = [n for n in _ast.walk(tree) if isinstance(n, _ast.If)
+              and any(a in _ast.walk(n) for a in appends)]
+    for g in guards:
+        seg = _ast.get_source_segment(src, g.test) or ""
+        assert seg.strip() not in {"False", "0", "None"}, (
+            f"the control recording is unreachable: `if {seg}`")
+    assert "del recent_ok[0]" in src, "the control buffer must be capped"
+
+
+def test_more_than_one_control_is_probed_before_calling_the_service_down():
+    """The VALUE is bounded, because the mechanism test derives its expectation
+    from this constant and therefore cannot see it change -- the
+    guard-computes-its-own-expectation shape, confirmed by a mutation to 1
+    surviving.
+
+    Two is the floor for a reason: a single control that happens to blip would
+    abort a run holding days of work on one request.
+    """
+    assert fx.ABORT_CONTROL_PROBES >= 2, (
+        f"ABORT_CONTROL_PROBES={fx.ABORT_CONTROL_PROBES}: one control makes a "
+        "transient blip indistinguishable from an outage")
+    assert fx.ABORT_CONTROL_PROBES <= 5, (
+        "and it must stay small: these are extra requests issued at the moment "
+        "the service is already suspected of being in trouble")
+
+
+def test_a_retry_pass_retires_the_slice_when_the_service_still_answers(
+        tmp_path, monkeypatch):
+    """THE #913 BLOCKER, as a regression test.
+
+    The recovery walk stopped here at 426 minutes with "the service looks down
+    rather than holding broken documents". It was not down: five articles the
+    crawl had given up on returned HTTP 500 on a hand probe while five whose
+    text it had stored returned HTTP 200, and the search endpoint answered
+    normally. Europe PMC serves 500 rather than 404 for articles with no
+    retrievable full text, so those documents fail forever.
+
+    With the service answering, the slice must RETIRE -- records stored with
+    title, abstract and MeSH and without full text, which is already the
+    documented behaviour for a text that has failed four in-run retries twice
+    across separate runs. The alternative is a slice that can never complete.
+    """
+    n = 2 * fx.MAX_CONSECUTIVE_DEFERRALS + 20
+    ids = [f"r{i}" for i in range(n)]
+    doomed = {i for i in ids if int(i[1:]) % 2 == 0}
+    _drive(tmp_path, monkeypatch, [_page(ids, None)], fail_ids=doomed)
+
+    # NOTHING IS PATCHED AT THE DECISION. The probe finds its own control --
+    # pass one stored full text for the odd ids, so the identity index can name
+    # an article with known-good text even though this pass has fetched none.
+    # That index fallback is what makes the check usable on a retry-only pass,
+    # which is exactly the state that blocked #913.
+    _rerun(tmp_path, monkeypatch, [_page(ids, None)], doomed)
+
+    import sqlite3 as _s3
+    c = _s3.connect(tmp_path / "state.sqlite")
+    done, seen, hits = c.execute("SELECT done, seen, hits FROM slice").fetchone()
+    c.close()
+    assert done == 1, (
+        "with the service answering, a slice whose remaining texts are "
+        "permanently broken must be able to retire; otherwise it is "
+        "unretirable forever, which is what blocked #913")
+    # `seen` is CUMULATIVE across passes and `hits` is the service's own
+    # total, so a re-walked slice legitimately exceeds it -- the live MED 2014
+    # sits at seen=368,562 against hits=274,899. The certification rule is
+    # "not walked SHORT", which is what `incomplete_slices` tests.
+    assert seen >= hits, (
+        f"a retired slice must not be walked short: seen={seen} hits={hits}")
+    c = _s3.connect(tmp_path / "state.sqlite")
+    try:
+        assert not fx.incomplete_slices(c), (
+            "the slice retired without being certifiable, which is the #913 "
+            "defect itself")
+    finally:
+        c.close()
+
+
+def test_a_successful_fetch_in_the_same_pass_supplies_the_control(
+        tmp_path, monkeypatch):
+    """END TO END, with the real probe rather than a patched verdict.
+
+    This is what the mutation "stop recording controls" needed in order to be
+    caught: without it the buffer is empty, `_service_is_up` returns None and
+    the run aborts, so a test that patches the verdict cannot tell the
+    difference. Here the retry pass ALSO fetches fresh records successfully, so
+    the buffer fills, the real probe finds a control and the slice retires.
+
+    The fresh ids come FIRST in the page deliberately. Records are processed in
+    page order, so a buffer filled only after the breaker trips would not help
+    -- and that ordering dependence is real rather than an artifact: a pass
+    that has not yet fetched anything genuinely has no control, and aborting is
+    the conservative branch there.
+    """
+    n = 2 * fx.MAX_CONSECUTIVE_DEFERRALS + 20
+    doomed_ids = [f"r{i}" for i in range(n)]
+    doomed = {i for i in doomed_ids if int(i[1:]) % 2 == 0}
+    _drive(tmp_path, monkeypatch, [_page(doomed_ids, None)], fail_ids=doomed)
+
+    fresh = [f"ok{i}" for i in range(3)]
+    _rerun(tmp_path, monkeypatch, [_page(fresh + doomed_ids, None)], doomed)
+
+    import sqlite3 as _s3
+    c = _s3.connect(tmp_path / "state.sqlite")
+    try:
+        done = c.execute("SELECT done FROM slice").fetchone()[0]
+        assert done == 1, (
+            "a pass that successfully fetched text has a control to probe, so "
+            "the permanently broken documents must not stop it")
+        assert not fx.incomplete_slices(c)
+    finally:
+        c.close()
+
+
+def test_the_probe_does_not_build_its_own_request():
+    """STRUCTURAL, and it exists because the first version DID.
+
+    `_service_is_up` called `_get` with a URL it assembled itself. That
+    duplicated construction the fetcher owns, so the probe could ask a
+    different question than the fetcher asks -- and it bypassed the one seam
+    the tests patch, so the guards for this function issued LIVE requests to
+    Europe PMC with synthetic PMCIDs. The tell was the runtime: 22.2s for this
+    file, against 1.5s once the probe went through `fetch_fulltext`.
+    """
+    src = (REPO / "scripts" / "corpus_expand_fetch.py").read_text()
+    fn = next(n for n in ast.walk(ast.parse(src))
+              if isinstance(n, ast.FunctionDef) and n.name == "_service_is_up")
+    called = {n.func.id for n in ast.walk(fn)
+              if isinstance(n, ast.Call) and isinstance(n.func, ast.Name)}
+    assert "fetch_fulltext" in called, (
+        "the probe must re-run the same call that succeeded")
+    assert "_get" not in called, (
+        "the probe must not assemble its own request: that duplicates the "
+        "fetcher's URL construction and escapes the test seam, which made "
+        "these guards hit the live network")
+    assert "urlopen" not in ast.dump(fn), "no direct HTTP from the probe"
+
+
+def test_controls_come_from_this_run_first_then_the_index(tmp_path):
+    """The fallback is what makes the probe usable, and the ORDER matters.
+
+    A retry pass fetches only the records that already failed, so it can reach
+    the breaker having succeeded at nothing. With no control the honest answer
+    is "unknown" and the run aborts -- which is safe, and is also precisely the
+    state that left #913 unable to finish: a slice whose remaining texts are
+    permanently broken could never retire no matter what the service was doing.
+
+    The identity index already records `has_fulltext` per key, so it can name
+    articles whose text this crawl HAS held. This run's own successes come
+    first because they are the freshest evidence.
+    """
+    import sqlite3
+    import corpus_identity_index as ix
+    db = tmp_path / "id.sqlite"
+    c = sqlite3.connect(db)
+    c.executescript(ix.SCHEMA)
+    c.executemany("INSERT INTO held(kind,key,source,has_fulltext) VALUES (?,?,?,?)",
+                  [("pmcid", "PMC_WITH_TEXT", "expand-MED", 1),
+                   ("pmcid", "PMC_NO_TEXT", "expand-MED", 0),
+                   ("pmcid", "PMC_OTHER_SOURCE", "frozen", 1)])
+    c.commit()
+
+    # No in-run success: every control comes from the index, and only the row
+    # that actually HAS text qualifies.
+    got = fx._control_records([], c, 3)
+    assert [r["pmcid"] for r in got] == ["PMC_WITH_TEXT"], (
+        f"only an expand-* row with has_fulltext=1 is a valid control; got {got}")
+
+    # An in-run success takes precedence and is used alone when it suffices.
+    got = fx._control_records([{"pmcid": "PMC_FRESH"}], c, 1)
+    assert got == [{"pmcid": "PMC_FRESH"}], (
+        f"this run's own success is the freshest evidence; got {got}")
+
+    # And a run with no index at all degrades to "unknown" rather than raising.
+    assert fx._control_records([], None, 3) == []
+    c.close()
+
+
+def test_a_broken_probe_never_takes_the_run_down(tmp_path):
+    """A diagnostic must not be the thing that kills a run holding days of
+    work. A closed or malformed index returns no controls, which the caller
+    reads as "unknown" and handles, rather than propagating."""
+    import sqlite3
+    c = sqlite3.connect(tmp_path / "empty.sqlite")
+    c.close()                      # closed connection: every query raises
+    assert fx._control_records([], c, 3) == []
