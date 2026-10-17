@@ -921,3 +921,28 @@ def test_the_dump_precedes_the_delete_in_source_order():
     assert dump_line < delete_line, (
         f"the dump (line {dump_line}) must be written before the DELETE "
         f"(line {delete_line}), or a crash between them loses the rows")
+
+
+def test_the_orphan_dump_is_not_committable():
+    """The dump lands beside the index, and everything else beside the index is
+    gitignored -- the ledgers, the raw shards, the manifests. The dump was not,
+    so a `git add -A` would have committed per-run operational data into a
+    public repository. The pattern is DERIVED from the writer's own format
+    string, so moving or renaming the dump fails here rather than silently
+    leaving it committable.
+    """
+    import re
+    import subprocess
+    src = (Path(__file__).resolve().parent.parent
+           / "scripts" / "corpus_expand_verify.py").read_text()
+    m = re.search(r'f"(orphans-\{[a-z_]+\})\.json"', src)
+    assert m, "the dump filename is no longer an f-string this guard can read"
+    sample = Path("corpus/atlas") / (m.group(1).split("{")[0] + "20260101-000000.json")
+    repo = Path(__file__).resolve().parent.parent
+    r = subprocess.run(["git", "check-ignore", "-q", str(sample)],
+                       cwd=repo, capture_output=True)
+    if r.returncode == 128:
+        pytest.skip("not a git work tree")
+    assert r.returncode == 0, (
+        f"{sample} is not gitignored, so a repair's orphan dump can be "
+        "committed by accident; add a pattern covering it to .gitignore")
