@@ -2381,21 +2381,25 @@ def test_controls_come_from_this_run_first_then_the_index(tmp_path):
     db = tmp_path / "id.sqlite"
     c = sqlite3.connect(db)
     c.executescript(ix.SCHEMA)
+    # Real-SHAPED ids. An earlier version of this fixture used readable names
+    # like "PMC_WITH_TEXT", which `norm_pmcid` rejects -- so once controls were
+    # filtered to those that can actually produce a request, the fixture's own
+    # ids stopped qualifying. The hardening caught the test, not the code.
     c.executemany("INSERT INTO held(kind,key,source,has_fulltext) VALUES (?,?,?,?)",
-                  [("pmcid", "PMC_WITH_TEXT", "expand-MED", 1),
-                   ("pmcid", "PMC_NO_TEXT", "expand-MED", 0),
-                   ("pmcid", "PMC_OTHER_SOURCE", "frozen", 1)])
+                  [("pmcid", "PMC111", "expand-MED", 1),
+                   ("pmcid", "PMC222", "expand-MED", 0),
+                   ("pmcid", "PMC333", "frozen", 1)])
     c.commit()
 
     # No in-run success: every control comes from the index, and only the row
     # that actually HAS text qualifies.
     got = fx._control_records([], c, 3)
-    assert [r["pmcid"] for r in got] == ["PMC_WITH_TEXT"], (
+    assert [r["pmcid"] for r in got] == ["PMC111"], (
         f"only an expand-* row with has_fulltext=1 is a valid control; got {got}")
 
     # An in-run success takes precedence and is used alone when it suffices.
-    got = fx._control_records([{"pmcid": "PMC_FRESH"}], c, 1)
-    assert got == [{"pmcid": "PMC_FRESH"}], (
+    got = fx._control_records([{"pmcid": "PMC999"}], c, 1)
+    assert got == [{"pmcid": "PMC999"}], (
         f"this run's own success is the freshest evidence; got {got}")
 
     # And a run with no index at all degrades to "unknown" rather than raising.
@@ -2411,3 +2415,35 @@ def test_a_broken_probe_never_takes_the_run_down(tmp_path):
     c = sqlite3.connect(tmp_path / "empty.sqlite")
     c.close()                      # closed connection: every query raises
     assert fx._control_records([], c, 3) == []
+
+
+def test_a_control_that_would_cause_no_request_is_not_a_control(tmp_path):
+    """A probe that asks nothing must not report success.
+
+    `fetch_fulltext` returns None WITHOUT touching the network when a record
+    has no usable PMCID and is not a PPR, and None is read as "the service
+    answered" -- correctly, since a 404 is an answer. So a control with no
+    usable PMCID would report the service up having issued no request at all:
+    the degenerate input satisfying the check, which is the vacuity shape this
+    repo keeps finding.
+    """
+    import sqlite3
+    import corpus_identity_index as ix
+    assert fx._control_records([{"pmcid": None}, {"pmcid": ""}], None, 3) == [], (
+        "records that cannot produce a request must be filtered out")
+    assert fx._control_records([{"doi": "10.1/x"}], None, 3) == [], (
+        "a record with no pmcid at all is not a usable control")
+    # And the index side is filtered on the same rule.
+    db = tmp_path / "id.sqlite"
+    c = sqlite3.connect(db)
+    c.executescript(ix.SCHEMA)
+    c.executemany("INSERT INTO held(kind,key,source,has_fulltext) VALUES (?,?,?,?)",
+                  [("pmcid", "", "expand-MED", 1),
+                   ("pmcid", "PMC77", "expand-MED", 1)])
+    c.commit()
+    got = [r["pmcid"] for r in fx._control_records([], c, 3)]
+    assert got == ["PMC77"], f"the unusable key must be dropped; got {got}"
+    c.close()
+    # The whole point: with no usable control the verdict is UNKNOWN, which the
+    # caller treats as unsafe -- NOT "up".
+    assert fx._service_is_up([{"pmcid": None}], None) is None

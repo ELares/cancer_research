@@ -273,7 +273,13 @@ def _control_records(recent_ok: list, ident, n: int) -> list:
     `fetch_fulltext` returns None without raising -- an answer is an answer.
     Only a 500 on several separately-proven articles indicates an outage.
     """
-    out = [r for r in reversed(recent_ok)][:n]
+    # A CONTROL THAT WOULD CAUSE NO REQUEST IS NOT A CONTROL. `fetch_fulltext`
+    # returns None without touching the network when a record has no usable
+    # PMCID and is not a PPR, and None is read here as "the service answered"
+    # -- so such a record would report the service up having asked nothing.
+    # That is the vacuity shape this repo keeps finding: a check satisfied by
+    # the degenerate input. Only records that will actually be fetched qualify.
+    out = [r for r in reversed(recent_ok) if norm_pmcid(r.get("pmcid"))][:n]
     if len(out) >= n or ident is None:
         return out
     try:
@@ -284,7 +290,7 @@ def _control_records(recent_ok: list, ident, n: int) -> list:
         # A probe is a diagnostic; it must never be the thing that takes the
         # run down. No controls simply means "unknown", handled by the caller.
         return out
-    return out + [{"pmcid": k} for (k,) in rows]
+    return out + [{"pmcid": k} for (k,) in rows if norm_pmcid(k)]
 
 
 def _service_is_up(recent_ok: list, ident=None) -> bool | None:
