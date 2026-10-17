@@ -33,6 +33,7 @@ import json
 import os
 import sqlite3
 import subprocess
+import time
 import sys
 import zlib
 from pathlib import Path
@@ -286,6 +287,34 @@ def repair(index: Path, shard_dir: Path, force: bool = False,
         return 2
 
     if not force:
+        # A CRAWL WRITING DURING THE SCAN MAKES ITS OWN RECORDS LOOK ORPHANED.
+        # `repair` works in two phases with a long gap: build `stored` by
+        # walking every shard (51 GB and ~23 minutes at current size), then
+        # delete every crawl row whose key is not in it. A record written into
+        # a shard the walk has already passed is absent from `stored` through
+        # timing alone, so its row is deleted -- an index row removed for an
+        # article that is sitting on disk, which `repair`'s own docstring
+        # identifies as worse than the defect being repaired, because the
+        # re-fetch it causes produces duplicates that the audit cannot see
+        # (it ignores `expand-*` provenance by design).
+        #
+        # The three refusals this joins all describe a WRONG DIRECTORY. None
+        # of them describes the right directory being written to concurrently,
+        # and the fraction ceiling is no help: a crawl that wrote a few
+        # thousand records during the scan yields an orphan fraction far under
+        # the ceiling, which is exactly the shape a genuine repair has.
+        #
+        # Asked of the OS, not inferred. The SCAN is safe mid-run and `verify`
+        # is designed to be run that way, so only the delete is gated.
+        running = live_shard(shard_dir)
+        if running is not None:
+            print("REFUSING: a crawl appears to be running (writing "
+                  f"{running}). The scan takes minutes, so records written "
+                  "after it passes their shard look orphaned and would be "
+                  "DELETED while their bytes sit on disk. Stop the crawl, "
+                  "then repair; the ledger is local so it resumes. If the "
+                  "process table really is clear, --force.")
+            return 2
         if not stored:
             print("REFUSING: no records were read from the shard directory, so "
                   "EVERY crawl row looks orphaned. That is what an unmounted or "
@@ -305,6 +334,36 @@ def repair(index: Path, shard_dir: Path, force: bool = False,
         print("nothing to repair")
         return 0
 
+    # THE ROWS ARE THE ONLY RECORD OF WHICH ARTICLES WERE LOST, so they are
+    # written out BEFORE the delete and the delete does not happen if that
+    # write fails. The bytes are gone from the shards -- that is what makes a
+    # row an orphan -- so once the row goes too, nothing anywhere names the
+    # article. Deleting restores ELIGIBILITY to re-fetch, which only pays off
+    # when the slice holding it is walked again, and a slice already marked
+    # done never is. With the dump, the articles can be re-fetched directly
+    # instead of waiting for a re-walk that may never come.
+    #
+    # A PRECONDITION, NOT A SIDE EFFECT: the repo's own provenance rule, where
+    # `proposal_correlated_study.committed_sources` refuses to run on dirty
+    # sources rather than recording that they were dirty.
+    stamp = time.strftime("%Y%m%d-%H%M%S")
+    dump = index.parent / f"orphans-{stamp}.json"
+    try:
+        dump.write_text(json.dumps(
+            {"index": str(index), "shard_dir": str(shard_dir),
+             "stored_keys": len(stored), "crawl_rows": total,
+             "damaged_shards": [{"shard": n, "recovered": k, "error": e}
+                                for n, k, e in truncated],
+             "deleted": [{"kind": k, "key": v} for k, v in orphans]},
+            indent=1), encoding="utf-8")
+    except OSError as e:
+        print(f"REFUSING: could not write {dump} ({e}). These rows name the "
+              "only articles whose bytes are already gone, so deleting them "
+              "without recording them destroys the last trace of what was "
+              "lost. Nothing deleted.")
+        return 2
+    print(f"wrote {dump}")
+
     c = sqlite3.connect(index, timeout=120)
     try:
         c.executemany("DELETE FROM held WHERE kind=? AND key=? AND source LIKE ?",
@@ -313,6 +372,9 @@ def repair(index: Path, shard_dir: Path, force: bool = False,
     finally:
         c.close()
     print(f"repaired: dropped {len(orphans):,} index rows with no stored record")
+    print(f"the articles they named are listed in {dump.name}; they are "
+          "re-fetchable now, but only a slice that gets walked again will do "
+          "it, so re-fetch from that file rather than waiting for one")
     return 0
 
 
