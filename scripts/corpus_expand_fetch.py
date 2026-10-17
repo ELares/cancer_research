@@ -77,7 +77,12 @@ OUT_ROOT = Path(os.getenv(
 STATE_DB = REPO / "corpus" / "atlas" / "expand_state.sqlite"
 # Bumped when a migration in `state()` must run once over an existing ledger.
 SCHEMA_VERSION = 1
-SEARCH = "https://www.ebi.ac.uk/europepmc/webservices/rest/search"
+# ONE definition. The full-text URL was written out at two call sites and a
+# third was about to be added for the service probe (#964); a base URL
+# duplicated across sites is how a probe ends up asking a different host
+# than the fetcher and answering a question nobody asked.
+REST = "https://www.ebi.ac.uk/europepmc/webservices/rest"
+SEARCH = f"{REST}/search"
 CONTACT = os.getenv("FERRO_CONTACT", "cancer-research-corpus")
 UA = f"cancer-research-corpus/1.0 (+{CONTACT}) python-urllib"
 
@@ -241,6 +246,138 @@ def _search_with_retry(src: str, year: int, cursor: str, verbose: bool = True):
     """The Europe PMC search, through the shared page retry."""
     return retry_page(search, src, year, cursor,
                       label=f"search {src} {year}", verbose=verbose)
+
+
+# How many known-good articles to re-probe before calling the service down.
+# Three, not one: a single control that happens to blip would abort a run
+# holding days of work, and any one success is enough to establish the service
+# is answering.
+ABORT_CONTROL_PROBES = 3
+
+
+def _control_records(recent_ok: list, ident, n: int) -> list:
+    """Records that are known to have had retrievable full text.
+
+    THIS RUN'S OWN SUCCESSES FIRST, then the identity index's record of what
+    was fetched successfully before. The second source is what makes the check
+    usable at all: a RETRY pass fetches only the records that already failed,
+    so it can reach the breaker having succeeded at nothing, and a probe with
+    no control has to answer "unknown" and abort. That is the conservative
+    answer and it is also exactly the state that left the #913 recovery walk
+    unable to finish -- a slice whose remaining texts are permanently broken
+    could never retire, whatever the service was doing.
+
+    The index holds `has_fulltext` per key, so it can name articles whose text
+    this crawl HAS held: ~1.1M of them. A control that has since been withdrawn
+    is still a useful control, because Europe PMC answers 404 for those and
+    `fetch_fulltext` returns None without raising -- an answer is an answer.
+    Only a 500 on several separately-proven articles indicates an outage.
+    """
+    # A CONTROL THAT WOULD CAUSE NO REQUEST IS NOT A CONTROL. `fetch_fulltext`
+    # returns None without touching the network when a record has no usable
+    # PMCID and is not a PPR, and None is read here as "the service answered"
+    # -- so such a record would report the service up having asked nothing.
+    # That is the vacuity shape this repo keeps finding: a check satisfied by
+    # the degenerate input. Only records that will actually be fetched qualify.
+    out = [r for r in reversed(recent_ok) if norm_pmcid(r.get("pmcid"))][:n]
+    if len(out) >= n or ident is None:
+        return out
+    try:
+        rows = ident.execute(
+            "SELECT key FROM held WHERE kind='pmcid' AND has_fulltext=1 "
+            "AND source LIKE ? LIMIT ?", ("expand-%", n - len(out))).fetchall()
+    except Exception:
+        # A probe is a diagnostic; it must never be the thing that takes the
+        # run down. No controls simply means "unknown", handled by the caller.
+        return out
+    return out + [{"pmcid": k} for (k,) in rows if norm_pmcid(k)]
+
+
+def _service_is_up(recent_ok: list, ident=None) -> bool | None:
+    """Is the service down, or are these particular documents broken?
+
+    THE DIFFERENCE IS NOT INFERABLE FROM THE FAILURES THEMSELVES, and the
+    breaker below used to infer it anyway: it read a long run of consecutive
+    full-text failures as an outage. On a RETRY pass that reasoning is exactly
+    backwards, because the records being retried are the ones that already
+    failed -- a population selected for failing -- so a long consecutive run is
+    the EXPECTED outcome of a set of permanently broken documents, not evidence
+    of an outage.
+
+    MEASURED (#964), with the crawl stopped by this breaker: five PMCIDs it had
+    given up on returned HTTP 500 on a hand probe, while five whose text it had
+    successfully stored returned HTTP 200 with real content, and the search
+    endpoint answered normally. The service was fine. Europe PMC serves 500
+    rather than 404 for articles it has no retrievable full text for, so those
+    articles fail forever and the run aborted on a permanent condition it had
+    diagnosed as transient.
+
+    So this asks the only question that separates the two: re-fetch something
+    that WORKED. The controls come from this run's own successes rather than a
+    hardcoded id, so the probe cannot rot and needs no maintenance.
+
+    IT RE-RUNS `fetch_fulltext`, THE SAME CALL, rather than assembling a URL of
+    its own. A first version called `_get` directly and that was wrong twice
+    over: it duplicated URL construction the fetcher already owns, so the probe
+    could end up asking a different question than the fetcher asks; and it
+    bypassed the one seam the tests patch, so the guards for this very function
+    issued LIVE network requests against Europe PMC with synthetic PMCIDs,
+    breaking the offline contract and reporting "the service is down" because
+    the ids were fabricated. Re-running the same call is also the more faithful
+    reading of "re-fetch something that worked".
+
+    ANY ANSWER COUNTS, because the question is whether the service is
+    reachable and not whether a particular article is still there. `_get`
+    returns bytes on success, None when the server REFUSES (404 and friends)
+    and raises only when it could not get an answer at all -- so catching
+    `TransientFetchError` is exactly the boundary between "no answer" and "an
+    answer I did not like", and a control that has since been withdrawn still
+    proves the service is up.
+
+    Returns True if the service answered for any control, False if it answered
+    for none, and None if this run has no success to re-probe -- which is a
+    third state and must not be collapsed into either. A run that begins on a
+    retry pass can hit the breaker having never fetched any text, and with no
+    control the honest answer is "unknown", which the caller treats as the
+    unsafe case and aborts on.
+    """
+    controls = _control_records(recent_ok, ident, ABORT_CONTROL_PROBES)
+    if not controls:
+        return None
+    for rec in controls:
+        try:
+            fetch_fulltext(rec)
+            return True
+        except TransientFetchError:
+            continue
+    return False
+
+
+def _abort_unless_documents_are_broken(consecutive: int, recent_ok: list,
+                                       ident, got: Exception,
+                                       phase: str) -> None:
+    """Raise if the service is down; RETURN if these documents are just broken.
+
+    ONE definition for both breaker sites, because it is the same decision in
+    both and two copies of a judgement call is how they drift apart. Returning
+    means "carry on": the caller resets its counter and the normal paths take
+    over -- deferral on a first pass, store-without-text on a retry -- both of
+    which are already the documented behaviour for a document whose text
+    cannot be had.
+    """
+    up = _service_is_up(recent_ok, ident)
+    if up:
+        return
+    why = ("no article with known-good full text could be found to re-probe, "
+           "in this run or in the identity index, so whether the service is "
+           "up is UNKNOWN"
+           if up is None else
+           f"and {ABORT_CONTROL_PROBES} articles this run already fetched "
+           "successfully also failed, so the service really is down")
+    raise RuntimeError(
+        f"{consecutive} consecutive full-text failures on {phase}: {why}. "
+        f"Retiring a slice without its text would be permanent, so stopping "
+        f"instead: {got}") from got
 
 
 def _should_abort(consecutive: int) -> bool:
@@ -650,12 +787,12 @@ def fetch_fulltext(rec) -> str | None:
     """
     pmcid = norm_pmcid(rec.get("pmcid"))
     if pmcid:
-        raw = _get(f"https://www.ebi.ac.uk/europepmc/webservices/rest/{pmcid}/fullTextXML",
+        raw = _get(f"{REST}/{pmcid}/fullTextXML",
                    tries=4, timeout=120)
         if raw:
             return raw.decode("utf-8", "replace")
     if rec.get("source") == "PPR" and rec.get("id"):
-        raw = _get(f"https://www.ebi.ac.uk/europepmc/webservices/rest/PPR/{rec['id']}/fullTextXML",
+        raw = _get(f"{REST}/PPR/{rec['id']}/fullTextXML",
                    tries=4, timeout=120)
         if raw:
             return raw.decode("utf-8", "replace")
@@ -846,6 +983,11 @@ def run(years, sources, limit_new=None, verbose=True) -> dict:
     # means the service is gone and continuing would walk the whole corpus
     # storing metadata and calling it a crawl.
     deferred = consecutive_deferred = 0
+    # RECORDS this run fetched text for -- the records, not their ids, so the
+    # breaker's probe re-runs the identical `fetch_fulltext` call rather than
+    # rebuilding a URL of its own. It re-probes them to tell an outage from a
+    # set of permanently broken documents.
+    recent_ok: list = []
     reopen_stale_slices(st, verbose=verbose)
     require_output_root(OUT_ROOT)
     shards = Shards(OUT_ROOT, "expanded")
@@ -1021,10 +1163,21 @@ def run(years, sources, limit_new=None, verbose=True) -> dict:
                                 slice_deferred += 1
                                 consecutive_deferred += 1
                                 if _should_abort(consecutive_deferred):
-                                    raise RuntimeError(
-                                        f"{consecutive_deferred} consecutive "
-                                        f"full-text failures; the service looks "
-                                        f"down rather than busy: {got}") from got
+                                    # MEASURED, not inferred (#964). Returns
+                                    # only if a known-good article still
+                                    # fetches, i.e. the service is answering
+                                    # and these documents are the problem.
+                                    _abort_unless_documents_are_broken(
+                                        consecutive_deferred, recent_ok,
+                                        ident, got, "a first pass")
+                                    if verbose:
+                                        print(f"  = {consecutive_deferred} "
+                                              f"consecutive full-text failures, "
+                                              f"but the service still answers "
+                                              f"for articles that work: these "
+                                              f"documents are broken, "
+                                              f"continuing", flush=True)
+                                    consecutive_deferred = 0
                                 if verbose and deferred % 25 == 1:
                                     print(f"  ! deferred {deferred} "
                                           f"(latest: {got})", flush=True)
@@ -1052,13 +1205,25 @@ def run(years, sources, limit_new=None, verbose=True) -> dict:
                                 consecutive_abandoned += 1
                                 consecutive_deferred = 0
                                 if _should_abort(consecutive_abandoned):
-                                    raise RuntimeError(
-                                        f"{consecutive_abandoned} consecutive "
-                                        f"full-text failures on a RETRY pass; "
-                                        f"the service looks down rather than "
-                                        f"holding broken documents, and "
-                                        f"retiring this slice without text "
-                                        f"would be permanent: {got}") from got
+                                    # THE SITE THAT STOPPED THE #913 RECOVERY
+                                    # WALK, and the one whose reasoning was
+                                    # backwards: on a retry pass the records
+                                    # being retried are the ones that already
+                                    # failed, so a long consecutive run is what
+                                    # a set of permanently broken documents
+                                    # looks like, not what an outage looks
+                                    # like. Measured rather than assumed now.
+                                    _abort_unless_documents_are_broken(
+                                        consecutive_abandoned, recent_ok,
+                                        ident, got, "a retry pass")
+                                    if verbose:
+                                        print(f"  = {consecutive_abandoned} "
+                                              f"consecutive retry failures, but "
+                                              f"the service still answers for "
+                                              f"articles that work: storing "
+                                              f"these without text, "
+                                              f"continuing", flush=True)
+                                    consecutive_abandoned = 0
                                 if verbose and slice_abandoned % 25 == 1:
                                     print(f"  ~ no full text after a second run "
                                           f"({slice_abandoned}); storing the "
@@ -1067,6 +1232,15 @@ def run(years, sources, limit_new=None, verbose=True) -> dict:
                                 text = got
                                 consecutive_deferred = 0
                                 consecutive_abandoned = 0
+                                # Controls for the breaker's probe, taken from
+                                # this run's own successes so the check cannot
+                                # rot the way a hardcoded id would. Capped: the
+                                # probe reads the newest few and a run stores
+                                # millions of records.
+                                if pmcid:
+                                    recent_ok.append(rec)
+                                    if len(recent_ok) > 20:
+                                        del recent_ok[0]
                         out = {
                             "source": src, "epmc_id": rec.get("id"),
                             "pmid": pmid, "pmcid": pmcid, "doi": doi,
