@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import gzip
 import json
+import pathlib
 import sqlite3
 import sys
 from pathlib import Path
@@ -758,3 +759,190 @@ def test_repair_does_not_read_every_shard_twice():
         "repair must reuse the stored set from orphaned_index_rows rather "
         "than rescanning every shard to print its size")
     assert "orphaned_index_rows" in called
+
+
+# --- repair must not race a live crawl (#962) ------------------------------
+
+
+def _repair_fixture(tmp_path):
+    """Many stored records and ONE index row that genuinely has no bytes.
+
+    The orphan has to be a small SHARE, not just a small count: with one
+    orphan out of two rows the existing REPAIR_MAX_FRACTION ceiling fires
+    first and the repair refuses for an unrelated reason, which would make
+    every guard below pass without exercising anything. 1 of 21 is 4.8%.
+    """
+    stored = [{"pmid": str(i)} for i in range(1, 21)]
+    sd = _shards(tmp_path, stored)
+    rows = [("pmid", r["pmid"], "expand-MED", 0) for r in stored]
+    rows.append(("pmid", "999", "expand-MED", 0))
+    return sd, _index(tmp_path, rows)
+
+
+def test_repair_refuses_while_a_crawl_is_running(tmp_path, monkeypatch, capsys):
+    """The delete is gated, not the scan.
+
+    `verify` already consulted `live_shard`; `repair` -- the only function that
+    DELETES -- did not, so correctness depended on remembering to sequence the
+    two by hand.
+    """
+    import corpus_expand_verify as cv
+    sd, idx = _repair_fixture(tmp_path)
+    monkeypatch.setattr(cv, "live_shard", lambda d: "expanded-00007.jsonl.gz")
+    rc = cv.repair(idx, sd)
+    out = capsys.readouterr().out
+    assert rc == 2, "a running crawl must stop the repair"
+    assert "REFUSING" in out and "expanded-00007.jsonl.gz" in out, (
+        "the refusal must name the shard being written, so an operator can "
+        f"check it against the process table; got {out!r}")
+    c = sqlite3.connect(idx)
+    try:
+        assert c.execute("SELECT COUNT(*) FROM held").fetchone()[0] == 21, (
+            "the refusal must delete NOTHING")
+    finally:
+        c.close()
+
+
+def test_repair_proceeds_when_no_crawl_is_running(tmp_path, monkeypatch):
+    """The control. Without this the guard above is satisfied by a repair that
+    never works at all."""
+    import corpus_expand_verify as cv
+    sd, idx = _repair_fixture(tmp_path)
+    monkeypatch.setattr(cv, "live_shard", lambda d: None)
+    assert cv.repair(idx, sd) == 0
+    c = sqlite3.connect(idx)
+    try:
+        rows = [r[0] for r in c.execute("SELECT key FROM held")]
+    finally:
+        c.close()
+    assert "999" not in rows, "the row with no stored record must go"
+    assert len(rows) == 20, f"every backed row must survive; got {len(rows)}"
+
+
+def test_force_overrides_the_live_crawl_refusal(tmp_path, monkeypatch):
+    """Overridable, like the other two refusals that describe a recoverable
+    situation -- an operator who has just stopped a crawl and checked the
+    process table can say so. The non-directory refusal stays absolute."""
+    import corpus_expand_verify as cv
+    sd, idx = _repair_fixture(tmp_path)
+    monkeypatch.setattr(cv, "live_shard", lambda d: "expanded-00007.jsonl.gz")
+    assert cv.repair(idx, sd, force=True) == 0
+
+
+def test_the_delete_is_gated_and_the_scan_is_not(tmp_path, monkeypatch):
+    """STRUCTURAL. `verify` must stay runnable against a live crawl -- it is
+    the tool for watching one -- so the gate belongs in `repair` alone. A fix
+    that put it in `iter_records` or `stored_keys` would break that and still
+    pass every behavioural guard above.
+    """
+    import ast
+    src = (Path(__file__).resolve().parent.parent
+           / "scripts" / "corpus_expand_verify.py").read_text()
+    tree = ast.parse(src)
+
+    def calls(name):
+        fn = next(n for n in ast.walk(tree)
+                  if isinstance(n, ast.FunctionDef) and n.name == name)
+        return {n.func.id for n in ast.walk(fn)
+                if isinstance(n, ast.Call) and isinstance(n.func, ast.Name)}
+
+    assert "live_shard" in calls("repair"), "the delete must consult it"
+    for scanner in ("iter_records", "stored_keys"):
+        assert "live_shard" not in calls(scanner), (
+            f"{scanner} must stay usable while a crawl runs; gating the scan "
+            "would break `verify`, whose job is to report on a live crawl")
+
+
+def test_repair_records_what_it_deletes_before_deleting_it(tmp_path, monkeypatch):
+    """An orphan row is the ONLY record of a lost article.
+
+    The bytes are gone from the shards -- that is what makes the row an orphan
+    -- so once the row goes too, nothing anywhere names the article. Deleting
+    restores eligibility to re-fetch, which pays off only when the slice
+    holding it is walked again, and a slice already marked `done` never is. So
+    the dump is what makes the repair recoverable rather than merely tidy.
+    """
+    import corpus_expand_verify as cv
+    sd, idx = _repair_fixture(tmp_path)
+    monkeypatch.setattr(cv, "live_shard", lambda d: None)
+    assert cv.repair(idx, sd) == 0
+    dumps = sorted(idx.parent.glob("orphans-*.json"))
+    assert len(dumps) == 1, f"exactly one dump expected; got {dumps}"
+    rec = json.loads(dumps[0].read_text())
+    assert rec["deleted"] == [{"kind": "pmid", "key": "999"}], (
+        f"the dump must name the rows actually deleted; got {rec['deleted']}")
+    assert rec["index"] == str(idx) and rec["shard_dir"] == str(sd), (
+        "a dump that does not say which index and shard directory it describes "
+        "cannot be acted on later")
+
+
+def test_repair_deletes_nothing_when_it_cannot_record_the_rows(tmp_path, monkeypatch):
+    """A PRECONDITION, not a side effect. Recording the loss after destroying
+    the evidence is the shape this repo already rejected for provenance."""
+    import corpus_expand_verify as cv
+    sd, idx = _repair_fixture(tmp_path)
+    monkeypatch.setattr(cv, "live_shard", lambda d: None)
+
+    real = pathlib.Path.write_text
+
+    def refuse(self, *a, **k):
+        if self.name.startswith("orphans-"):
+            raise OSError("no space left on device")
+        return real(self, *a, **k)
+
+    monkeypatch.setattr(pathlib.Path, "write_text", refuse)
+    assert cv.repair(idx, sd) == 2, "an unwritable dump must stop the delete"
+    c = sqlite3.connect(idx)
+    try:
+        assert c.execute("SELECT COUNT(*) FROM held").fetchone()[0] == 21, (
+            "the orphan row must survive a repair that could not record it")
+    finally:
+        c.close()
+
+
+def test_the_dump_precedes_the_delete_in_source_order():
+    """STRUCTURAL. Both behavioural guards above pass if the dump is written
+    AFTER the delete, because they only observe the end state -- and a dump
+    written afterwards is exactly the ordering that loses the rows when the
+    process dies between the two."""
+    import ast
+    src = (Path(__file__).resolve().parent.parent
+           / "scripts" / "corpus_expand_verify.py").read_text()
+    fn = next(n for n in ast.walk(ast.parse(src))
+              if isinstance(n, ast.FunctionDef) and n.name == "repair")
+    dump_line = delete_line = None
+    for node in ast.walk(fn):
+        if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute):
+            if node.func.attr == "write_text" and dump_line is None:
+                dump_line = node.lineno
+            if node.func.attr == "executemany":
+                delete_line = node.lineno
+    assert dump_line and delete_line, (dump_line, delete_line)
+    assert dump_line < delete_line, (
+        f"the dump (line {dump_line}) must be written before the DELETE "
+        f"(line {delete_line}), or a crash between them loses the rows")
+
+
+def test_the_orphan_dump_is_not_committable():
+    """The dump lands beside the index, and everything else beside the index is
+    gitignored -- the ledgers, the raw shards, the manifests. The dump was not,
+    so a `git add -A` would have committed per-run operational data into a
+    public repository. The pattern is DERIVED from the writer's own format
+    string, so moving or renaming the dump fails here rather than silently
+    leaving it committable.
+    """
+    import re
+    import subprocess
+    src = (Path(__file__).resolve().parent.parent
+           / "scripts" / "corpus_expand_verify.py").read_text()
+    m = re.search(r'f"(orphans-\{[a-z_]+\})\.json"', src)
+    assert m, "the dump filename is no longer an f-string this guard can read"
+    sample = Path("corpus/atlas") / (m.group(1).split("{")[0] + "20260101-000000.json")
+    repo = Path(__file__).resolve().parent.parent
+    r = subprocess.run(["git", "check-ignore", "-q", str(sample)],
+                       cwd=repo, capture_output=True)
+    if r.returncode == 128:
+        pytest.skip("not a git work tree")
+    assert r.returncode == 0, (
+        f"{sample} is not gitignored, so a repair's orphan dump can be "
+        "committed by accident; add a pattern covering it to .gitignore")

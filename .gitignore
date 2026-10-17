@@ -49,6 +49,13 @@ corpus/atlas/comention/
 # nothing offline -- atlas_coverage.py exits without corpus/atlas/records/,
 # which is gitignored, so it can never run from a fresh checkout anyway.
 corpus/atlas/manifest.json
+
+# `corpus_expand_verify.py --repair` writes the index rows it is about
+# to delete beside the index, because those rows are the only record of
+# which articles were lost (#962). Operational, per-run, and sized by
+# the damage -- it belongs with the ledgers it describes, all of which
+# are ignored, not in the repository.
+corpus/atlas/orphans-*.json
 corpus/atlas/manifest-c04only.json
 corpus/atlas/unindexed-manifest.json
 corpus/atlas/records_updates/
